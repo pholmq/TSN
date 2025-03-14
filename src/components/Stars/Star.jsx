@@ -107,9 +107,9 @@ let starsize
   const size = starsize/500 * starScale
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} visible={s.visible}>
       <sprite material={spriteMaterial} scale={[size, size, size]} />
-      <mesh name={s.name} ref={meshRef} visible={s.visible}>
+      <mesh name={s.name} ref={meshRef} >
         <sphereGeometry args={[radius, 32, 32]} />
         <FakeGlowMaterial
           glowColor={color}
