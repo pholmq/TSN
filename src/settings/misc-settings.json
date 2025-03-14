@@ -1,0 +1,301 @@
+[
+  {
+    "name": "SystemCenter",
+    "color": "#222222",
+    "type": "planet",
+    "visible": true,
+    "texture": "",
+    "unicodeSymbol": "",
+    "planetCamera": true,
+    "axesHelper": false
+  },
+  {
+    "name": "Earth",
+    "earth": true,
+    "color": "#287AB8",
+    "type": "planet",
+    "actualSize": 0.00426,
+    "visible": true,
+    "axesHelper": false,
+    "arrows": true,
+    "reverseArrows": true,
+    "texture": "/textures/planets/2k_earth_daymap.jpg",
+    "unicodeSymbol": "&#x1F728;",
+    "planetCamera": true,
+    "description": "EARTH orbital Ø: 113 230 656 km (the “PVP” orbit), Orbital circumference: 355 724 597 km, Diameter at equator: 12756.3 km, Equatorial circumference: 40075 km"
+  },
+  {
+    "name": "Moon deferent A",
+    "color": "gray",
+    "type": "deferent",
+    "visible": false,
+    "axesHelper": false
+  },
+  {
+    "name": "Moon deferent B",
+    "color": "gray",
+    "type": "deferent",
+    "visible": false,
+    "axesHelper": false
+  },
+  {
+    "name": "Moon",
+    "color": "#8b8b8b",
+    "type": "planet",
+    "actualSize": 0.00116,
+    "rotationStart": 3,
+    "visible": true,
+    "axesHelper": false,
+    "texture": "/textures/planets/2k_moon.jpg",
+    "unicodeSymbol": "&#x263D;",
+    "planetCamera": true,
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
+  },
+  {
+    "name": "Sun deferent",
+    "color": "yellow",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Sun",
+    "color": "yellow",
+    "type": "planet",
+    "actualSize": 0.465,
+    "visible": true,
+    "axesHelper": false,
+    "arrows": true,
+    "texture": "/textures/planets/2k_sun.jpg",
+    "light": true,
+    "glow": true,
+    "unicodeSymbol": "&#x2609;",
+    "planetCamera": true,
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 10, "stepFact": "sYear" }
+  },
+  {
+    "name": "Mercury def A",
+    "color": "gray",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Mercury def B",
+    "color": "gray",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Mercury",
+    "color": "#CECCD1",
+    "type": "planet",
+    "actualSize": 0.00163,
+    "visible": true,
+    "axesHelper": false,
+    "arrows": true,
+    "texture": "/textures/planets/2k_mercury.jpg",
+    "unicodeSymbol": "&#x263F;",
+    "planetCamera": true,
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
+  },
+  {
+    "name": "Venus deferent A",
+    "color": "#FFC649",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Venus deferent B",
+    "color": "orange",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Venus",
+    "color": "#FFC649",
+    "type": "planet",
+    "actualSize": 0.00404,
+    "visible": true,
+    "axesHelper": false,
+    "arrows": true,
+    "texture": "/textures/planets/2k_venus.jpg",
+    "unicodeSymbol": "&#x2640;",
+    "planetCamera": true,
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
+  },
+  {
+    "name": "Mars E deferent",
+    "color": "red",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Mars S deferent",
+    "color": "red",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Mars",
+    "color": "red",
+    "type": "planet",
+    "actualSize": 0.00227,
+    "visible": true,
+    "axesHelper": false,
+    "arrows": true,
+    "reverseArrows": true,
+    "texture": "/textures/planets/2k_mars.jpg",
+    "unicodeSymbol": "&#x2642;",
+    "planetCamera": true,
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
+  },
+  {
+    "name": "Phobos",
+    "type": "planet",
+    "actualSize": 0.00000742,
+    "color": "grey",
+    "visible": false,
+    "texture": "",
+    "unicodeSymbol": ""
+  },
+  {
+    "name": "Deimos",
+    "type": "planet",
+    "actualSize": 0.00000414,
+    "color": "grey",
+    "visible": false,
+    "texture": "",
+    "unicodeSymbol": ""
+  },
+  {
+    "name": "Jupiter deferent",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Jupiter",
+
+    "color": "#D2CFDA",
+    "type": "planet",
+    "actualSize": 0.0467,
+    "visible": true,
+    "texture": "/textures/planets/2k_jupiter.jpg",
+    "unicodeSymbol": "&#x2643;",
+    "planetCamera": true,
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" },
+    "rings": {
+      "innerRadius": 10,
+      "outerRadius": 1,
+      "texture": "/textures/jupiter_ring.jpg"
+    }
+  },
+  {
+    "name": "Saturn deferent",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Saturn",
+    "color": "#fae5bf",
+    "type": "planet",
+    "actualSize": 0.0389,
+    "visible": true,
+    "texture": "/textures/planets/2k_saturn.jpg",
+    "unicodeSymbol": "&#x2644;",
+    "planetCamera": true,
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" },
+    "rings": {
+      "innerRadius": 0.7,
+      "outerRadius": 5,
+      "texture": "/textures/saturn_ring.jpg"
+    }
+  },
+  {
+    "name": "Uranus deferent",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Uranus",
+    "color": "#B2D6DB",
+    "type": "planet",
+    "actualSize": 0.0169,
+    "visible": true,
+    "texture": "/textures/planets/2k_uranus.jpg",
+    "unicodeSymbol": "&#x2645;",
+    "planetCamera": true,
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" },
+    "rings": {
+      "innerRadius": 0.4,
+      "outerRadius": 4.9,
+      "texture": "/textures/uranus_ring.png"
+    }
+  },
+  {
+    "name": "Neptune deferent",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Neptune",
+    "color": "#7CB7BB",
+    "type": "planet",
+    "actualSize": 0.0164,
+    "visible": true,
+    "texture": "/textures/planets/2k_neptune.jpg",
+    "unicodeSymbol": "&#x2646;",
+    "planetCamera": true,
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" },
+    "rings": {
+      "innerRadius": 1.8,
+      "outerRadius": 7,
+      "texture": "/textures/neptune_ring.png"
+    }
+  },
+  {
+    "name": "Halleys deferent",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Halleys",
+    "color": "#00FF00",
+    "type": "planet",
+    "actualSize": 0.00000368,
+    "visible": false,
+    "planet": true,
+    "texture": "",
+    "unicodeSymbol": "",
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
+  },
+  {
+    "name": "Eros deferent A",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Eros deferent B",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Eros",
+    "color": "#FF5800",
+    "type": "planet",
+    "actualSize": 0.00000563,
+    "visible": false,
+    "texture": "",
+    "unicodeSymbol": "",
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
+  }
+]
