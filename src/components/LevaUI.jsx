@@ -45,6 +45,7 @@ const LevaUI = () => {
     setStepMultiplier,
   } = useTraceStore();
 
+
   // const toggleTrace = () => {
   //   useTraceStore.setState({ trace: !traceOnOff });
   //   setTraceOnOff(!traceOnOff);
