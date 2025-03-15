@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { useStore } from "../store";
+import changeZoom from "../utils/changeZoom"
 
 const UIZoom = () => {
-  const [zoomLevel, setZoomLevel] = useState(1); // Initial zoom at 100%
+  const [zoomLevel, setZoomLevel] = useState(80); // Initial zoom
   // const {zoomLevel, zoomIn, zoomOut} = useStore();
 
   const zoomIn = () => {
-    setZoomLevel((prev) => prev + 0.1); // Increase by 10%
+    setZoomLevel((prev) => prev + 10); // Increase by 10%
   };
 
   const zoomOut = () => {
-    setZoomLevel((prev) => Math.max(0.5, prev - 0.1)); // Decrease by 10%, min 50%
+    setZoomLevel((prev) => Math.max(0.5, prev - 10)); // Decrease by 10%, min 50%
   };
 
   // console.log(zoomLevel)
@@ -24,6 +25,10 @@ const UIZoom = () => {
 //     rootElement.style.transformOrigin = "top left";
 //   }
 // }, [zoomLevel]);
+
+useEffect(()=>{
+  changeZoom(zoomLevel)
+}, [zoomLevel])
 
   return (
     <>

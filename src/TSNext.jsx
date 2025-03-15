@@ -21,13 +21,15 @@ const TSNext = () => {
 
   return (
     <>
-      <div id="zoomable">
+      <div >
         <UserInterface />
 
         {/* <InfoPanel /> */}
         <Positions />
       </div>
-      <Canvas frameloop="demand">
+      <Canvas         
+        frameloop="demand"
+      >
         <OrbitCamera />
         <AnimationController />
         <PosController />
