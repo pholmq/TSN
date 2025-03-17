@@ -109,7 +109,7 @@ body {
 }
 
 .menu-label-centered {
-  font-size: 1rem;
+  font-size: 1.2rem;
   color: #ffffff;
   padding: 0.25rem;
   flex-shrink: 0;
@@ -166,8 +166,4 @@ body {
   opacity: 0.8;
 }
 
-.bold-symbol {
-  text-shadow: 0.05em 0 0 #fff, -0.05em 0 0 #fff, 0 0.05em 0 #fff,
-    0 -0.05em 0 #fff;
-  /* Or: -webkit-text-stroke: 1px #fff; */
-}
+
