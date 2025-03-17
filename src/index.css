@@ -109,7 +109,7 @@ body {
 }
 
 .menu-label-centered {
-  font-size: 1rem;
+  font-size: 1.2rem;
   color: #ffffff;
   padding: 0.25rem;
   flex-shrink: 0;
@@ -152,7 +152,6 @@ body {
   user-select: none;
   margin: 0.25rem;
   padding: 0.5rem;
-  width: 200px; /* Reduced width (adjust as needed) */
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -164,10 +163,4 @@ body {
   left: 10px !important;
   right: auto !important;
   opacity: 0.8;
-}
-
-.bold-symbol {
-  text-shadow: 0.05em 0 0 #fff, -0.05em 0 0 #fff, 0 0.05em 0 #fff,
-    0 -0.05em 0 #fff;
-  /* Or: -webkit-text-stroke: 1px #fff; */
 }
