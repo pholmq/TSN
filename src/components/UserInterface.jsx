@@ -107,13 +107,15 @@ const UserInterface = () => {
       <div className="menu">
         <div className="menu-item">
           <span className="menu-header">TYCHOSIUM (beta)</span>
-          <UIZoom />
-          <button
-            className="menu-button menu-header-button"
-            onClick={toggleShowLevaMenu}
-          >
-            {showLevaMenu ? <FaTimes /> : <FaBars />}
-          </button>
+          <div className="zoom-controls">
+            <UIZoom />
+            <button
+              className="menu-button menu-header-button"
+              onClick={toggleShowLevaMenu}
+            >
+              {showLevaMenu ? <FaTimes /> : <FaBars />}
+            </button>
+          </div>
         </div>
         <div className="menu-item">
           <button
