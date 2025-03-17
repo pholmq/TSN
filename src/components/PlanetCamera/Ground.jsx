@@ -11,31 +11,18 @@ export default function Ground({ size = 100 }) {
   return (
     <>
       <axesHelper args={[40]} position={[0, 0, 0]} />
-      <mesh rotation-x={Math.PI / 2}>
-        <torusGeometry args={[size, 0.003, 32, 100]} />
-        <meshBasicMaterial color={0xffff00} side={THREE.DoubleSide} />
-        {/* <mesh position={[0, 0, 0]} rotation-x={Math.PI}>
-          <circleGeometry args={[100, 32]} />
-          <meshStandardMaterial
-            color="green"
-            transparent={true}
-            opacity={0.5}
-          />
-        </mesh> */}
 
-        <mesh rotation-x={Math.PI / 2}>
-          <sphereGeometry
-            args={[size, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]}
-          />
-          <meshStandardMaterial
-            color="green"
-            transparent={true}
-            opacity={0.2}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
+      <mesh rotation-x={Math.PI}>
+        <sphereGeometry args={[size, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial
+          color="green"
+          transparent={true}
+          opacity={0.2}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
 
-        <Html
+      {/* <Html
           rotation-x={-Math.PI / 2}
           position={[0, -size, 0]}
           style={textStyle}
@@ -62,8 +49,7 @@ export default function Ground({ size = 100 }) {
           style={textStyle}
         >
           E
-        </Html>
-      </mesh>
+        </Html> */}
     </>
   );
 }
