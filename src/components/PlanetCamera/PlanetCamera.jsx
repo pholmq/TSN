@@ -114,7 +114,7 @@ export default function PlanetCamera() {
   //   }
   // );
 
-  
+
   let latRotationX;
   let camRotationX;
   useFrame(() => {
@@ -205,7 +205,7 @@ export default function PlanetCamera() {
         {/* We put the camera system in a group and rotate it so that lat and long are at 0 */}
         <group ref={longAxisRef}>
           <group ref={latAxisRef}>
-            <Ground data={planetData} position={[0, -0.2, 0]} />
+            <Ground planet={planetCameraTarget} position={[0, -0.2, 0]} />
             <group ref={camMountRef} position={[0, cameraHeight, 0]}>
               <group
                 name="CamBox"
