@@ -15,6 +15,7 @@ import PosController from "./components/PosController";
 import InfoPanel from "./components/InfoPanel";
 import Positions from "./components/Positions";
 import Stars from "./components/Stars/Stars";
+import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 
 const TSNext = () => {
   const zoomLevel = useStore((s) => s.zoomLevel);
@@ -31,6 +32,7 @@ const TSNext = () => {
         frameloop="demand"
       >
         <OrbitCamera />
+        <PlanetCamera />
         <AnimationController />
         <PosController />
         <TraceController />
