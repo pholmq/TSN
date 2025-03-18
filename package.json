@@ -1,11 +1,9 @@
 {
-  "name": "react-typescript",
+  "name": "the_tychosium",
   "version": "1.0.0",
-  "description": "React and TypeScript example starter project",
+  "description": "The Tychosium www.tychos.space",
   "keywords": [
-    "typescript",
-    "react",
-    "starter"
+    "react"
   ],
   "main": "src/index.jsx",
   "dependencies": {
@@ -24,8 +22,7 @@
   },
   "devDependencies": {
     "@types/react": "18.2.38",
-    "@types/react-dom": "18.2.15",
-    "typescript": "4.4.4"
+    "@types/react-dom": "18.2.15"
   },
   "scripts": {
     "start": "react-scripts start",
