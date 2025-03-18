@@ -111,7 +111,7 @@ const LevaUI = () => {
         // },
         "Line width": {
           value: lineWidth,
-          min: 0,
+          min: 1,
           max: 10,
           step: 1,
           onChange: setLineWidth,
