@@ -41,11 +41,6 @@ const Stars = () => {
   return (
     <group ref={starGroupRef}>
        {/* <axesHelper args={[10]} /> */}
-      {/* <Star name="Polaris" />
-      <Star name="Reference Star South" />
-      <Star name="Reference Star RA 0" />
-      <Star name="Reference Star RA 12" />
-      <Star name="Sirius" /> */}
       {starSettings.map((item, index) => (
         <Star key={index} name={item.name} />
       ))}
