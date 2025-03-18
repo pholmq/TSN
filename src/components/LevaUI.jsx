@@ -66,19 +66,6 @@ const LevaUI = () => {
 
         onChange: setSpeedFact,
       },
-      traceOn1: {
-        label: "Trace On/Off",
-        value: trace,
-        onChange: (v) => {
-          setTrace(v);
-          // set2({ traceOn2: v });
-        },
-      },
-      "Show positions": {
-        value: showPositions,
-        hint: "Keep unchecked for best performance",
-        onChange: setShowPositions,
-      },
     }),
     { store: levaStore }
   );
@@ -87,7 +74,20 @@ const LevaUI = () => {
   //order we create them here
 
   const [, set2] = useControls(() => ({
-    Camera: folder(
+    traceOn1: {
+      label: "Trace On/Off",
+      value: trace,
+      onChange: (v) => {
+        setTrace(v);
+        // set2({ traceOn2: v });
+      },
+    },
+  "Show positions": {
+      value: showPositions,
+      hint: "Keep unchecked for best performance",
+      onChange: setShowPositions,
+    },
+  Camera: folder(
       { Follow: { value: cameraFollow, onChange: setCameraFollow } },
       { collapsed: true }
     ),
