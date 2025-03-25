@@ -1,12 +1,11 @@
 import React from "react";
 import { useTexture } from "@react-three/drei";
 import { Vector3 } from "three";
-import { useSettingsStore } from "../store.js"
+import { useSettingsStore } from "../store.js";
 
 export default function Ground({ planet, position = [0, 0, 0] }) {
   const getSetting = useSettingsStore((state) => state.getSetting);
-  const s = getSetting(planet)
-console.log(s)
+  const s = getSetting(planet);
 
   return (
     <group position={position} rotation={[-Math.PI / 2, 0, 0]}>
