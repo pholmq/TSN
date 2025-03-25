@@ -43,7 +43,7 @@ export const useStore = create((set) => ({
 
   orbits: true,
   setOrbits: (v) => set({ orbits: v }),
-  orbitsLineWidth: 2,
+  orbitsLineWidth: 1.5,
   setOrbitsLineWidth: (v) => set({ orbitsLineWidth: v }),
   planetScale: 1,
   setPlanetScale: (v) => set({ planetScale: v }),
@@ -117,7 +117,7 @@ export const useTraceStore = create((set) => ({
   setTrace: (v) => set({ trace: v }),
   toggleTrace: () => set((state) => ({ trace: !state.trace })),
   interval: 10,
-  lineWidth: 2,
+  lineWidth: 1.5,
   setLineWidth: (v) => set({ lineWidth: v }),
   lengthMultiplier: 1,
   setLengthMultiplier: (v) => set({ lengthMultiplier: v }),
