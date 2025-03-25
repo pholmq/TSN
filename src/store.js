@@ -74,6 +74,7 @@ export const useStore = create((set) => ({
 
   //Trigger update flags
   resetClicked: false,
+  setResetClicked: () => set((state) => ({ resetClicked: !state.resetClicked })),
   updAC: false, //When this value changes AnimationController rerenders
   updateAC: () => set((state) => ({ updAC: !state.updAC })),
 
