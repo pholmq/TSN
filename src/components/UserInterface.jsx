@@ -38,6 +38,8 @@ const UserInterface = () => {
     speedMultiplier,
     showLevaMenu,
     toggleShowLevaMenu,
+    setResetClicked,
+    setCameraTarget
   } = useStore();
 
   const dateRef = useRef();
@@ -102,6 +104,15 @@ const UserInterface = () => {
     document.activeElement.blur();
   }
 
+  const handleReset = ()=>{
+    posRef.current = 0;
+    dateRef.current.value = posToDate(posRef.current);
+    timeRef.current.value = posToTime(posRef.current);
+    updateAC();
+    setResetClicked();
+    setCameraTarget("Earth");
+  }
+
   return (
     <>
       <div className="menu">
@@ -120,12 +131,7 @@ const UserInterface = () => {
         <div className="menu-item">
           <button
             className="menu-button"
-            onClick={() => {
-              posRef.current = 0;
-              dateRef.current.value = posToDate(posRef.current);
-              timeRef.current.value = posToTime(posRef.current);
-              updateAC();
-            }}
+            onClick={handleReset}
           >
             Reset
           </button>
