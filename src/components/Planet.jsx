@@ -47,7 +47,7 @@ export default function Planet(s) {
   return (
     <>
       <group rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
-        {s.name === "Earth" ? <CelestialSphere visible={false} /> : null}
+        {s.name === "Earth" && <CelestialSphere visible={false} />}
         {s.visible && <HoverObj s={s} />}
         <mesh name={s.name} visible={s.visible} ref={planetRef} scale={planetScale} rotation={[0, rotationStart || 0, 0]}>
           <sphereGeometry args={[size, 64, 64]} />
