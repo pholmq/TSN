@@ -24,6 +24,8 @@ const LevaUI = () => {
     setActualPlanetSizes,
     showPositions,
     setShowPositions,
+    zodiac,
+    setZodiac,
     starDistanceModifier,
     setStarDistanceModifier,
     officialStarDistances,
@@ -171,6 +173,10 @@ const LevaUI = () => {
     ),
     "Stars & Helpers": folder(
       {
+        "Zodiac": {
+          value: zodiac,
+          onChange: setZodiac,
+        },
         "Use star distances": {
           value: officialStarDistances,
           onChange: setOfficialStarDistances,

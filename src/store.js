@@ -62,6 +62,9 @@ export const useStore = create((set) => ({
 
   sunLight: 2,
 
+  zodiac: false,
+  setZodiac: (v) => set({ zodiac: v }),
+
   officialStarDistances: false,
   setOfficialStarDistances: (v) => set({ officialStarDistances: v }),
 
