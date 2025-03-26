@@ -64,6 +64,8 @@ export const useStore = create((set) => ({
 
   zodiac: false,
   setZodiac: (v) => set({ zodiac: v }),
+  zodiacSize: 1,
+  setZodiacSize: (v) => set({ zodiacSize: v }),
 
   officialStarDistances: false,
   setOfficialStarDistances: (v) => set({ officialStarDistances: v }),
