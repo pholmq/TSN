@@ -29,7 +29,8 @@ const TSNext = () => {
         <Positions />
       </div>
       <Canvas         
-        frameloop="demand"
+        frameloop="demand" 
+        gl={{ logarithmicDepthBuffer: true }} //Fixes depth buffer issues due to extreme Camera far
       >
         <OrbitCamera />
         <AnimationController />
