@@ -66,6 +66,8 @@ export const useStore = create((set) => ({
   setZodiac: (v) => set({ zodiac: v }),
   zodiacSize: 1,
   setZodiacSize: (v) => set({ zodiacSize: v }),
+  zodiacSize: 1,
+  setZodiacSize: (v) => set({ zodiacSize: v }),
 
   polarLine: false,
   setPolarLine: (v) => set({ polarLine: v }),
@@ -73,9 +75,16 @@ export const useStore = create((set) => ({
   setSouthLine: (v) => set({ southLine: v }),
   polarLineSize: 100,
   setPolarLineSize: (v) => set({ polarLineSize: v }),
- 
-  zodiacSize: 1,
-  setZodiacSize: (v) => set({ zodiacSize: v }),
+
+  celestialSphere: false,
+  setCelestialSphere: (v) => set({ celestialSphere: v }),
+  celestialSphereSize: 50,
+  setCelestialSphereSize: (v) => set({ celestialSphereSize: v }),
+
+  eclipticGrid: false,
+  setEclipticGrid: (v) => set({ eclipticGrid: v }),
+  eclipticGridSize: 100,
+  setEclipticGridSize: (v) => set({ eclipticGridSize: v }),
 
   officialStarDistances: false,
   setOfficialStarDistances: (v) => set({ officialStarDistances: v }),
@@ -89,7 +98,8 @@ export const useStore = create((set) => ({
 
   //Trigger update flags
   resetClicked: false,
-  setResetClicked: () => set((state) => ({ resetClicked: !state.resetClicked })),
+  setResetClicked: () =>
+    set((state) => ({ resetClicked: !state.resetClicked })),
   updAC: false, //When this value changes AnimationController rerenders
   updateAC: () => set((state) => ({ updAC: !state.updAC })),
 

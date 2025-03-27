@@ -4,6 +4,7 @@ import { folder, useControls, button } from "leva";
 import { useStore, useSettingsStore } from "../store";
 import Planet from "./Planet";
 import Orbit from "./Orbit";
+import EclipticGrid from "./Helpers/EclipticGrid";
 
 const Cobj = ({ name, children }) => {
   const { settings } = useSettingsStore();
@@ -62,6 +63,7 @@ const Cobj = ({ name, children }) => {
           <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
             {s.axesHelper && s.visible ? <axesHelper args={[10]} /> : null}
             {s.type === "planet" ? <Planet {...s} /> : null}
+            {s.name === "Earth" && <EclipticGrid/>}
             {children}
           </group>
         </group>

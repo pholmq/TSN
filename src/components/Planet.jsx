@@ -46,7 +46,7 @@ export default function Planet(s) {
   return (
     <>
       <group rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
-        {s.name === "Earth" && <CelestialSphere visible={false} />}
+        {s.name === "Earth" && <CelestialSphere />}
         {s.name === "Earth" && <PolarLine />}
         {s.visible && <HoverObj s={s} />}
         <mesh
