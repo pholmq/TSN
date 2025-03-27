@@ -34,6 +34,14 @@ const LevaUI = () => {
     setPolarLineSize,
     southLine,
     setSouthLine,
+    celestialSphere,
+    setCelestialSphere,
+    celestialSphereSize,
+    setCelestialSphereSize,
+    eclipticGrid,
+    setEclipticGrid,
+    eclipticGridSize,
+    setEclipticGridSize,
     starDistanceModifier,
     setStarDistanceModifier,
     officialStarDistances,
@@ -204,6 +212,25 @@ const LevaUI = () => {
           min: 5,
           onChange: setPolarLineSize,
         },
+        "Celestial sphere": {
+          value: celestialSphere,
+          onChange: setCelestialSphere,
+        },
+        "Sphere size": {
+          value: celestialSphereSize,
+          min: 5,
+          onChange: setCelestialSphereSize,
+        },
+        "Ecliptic grid": {
+          value: eclipticGrid,
+          onChange: setEclipticGrid,
+        },
+        "Grid size": {
+          value: eclipticGridSize,
+          min: 5,
+          onChange: setEclipticGridSize,
+        },
+
         "Use star distances": {
           value: officialStarDistances,
           onChange: setOfficialStarDistances,
