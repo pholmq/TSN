@@ -24,12 +24,22 @@ const LevaUI = () => {
     setActualPlanetSizes,
     showPositions,
     setShowPositions,
+    zodiac,
+    setZodiac,
+    zodiacSize,
+    setZodiacSize,
+    polarLine,
+    setPolarLine,
+    polarLineSize,
+    setPolarLineSize,
+    southLine,
+    setSouthLine,
     starDistanceModifier,
     setStarDistanceModifier,
     officialStarDistances,
     setOfficialStarDistances,
     starScale,
-    setStarScale
+    setStarScale,
   } = useStore();
 
   const {
@@ -44,7 +54,6 @@ const LevaUI = () => {
     stepMultiplier,
     setStepMultiplier,
   } = useTraceStore();
-
 
   // const toggleTrace = () => {
   //   useTraceStore.setState({ trace: !traceOnOff });
@@ -82,12 +91,12 @@ const LevaUI = () => {
         // set2({ traceOn2: v });
       },
     },
-  "Show positions": {
+    "Show positions": {
       value: showPositions,
       hint: "Keep unchecked for best performance",
       onChange: setShowPositions,
     },
-  Camera: folder(
+    Camera: folder(
       { Follow: { value: cameraFollow, onChange: setCameraFollow } },
       { collapsed: true }
     ),
@@ -171,6 +180,30 @@ const LevaUI = () => {
     ),
     "Stars & Helpers": folder(
       {
+        Zodiac: {
+          value: zodiac,
+          onChange: setZodiac,
+        },
+        "Zodiac size": {
+          value: zodiacSize,
+          min: 0.1,
+          max: 5,
+          step: 0.1,
+          onChange: setZodiacSize,
+        },
+        "Polar line": {
+          value: polarLine,
+          onChange: setPolarLine,
+        },
+        "South line": {
+          value: southLine,
+          onChange: setSouthLine,
+        },
+        "Line length": {
+          value: polarLineSize,
+          min: 5,
+          onChange: setPolarLineSize,
+        },
         "Use star distances": {
           value: officialStarDistances,
           onChange: setOfficialStarDistances,
@@ -181,7 +214,7 @@ const LevaUI = () => {
           step: 100,
           onChange: setStarDistanceModifier,
         },
-              "Star sizes": {
+        "Star sizes": {
           value: starScale,
           min: 0.1,
           max: 5,

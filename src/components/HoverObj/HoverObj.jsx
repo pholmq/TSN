@@ -19,7 +19,7 @@ const HoverObj = ({ s, starColor=false }) => {
     transparent: true,
     opacity: hovered ? 0.09 : 0.05,
     sizeAttenuation: false,
-    depthTest: false,
+    // depthTest: false,
   });
 
   const handlePointerOver = () => {

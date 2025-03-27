@@ -62,6 +62,21 @@ export const useStore = create((set) => ({
 
   sunLight: 2,
 
+  zodiac: false,
+  setZodiac: (v) => set({ zodiac: v }),
+  zodiacSize: 1,
+  setZodiacSize: (v) => set({ zodiacSize: v }),
+
+  polarLine: false,
+  setPolarLine: (v) => set({ polarLine: v }),
+  southLine: false,
+  setSouthLine: (v) => set({ southLine: v }),
+  polarLineSize: 100,
+  setPolarLineSize: (v) => set({ polarLineSize: v }),
+ 
+  zodiacSize: 1,
+  setZodiacSize: (v) => set({ zodiacSize: v }),
+
   officialStarDistances: false,
   setOfficialStarDistances: (v) => set({ officialStarDistances: v }),
 

@@ -2,9 +2,10 @@ import { useRef, useMemo, useEffect, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useStore } from "../store";
 import useTextureLoader from "../utils/useTextureLoader";
-import CelestialSphere from "./CelestialSphere";
+import CelestialSphere from "./Helpers/CelestialSphere";
+import PolarLine from "./Helpers/PolarLine";
 
-import HoverObj from '../components/HoverObj/HoverObj';
+import HoverObj from "../components/HoverObj/HoverObj";
 
 export default function Planet(s) {
   const cSphereRef = useRef();
@@ -28,12 +29,10 @@ export default function Planet(s) {
     }
   }, [texture]);
 
-
   const rotationSpeed = s.rotationSpeed || 0;
   const rotationStart = s.rotationStart || 0;
 
-  const size = actualPlanetSizes ? s.actualSize : s.size
-
+  const size = actualPlanetSizes ? s.actualSize : s.size;
 
   useFrame(() => {
     if (rotationSpeed) {
@@ -47,9 +46,16 @@ export default function Planet(s) {
   return (
     <>
       <group rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
-        {s.name === "Earth" ? <CelestialSphere visible={false} /> : null}
+        {s.name === "Earth" && <CelestialSphere visible={false} />}
+        {s.name === "Earth" && <PolarLine />}
         {s.visible && <HoverObj s={s} />}
-        <mesh name={s.name} visible={s.visible} ref={planetRef} scale={planetScale} rotation={[0, rotationStart || 0, 0]}>
+        <mesh
+          name={s.name}
+          visible={s.visible}
+          ref={planetRef}
+          scale={planetScale}
+          rotation={[0, rotationStart || 0, 0]}
+        >
           <sphereGeometry args={[size, 64, 64]} />
           <meshStandardMaterial
             ref={materialRef}

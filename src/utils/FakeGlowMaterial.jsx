@@ -25,7 +25,7 @@ const FakeGlowMaterial = ({
   glowColor = "#00ff00",
   glowSharpness = 1.0,
   side = "THREE.FrontSide",
-  depthTest = false,
+  depthTest = true,
   opacity = 1.0,
 }) => {
   const FakeGlowMaterial = useMemo(() => {
