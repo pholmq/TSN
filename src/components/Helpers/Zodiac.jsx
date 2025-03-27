@@ -1,6 +1,6 @@
 import { CanvasTexture, DoubleSide } from "three";
 import getCircularText from "../../utils/getCircularText";
-import { useStore, useStarStore } from "../../store";
+import { useStore } from "../../store";
 function ZodiacLabels() {
   const names =
     "      GEMINI" +
@@ -91,7 +91,7 @@ export default function Zodiac() {
           rotation={[0, -Math.PI / 3, 0]}
           scale={zodiacSize}
         >
-          <polarGridHelper args={[250, 24, 1, 64, 0x000000, 0x555555]} />
+          <polarGridHelper args={[260, 24, 1, 64, 0x000000, 0x555555]} />
           <ZodiacLabels />
         </group>
       )}

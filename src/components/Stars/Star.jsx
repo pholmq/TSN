@@ -9,11 +9,11 @@ import {
   declinationToRadians,
   rightAscensionToRadians,
   sphericalToCartesian,
-  convertMagnitude
+  convertMagnitude,
 } from "../../utils/celestial-functions";
 import HoverObj from "../HoverObj/HoverObj";
 import createCircleTexture from "../../utils/createCircleTexture";
-import colorTemperature2rgb from "../../utils/colorTempToRGB"
+import colorTemperature2rgb from "../../utils/colorTempToRGB";
 
 export default function Star({ name }) {
   const { camera, invalidate } = useThree();
@@ -24,7 +24,7 @@ export default function Star({ name }) {
   const s = settings.find((obj) => obj.name === name);
   const radius = s.size;
   // const color = s.color;
-  const color = colorTemperature2rgb(s.colorTemp)
+  const color = colorTemperature2rgb(s.colorTemp);
 
   const meshRef = useRef();
   const groupRef = useRef();
@@ -91,25 +91,25 @@ export default function Star({ name }) {
     transparent: true,
     opacity: 1,
     sizeAttenuation: false,
-    depthTest: false,
+    // depthTest: false,
   });
-let starsize
+  let starsize;
   if (s.magnitude < 1) {
     starsize = 1.2;
-  } else if(s.magnitude > 1 && s.magnitude < 3) {
+  } else if (s.magnitude > 1 && s.magnitude < 3) {
     starsize = 0.6;
-  } else if(s.magnitude > 3 && s.magnitude < 5) {
+  } else if (s.magnitude > 3 && s.magnitude < 5) {
     starsize = 0.4;
   } else {
     starsize = 0.2;
   }
 
-  const size = starsize/500 * starScale
+  const size = (starsize / 500) * starScale;
 
   return (
     <group ref={groupRef} visible={s.visible}>
       <sprite material={spriteMaterial} scale={[size, size, size]} />
-      <mesh name={s.name} ref={meshRef} >
+      <mesh name={s.name} ref={meshRef}>
         <sphereGeometry args={[radius, 32, 32]} />
         <FakeGlowMaterial
           glowColor={color}

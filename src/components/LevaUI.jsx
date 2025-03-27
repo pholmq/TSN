@@ -28,6 +28,12 @@ const LevaUI = () => {
     setZodiac,
     zodiacSize,
     setZodiacSize,
+    polarLine,
+    setPolarLine,
+    polarLineSize,
+    setPolarLineSize,
+    southLine,
+    setSouthLine,
     starDistanceModifier,
     setStarDistanceModifier,
     officialStarDistances,
@@ -184,6 +190,19 @@ const LevaUI = () => {
           max: 5,
           step: 0.1,
           onChange: setZodiacSize,
+        },
+        "Polar line": {
+          value: polarLine,
+          onChange: setPolarLine,
+        },
+        "South line": {
+          value: southLine,
+          onChange: setSouthLine,
+        },
+        "Line length": {
+          value: polarLineSize,
+          min: 5,
+          onChange: setPolarLineSize,
         },
         "Use star distances": {
           value: officialStarDistances,
