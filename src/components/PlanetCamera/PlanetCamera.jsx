@@ -68,11 +68,11 @@ export default function PlanetCamera() {
     }));
   }
 
-  // useHelper(
-  //   //Only show helper if planetCamera is not active
-  //   planetCameraHelper && !planetCamera ? planetCamRef : false,
-  //   CameraHelper
-  // );
+  useHelper(
+    //Only show helper if planetCamera is not active
+    planetCameraHelper && !planetCamera ? planetCamRef : false,
+    CameraHelper
+  );
 
   // //Set touch action to none so useGesture doesn't complain
   // gl.domElement.style.touchAction = "none";
@@ -113,7 +113,6 @@ export default function PlanetCamera() {
   //     eventOptions: { passive: false },
   //   }
   // );
-
 
   let latRotationX;
   let camRotationX;

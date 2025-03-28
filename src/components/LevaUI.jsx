@@ -101,15 +101,10 @@ const LevaUI = () => {
         // set2({ traceOn2: v });
       },
     },
-    "Show positions": {
-      value: showPositions,
-      hint: "Keep unchecked for best performance",
-      onChange: setShowPositions,
-    },
     Camera: folder(
       {
         Follow: { value: cameraFollow, onChange: setCameraFollow },
-        // "Planet camera": { value: planetCamera, onChange: setPlanetCamera },
+        "Planet camera": { value: planetCamera, onChange: setPlanetCamera },
       },
       { collapsed: true }
     ),
@@ -160,8 +155,13 @@ const LevaUI = () => {
 
       { collapsed: true }
     ),
-    "Planets & Orbits": folder(
+    "Planets & Positions": folder(
       {
+        "Show positions": {
+          value: showPositions,
+          hint: "Keep unchecked for best performance",
+          onChange: setShowPositions,
+        },
         "Show Orbits": {
           value: orbits,
           onChange: setOrbits,

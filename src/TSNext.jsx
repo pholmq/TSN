@@ -9,7 +9,7 @@ import SolarSystem from "./components/SolarSystem";
 import PlotSolarSystem from "./components/PlotSolarSystem";
 import TraceController from "./components/Trace/TraceController";
 import LightEffectsMenu from "./components/Menus/LightEffectsMenu";
-import PlanetsOrbitsMenu from "./components/Menus/PlanetsOrbitsMenu";
+import PlanetsPositionsMenu from "./components/Menus/PlanetsPositionsMenu";
 import StarsHelpersMenu from "./components/Menus/StarsHelpersMenu";
 import PosController from "./components/PosController";
 import InfoPanel from "./components/InfoPanel";
@@ -34,11 +34,11 @@ const TSNext = () => {
         gl={{ logarithmicDepthBuffer: true }} //Fixes depth buffer issues due to extreme Camera far
       >
         <OrbitCamera />
-        {/* <PlanetCamera /> */}
+        <PlanetCamera />
         <AnimationController />
         <PosController />
         <TraceController />
-        <PlanetsOrbitsMenu />
+        <PlanetsPositionsMenu />
         <StarsHelpersMenu />
         <LightEffectsMenu />
         <SolarSystem />
