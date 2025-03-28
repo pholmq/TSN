@@ -15,7 +15,7 @@ import PosController from "./components/PosController";
 import InfoPanel from "./components/InfoPanel";
 import Positions from "./components/Positions";
 import Stars from "./components/Stars/Stars";
-import Zodiac from "./components/Helpers/Zodiac"
+import Zodiac from "./components/Helpers/Zodiac";
 import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 
 const TSNext = () => {
@@ -23,28 +23,28 @@ const TSNext = () => {
 
   return (
     <>
-      <div >
+      <div>
         <UserInterface />
 
         {/* <InfoPanel /> */}
         <Positions />
       </div>
-      <Canvas         
-        frameloop="demand" 
+      <Canvas
+        frameloop="demand"
         gl={{ logarithmicDepthBuffer: true }} //Fixes depth buffer issues due to extreme Camera far
       >
         <OrbitCamera />
-        <PlanetCamera />
+        {/* <PlanetCamera /> */}
         <AnimationController />
         <PosController />
         <TraceController />
         <PlanetsOrbitsMenu />
-        <StarsHelpersMenu/>
+        <StarsHelpersMenu />
         <LightEffectsMenu />
         <SolarSystem />
         <PlotSolarSystem />
-        <Stars/>
-        <Zodiac/>
+        <Stars />
+        <Zodiac />
       </Canvas>
     </>
   );
