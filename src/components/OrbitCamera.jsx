@@ -1,4 +1,4 @@
-import { useRef, useLayoutEffect } from "react";
+import { useRef, useLayoutEffect, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import { PerspectiveCamera, CameraControls } from "@react-three/drei";
@@ -10,9 +10,10 @@ export default function OrbitCamera() {
   const controlsRef = useRef();
   const planetCamera = useStore((s) => s.planetCamera);
   const cameraTarget = useStore((s) => s.cameraTarget);
-  const cameraFollow = useStore((s) => s.cameraFollow);
-  
+  const cameraFollow = useStore((s) => s.cameraFollow);  
   const cameraUpdate = useStore((s) => s.cameraUpdate);
+  const resetClicked = useStore((s) => s.resetClicked);
+
   const targetObjRef = useRef(null);
   const target = new Vector3();
 
@@ -21,6 +22,14 @@ export default function OrbitCamera() {
     targetObjRef.current.getWorldPosition(target);
     controlsRef.current.setTarget(target.x, target.y, target.z, false);
   }, [cameraTarget, cameraUpdate, camera]);
+
+  useEffect(()=>{
+    console.log("iran")
+    if (controlsRef.current) {
+      controlsRef.current.setPosition(-3000, 1000, 0)
+    }
+    // camera.position.set(-3000, 1000, 0);
+  },[resetClicked])
 
   useFrame(() => {
     if (cameraFollow) {

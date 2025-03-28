@@ -44,7 +44,7 @@ const LightEffectsMenu = () => {
       },
       antialiasing: {
         label: "Anti-Aliasing",
-        value: "FXAA",
+        value: "SMAA",
         options: ["FXAA", "SMAA", "None"],
       },
       stats: {

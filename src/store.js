@@ -44,7 +44,7 @@ export const useStore = create((set) => ({
 
   orbits: true,
   setOrbits: (v) => set({ orbits: v }),
-  orbitsLineWidth: 2,
+  orbitsLineWidth: 1.5,
   setOrbitsLineWidth: (v) => set({ orbitsLineWidth: v }),
   planetScale: 1,
   setPlanetScale: (v) => set({ planetScale: v }),
@@ -63,6 +63,30 @@ export const useStore = create((set) => ({
 
   sunLight: 2,
 
+  zodiac: false,
+  setZodiac: (v) => set({ zodiac: v }),
+  zodiacSize: 1,
+  setZodiacSize: (v) => set({ zodiacSize: v }),
+  zodiacSize: 1,
+  setZodiacSize: (v) => set({ zodiacSize: v }),
+
+  polarLine: false,
+  setPolarLine: (v) => set({ polarLine: v }),
+  southLine: false,
+  setSouthLine: (v) => set({ southLine: v }),
+  polarLineSize: 100,
+  setPolarLineSize: (v) => set({ polarLineSize: v }),
+
+  celestialSphere: false,
+  setCelestialSphere: (v) => set({ celestialSphere: v }),
+  celestialSphereSize: 50,
+  setCelestialSphereSize: (v) => set({ celestialSphereSize: v }),
+
+  eclipticGrid: false,
+  setEclipticGrid: (v) => set({ eclipticGrid: v }),
+  eclipticGridSize: 100,
+  setEclipticGridSize: (v) => set({ eclipticGridSize: v }),
+
   officialStarDistances: false,
   setOfficialStarDistances: (v) => set({ officialStarDistances: v }),
 
@@ -75,6 +99,8 @@ export const useStore = create((set) => ({
 
   //Trigger update flags
   resetClicked: false,
+  setResetClicked: () =>
+    set((state) => ({ resetClicked: !state.resetClicked })),
   updAC: false, //When this value changes AnimationController rerenders
   updateAC: () => set((state) => ({ updAC: !state.updAC })),
 
@@ -118,7 +144,7 @@ export const useTraceStore = create((set) => ({
   setTrace: (v) => set({ trace: v }),
   toggleTrace: () => set((state) => ({ trace: !state.trace })),
   interval: 10,
-  lineWidth: 2,
+  lineWidth: 1.5,
   setLineWidth: (v) => set({ lineWidth: v }),
   lengthMultiplier: 1,
   setLengthMultiplier: (v) => set({ lengthMultiplier: v }),

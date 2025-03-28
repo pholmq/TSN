@@ -55,6 +55,17 @@
     "distLy": 25.04
   },
   {
+    "name": "Thuban",
+    "type": "star",
+    "size": 1.1,
+    "colorTemp": 7001,
+    "visible": true,
+    "magnitude": 3.65,
+    "ra": "14h 04m 23.3s",
+    "dec": "+64° 22'33",
+    "distLy": 303
+  },
+  {
     "name": "Capella",
     "type": "star",
     "size": 0.46,

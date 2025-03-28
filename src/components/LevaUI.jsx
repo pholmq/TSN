@@ -26,12 +26,30 @@ const LevaUI = () => {
     setActualPlanetSizes,
     showPositions,
     setShowPositions,
+    zodiac,
+    setZodiac,
+    zodiacSize,
+    setZodiacSize,
+    polarLine,
+    setPolarLine,
+    polarLineSize,
+    setPolarLineSize,
+    southLine,
+    setSouthLine,
+    celestialSphere,
+    setCelestialSphere,
+    celestialSphereSize,
+    setCelestialSphereSize,
+    eclipticGrid,
+    setEclipticGrid,
+    eclipticGridSize,
+    setEclipticGridSize,
     starDistanceModifier,
     setStarDistanceModifier,
     officialStarDistances,
     setOfficialStarDistances,
     starScale,
-    setStarScale
+    setStarScale,
   } = useStore();
 
   const {
@@ -46,7 +64,6 @@ const LevaUI = () => {
     stepMultiplier,
     setStepMultiplier,
   } = useTraceStore();
-
 
   // const toggleTrace = () => {
   //   useTraceStore.setState({ trace: !traceOnOff });
@@ -84,7 +101,7 @@ const LevaUI = () => {
         // set2({ traceOn2: v });
       },
     },
-  "Show positions": {
+    "Show positions": {
       value: showPositions,
       hint: "Keep unchecked for best performance",
       onChange: setShowPositions,
@@ -113,9 +130,9 @@ const LevaUI = () => {
         // },
         "Line width": {
           value: lineWidth,
-          min: 1,
-          max: 10,
-          step: 1,
+          min: 0.5,
+          max: 5,
+          step: 0.5,
           onChange: setLineWidth,
         },
         "Dotted line": {
@@ -148,9 +165,9 @@ const LevaUI = () => {
         },
         "Orbits linewidth": {
           value: orbitsLineWidth,
-          min: 1,
-          max: 10,
-          step: 1,
+          min: 0.5,
+          max: 5,
+          step: 0.5,
           onChange: setOrbitsLineWidth,
         },
         "Planet sizes": {
@@ -173,6 +190,49 @@ const LevaUI = () => {
     ),
     "Stars & Helpers": folder(
       {
+        Zodiac: {
+          value: zodiac,
+          onChange: setZodiac,
+        },
+        "Zodiac size": {
+          value: zodiacSize,
+          min: 0.1,
+          max: 5,
+          step: 0.1,
+          onChange: setZodiacSize,
+        },
+        "Polar line": {
+          value: polarLine,
+          onChange: setPolarLine,
+        },
+        "South line": {
+          value: southLine,
+          onChange: setSouthLine,
+        },
+        "Line length": {
+          value: polarLineSize,
+          min: 5,
+          onChange: setPolarLineSize,
+        },
+        "Celestial sphere": {
+          value: celestialSphere,
+          onChange: setCelestialSphere,
+        },
+        "Sphere size": {
+          value: celestialSphereSize,
+          min: 5,
+          onChange: setCelestialSphereSize,
+        },
+        "Ecliptic grid": {
+          value: eclipticGrid,
+          onChange: setEclipticGrid,
+        },
+        "Grid size": {
+          value: eclipticGridSize,
+          min: 5,
+          onChange: setEclipticGridSize,
+        },
+
         "Use star distances": {
           value: officialStarDistances,
           onChange: setOfficialStarDistances,
@@ -183,7 +243,7 @@ const LevaUI = () => {
           step: 100,
           onChange: setStarDistanceModifier,
         },
-              "Star sizes": {
+        "Star sizes": {
           value: starScale,
           min: 0.1,
           max: 5,
