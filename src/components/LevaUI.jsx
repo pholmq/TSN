@@ -12,6 +12,8 @@ const LevaUI = () => {
     setSpeedFact,
     cameraFollow,
     setCameraFollow,
+    planetCamera,
+    setPlanetCamera,
     orbits,
     setOrbits,
     arrows,
@@ -104,8 +106,8 @@ const LevaUI = () => {
       hint: "Keep unchecked for best performance",
       onChange: setShowPositions,
     },
-    Camera: folder(
-      { Follow: { value: cameraFollow, onChange: setCameraFollow } },
+  Camera: folder(
+      { Follow: { value: cameraFollow, onChange: setCameraFollow }, "Planet camera":{value: planetCamera, onChange: setPlanetCamera} },
       { collapsed: true }
     ),
 

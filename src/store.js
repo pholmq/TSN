@@ -27,12 +27,13 @@ export const useStore = create((set) => ({
   cameraFollow: false,
   setCameraFollow: (v) => set({ cameraFollow: v }),
   planetCamera: false,
+  setPlanetCamera: (v) => set({ planetCamera: v }),
   planetCameraTarget: "Earth",
   setPlanetCameraTarget: (v) => {
     set({ planetCameraTarget: v });
   },
   planetCameraTargetData: {},
-  planetCameraHelper: false,
+  planetCameraHelper: true,
   planetCameraDirection: {
     camRotationy: 0,
     camRotationx: -0.2,

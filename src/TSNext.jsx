@@ -16,6 +16,7 @@ import InfoPanel from "./components/InfoPanel";
 import Positions from "./components/Positions";
 import Stars from "./components/Stars/Stars";
 import Zodiac from "./components/Helpers/Zodiac"
+import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 
 const TSNext = () => {
   const zoomLevel = useStore((s) => s.zoomLevel);
@@ -33,6 +34,7 @@ const TSNext = () => {
         gl={{ logarithmicDepthBuffer: true }} //Fixes depth buffer issues due to extreme Camera far
       >
         <OrbitCamera />
+        <PlanetCamera />
         <AnimationController />
         <PosController />
         <TraceController />
