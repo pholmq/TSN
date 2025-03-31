@@ -12,7 +12,6 @@ import LightEffectsMenu from "./components/Menus/LightEffectsMenu";
 import PlanetsPositionsMenu from "./components/Menus/PlanetsPositionsMenu";
 import StarsHelpersMenu from "./components/Menus/StarsHelpersMenu";
 import PosController from "./components/PosController";
-import InfoPanel from "./components/InfoPanel";
 import Positions from "./components/Positions";
 import Stars from "./components/Stars/Stars";
 import Zodiac from "./components/Helpers/Zodiac";
