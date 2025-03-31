@@ -16,6 +16,7 @@ import Positions from "./components/Positions";
 import Stars from "./components/Stars/Stars";
 import Zodiac from "./components/Helpers/Zodiac";
 import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
+import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
 
 const TSNext = () => {
   const zoomLevel = useStore((s) => s.zoomLevel);
@@ -27,6 +28,7 @@ const TSNext = () => {
 
         {/* <InfoPanel /> */}
         <Positions />
+        <PlanetCameraUI />
       </div>
       <Canvas
         frameloop="demand"
