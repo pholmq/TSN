@@ -215,6 +215,7 @@ const LevaUI = () => {
         "Line length": {
           value: polarLineSize,
           min: 5,
+          step: 1,
           onChange: setPolarLineSize,
         },
         "Celestial sphere": {
@@ -224,6 +225,7 @@ const LevaUI = () => {
         "Sphere size": {
           value: celestialSphereSize,
           min: 5,
+          step: 1,
           onChange: setCelestialSphereSize,
         },
         "Ecliptic grid": {
@@ -233,6 +235,7 @@ const LevaUI = () => {
         "Grid size": {
           value: eclipticGridSize,
           min: 5,
+          step: 1,
           onChange: setEclipticGridSize,
         },
 
