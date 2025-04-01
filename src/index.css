@@ -158,18 +158,31 @@ body {
 
 /* Override Leva’s inline styles for its root element */
 .positions-div > div {
+  position: fixed;
   top: 10px !important;
   left: 10px !important;
   right: auto !important;
   opacity: 0.8;
 }
 
-.plancam-div {
+.plancam-div > div {
+  position: fixed;
+  bottom: 10px !important; /* Anchor to bottom */
+  left: 10px !important;
+  right: auto !important;
+  top: auto !important; /* Prevent top from overriding */
+  max-height: 25vh; /* Limit height */
+  height: auto; /* Let content define height up to max-height */
+  opacity: 0.8;
+}
+
+
+/* .plancam-div {
   z-index: 10;
   position: absolute;
   bottom: 10px;
   left: 0px;
-  width: 400px; /* Adjust as needed */
+  width: 400px; 
   height: 200px;
-  opacity: 0.8; /* Matches your previous styling */
-}
+  opacity: 0.8;
+} */
