@@ -30,7 +30,7 @@ export default function PlanetCamera() {
   // const cameraTarget = useStore((s) => s.cameraTarget);
   const planetCameraTarget = useStore((s) => s.planetCameraTarget);
   const planetData = useStore((s) => s.planetCameraTargetData);
-  const cameraHeight = 0;
+  const cameraHeight = 0.0043;
 
   let planetCameraLookAt = new Vector3();
 
@@ -64,6 +64,7 @@ export default function PlanetCamera() {
         camFov: planetCamRef.current.fov,
         latRotationx: latAxisRef.current.rotation.x + Math.PI / 2,
         longRotationy: longAxisRef.current.rotation.y + Math.PI / 2,
+        height: camMountRef.current.position.y,
       },
     }));
   }
@@ -202,7 +203,7 @@ export default function PlanetCamera() {
 
   return (
     <>
-      <group ref={planetCamSystemRef}>
+      <group ref={planetCamSystemRef} rotation={[0, 0, 0]}>
         {/* We put the camera system in a group and rotate it so that lat and long are at 0 */}
         <group ref={longAxisRef}>
           <group ref={latAxisRef}>
@@ -211,7 +212,7 @@ export default function PlanetCamera() {
               <group
                 name="CamBox"
                 ref={camBoxRef}
-                rotation={[0, Math.PI, 0]}
+                rotation={[0, 0, 0]}
                 rotation-order={"YXZ"}
                 // show the box if planetcamera is not active and show camera pos is on
               >
@@ -230,7 +231,7 @@ export default function PlanetCamera() {
                 <PerspectiveCamera
                   name="PlanetCamera"
                   rotation={[0, Math.PI, 0]}
-                  near={0.0001}
+                  near={0.00007}
                   far={1000000000000}
                   makeDefault={planetCamera}
                   ref={planetCamRef}
