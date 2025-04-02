@@ -7,7 +7,7 @@
     "texture": "",
     "unicodeSymbol": "",
     "planetCamera": true,
-    "axesHelper": false
+    "opacity": 0.5
   },
   {
     "name": "Earth",
@@ -16,7 +16,6 @@
     "type": "planet",
     "actualSize": 0.00426,
     "visible": true,
-    "axesHelper": false,
     "arrows": true,
     "reverseArrows": true,
     "texture": "/textures/planets/2k_earth_daymap.jpg",
@@ -28,15 +27,13 @@
     "name": "Moon deferent A",
     "color": "gray",
     "type": "deferent",
-    "visible": false,
-    "axesHelper": false
+    "visible": false
   },
   {
     "name": "Moon deferent B",
     "color": "gray",
     "type": "deferent",
-    "visible": false,
-    "axesHelper": false
+    "visible": false
   },
   {
     "name": "Moon",
@@ -45,7 +42,6 @@
     "actualSize": 0.00116,
     "rotationStart": 3,
     "visible": true,
-    "axesHelper": false,
     "texture": "/textures/planets/2k_moon.jpg",
     "unicodeSymbol": "&#x263D;",
     "planetCamera": true,
@@ -64,7 +60,6 @@
     "type": "planet",
     "actualSize": 0.465,
     "visible": true,
-    "axesHelper": false,
     "arrows": true,
     "texture": "/textures/planets/2k_sun.jpg",
     "light": true,
@@ -92,7 +87,6 @@
     "type": "planet",
     "actualSize": 0.00163,
     "visible": true,
-    "axesHelper": false,
     "arrows": true,
     "texture": "/textures/planets/2k_mercury.jpg",
     "unicodeSymbol": "&#x263F;",
@@ -118,7 +112,6 @@
     "type": "planet",
     "actualSize": 0.00404,
     "visible": true,
-    "axesHelper": false,
     "arrows": true,
     "texture": "/textures/planets/2k_venus.jpg",
     "unicodeSymbol": "&#x2640;",
@@ -144,7 +137,6 @@
     "type": "planet",
     "actualSize": 0.00227,
     "visible": true,
-    "axesHelper": false,
     "arrows": true,
     "reverseArrows": true,
     "texture": "/textures/planets/2k_mars.jpg",

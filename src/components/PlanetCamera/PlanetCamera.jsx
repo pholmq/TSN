@@ -12,6 +12,7 @@ import Ballrod from "../../utils/Ballrod";
 
 // import PlanCamLookAt from "../utils/PlanCamLookAt";
 import Ground from "../../utils/Ground";
+import useFrameInterval from "../../utils/useFrameInterval";
 export default function PlanetCamera() {
   const posRef = useStore((s) => s.posRef);
 
@@ -30,7 +31,7 @@ export default function PlanetCamera() {
   // const cameraTarget = useStore((s) => s.cameraTarget);
   const planetCameraTarget = useStore((s) => s.planetCameraTarget);
   const planetData = useStore((s) => s.planetCameraTargetData);
-  const cameraHeight = 0.0043;
+  const cameraHeight = 0.0044;
 
   let planetCameraLookAt = new Vector3();
 
@@ -117,7 +118,7 @@ export default function PlanetCamera() {
 
   let latRotationX;
   let camRotationX;
-  useFrame(() => {
+  useFrameInterval(() => {
     if (keyPressed) {
       latRotationX = latAxisRef.current.rotation.x;
     }
@@ -156,47 +157,48 @@ export default function PlanetCamera() {
         break;
     }
 
-    if (keyPressed === "PageUp") {
-      if (planetCamRef.current.fov > 0.5) {
-        planetCamRef.current.fov -= 0.5;
-        planetCamRef.current.updateProjectionMatrix();
-      }
-    }
-    if (keyPressed === "PageDown") {
-      if (planetCamRef.current.fov < 120) {
-        planetCamRef.current.fov += 0.5;
-        planetCamRef.current.updateProjectionMatrix();
-      }
-    }
-    //Multiplute by fov to make the movement less sensitive when we're zoomed in
-    const rotationFact = 0.001 * planetCamRef.current.fov;
-    camRotationX = planetCamRef.current.rotation.x;
-    switch (keyPressed) {
-      case "ArrowUp":
-        camRotationX += rotationFact;
-        break;
-      case "ArrowDown":
-        camRotationX -= rotationFact;
-        break;
-      case "ArrowLeft":
-        planetCamRef.current.rotation.y += rotationFact;
-        break;
-      case "ArrowRight":
-        planetCamRef.current.rotation.y -= rotationFact;
-        break;
-    }
+    // We olny have mouse movement of camera and zoom for now
+    //   if (keyPressed === "PageUp") {
+    //     if (planetCamRef.current.fov > 0.5) {
+    //       planetCamRef.current.fov -= 0.5;
+    //       planetCamRef.current.updateProjectionMatrix();
+    //     }
+    //   }
+    //   if (keyPressed === "PageDown") {
+    //     if (planetCamRef.current.fov < 120) {
+    //       planetCamRef.current.fov += 0.5;
+    //       planetCamRef.current.updateProjectionMatrix();
+    //     }
+    //   }
+    //   //Multiplute by fov to make the movement less sensitive when we're zoomed in
+    //   const rotationFact = 0.001 * planetCamRef.current.fov;
+    //   camRotationX = planetCamRef.current.rotation.x;
+    //   switch (keyPressed) {
+    //     case "ArrowUp":
+    //       camRotationX += rotationFact;
+    //       break;
+    //     case "ArrowDown":
+    //       camRotationX -= rotationFact;
+    //       break;
+    //     case "ArrowLeft":
+    //       planetCamRef.current.rotation.y += rotationFact;
+    //       break;
+    //     case "ArrowRight":
+    //       planetCamRef.current.rotation.y -= rotationFact;
+    //       break;
+    //   }
 
     if (keyPressed) {
       if (latRotationX > 0) latRotationX = 0;
       if (latRotationX < -Math.PI) latRotationX = -Math.PI;
 
       latAxisRef.current.rotation.x = latRotationX;
-      if (camRotationX > Math.PI / 2) camRotationX = Math.PI / 2;
-      if (camRotationX < -Math.PI / 2) camRotationX = -Math.PI / 2;
-      planetCamRef.current.rotation.x = camRotationX;
+      // if (camRotationX > Math.PI / 2) camRotationX = Math.PI / 2;
+      // if (camRotationX < -Math.PI / 2) camRotationX = -Math.PI / 2;
+      // planetCamRef.current.rotation.x = camRotationX;
 
-      camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
-      camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
+      // camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
+      // camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
       saveCameraPosition();
     }
   });

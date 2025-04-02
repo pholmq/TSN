@@ -13,7 +13,14 @@ const PlanetCameraUI = () => {
   const showPositions = useStore((s) => s.showPositions);
   const planetCamera = useStore((s) => s.planetCamera);
   const planetCameraDirection = useStore((s) => s.planetCameraDirection);
-  const { latRotationx, longRotationy, height } = planetCameraDirection;
+  const {
+    camRotationx,
+    camRotationy,
+    camFov,
+    latRotationx,
+    longRotationy,
+    height,
+  } = planetCameraDirection;
   const positions = usePosStore((s) => s.positions);
   const { settings } = useSettingsStore();
 
@@ -36,6 +43,21 @@ const PlanetCameraUI = () => {
         hint: "Camera height over planet center",
         onChange: () => {},
       },
+      Direction: {
+        value: radiansToAzimuth(-camRotationy + Math.PI / 2),
+        hint: "Camera direction/azimuth",
+        onChange: () => {},
+      },
+      Angle: {
+        value: camRotationx * (180 / Math.PI),
+        hint: "Camera angle/elevation",
+        onChange: () => {},
+      },
+      FOV: {
+        value: camFov,
+        hint: "Camera field of view",
+        onChange: () => {},
+      },
     }),
     { store: plancamUIStore }
   );
@@ -47,6 +69,9 @@ const PlanetCameraUI = () => {
     set({ Latitude: rad2lat(latRotationx) });
     set({ Longitude: rad2lon(longRotationy) });
     set({ Height: height * 100 });
+    set({ Angle: camRotationx * (180 / Math.PI) });
+    set({ Direction: radiansToAzimuth(-camRotationy + Math.PI / 2) });
+    set({ FOV: camFov });
   }, [planetCameraDirection]);
 
   return (

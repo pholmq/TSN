@@ -64,6 +64,8 @@ export default function Planet(s) {
             emissiveIntensity={s.light && sunLight}
             roughness={0.7}
             metalness={0.2}
+            transparent={s.opacity ? true : false}
+            opacity={s.opacity ? s.opacity : 1}
           />
 
           {s.light && <pointLight intensity={sunLight * 100000} />}

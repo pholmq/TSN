@@ -321,6 +321,19 @@ export function rad2lon(rad) {
   return Math.round(deg * 1000000) / 1000000;
 }
 
+export function radiansToAzimuth(radians) {
+  // Convert radians to degrees
+  let degrees = radians * (180 / Math.PI);
+  // Adjust to azimuth convention
+  let azimuth = (degrees - 90) % 360;
+  // Ensure the result is positive
+  if (azimuth < 0) {
+    azimuth += 360;
+  }
+  // Round to two decimal places
+  return Math.round(azimuth * 100) / 100;
+}
+
 function leadZero(n, plus) {
   let sign = n < 0 ? "-" : "";
   if (sign === "" && plus) {
