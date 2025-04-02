@@ -28,14 +28,14 @@ const TSNext = () => {
 
         {/* <InfoPanel /> */}
         <Positions />
-        <PlanetCameraUI />
+        {/* <PlanetCameraUI /> */}
       </div>
       <Canvas
         frameloop="demand"
         gl={{ logarithmicDepthBuffer: true }} //Fixes depth buffer issues due to extreme Camera far
       >
         <OrbitCamera />
-        <PlanetCamera />
+        {/* <PlanetCamera /> */}
         <AnimationController />
         <PosController />
         <TraceController />
