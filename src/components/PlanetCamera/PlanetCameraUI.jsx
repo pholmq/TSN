@@ -5,6 +5,7 @@ import { useStore, useSettingsStore, usePosStore } from "../../store";
 import {
   azEl2RaDec,
   rad2lat,
+  lat2rad,
   rad2lon,
   radiansToAzimuth,
 } from "../../utils/celestial-functions";
@@ -32,12 +33,18 @@ const PlanetCameraUI = () => {
       Latitude: {
         value: rad2lat(latRotationx),
         hint: "Camera latitude in decimal degrees",
-        onChange: () => {},
+        onChange: (value) => {
+          const rad = lat2rad(value);
+          setPlanetCameraDirection({ latRotationx: rad });
+        },
       },
       Longitude: {
         value: rad2lon(longRotationy),
         hint: "Camera longitude in decimal degrees",
-        onChange: () => {},
+        onChange: (value) => {
+          const rad = lat2rad(value);
+          setPlanetCameraDirection({ height: value });
+        },
       },
       Height: {
         value: height,

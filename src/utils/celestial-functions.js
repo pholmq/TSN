@@ -310,6 +310,23 @@ export function rad2lat(rad) {
   return Math.round(deg * 1000000) / 1000000;
 }
 
+export function lat2rad(lat) {
+  // Ensure input latitude is within -90 to 90 range
+  let normalizedLat = lat;
+  normalizedLat = normalizedLat % 360; // Normalize to 0-360 range first
+  if (normalizedLat > 90) {
+    normalizedLat = 180 - normalizedLat;
+  } else if (normalizedLat < -90) {
+    normalizedLat = -180 - normalizedLat;
+  }
+
+  // Convert degrees to radians
+  let rad = (normalizedLat * Math.PI) / 180;
+
+  // Round to 6 decimal places to match rad2lat precision
+  return Math.round(rad * 1000000) / 1000000;
+}
+
 export function rad2lon(rad) {
   let deg = (rad * 180) / Math.PI;
   deg = deg % 360;

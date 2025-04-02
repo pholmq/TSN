@@ -68,7 +68,7 @@ export default function PlanetCamera() {
       planetCameraDirection.latRotationx - Math.PI / 2;
     longAxisRef.current.rotation.y =
       planetCameraDirection.longRotationy - Math.PI / 2;
-    camMountRef.current.position.y = planetCameraDirection.height/100;
+    camMountRef.current.position.y = planetCameraDirection.height/1000;
 
     camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
     camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;

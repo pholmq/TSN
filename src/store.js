@@ -40,7 +40,7 @@ export const useStore = create((set) => ({
     camFov: 15,
     latRotationx: 0,
     longRotationy: 0,
-    height: 0.43,
+    height: 4.3,
   },
 
   setPlanetCameraDirection: (updates) =>

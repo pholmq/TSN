@@ -82,10 +82,10 @@ export function PlanetCameraControls() {
         longRotationy += 0.005;
         break;
       case "q":
-        height += 0.00001;
+        height += 0.1;
         break;
       case "e":
-        if (height >= 0) height -= 0.00001;
+        if (height >= 0) height -= 0.1;
         if (height < 0) height = 0;
         break;
     }
