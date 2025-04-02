@@ -13,6 +13,7 @@ const PlanetCameraUI = () => {
   const showPositions = useStore((s) => s.showPositions);
   const planetCamera = useStore((s) => s.planetCamera);
   const planetCameraDirection = useStore((s) => s.planetCameraDirection);
+  const setPlanetCameraDirection = useStore((s) => s.setPlanetCameraDirection);
   const {
     camRotationx,
     camRotationy,
@@ -40,8 +41,9 @@ const PlanetCameraUI = () => {
       },
       Height: {
         value: height * 100,
+        
         hint: "Camera height over planet center",
-        onChange: () => {},
+        onChange: (value) => setPlanetCameraDirection({ height: value / 100 }),
       },
       Direction: {
         value: radiansToAzimuth(-camRotationy + Math.PI / 2),

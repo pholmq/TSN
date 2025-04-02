@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { Vector3 } from "three";
-import { useThree } from "@react-three/fiber";
+import { useThree, useFrame } from "@react-three/fiber";
 import { PerspectiveCamera, useHelper } from "@react-three/drei";
 import { useStore } from "../../store";
 import { CameraHelper } from "three";
+import useFrameInterval from "../../utils/useFrameInterval";
 
 export default function PlanetCamera() {
   const posRef = useStore((s) => s.posRef);
@@ -34,7 +35,27 @@ export default function PlanetCamera() {
     });
   }, [planetCameraTarget]);
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   if (!planetCamRef.current) return;
+
+  //   planetCamRef.current.rotation.y =
+  //     planetCameraDirection.camRotationy + Math.PI;
+  //   planetCamRef.current.rotation.x = planetCameraDirection.camRotationx;
+  //   planetCamRef.current.fov = planetCameraDirection.camFov;
+  //   planetCamRef.current.updateProjectionMatrix();
+
+  //   latAxisRef.current.rotation.x =
+  //     planetCameraDirection.latRotationx - Math.PI / 2;
+  //   longAxisRef.current.rotation.y =
+  //     planetCameraDirection.longRotationy - Math.PI / 2;
+  //   camMountRef.current.position.y = planetCameraDirection.height;
+
+  //   camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
+  //   camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
+  // }, [planetCameraDirection]);
+
+  // Update camera based on planetCameraDirection
+  useFrameInterval(() => {
     if (!planetCamRef.current) return;
 
     planetCamRef.current.rotation.y =
@@ -51,7 +72,7 @@ export default function PlanetCamera() {
 
     camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
     camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
-  }, [planetCameraDirection]);
+  });
 
   useHelper(
     planetCameraHelper && !planetCamera ? planetCamRef : false,
