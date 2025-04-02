@@ -40,10 +40,11 @@ const PlanetCameraUI = () => {
         onChange: () => {},
       },
       Height: {
-        value: height * 100,
-        
+        value: height,
+        min: 0,
+        step: 0.1,
         hint: "Camera height over planet center",
-        onChange: (value) => setPlanetCameraDirection({ height: value / 100 }),
+        onChange: (value) => setPlanetCameraDirection({ height: value }),
       },
       Direction: {
         value: radiansToAzimuth(-camRotationy + Math.PI / 2),
@@ -70,7 +71,7 @@ const PlanetCameraUI = () => {
 
     set({ Latitude: rad2lat(latRotationx) });
     set({ Longitude: rad2lon(longRotationy) });
-    set({ Height: height * 100 });
+    set({ Height: height });
     set({ Angle: camRotationx * (180 / Math.PI) });
     set({ Direction: radiansToAzimuth(-camRotationy + Math.PI / 2) });
     set({ FOV: camFov });
