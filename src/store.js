@@ -43,6 +43,14 @@ export const useStore = create((set) => ({
     height: 0,
   },
 
+  setPlanetCameraDirection: (updates) =>
+    set((state) => ({
+      planetCameraDirection: {
+        ...state.planetCameraDirection,
+        ...updates,
+      },
+    })),
+
   orbits: true,
   setOrbits: (v) => set({ orbits: v }),
   orbitsLineWidth: 1.5,
