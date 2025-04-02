@@ -56,7 +56,7 @@ export default function Planet(s) {
           scale={planetScale}
           rotation={[0, rotationStart || 0, 0]}
         >
-          <sphereGeometry args={[size, 64, 64]} />
+          <sphereGeometry args={[size, 256, 256]} />
           <meshStandardMaterial
             ref={materialRef}
             color={isLoading || !texture ? s.color : "#ffffff"}

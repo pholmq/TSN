@@ -101,11 +101,6 @@ const LevaUI = () => {
         // set2({ traceOn2: v });
       },
     },
-    "Show positions": {
-      value: showPositions,
-      hint: "Keep unchecked for best performance",
-      onChange: setShowPositions,
-    },
     Camera: folder(
       {
         Follow: { value: cameraFollow, onChange: setCameraFollow },
@@ -160,8 +155,24 @@ const LevaUI = () => {
 
       { collapsed: true }
     ),
-    "Planets & Orbits": folder(
+    "Planets & Positions": folder(
       {
+        "Show positions": {
+          value: showPositions,
+          hint: "Keep unchecked for best performance",
+          onChange: setShowPositions,
+        },
+        "Actual planet sizes": {
+          value: actualPlanetSizes,
+          onChange: setActualPlanetSizes,
+        },
+        "Planet sizes": {
+          value: planetScale,
+          min: 0.1,
+          max: 5,
+          step: 0.1,
+          onChange: setPlanetScale,
+        },
         "Show Orbits": {
           value: orbits,
           onChange: setOrbits,
@@ -172,17 +183,6 @@ const LevaUI = () => {
           max: 5,
           step: 0.5,
           onChange: setOrbitsLineWidth,
-        },
-        "Planet sizes": {
-          value: planetScale,
-          min: 0.1,
-          max: 5,
-          step: 0.1,
-          onChange: setPlanetScale,
-        },
-        "Actual planet sizes": {
-          value: actualPlanetSizes,
-          onChange: setActualPlanetSizes,
         },
         Arrows: {
           value: arrows,
@@ -215,6 +215,7 @@ const LevaUI = () => {
         "Line length": {
           value: polarLineSize,
           min: 5,
+          step: 1,
           onChange: setPolarLineSize,
         },
         "Celestial sphere": {
@@ -224,6 +225,7 @@ const LevaUI = () => {
         "Sphere size": {
           value: celestialSphereSize,
           min: 5,
+          step: 1,
           onChange: setCelestialSphereSize,
         },
         "Ecliptic grid": {
@@ -233,6 +235,7 @@ const LevaUI = () => {
         "Grid size": {
           value: eclipticGridSize,
           min: 5,
+          step: 1,
           onChange: setEclipticGridSize,
         },
 

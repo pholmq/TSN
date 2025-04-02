@@ -1,7 +1,7 @@
 import { useControls } from "leva";
 import { useSettingsStore } from "../../store";
 
-const PlanetsOrbitsMenu = () => {
+const PlanetsPositionsMenu = () => {
   const { settings, updateSetting } = useSettingsStore();
 
   //Create a leva checkbox object for each planet
@@ -20,7 +20,7 @@ const PlanetsOrbitsMenu = () => {
     }
   });
 
-  useControls("Planets & Orbits", {
+  useControls("Planets & Positions", {
     "Planets:": { value: "", editable: false },
     ...checkboxes,
   });
@@ -28,4 +28,4 @@ const PlanetsOrbitsMenu = () => {
   return null;
 };
 
-export default PlanetsOrbitsMenu;
+export default PlanetsPositionsMenu;

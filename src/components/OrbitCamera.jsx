@@ -10,7 +10,7 @@ export default function OrbitCamera() {
   const controlsRef = useRef();
   const planetCamera = useStore((s) => s.planetCamera);
   const cameraTarget = useStore((s) => s.cameraTarget);
-  const cameraFollow = useStore((s) => s.cameraFollow);  
+  const cameraFollow = useStore((s) => s.cameraFollow);
   const cameraUpdate = useStore((s) => s.cameraUpdate);
   const resetClicked = useStore((s) => s.resetClicked);
 
@@ -23,13 +23,12 @@ export default function OrbitCamera() {
     controlsRef.current.setTarget(target.x, target.y, target.z, false);
   }, [cameraTarget, cameraUpdate, camera]);
 
-  useEffect(()=>{
-    console.log("iran")
+  useEffect(() => {
     if (controlsRef.current) {
-      controlsRef.current.setPosition(-3000, 1000, 0)
+      controlsRef.current.setPosition(-3000, 1000, 0);
     }
     // camera.position.set(-3000, 1000, 0);
-  },[resetClicked])
+  }, [resetClicked]);
 
   useFrame(() => {
     if (cameraFollow) {

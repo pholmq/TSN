@@ -9,14 +9,14 @@ import SolarSystem from "./components/SolarSystem";
 import PlotSolarSystem from "./components/PlotSolarSystem";
 import TraceController from "./components/Trace/TraceController";
 import LightEffectsMenu from "./components/Menus/LightEffectsMenu";
-import PlanetsOrbitsMenu from "./components/Menus/PlanetsOrbitsMenu";
+import PlanetsPositionsMenu from "./components/Menus/PlanetsPositionsMenu";
 import StarsHelpersMenu from "./components/Menus/StarsHelpersMenu";
 import PosController from "./components/PosController";
-import InfoPanel from "./components/InfoPanel";
 import Positions from "./components/Positions";
 import Stars from "./components/Stars/Stars";
 import Zodiac from "./components/Helpers/Zodiac";
 import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
+import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
 
 const TSNext = () => {
   const zoomLevel = useStore((s) => s.zoomLevel);
@@ -28,6 +28,7 @@ const TSNext = () => {
 
         {/* <InfoPanel /> */}
         <Positions />
+        {/* <PlanetCameraUI /> */}
       </div>
       <Canvas
         frameloop="demand"
@@ -38,7 +39,7 @@ const TSNext = () => {
         <AnimationController />
         <PosController />
         <TraceController />
-        <PlanetsOrbitsMenu />
+        <PlanetsPositionsMenu />
         <StarsHelpersMenu />
         <LightEffectsMenu />
         <SolarSystem />
