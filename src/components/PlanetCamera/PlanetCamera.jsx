@@ -169,34 +169,34 @@ export default function PlanetCamera() {
       }
     }
     //Multiplute by fov to make the movement less sensitive when we're zoomed in
-    const rotationFact = 0.001 * planetCamRef.current.fov;
-    camRotationX = planetCamRef.current.rotation.x;
-    switch (keyPressed) {
-      case "ArrowUp":
-        camRotationX += rotationFact;
-        break;
-      case "ArrowDown":
-        camRotationX -= rotationFact;
-        break;
-      case "ArrowLeft":
-        planetCamRef.current.rotation.y += rotationFact;
-        break;
-      case "ArrowRight":
-        planetCamRef.current.rotation.y -= rotationFact;
-        break;
-    }
+    // const rotationFact = 0.001 * planetCamRef.current.fov;
+    // camRotationX = planetCamRef.current.rotation.x;
+    // switch (keyPressed) {
+    //   case "ArrowUp":
+    //     camRotationX += rotationFact;
+    //     break;
+    //   case "ArrowDown":
+    //     camRotationX -= rotationFact;
+    //     break;
+    //   case "ArrowLeft":
+    //     planetCamRef.current.rotation.y += rotationFact;
+    //     break;
+    //   case "ArrowRight":
+    //     planetCamRef.current.rotation.y -= rotationFact;
+    //     break;
+    // }
 
     if (keyPressed) {
       if (latRotationX > 0) latRotationX = 0;
       if (latRotationX < -Math.PI) latRotationX = -Math.PI;
 
       latAxisRef.current.rotation.x = latRotationX;
-      if (camRotationX > Math.PI / 2) camRotationX = Math.PI / 2;
-      if (camRotationX < -Math.PI / 2) camRotationX = -Math.PI / 2;
-      planetCamRef.current.rotation.x = camRotationX;
+      // if (camRotationX > Math.PI / 2) camRotationX = Math.PI / 2;
+      // if (camRotationX < -Math.PI / 2) camRotationX = -Math.PI / 2;
+      // planetCamRef.current.rotation.x = camRotationX;
 
-      camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
-      camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
+      // camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
+      // camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
       saveCameraPosition();
     }
   });

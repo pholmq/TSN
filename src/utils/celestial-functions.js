@@ -125,7 +125,6 @@ export function rAandDecFromLocal(lat, lon, time, az, alt) {
 }
 
 export function getRaDecDistance(name, scene) {
-  
   //
   //getRaDecDistance optimized by Deepseek AI
   //
@@ -222,27 +221,27 @@ export function radToDec(rad) {
 export function declinationToRadians(declination) {
   const regex = /(-?\d+)[^\d]+(\d*)[^\d]*(\d*)/;
   const match = declination.match(regex);
-  
+
   if (!match) {
-      throw new Error("Invalid declination format");
+    throw new Error("Invalid declination format");
   }
-  
+
   let degrees = parseInt(match[1], 10);
   let minutes = match[2] ? parseInt(match[2], 10) : 0;
   let seconds = match[3] ? parseInt(match[3], 10) : 0;
-  
+
   if (isNaN(degrees) || isNaN(minutes) || isNaN(seconds)) {
-      throw new Error("Invalid declination format: could not parse numbers");
+    throw new Error("Invalid declination format: could not parse numbers");
   }
-  
+
   if (degrees > 90 || degrees < -90) {
-      throw new Error("Degrees must be between -90 and 90");
+    throw new Error("Degrees must be between -90 and 90");
   }
-  
+
   // Convert to decimal degrees
   let decimalDegrees = Math.abs(degrees) + minutes / 60 + seconds / 3600;
   decimalDegrees = degrees < 0 ? -decimalDegrees : decimalDegrees;
-  
+
   // Convert to radians
   return decimalDegrees * (Math.PI / 180);
 }
@@ -250,26 +249,26 @@ export function declinationToRadians(declination) {
 export function rightAscensionToRadians(ra) {
   const regex = /(\d+)[^\d]+(\d*)[^\d]*(\d*)/;
   const match = ra.match(regex);
-  
+
   if (!match) {
-      throw new Error("Invalid right ascension format");
+    throw new Error("Invalid right ascension format");
   }
-  
+
   let hours = parseInt(match[1], 10);
   let minutes = match[2] ? parseInt(match[2], 10) : 0;
   let seconds = match[3] ? parseInt(match[3], 10) : 0;
-  
+
   if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
-      throw new Error("Invalid right ascension format: could not parse numbers");
+    throw new Error("Invalid right ascension format: could not parse numbers");
   }
-  
+
   if (hours < 0 || hours >= 24) {
-      throw new Error("Hours must be between 0 and 23");
+    throw new Error("Hours must be between 0 and 23");
   }
-  
+
   // Convert to decimal hours
   let decimalHours = hours + minutes / 60 + seconds / 3600;
-  
+
   // Convert to radians (15 degrees per hour)
   return decimalHours * 15 * (Math.PI / 180);
 }
@@ -282,19 +281,74 @@ export function sphericalToCartesian(raRad, decRad, dist) {
   return { x, y, z };
 }
 
-
 export function convertMagnitude(magnitude) {
   // Define the reference magnitude (brightness of the dimmest visible star)
   const referenceMagnitude = 6.5;
-  
+
   // Calculate the difference from the reference magnitude
   const difference = referenceMagnitude - magnitude;
-  
+
   // Convert to a positive scale where brighter objects have higher values
   const convertedValue = Math.max(0, Math.pow(10, difference / 2.5));
-  
+
   // Round to 2 decimal places for readability
   return Math.round(convertedValue * 100) / 100;
+}
+
+export function rad2lat(rad) {
+  // Convert radians to degrees
+  let deg = (rad * 180) / Math.PI;
+  // Normalize to -180 to 180 range
+  deg = deg % 360;
+  // Adjust for latitude range (-90 to 90)
+  if (deg > 90) {
+    deg = 180 - deg;
+  } else if (deg < -90) {
+    deg = -180 - deg;
+  }
+  // Round to 6 decimal places
+  return Math.round(deg * 1000000) / 1000000;
+}
+
+export function lat2rad(lat) {
+  // Ensure input latitude is within -90 to 90 range
+  let normalizedLat = lat;
+  normalizedLat = normalizedLat % 360; // Normalize to 0-360 range first
+  if (normalizedLat > 90) {
+    normalizedLat = 180 - normalizedLat;
+  } else if (normalizedLat < -90) {
+    normalizedLat = -180 - normalizedLat;
+  }
+
+  // Convert degrees to radians
+  let rad = (normalizedLat * Math.PI) / 180;
+
+  // Round to 6 decimal places to match rad2lat precision
+  return Math.round(rad * 1000000) / 1000000;
+}
+
+export function rad2lon(rad) {
+  let deg = (rad * 180) / Math.PI;
+  deg = deg % 360;
+  if (deg > 180) {
+    deg -= 360;
+  } else if (deg < -180) {
+    deg += 360;
+  }
+  return Math.round(deg * 1000000) / 1000000;
+}
+
+export function radiansToAzimuth(radians) {
+  // Convert radians to degrees
+  let degrees = radians * (180 / Math.PI);
+  // Adjust to azimuth convention
+  let azimuth = (degrees - 90) % 360;
+  // Ensure the result is positive
+  if (azimuth < 0) {
+    azimuth += 360;
+  }
+  // Round to two decimal places
+  return Math.round(azimuth * 100) / 100;
 }
 
 function leadZero(n, plus) {
@@ -305,4 +359,3 @@ function leadZero(n, plus) {
   n = Math.abs(n);
   return n > 9 ? sign + n : sign + "0" + n;
 }
-

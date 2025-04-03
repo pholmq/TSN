@@ -17,6 +17,7 @@ import Stars from "./components/Stars/Stars";
 import Zodiac from "./components/Helpers/Zodiac";
 import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
+import { PlanetCameraControls } from "./components/PlanetCamera/PlanetCameraControls";
 
 const TSNext = () => {
   const zoomLevel = useStore((s) => s.zoomLevel);
@@ -25,17 +26,16 @@ const TSNext = () => {
     <>
       <div>
         <UserInterface />
-
-        {/* <InfoPanel /> */}
         <Positions />
-        {/* <PlanetCameraUI /> */}
+        <PlanetCameraUI />
       </div>
       <Canvas
         frameloop="demand"
         gl={{ logarithmicDepthBuffer: true }} //Fixes depth buffer issues due to extreme Camera far
       >
         <OrbitCamera />
-        {/* <PlanetCamera /> */}
+        <PlanetCamera />
+        {/* <PlanetCameraControls /> */}
         <AnimationController />
         <PosController />
         <TraceController />

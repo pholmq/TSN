@@ -5,6 +5,7 @@ body,
   margin: 0;
   background: #000000;
   overflow: hidden;
+  touch-action: none;
 }
 
 body {
@@ -175,7 +176,6 @@ body {
   height: auto; /* Let content define height up to max-height */
   opacity: 0.8;
 }
-
 
 /* .plancam-div {
   z-index: 10;
