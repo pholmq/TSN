@@ -12,8 +12,8 @@ const LevaUI = () => {
     setSpeedFact,
     cameraFollow,
     setCameraFollow,
-    planetCamera,
-    setPlanetCamera,
+    planetCameraHelper,
+    setPlanetCameraHelper,
     orbits,
     setOrbits,
     arrows,
@@ -104,7 +104,7 @@ const LevaUI = () => {
     Camera: folder(
       {
         Follow: { value: cameraFollow, onChange: setCameraFollow },
-        "Planet camera": { value: planetCamera, onChange: setPlanetCamera },
+        "Planet camera": { value: planetCameraHelper, onChange: setPlanetCameraHelper },
       },
       { collapsed: true }
     ),

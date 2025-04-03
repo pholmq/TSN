@@ -35,7 +35,7 @@ const TSNext = () => {
       >
         <OrbitCamera />
         <PlanetCamera />
-        <PlanetCameraControls />
+        {/* <PlanetCameraControls /> */}
         <AnimationController />
         <PosController />
         <TraceController />

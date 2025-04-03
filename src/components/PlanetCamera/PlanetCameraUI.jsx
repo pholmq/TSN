@@ -13,7 +13,12 @@ import {
 const PlanetCameraUI = () => {
   const showPositions = useStore((s) => s.showPositions);
   const planetCamera = useStore((s) => s.planetCamera);
+  const setPlanetCamera = useStore((s) => s.setPlanetCamera);
+  const planetCameraHelper = useStore((s) => s.planetCameraHelper);
+
+  const planetCameraMenu = useStore((s) => s.planetCameraMenu);
   const planetCameraDirection = useStore((s) => s.planetCameraDirection);
+
   const setPlanetCameraDirection = useStore((s) => s.setPlanetCameraDirection);
   const {
     camRotationx,
@@ -30,6 +35,10 @@ const PlanetCameraUI = () => {
   const plancamUIStore = useCreateStore();
   const [, set] = useControls(
     () => ({
+      "On/Off": {
+        value: planetCamera,
+        onChange: setPlanetCamera,
+      },
       Latitude: {
         value: rad2lat(latRotationx),
         hint: "Camera latitude in decimal degrees",
@@ -38,6 +47,7 @@ const PlanetCameraUI = () => {
         //   setPlanetCameraDirection({ latRotationx: rad });
         // },
       },
+
       Longitude: {
         value: rad2lon(longRotationy),
         hint: "Camera longitude in decimal degrees",
@@ -86,7 +96,7 @@ const PlanetCameraUI = () => {
 
   return (
     <>
-      {planetCamera && (
+      {planetCameraHelper && (
         <div className="plancam-div">
           <Leva
             store={plancamUIStore}

@@ -33,7 +33,10 @@ export const useStore = create((set) => ({
     set({ planetCameraTarget: v });
   },
   planetCameraTargetData: {},
-  planetCameraHelper: true,
+  planetCameraMenu: false,
+  setPlanetCameraMenu: (v) => set({ planetCameraMenu: v }),
+  planetCameraHelper: false,
+  setPlanetCameraHelper: (v) => set({ planetCameraHelper: v }),
   planetCameraDirection: {
     camRotationy: 0,
     camRotationx: -0.2,
