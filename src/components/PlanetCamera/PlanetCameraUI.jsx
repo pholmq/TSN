@@ -28,6 +28,10 @@ const PlanetCameraUI = () => {
     longRotationy,
     height,
   } = planetCameraDirection;
+
+  const planCamLat = useStore((s) => s.planCamLat);
+  const setPlanCamLat = useStore((s) => s.setPlanCamLat);
+
   const positions = usePosStore((s) => s.positions);
   const { settings } = useSettingsStore();
 
@@ -40,12 +44,12 @@ const PlanetCameraUI = () => {
         onChange: setPlanetCamera,
       },
       Latitude: {
-        value: rad2lat(latRotationx),
+        value: planCamLat,
+        max: 90,
+        min: -90,
+        step: 0.1,
         hint: "Camera latitude in decimal degrees",
-        // onChange: (value) => {
-        //   const rad = lat2rad(value);
-        //   setPlanetCameraDirection({ latRotationx: rad });
-        // },
+        onChange: setPlanCamLat,
       },
 
       Longitude: {
@@ -56,42 +60,42 @@ const PlanetCameraUI = () => {
         //   setPlanetCameraDirection({ height: value });
         // },
       },
-      Height: {
-        value: height,
-        min: 0,
-        step: 0.1,
-        hint: "Camera height over planet center",
-        onChange: (value) => setPlanetCameraDirection({ height: value }),
-      },
-      Direction: {
-        value: radiansToAzimuth(-camRotationy + Math.PI / 2),
-        hint: "Camera direction/azimuth",
-        onChange: () => {},
-      },
-      Angle: {
-        value: camRotationx * (180 / Math.PI),
-        hint: "Camera angle/elevation",
-        onChange: () => {},
-      },
-      FOV: {
-        value: camFov,
-        hint: "Camera field of view",
-        onChange: () => {},
-      },
+      // Height: {
+      //   value: height,
+      //   min: 0,
+      //   step: 0.1,
+      //   hint: "Camera height over planet center",
+      //   onChange: (value) => setPlanetCameraDirection({ height: value }),
+      // },
+      // Direction: {
+      //   value: radiansToAzimuth(-camRotationy + Math.PI / 2),
+      //   hint: "Camera direction/azimuth",
+      //   onChange: () => {},
+      // },
+      // Angle: {
+      //   value: camRotationx * (180 / Math.PI),
+      //   hint: "Camera angle/elevation",
+      //   onChange: () => {},
+      // },
+      // FOV: {
+      //   value: camFov,
+      //   hint: "Camera field of view",
+      //   onChange: () => {},
+      // },
     }),
     { store: plancamUIStore }
   );
 
   // Update Leva controls when camera pos changes
   useEffect(() => {
-    console.log(planetCameraDirection.latRotationx);
+    // console.log(planetCameraDirection.latRotationx);
 
-    set({ Latitude: rad2lat(latRotationx) });
+    // set({ Latitude: rad2lat(latRotationx) });
     set({ Longitude: rad2lon(longRotationy) });
-    set({ Height: height });
-    set({ Angle: camRotationx * (180 / Math.PI) });
-    set({ Direction: radiansToAzimuth(-camRotationy + Math.PI / 2) });
-    set({ FOV: camFov });
+    // set({ Height: height });
+    // set({ Angle: camRotationx * (180 / Math.PI) });
+    // set({ Direction: radiansToAzimuth(-camRotationy + Math.PI / 2) });
+    // set({ FOV: camFov });
   }, [planetCameraDirection]);
 
   return (

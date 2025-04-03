@@ -17,37 +17,6 @@ function latToRad(degrees) {
   return (degrees - 90) * (Math.PI / 180);
 }
 
-function radToLat(radians) {
-  // Reverse the previous conversion
-  // Normal conversion is (radians * 180 / Math.PI)
-  // We want: 0 → 90°, -π/2 → 0°, -π → -90°
-  return radians * (180 / Math.PI) + 90;
-}
-
-function longToRad(degrees) {
-  // Normalize the angle to be within -180 to 180 degrees
-  let normalized = ((((degrees + 180) % 360) + 360) % 360) - 180;
-  // Convert to standard radians where 0° = 0rad, 90° = π/2, etc.
-  let standardRadians = normalized * (Math.PI / 180);
-  // Shift the result by adding 3π/2 and normalize to 0 to 2π range
-  let shiftedRadians = (standardRadians + (3 * Math.PI) / 2) % (2 * Math.PI);
-  return shiftedRadians;
-}
-
-function radToLong(radians) {
-  // Normalize radians to 0 to 2π
-  let normalizedRad = ((radians % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-  // Reverse the shift by subtracting 3π/2 and normalize again
-  let unshiftedRad =
-    (normalizedRad - (3 * Math.PI) / 2 + 2 * Math.PI) % (2 * Math.PI);
-  // Convert to degrees and adjust to -180 to 180 range
-  let degrees = unshiftedRad * (180 / Math.PI);
-  if (degrees > 180) {
-    degrees -= 360;
-  }
-  return degrees;
-}
-
 // import PlanCamLookAt from "../utils/PlanCamLookAt";
 import Ground from "../../utils/Ground";
 export default function PlanetCamera() {
@@ -210,12 +179,8 @@ export default function PlanetCamera() {
       console.log(
         "longAxisRef.current.rotation.y: " +
           longAxisRef.current.rotation.y +
-          "longToRad(radToLong(x)): " +
-          longToRad(radToLong(longAxisRef.current.rotation.y))
-        // " latAxisRef.current.rotation.x: " +
-        //     latAxisRef.current.rotation.x +
-        //     " radToLat(latToRad(x)): " +
-        //     radToLat(latToRad(latAxisRef.current.rotation.x))
+          " latAxisRef.current.rotation.x: " +
+          latAxisRef.current.rotation.x
       );
 
       saveCameraPosition();
