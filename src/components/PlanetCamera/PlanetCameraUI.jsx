@@ -33,18 +33,18 @@ const PlanetCameraUI = () => {
       Latitude: {
         value: rad2lat(latRotationx),
         hint: "Camera latitude in decimal degrees",
-        onChange: (value) => {
-          const rad = lat2rad(value);
-          setPlanetCameraDirection({ latRotationx: rad });
-        },
+        // onChange: (value) => {
+        //   const rad = lat2rad(value);
+        //   setPlanetCameraDirection({ latRotationx: rad });
+        // },
       },
       Longitude: {
         value: rad2lon(longRotationy),
         hint: "Camera longitude in decimal degrees",
-        onChange: (value) => {
-          const rad = lat2rad(value);
-          setPlanetCameraDirection({ height: value });
-        },
+        // onChange: (value) => {
+        //   const rad = lat2rad(value);
+        //   setPlanetCameraDirection({ height: value });
+        // },
       },
       Height: {
         value: height,
@@ -74,7 +74,7 @@ const PlanetCameraUI = () => {
 
   // Update Leva controls when camera pos changes
   useEffect(() => {
-    // console.log(planetCameraDirection.height);
+    console.log(planetCameraDirection.latRotationx);
 
     set({ Latitude: rad2lat(latRotationx) });
     set({ Longitude: rad2lon(longRotationy) });
