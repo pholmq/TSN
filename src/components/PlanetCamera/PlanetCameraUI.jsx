@@ -31,6 +31,8 @@ const PlanetCameraUI = () => {
 
   const planCamLat = useStore((s) => s.planCamLat);
   const setPlanCamLat = useStore((s) => s.setPlanCamLat);
+  const planCamLong = useStore((s) => s.planCamLong);
+  const setPlanCamLong = useStore((s) => s.setPlanCamLong);
 
   const positions = usePosStore((s) => s.positions);
   const { settings } = useSettingsStore();
@@ -53,12 +55,12 @@ const PlanetCameraUI = () => {
       },
 
       Longitude: {
-        value: rad2lon(longRotationy),
+        value: planCamLong,
+        max: 180,
+        min: -180,
+        step: 0.1,
         hint: "Camera longitude in decimal degrees",
-        // onChange: (value) => {
-        //   const rad = lat2rad(value);
-        //   setPlanetCameraDirection({ height: value });
-        // },
+        onChange: setPlanCamLong,
       },
       // Height: {
       //   value: height,
@@ -108,6 +110,11 @@ const PlanetCameraUI = () => {
             fill={false}
             hideCopyButton
             theme={{
+              sizes: {
+                // controlWidth: "70%", // or specific pixel value like '200px'
+                numberInputMinWidth: "60px", // specifically for number inputs
+              },
+
               fontSizes: {
                 root: "16px",
               },
