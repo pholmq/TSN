@@ -20,7 +20,7 @@ const PlanetsPositionsMenu = () => {
     }
   });
 
-  useControls("Planets & Positions", {
+  useControls("Planet settings", {
     "Planets:": { value: "", editable: false },
     ...checkboxes,
   });
