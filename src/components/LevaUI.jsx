@@ -108,6 +108,11 @@ const LevaUI = () => {
           value: planetCameraHelper,
           onChange: setPlanetCameraHelper,
         },
+        "Show positions": {
+          value: showPositions,
+          hint: "Keep unchecked for best performance",
+          onChange: setShowPositions,
+        },
         "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
       },
       { collapsed: false }
@@ -144,13 +149,8 @@ const LevaUI = () => {
 
       { collapsed: true }
     ),
-    "Planets & Positions": folder(
+    "Planets & Orbits": folder(
       {
-        "Show positions": {
-          value: showPositions,
-          hint: "Keep unchecked for best performance",
-          onChange: setShowPositions,
-        },
         "Planet sizes": {
           value: planetScale,
           min: 0.1,
