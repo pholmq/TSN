@@ -207,20 +207,31 @@ export default function PlanetCamera() {
 
       latAxisRef.current.rotation.x = latRotationX;
 
-      console.log(
-        "longAxisRef.current.rotation.y: " +
-          longAxisRef.current.rotation.y +
-          "longToRad(radToLong(x)): " +
-          longToRad(radToLong(longAxisRef.current.rotation.y))
-        // " latAxisRef.current.rotation.x: " +
-        //     latAxisRef.current.rotation.x +
-        //     " radToLat(latToRad(x)): " +
-        //     radToLat(latToRad(latAxisRef.current.rotation.x))
-      );
+      // console.log(
+      //   "longAxisRef.current.rotation.y: " +
+      //     longAxisRef.current.rotation.y +
+      //     "longToRad(radToLong(x)): " +
+      //     longToRad(radToLong(longAxisRef.current.rotation.y))
+  
+      // );
 
       saveCameraPosition();
     }
   });
+
+  const planCamLat = useStore((s) => s.planCamLat);
+  const planCamLong = useStore((s) => s.planCamLong);
+  const planCamHeight = useStore((s) => s.planCamHeight);
+
+  const mountHeight = planCamHeight / 1495978.707;
+
+  useEffect(() => {
+    if (!latAxisRef.current) return;
+    latAxisRef.current.rotation.x = latToRad(planCamLat);
+    longAxisRef.current.rotation.y = longToRad(planCamLong);
+    camMountRef.current.position.y = planCamHeight / 1495978.707;
+    //1 km should be divided by this since 100 units in the model is 1 AU
+  }, [planCamLat, planCamLong]);
 
   return (
     <>
@@ -229,7 +240,7 @@ export default function PlanetCamera() {
         <group ref={longAxisRef}>
           <group ref={latAxisRef}>
             {/* <Ground planet={planetCameraTarget} position={[0, -0.2, 0]} /> */}
-            <group ref={camMountRef} position={[0, cameraHeight, 0]}>
+            <group ref={camMountRef} position={[0, mountHeight, 0]}>
               <group
                 name="CamBox"
                 ref={camBoxRef}

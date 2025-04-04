@@ -58,6 +58,8 @@ export const useStore = create((set) => ({
   setPlanCamLat: (v) => set({ planCamLat: v }),
   planCamLong: 0,
   setPlanCamLong: (v) => set({ planCamLong: v }),
+  planCamHeight: 6500,
+  setPlanCamHeight: (v) => set({ planCamHeight: v }),
 
   orbits: true,
   setOrbits: (v) => set({ orbits: v }),
