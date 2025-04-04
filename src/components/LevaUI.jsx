@@ -149,7 +149,7 @@ const LevaUI = () => {
 
       { collapsed: true }
     ),
-    "Planet settings": folder(
+    "Planets & Orbits": folder(
       {
         "Planet sizes": {
           value: planetScale,

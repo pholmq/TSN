@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { useGesture } from "@use-gesture/react";
 import { useControls, useCreateStore, Leva, folder } from "leva";
 import { useStore, useSettingsStore, usePosStore } from "../../store";
 
@@ -46,7 +47,7 @@ const PlanetCameraUI = () => {
   const positions = usePosStore((s) => s.positions);
   const { settings } = useSettingsStore();
 
-  // Create a custom Leva store
+  // Create a Leva store & panel
   const plancamUIStore = useCreateStore();
   const [, set] = useControls(
     () => ({
@@ -111,12 +112,60 @@ const PlanetCameraUI = () => {
     { store: plancamUIStore }
   );
 
+  //Set touch action to none so useGesture doesn't complain
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = document.getElementById("r3f-canvas");
+    if (canvas) {
+      canvasRef.current = canvas;
+      canvas.style.touchAction = "none";
+    }
+  }, []);
+
+  // //Set touch action to none so useGesture doesn't complain
+  // gl.domElement.style.touchAction = "none";
+  useGesture(
+    {
+      onDrag: planetCamera //If planetCamera is true, then we hand it a function
+        ? ({ delta: [dx, dy] }) => {
+            //Multiplute by fov to make the movement less sensitive when we're zoomed in
+            // const sensitivity = 0.0001 * planetCamRef.current.fov;
+            // planetCamRef.current.rotation.y += dx * sensitivity;
+            // let camRotationX =
+            //   planetCamRef.current.rotation.x + dy * sensitivity;
+            // if (camRotationX > Math.PI / 2) camRotationX = Math.PI / 2;
+            // if (camRotationX < -Math.PI / 2) camRotationX = -Math.PI / 2;
+            // planetCamRef.current.rotation.x = camRotationX;
+            // camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
+            // camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
+            // saveCameraPosition();
+          }
+        : () => {}, // and if not, it gets and empty function
+
+      onWheel: planetCamera
+        ? ({ delta: [, dy] }) => {
+            //
+            // const sensitivity = 0.01;
+            // const fov = planetCamRef.current.fov + dy * sensitivity;
+            // if (fov > 0 && fov < 120) {
+            //   planetCamRef.current.fov = fov;
+            //   planetCamRef.current.updateProjectionMatrix();
+            // }
+            // saveCameraPosition();
+          }
+        : () => {},
+    },
+    {
+      // target: gl.domElement,
+      eventOptions: { passive: false },
+    }
+  );
+
   // Update Leva controls when camera pos changes
   useEffect(() => {
     // console.log(planetCameraDirection.latRotationx);
-
     // set({ Latitude: rad2lat(latRotationx) });
-    set({ Longitude: rad2lon(longRotationy) });
+    // set({ Longitude: rad2lon(longRotationy) });
     // set({ Height: height });
     // set({ Angle: camRotationx * (180 / Math.PI) });
     // set({ Direction: radiansToAzimuth(-camRotationy + Math.PI / 2) });

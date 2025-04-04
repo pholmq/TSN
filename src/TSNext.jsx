@@ -30,6 +30,7 @@ const TSNext = () => {
         <PlanetCameraUI />
       </div>
       <Canvas
+        id="canvas"
         frameloop="demand"
         gl={{ logarithmicDepthBuffer: true }} //Fixes depth buffer issues due to extreme Camera far
       >
