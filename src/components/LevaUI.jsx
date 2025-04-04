@@ -93,39 +93,28 @@ const LevaUI = () => {
   //order we create them here
 
   const [, set2] = useControls(() => ({
-    traceOn1: {
-      label: "Trace On/Off",
-      value: trace,
-      onChange: (v) => {
-        setTrace(v);
-        // set2({ traceOn2: v });
-      },
-    },
-    Camera: folder(
+    Controls: folder(
       {
-        Follow: { value: cameraFollow, onChange: setCameraFollow },
-        "Planet camera": { value: planetCameraHelper, onChange: setPlanetCameraHelper },
+        Trace: {
+          label: "Trace On/Off",
+          value: trace,
+          onChange: setTrace,
+        },
+        "Actual planet sizes": {
+          value: actualPlanetSizes,
+          onChange: setActualPlanetSizes,
+        },
+        "Planet camera": {
+          value: planetCameraHelper,
+          onChange: setPlanetCameraHelper,
+        },
+        "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
       },
-      { collapsed: true }
+      { collapsed: false }
     ),
 
-    Trace: folder(
+    "Trace settings": folder(
       {
-        // traceOn2: {
-        //   label: "Trace On/Off",
-        //   value: trace,
-        //   onChange: (v) => {
-        //     setTrace(v);
-        //     set1({ traceOn1: v });
-        //   },
-        // },
-        // "Update interval": {
-        //   value: useTraceStore.getState().interval,
-        //   min: 0,
-        //   max: 900,
-        //   step:10,
-        //   onChange: (v) => useTraceStore.setState({ interval: v }),
-        // },
         "Line width": {
           value: lineWidth,
           min: 0.5,
@@ -161,10 +150,6 @@ const LevaUI = () => {
           value: showPositions,
           hint: "Keep unchecked for best performance",
           onChange: setShowPositions,
-        },
-        "Actual planet sizes": {
-          value: actualPlanetSizes,
-          onChange: setActualPlanetSizes,
         },
         "Planet sizes": {
           value: planetScale,

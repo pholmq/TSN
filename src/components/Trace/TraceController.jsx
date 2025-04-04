@@ -6,7 +6,7 @@ const TraceController = () => {
   const { settings } = useSettingsStore();
   const { trace, setTraceStart } = useTraceStore();
   const posRef = useStore((s) => s.posRef);
-  
+
   const traceablePlanets = settings
     .filter((item) => item.traceable)
     .map((item) => item.name);
@@ -19,7 +19,7 @@ const TraceController = () => {
   //Mars should be on by default
   checkboxes.Mars = true;
 
-  const tracedPlanets = useControls("Trace", {
+  const tracedPlanets = useControls("Trace settings", {
     "Planets:": { value: "", editable: false },
     ...checkboxes,
   });
