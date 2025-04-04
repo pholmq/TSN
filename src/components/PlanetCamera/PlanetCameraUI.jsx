@@ -1,34 +1,12 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useGesture } from "@use-gesture/react";
 import { useControls, useCreateStore, Leva, folder } from "leva";
 import { useStore, useSettingsStore, usePosStore } from "../../store";
 
-import {
-  azEl2RaDec,
-  rad2lat,
-  lat2rad,
-  rad2lon,
-  radiansToAzimuth,
-} from "../../utils/celestial-functions";
-
 const PlanetCameraUI = () => {
-  const showPositions = useStore((s) => s.showPositions);
   const planetCamera = useStore((s) => s.planetCamera);
   const setPlanetCamera = useStore((s) => s.setPlanetCamera);
   const planetCameraHelper = useStore((s) => s.planetCameraHelper);
-
-  const planetCameraMenu = useStore((s) => s.planetCameraMenu);
-  const planetCameraDirection = useStore((s) => s.planetCameraDirection);
-
-  const setPlanetCameraDirection = useStore((s) => s.setPlanetCameraDirection);
-  const {
-    camRotationx,
-    camRotationy,
-    camFov,
-    latRotationx,
-    longRotationy,
-    height,
-  } = planetCameraDirection;
 
   const planCamLat = useStore((s) => s.planCamLat);
   const setPlanCamLat = useStore((s) => s.setPlanCamLat);
@@ -44,8 +22,6 @@ const PlanetCameraUI = () => {
   const setPlanCamFov = useStore((s) => s.setPlanCamFov);
   const planCamFar = useStore((s) => s.planCamFar);
   const setPlanCamFar = useStore((s) => s.setPlanCamFar);
-  const positions = usePosStore((s) => s.positions);
-  const { settings } = useSettingsStore();
 
   // Create a Leva store & panel
   const plancamUIStore = useCreateStore();
@@ -112,34 +88,20 @@ const PlanetCameraUI = () => {
     { store: plancamUIStore }
   );
 
-  //Set touch action to none so useGesture doesn't complain
   const canvasRef = useRef(null);
   useEffect(() => {
     const canvas = document.getElementById("canvas");
     if (canvas) {
       canvasRef.current = canvas;
+      //Set touch action to none so useGesture doesn't complain
       canvas.style.touchAction = "none";
     }
   }, []);
 
-  // //Set touch action to none so useGesture doesn't complain
-  // gl.domElement.style.touchAction = "none";
   useGesture(
     {
       onDrag: planetCamera //If planetCamera is true, then we hand it a function
         ? ({ delta: [dx, dy] }) => {
-            //Multiplute by fov to make the movement less sensitive when we're zoomed in
-            // const sensitivity = 0.0001 * planetCamRef.current.fov;
-            // planetCamRef.current.rotation.y += dx * sensitivity;
-            // let camRotationX =
-            //   planetCamRef.current.rotation.x + dy * sensitivity;
-            // if (camRotationX > Math.PI / 2) camRotationX = Math.PI / 2;
-            // if (camRotationX < -Math.PI / 2) camRotationX = -Math.PI / 2;
-            // planetCamRef.current.rotation.x = camRotationX;
-            // camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
-            // camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
-            // saveCameraPosition();
-
             //Multiplute by fov to make the movement less sensitive when we're zoomed in
             const sensitivity = 0.002 * planCamFov;
 
@@ -158,15 +120,6 @@ const PlanetCameraUI = () => {
 
       onWheel: planetCamera
         ? ({ delta: [, dy] }) => {
-            //
-            // const sensitivity = 0.01;
-            // const fov = planetCamRef.current.fov + dy * sensitivity;
-            // if (fov > 0 && fov < 120) {
-            //   planetCamRef.current.fov = fov;
-            //   planetCamRef.current.updateProjectionMatrix();
-            // }
-            // saveCameraPosition();
-
             const sensitivity = 0.02;
             const fov = planCamFov + dy * sensitivity;
             if (fov <= 120 && fov >= 1) {
@@ -181,17 +134,6 @@ const PlanetCameraUI = () => {
       eventOptions: { passive: false },
     }
   );
-
-  // Update Leva controls when camera pos changes
-  useEffect(() => {
-    // console.log(planetCameraDirection.latRotationx);
-    // set({ Latitude: rad2lat(latRotationx) });
-    // set({ Longitude: rad2lon(longRotationy) });
-    // set({ Height: height });
-    // set({ Angle: camRotationx * (180 / Math.PI) });
-    // set({ Direction: radiansToAzimuth(-camRotationy + Math.PI / 2) });
-    // set({ FOV: camFov });
-  }, [planetCameraDirection]);
 
   return (
     <>
