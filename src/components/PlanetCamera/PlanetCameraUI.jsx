@@ -102,7 +102,7 @@ const PlanetCameraUI = () => {
       },
       "Viewing dist in Ly": {
         value: planCamFar,
-        hint: "Camera field of view",
+        hint: "Camera viewing distance in light years",
         max: 500,
         min: 0.01,
         step: 0.01,
@@ -115,7 +115,7 @@ const PlanetCameraUI = () => {
   //Set touch action to none so useGesture doesn't complain
   const canvasRef = useRef(null);
   useEffect(() => {
-    const canvas = document.getElementById("r3f-canvas");
+    const canvas = document.getElementById("canvas");
     if (canvas) {
       canvasRef.current = canvas;
       canvas.style.touchAction = "none";
@@ -139,6 +139,20 @@ const PlanetCameraUI = () => {
             // camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
             // camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
             // saveCameraPosition();
+
+            //Multiplute by fov to make the movement less sensitive when we're zoomed in
+            const sensitivity = 0.002 * planCamFov;
+
+            const angle = planCamAngle + dy * sensitivity;
+            if (angle <= 90 && angle >= -90) {
+              setPlanCamAngle(angle);
+              set({ Angle: angle });
+            }
+            let direction = planCamDirection - dx * sensitivity;
+            if (direction > 360) direction -= 360;
+            if (direction < 0) direction += 360;
+            setPlanCamDirection(direction);
+            set({ Direction: direction });
           }
         : () => {}, // and if not, it gets and empty function
 
@@ -152,11 +166,18 @@ const PlanetCameraUI = () => {
             //   planetCamRef.current.updateProjectionMatrix();
             // }
             // saveCameraPosition();
+
+            const sensitivity = 0.02;
+            const fov = planCamFov + dy * sensitivity;
+            if (fov <= 120 && fov >= 1) {
+              setPlanCamFov(fov);
+              set({ "Field of view": fov });
+            }
           }
         : () => {},
     },
     {
-      // target: gl.domElement,
+      target: canvasRef.current,
       eventOptions: { passive: false },
     }
   );

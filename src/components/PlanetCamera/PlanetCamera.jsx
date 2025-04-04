@@ -132,45 +132,45 @@ export default function PlanetCamera() {
   );
 
   // //Set touch action to none so useGesture doesn't complain
-  gl.domElement.style.touchAction = "none";
-  useGesture(
-    {
-      onDrag: planetCamera //If planetCamera is true, then we hand it a function
-        ? ({ delta: [dx, dy] }) => {
-            //Multiplute by fov to make the movement less sensitive when we're zoomed in
-            const sensitivity = 0.0001 * planetCamRef.current.fov;
-            planetCamRef.current.rotation.y += dx * sensitivity;
-            let camRotationX =
-              planetCamRef.current.rotation.x + dy * sensitivity;
-            if (camRotationX > Math.PI / 2) camRotationX = Math.PI / 2;
-            if (camRotationX < -Math.PI / 2) camRotationX = -Math.PI / 2;
-            planetCamRef.current.rotation.x = camRotationX;
-            camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
-            camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
+  // gl.domElement.style.touchAction = "none";
+  // useGesture(
+  //   {
+  //     onDrag: planetCamera //If planetCamera is true, then we hand it a function
+  //       ? ({ delta: [dx, dy] }) => {
+  //           //Multiplute by fov to make the movement less sensitive when we're zoomed in
+  //           const sensitivity = 0.0001 * planetCamRef.current.fov;
+  //           planetCamRef.current.rotation.y += dx * sensitivity;
+  //           let camRotationX =
+  //             planetCamRef.current.rotation.x + dy * sensitivity;
+  //           if (camRotationX > Math.PI / 2) camRotationX = Math.PI / 2;
+  //           if (camRotationX < -Math.PI / 2) camRotationX = -Math.PI / 2;
+  //           planetCamRef.current.rotation.x = camRotationX;
+  //           camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
+  //           camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
 
-            saveCameraPosition();
-          }
-        : () => {}, // and if not, it gets and empty function
+  //           saveCameraPosition();
+  //         }
+  //       : () => {}, // and if not, it gets and empty function
 
-      onWheel: planetCamera
-        ? ({ delta: [, dy] }) => {
-            //
-            const sensitivity = 0.01;
-            const fov = planetCamRef.current.fov + dy * sensitivity;
+  //     onWheel: planetCamera
+  //       ? ({ delta: [, dy] }) => {
+  //           //
+  //           const sensitivity = 0.01;
+  //           const fov = planetCamRef.current.fov + dy * sensitivity;
 
-            if (fov > 0 && fov < 120) {
-              planetCamRef.current.fov = fov;
-              planetCamRef.current.updateProjectionMatrix();
-            }
-            saveCameraPosition();
-          }
-        : () => {},
-    },
-    {
-      target: gl.domElement,
-      eventOptions: { passive: false },
-    }
-  );
+  //           if (fov > 0 && fov < 120) {
+  //             planetCamRef.current.fov = fov;
+  //             planetCamRef.current.updateProjectionMatrix();
+  //           }
+  //           saveCameraPosition();
+  //         }
+  //       : () => {},
+  //   },
+  //   {
+  //     target: gl.domElement,
+  //     eventOptions: { passive: false },
+  //   }
+  // );
 
   let latRotationX;
   let camRotationX;
