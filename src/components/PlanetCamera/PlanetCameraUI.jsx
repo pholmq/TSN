@@ -35,6 +35,14 @@ const PlanetCameraUI = () => {
   const setPlanCamLong = useStore((s) => s.setPlanCamLong);
   const planCamHeight = useStore((s) => s.planCamHeight);
   const setPlanCamHeight = useStore((s) => s.setPlanCamHeight);
+  const planCamAngle = useStore((s) => s.planCamAngle);
+  const setPlanCamAngle = useStore((s) => s.setPlanCamAngle);
+  const planCamDirection = useStore((s) => s.planCamDirection);
+  const setPlanCamDirection = useStore((s) => s.setPlanCamDirection);
+  const planCamFov = useStore((s) => s.planCamFov);
+  const setPlanCamFov = useStore((s) => s.setPlanCamFov);
+  const planCamFar = useStore((s) => s.planCamFar);
+  const setPlanCamFar = useStore((s) => s.setPlanCamFar);
   const positions = usePosStore((s) => s.positions);
   const { settings } = useSettingsStore();
 
@@ -63,28 +71,42 @@ const PlanetCameraUI = () => {
         hint: "Camera longitude in decimal degrees",
         onChange: setPlanCamLong,
       },
-      "Height (km)": {
+      "Height in km": {
         value: planCamHeight,
         min: 0,
-        step: 100,
+        step: 10,
         hint: "Camera height in kilometers above planet center",
         onChange: setPlanCamHeight,
       },
-      // Direction: {
-      //   value: radiansToAzimuth(-camRotationy + Math.PI / 2),
-      //   hint: "Camera direction/azimuth",
-      //   onChange: () => {},
-      // },
-      // Angle: {
-      //   value: camRotationx * (180 / Math.PI),
-      //   hint: "Camera angle/elevation",
-      //   onChange: () => {},
-      // },
-      // FOV: {
-      //   value: camFov,
-      //   hint: "Camera field of view",
-      //   onChange: () => {},
-      // },
+      Angle: {
+        value: planCamAngle,
+        hint: "Camera angle/elevation",
+        max: 90,
+        min: -90,
+        onChange: setPlanCamAngle,
+      },
+      Direction: {
+        value: planCamDirection,
+        hint: "Camera direction/azimuth",
+        max: 360,
+        min: 0,
+        onChange: setPlanCamDirection,
+      },
+      "Field of view": {
+        value: planCamFov,
+        hint: "Camera field of view",
+        max: 120,
+        min: 1,
+        onChange: setPlanCamFov,
+      },
+      "Viewing dist in Ly": {
+        value: planCamFar,
+        hint: "Camera field of view",
+        max: 500,
+        min: 0.01,
+        step: 0.01,
+        onChange: setPlanCamFar,
+      },
     }),
     { store: plancamUIStore }
   );

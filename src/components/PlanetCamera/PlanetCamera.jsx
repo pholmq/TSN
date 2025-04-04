@@ -48,6 +48,24 @@ function radToLong(radians) {
   return degrees;
 }
 
+function kmToUnits(kilometers) {
+  const units = kilometers / 1495978.707;
+  //Kilometers is divided by this since 100 units in the model is 1 AU
+  return units;
+}
+
+function lyToUnits(lightYears) {
+  return lightYears * 6324100;
+}
+
+function altToRad(degrees) {
+  return degrees * (Math.PI / 180);
+}
+
+function dirToRad(degrees) {
+  return Math.PI - (Math.PI / 180) * degrees;
+}
+
 // import PlanCamLookAt from "../utils/PlanCamLookAt";
 import Ground from "../../utils/Ground";
 export default function PlanetCamera() {
@@ -129,6 +147,7 @@ export default function PlanetCamera() {
             planetCamRef.current.rotation.x = camRotationX;
             camBoxRef.current.rotation.y = planetCamRef.current.rotation.y;
             camBoxRef.current.rotation.x = planetCamRef.current.rotation.x;
+
             saveCameraPosition();
           }
         : () => {}, // and if not, it gets and empty function
@@ -212,7 +231,7 @@ export default function PlanetCamera() {
       //     longAxisRef.current.rotation.y +
       //     "longToRad(radToLong(x)): " +
       //     longToRad(radToLong(longAxisRef.current.rotation.y))
-  
+
       // );
 
       saveCameraPosition();
@@ -222,6 +241,10 @@ export default function PlanetCamera() {
   const planCamLat = useStore((s) => s.planCamLat);
   const planCamLong = useStore((s) => s.planCamLong);
   const planCamHeight = useStore((s) => s.planCamHeight);
+  const planCamAngle = useStore((s) => s.planCamAngle);
+  const planCamDirection = useStore((s) => s.planCamDirection);
+  const planCamFov = useStore((s) => s.planCamFov);
+  const planCamFar = useStore((s) => s.planCamFar);
 
   const mountHeight = planCamHeight / 1495978.707;
 
@@ -229,9 +252,22 @@ export default function PlanetCamera() {
     if (!latAxisRef.current) return;
     latAxisRef.current.rotation.x = latToRad(planCamLat);
     longAxisRef.current.rotation.y = longToRad(planCamLong);
-    camMountRef.current.position.y = planCamHeight / 1495978.707;
-    //1 km should be divided by this since 100 units in the model is 1 AU
-  }, [planCamLat, planCamLong]);
+    camMountRef.current.position.y = kmToUnits(planCamHeight);
+    planetCamRef.current.rotation.x = altToRad(planCamAngle);
+    planetCamRef.current.rotation.y = dirToRad(planCamDirection);
+    planetCamRef.current.fov = planCamFov;
+    planetCamRef.current.far = lyToUnits(planCamFar);
+
+    planetCamRef.current.updateProjectionMatrix();
+  }, [
+    planCamLat,
+    planCamLong,
+    planCamHeight,
+    planCamAngle,
+    planCamDirection,
+    planCamFov,
+    planCamFar,
+  ]);
 
   return (
     <>
@@ -240,7 +276,7 @@ export default function PlanetCamera() {
         <group ref={longAxisRef}>
           <group ref={latAxisRef}>
             {/* <Ground planet={planetCameraTarget} position={[0, -0.2, 0]} /> */}
-            <group ref={camMountRef} position={[0, mountHeight, 0]}>
+            <group ref={camMountRef} position={[0, 0, 0]}>
               <group
                 name="CamBox"
                 ref={camBoxRef}
@@ -264,7 +300,7 @@ export default function PlanetCamera() {
                   name="PlanetCamera"
                   rotation={[0, Math.PI, 0]}
                   near={0.00007}
-                  far={1000000000000}
+                  // far={1000000000000}
                   makeDefault={planetCamera}
                   ref={planetCamRef}
                   rotation-order={"YXZ"}
