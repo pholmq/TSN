@@ -1,0 +1,73 @@
+[33md02657c[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/repair[m[33m, [m[1;31morigin/pholmq/reset[m[33m, [m[1;31morigin/fix2[m[33m, [m[1;31morigin/fix[m[33m, [m[1;31morigin/cleanup[m[33m)[m cleanup
+[33m0e9cf8e[m Merge pull request #20 from pholmq/plancam
+[33m7f59fd2[m Cleanup
+[33m2152933[m Planet camera working! :-)
+[33m604a5f6[m more plancam work
+[33m8b00e9f[m Plan cam almost done
+[33m172499e[m menu rearrange
+[33ma6109b5[m rearranged the menu
+[33m0fa82f2[m lat long height working
+[33md5856b0[m x
+[33m6bcfc77[m Lat Long work
+[33m22bf280[m Merge pull request #19 from pholmq/plancam2
+[33m3238567[m PlanetCamera in main menu turns on PlanetCameraUI and the cameraHelper
+[33m192399d[m x
+[33m3dc5451[m plancamui work
+[33maeaa015[m plancam ui work
+[33m439d950[m plancam work
+[33m8ed8227[m Everything deepssek messed up restored...
+[33m07297c4[m more ui work and a some fixes
+[33m94101d2[m plancam ui work
+[33mb18bb5a[m first commit
+[33m5264a26[m Merge pull request #18 from pholmq/plancam
+[33m31c6088[m Commented out planetcamera and pushed to main Plancam work continues in branch plancam2
+[33m7804ab0[m plancm ui work
+[33me0e85e2[m plancam ui work
+[33m157ebc8[m Plancam ui started
+[33m718a3d9[m menu order fix
+[33m9470d9b[m Removed obsolete components
+[33mb3d0aca[m Some minor fixes. Planet camera near/far adjusted
+[33mcc9ebeb[m Planetcamera work Adjustments of the css so that the menu takes more real estate
+[33m6e205ea[m Merge pull request #17 from pholmq/hide-plancam-in-main
+[33m36621ed[m hide plancam
+[33m2f9540d[m Merge pull request #15 from pholmq/planetcamera
+[33m254e8b1[m Merge pull request #14 from pholmq/main
+[33m53a780a[m Merge branch 'planetcamera' into main
+[33m479d77c[m Merge pull request #13 from pholmq/fixDepthBuffer
+[33m2711bf6[m fix depth buffer issue and lowered zodiac pos
+[33m153724c[m Merge pull request #12 from pholmq/CelSphereAndEqPlane
+[33m32c1068[m Celestial sphere and Ecliptic plane done
+[33m62c3a10[m Merge pull request #11 from pholmq/zodiacAndPolarLine
+[33m40c4963[m Polar line done
+[33m4b6a50a[m Polar line strated
+[33me98e51a[m Zodiac wheel done
+[33m3c52fda[m zodiac work
+[33m8ce7c03[m Zodiac started
+[33mff4c6fd[m Merge pull request #10 from pholmq/linesandreset
+[33m096c639[m reset, resets the camera
+[33m49f7412[m changed linew for orbits and trace to 1.5. changed antialias to
+[33m8f4c6b7[m Merge pull request #9 from pholmq/starsadd
+[33mb497357[m added thuban
+[33mcd12e2d[m packagelock
+[33m78d1d83[m ground
+[33mb3890d6[m Merge branch 'planetcamera' of https://github.com/pholmq/tsn.git
+[33m7dd3300[m more plancam
+[33m9118e07[m more plancam
+[33mef64830[m PlanCam compiles
+[33m0762aa8[m changed min traceline to one
+[33m9244c2d[m Merge pull request #7 from pholmq/menufix
+[33m586ed72[m menufix
+[33m69d232b[m Merge pull request #6 from pholmq/pholmq/cleanup
+[33m3cecd55[m cleanup
+[33me4542ff[m Merge pull request #4 from pholmq/fix-fontsizes
+[33mfc82557[m fix size of info panel
+[33m0dc038e[m removed bold css
+[33m8abc674[m test
+[33m69cb809[m Merge pull request #3 from pholmq/codespacetest
+[33m5d00dc7[m zoom level fixes
+[33m8d4c2a6[m a commit
+[33mcea4fbb[m Merge pull request #2 from pholmq:uizoom
+[33m70c2e10[m zoom done
+[33mc2b07df[m Merge pull request #1 from pholmq/pholmq/hidestars
+[33m9d0f69f[m hide stars fix
+[33mc871af6[m Initial commit
