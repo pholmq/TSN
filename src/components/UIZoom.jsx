@@ -14,7 +14,7 @@ const UIZoom = () => {
   };
 
   const zoomOut = () => {
-    if (zoomLevel > 50) {
+    if (zoomLevel > 60) {
       setZoomLevel((prev) => prev - 10); // Decrease by 10%
     }
   };

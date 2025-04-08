@@ -95,7 +95,7 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
             </div>
             <div className="menu-item">
               <label className="menu-label-centered">
-                Doubleclick - Center cam. <br /> Right click for menu.
+                Doubleclick - Center cam. <br /> Right click - Menu.
               </label>
             </div>
           </div>
