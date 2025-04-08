@@ -6,6 +6,7 @@ import CelestialSphere from "./Helpers/CelestialSphere";
 import PolarLine from "./Helpers/PolarLine";
 
 import HoverObj from "../components/HoverObj/HoverObj";
+import PlanetRings from "./PlanetRings";
 
 export default function Planet(s) {
   const cSphereRef = useRef();
@@ -69,6 +70,14 @@ export default function Planet(s) {
           />
 
           {s.light && <pointLight intensity={sunLight * 100000} />}
+          {s.rings && (
+            <PlanetRings
+              innerRadius={s.rings.innerRadius + s.size}
+              outerRadius={s.rings.outerRadius + s.size}
+              texture={s.rings.texture}
+              opacity={s.rings.opacity}
+            />
+          )}
         </mesh>
       </group>
     </>

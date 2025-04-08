@@ -183,7 +183,8 @@
     "rings": {
       "innerRadius": 10,
       "outerRadius": 1,
-      "texture": "/textures/jupiter_ring.jpg"
+      "texture": "/textures/jupiter_ring.jpg",
+      "opacity": 0.2
     }
   },
   {
@@ -205,7 +206,8 @@
     "rings": {
       "innerRadius": 0.7,
       "outerRadius": 5,
-      "texture": "/textures/saturn_ring.jpg"
+      "texture": "/textures/saturn_ring.jpg",
+      "opacity": 0.8
     }
   },
   {
@@ -227,7 +229,8 @@
     "rings": {
       "innerRadius": 0.4,
       "outerRadius": 4.9,
-      "texture": "/textures/uranus_ring.png"
+      "texture": "/textures/uranus_ring.png",
+      "opacity": 0.2
     }
   },
   {
@@ -249,7 +252,8 @@
     "rings": {
       "innerRadius": 1.8,
       "outerRadius": 7,
-      "texture": "/textures/neptune_ring.png"
+      "texture": "/textures/neptune_ring.png",
+      "opacity": 0.2
     }
   },
   {

@@ -2,7 +2,12 @@ import { useRef, useMemo } from "react";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
-export function PlanetRings({ innerRadius, outerRadius, texture }) {
+export default function PlanetRings({
+  innerRadius,
+  outerRadius,
+  texture,
+  opacity,
+}) {
   const ringRef = useRef();
   const [ringTexture] = useTexture([texture]);
 
@@ -43,6 +48,7 @@ export function PlanetRings({ innerRadius, outerRadius, texture }) {
     return new THREE.MeshStandardMaterial({
       map: ringTexture, // Apply the texture
       transparent: true,
+      opacity: opacity, // (0 = fully transparent, 1 = fully opaque)
       side: THREE.DoubleSide,
     });
   }, [ringTexture]);

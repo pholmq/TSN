@@ -26,7 +26,7 @@ export const useStore = create((set) => ({
     })),
   cameraFollow: false,
   setCameraFollow: (v) => set({ cameraFollow: v }),
-  
+
   planetCamera: false,
   setPlanetCamera: (v) => set({ planetCamera: v }),
   planetCameraTarget: "Earth",
@@ -112,10 +112,16 @@ export const useStore = create((set) => ({
   updAC: false, //When this value changes AnimationController rerenders
   updateAC: () => set((state) => ({ updAC: !state.updAC })),
 
-  zoomLevel: 1,
-  zoomIn: () => set((state) => ({ zoomLevel: state.zoomLevel + 0.1 })),
+  zoomLevel: 80, // Initial zoom level
+  setZoom: (level) => set({ zoomLevel: level }),
+  zoomIn: () =>
+    set((state) => ({
+      zoomLevel: Math.min(state.zoomLevel + 10, 120),
+    })),
   zoomOut: () =>
-    set((state) => ({ zoomLevel: Math.max(0.5, state.zoomLevel - 0.1) })),
+    set((state) => ({
+      zoomLevel: Math.max(state.zoomLevel - 10, 60),
+    })),
 
   hoveredObjectId: null, // New state for tracking hovered object
   setHoveredObjectId: (id) => set({ hoveredObjectId: id }), // Action to update hovered object

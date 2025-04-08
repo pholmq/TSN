@@ -49,7 +49,7 @@ const HoverObj = ({ s, starColor=false }) => {
       onPointerLeave={handlePointerLeave}
       onDoubleClick={() => setCameraTarget(s.name)}
       onContextMenu={() => {
-        if (hovered) setContextMenu(true);
+        if (showPanel) setContextMenu(true);
       }}
       renderOrder={1}
     >
