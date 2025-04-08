@@ -4,20 +4,21 @@ import { useStore } from "../store";
 import changeZoom from "../utils/changeZoom";
 
 const UIZoom = () => {
-  const [zoomLevel, setZoomLevel] = useState(80); // Initial zoom
-  // const {zoomLevel, zoomIn, zoomOut} = useStore();
+  // const [zoomLevel, setZoomLevel] = useState(80); // Initial zoom
+  // // const {zoomLevel, zoomIn, zoomOut} = useStore();
+  const { zoomLevel, zoomIn, zoomOut } = useStore();
 
-  const zoomIn = () => {
-    if (zoomLevel < 120) {
-      setZoomLevel((prev) => prev + 10); // Increase by 10%
-    }
-  };
+  // const zoomIn = () => {
+  //   if (zoomLevel < 120) {
+  //     setZoomLevel((prev) => prev + 10); // Increase by 10%
+  //   }
+  // };
 
-  const zoomOut = () => {
-    if (zoomLevel > 60) {
-      setZoomLevel((prev) => prev - 10); // Decrease by 10%
-    }
-  };
+  // const zoomOut = () => {
+  //   if (zoomLevel > 60) {
+  //     setZoomLevel((prev) => prev - 10); // Decrease by 10%
+  //   }
+  // };
 
   useEffect(() => {
     changeZoom(zoomLevel);
