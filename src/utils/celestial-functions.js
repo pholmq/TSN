@@ -295,60 +295,59 @@ export function convertMagnitude(magnitude) {
   return Math.round(convertedValue * 100) / 100;
 }
 
-export function rad2lat(rad) {
-  // Convert radians to degrees
-  let deg = (rad * 180) / Math.PI;
-  // Normalize to -180 to 180 range
-  deg = deg % 360;
-  // Adjust for latitude range (-90 to 90)
-  if (deg > 90) {
-    deg = 180 - deg;
-  } else if (deg < -90) {
-    deg = -180 - deg;
-  }
-  // Round to 6 decimal places
-  return Math.round(deg * 1000000) / 1000000;
+export function latToRad(degrees) {
+  // Shift the input by -90 degrees and scale to match the desired output
+  // Normal conversion is (degrees * Math.PI / 180)
+  // We want: 90° → 0, 0° → -π/2, -90° → -π
+  return (degrees - 90) * (Math.PI / 180);
 }
 
-export function lat2rad(lat) {
-  // Ensure input latitude is within -90 to 90 range
-  let normalizedLat = lat;
-  normalizedLat = normalizedLat % 360; // Normalize to 0-360 range first
-  if (normalizedLat > 90) {
-    normalizedLat = 180 - normalizedLat;
-  } else if (normalizedLat < -90) {
-    normalizedLat = -180 - normalizedLat;
-  }
-
-  // Convert degrees to radians
-  let rad = (normalizedLat * Math.PI) / 180;
-
-  // Round to 6 decimal places to match rad2lat precision
-  return Math.round(rad * 1000000) / 1000000;
+export function radToLat(radians) {
+  // Normal conversion is (radians * 180 / Math.PI)
+  // We want: 0 → 90°, -π/2 → 0°, -π → -90°
+  return radians * (180 / Math.PI) + 90;
 }
 
-export function rad2lon(rad) {
-  let deg = (rad * 180) / Math.PI;
-  deg = deg % 360;
-  if (deg > 180) {
-    deg -= 360;
-  } else if (deg < -180) {
-    deg += 360;
-  }
-  return Math.round(deg * 1000000) / 1000000;
+export function longToRad(degrees) {
+  // Normalize the angle to be within -180 to 180 degrees
+  let normalized = ((((degrees + 180) % 360) + 360) % 360) - 180;
+  // Convert to standard radians where 0° = 0rad, 90° = π/2, etc.
+  let standardRadians = normalized * (Math.PI / 180);
+  // Shift the result by adding 3π/2 and normalize to 0 to 2π range
+  let shiftedRadians = (standardRadians + (3 * Math.PI) / 2) % (2 * Math.PI);
+  return shiftedRadians;
 }
 
-export function radiansToAzimuth(radians) {
-  // Convert radians to degrees
-  let degrees = radians * (180 / Math.PI);
-  // Adjust to azimuth convention
-  let azimuth = (degrees - 90) % 360;
-  // Ensure the result is positive
-  if (azimuth < 0) {
-    azimuth += 360;
+export function radToLong(radians) {
+  // Normalize radians to 0 to 2π
+  let normalizedRad = ((radians % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  // Reverse the shift by subtracting 3π/2 and normalize again
+  let unshiftedRad =
+    (normalizedRad - (3 * Math.PI) / 2 + 2 * Math.PI) % (2 * Math.PI);
+  // Convert to degrees and adjust to -180 to 180 range
+  let degrees = unshiftedRad * (180 / Math.PI);
+  if (degrees > 180) {
+    degrees -= 360;
   }
-  // Round to two decimal places
-  return Math.round(azimuth * 100) / 100;
+  return degrees;
+}
+
+export function kmToUnits(kilometers) {
+  const units = kilometers / 1495978.707;
+  //Kilometers is divided by this since 100 units in the model is 1 AU
+  return units;
+}
+
+export function lyToUnits(lightYears) {
+  return lightYears * 6324100;
+}
+
+export function altToRad(degrees) {
+  return degrees * (Math.PI / 180);
+}
+
+export function dirToRad(degrees) {
+  return Math.PI - (Math.PI / 180) * degrees;
 }
 
 function leadZero(n, plus) {
