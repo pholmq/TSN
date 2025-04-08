@@ -47,7 +47,7 @@ const ContextMenu = ({ setContextMenu, pinned, setPinned, s }) => {
             className="menu-button"
             onClick={() => setCameraTarget(s.name)}
           >
-            Camera focus
+            Center camera
           </button>
         </div>
         <div className="menu-item">

@@ -26,34 +26,15 @@ export const useStore = create((set) => ({
     })),
   cameraFollow: false,
   setCameraFollow: (v) => set({ cameraFollow: v }),
+  
   planetCamera: false,
   setPlanetCamera: (v) => set({ planetCamera: v }),
   planetCameraTarget: "Earth",
   setPlanetCameraTarget: (v) => {
     set({ planetCameraTarget: v });
   },
-  planetCameraTargetData: {},
-  planetCameraMenu: false,
-  setPlanetCameraMenu: (v) => set({ planetCameraMenu: v }),
   planetCameraHelper: false,
   setPlanetCameraHelper: (v) => set({ planetCameraHelper: v }),
-  planetCameraDirection: {
-    camRotationy: 0,
-    camRotationx: -0.2,
-    camFov: 15,
-    latRotationx: 0,
-    longRotationy: 0,
-    height: 4.3,
-  },
-
-  setPlanetCameraDirection: (updates) =>
-    set((state) => ({
-      planetCameraDirection: {
-        ...state.planetCameraDirection,
-        ...updates,
-      },
-    })),
-
   planCamLat: 0,
   setPlanCamLat: (v) => set({ planCamLat: v }),
   planCamLong: 0,
