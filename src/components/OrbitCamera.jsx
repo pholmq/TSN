@@ -4,6 +4,7 @@ import { Vector3 } from "three";
 import { PerspectiveCamera, CameraControls } from "@react-three/drei";
 
 import { useStore } from "../store";
+import CameraAnimation from "./CameraAnimation";
 export default function OrbitCamera() {
   const { scene, camera } = useThree();
   const cameraRef = useRef();
@@ -43,12 +44,14 @@ export default function OrbitCamera() {
         makeDefault={!planetCamera}
         name="OrbitCamera"
         ref={cameraRef}
-        position={[-3000, 1000, 0]}
+        position={[-30000000, 10000000, 0]}
+        // position={[-3000, 1000, 0]}
         fov={15}
         near={0.0001}
         far={10000000000000}
       />
       <CameraControls ref={controlsRef} camera={cameraRef.current} />
+      <CameraAnimation controlsRef={controlsRef} />
     </>
   );
 }
