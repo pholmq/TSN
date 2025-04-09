@@ -2,9 +2,9 @@ import { useRef, useLayoutEffect, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import { PerspectiveCamera, CameraControls } from "@react-three/drei";
-
 import { useStore } from "../store";
-import CameraAnimation from "./CameraAnimation";
+import CameraAnimation from "./Intro/CameraAnimation";
+
 export default function OrbitCamera() {
   const { scene, camera } = useThree();
   const cameraRef = useRef();
@@ -26,7 +26,7 @@ export default function OrbitCamera() {
 
   useEffect(() => {
     if (controlsRef.current) {
-      controlsRef.current.setPosition(-3000, 1000, 0);
+      controlsRef.current.setPosition(0, 2200, 0);
     }
     // camera.position.set(-3000, 1000, 0);
   }, [resetClicked]);
