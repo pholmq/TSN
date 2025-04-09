@@ -15,6 +15,7 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
   const intervalRef = useRef(null);
   const [pinned, setPinned] = useState(false);
   const setCameraTarget = useStore((state) => state.setCameraTarget);
+  const setHoveredObjectId = useStore((state) => state.setHoveredObjectId);
 
   const groupRef = useRef(null);
 
@@ -62,6 +63,7 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
             onContextMenu={(e) => {
               if (pinned) {
                 e.preventDefault();
+                setHoveredObjectId(s.name);
                 setContextMenu(true);
               }
             }}
@@ -78,19 +80,19 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
             </div>
             <div className="menu-item">
               <label className="menu-label">RA:</label>
-              <input className="menu-input" ref={raRef} />
+              <input className="menu-input" ref={raRef} disabled />
             </div>
             <div className="menu-item">
               <label className="menu-label">Dec:</label>
-              <input className="menu-input" ref={decRef} />
+              <input className="menu-input" ref={decRef} disabled />
             </div>
             <div className="menu-item">
               <label className="menu-label">Dist:</label>
-              <input className="menu-input" ref={distRef} />
+              <input className="menu-input" ref={distRef} disabled />
             </div>
             <div className="menu-item">
               <label className="menu-label">Elongation:</label>
-              <input className="menu-input" ref={eloRef} />
+              <input className="menu-input" ref={eloRef} disabled />
             </div>
             <div className="menu-item">
               <label className="menu-label-centered">
