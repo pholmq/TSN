@@ -21,6 +21,7 @@ import IntroText from "./components/Intro/IntroText";
 
 const TSNext = () => {
   const zoomLevel = useStore((s) => s.zoomLevel);
+  const runIntro = useStore((s) => s.runIntro);
 
   return (
     <>
@@ -36,7 +37,7 @@ const TSNext = () => {
       >
         <OrbitCamera />
         <PlanetCamera />
-        <IntroText />
+        {runIntro && <IntroText />}
         <AnimationController />
         <PosController />
         <TraceController />

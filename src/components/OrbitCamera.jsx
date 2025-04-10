@@ -28,7 +28,6 @@ export default function OrbitCamera() {
     if (controlsRef.current) {
       controlsRef.current.setPosition(0, 2200, 0);
     }
-    // camera.position.set(-3000, 1000, 0);
   }, [resetClicked]);
 
   useFrame(() => {
