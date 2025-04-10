@@ -8,7 +8,7 @@ export default function CameraAnimation({ controlsRef }) {
   const tweenRef = useRef(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const runIntro = useStore((s) => s.runIntro);
-
+  const setRunIntro = useStore((s) => s.setRunIntro);
   const startPos = { x: -30000000, y: 10000000, z: 0 };
   const endPos = { x: 0, y: 2200, z: 0 };
   const duration = 8000;
@@ -25,6 +25,7 @@ export default function CameraAnimation({ controlsRef }) {
         })
         .onComplete(() => {
           tweenRef.current = null;
+          setRunIntro(false);
         })
         .start();
     }
