@@ -49,6 +49,10 @@ body {
   overflow-y: auto;
   padding: 0.5rem;
 }
+
+.menu[hidden] {
+  display: none;
+}
 /* Style the zoom controls to align right */
 .zoom-controls {
   display: flex;

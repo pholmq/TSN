@@ -40,7 +40,8 @@ const UserInterface = () => {
     toggleShowLevaMenu,
     setResetClicked,
     setCameraTarget,
-    setRunIntro
+    runIntro,
+    setRunIntro,
   } = useStore();
 
   const dateRef = useRef();
@@ -70,15 +71,14 @@ const UserInterface = () => {
     const handleClick = (event) => {
       // Check if it's a left mouse button click (button === 0)
       if (event.button === 0) {
-        setRunIntro(false)
-        
+        setRunIntro(false);
       }
     };
     // Add event listener to the document
-    document.addEventListener('click', handleClick);
+    document.addEventListener("click", handleClick);
     // Cleanup function
     return () => {
-      document.removeEventListener('click', handleClick);
+      document.removeEventListener("click", handleClick);
     };
   }, []);
 
@@ -122,18 +122,18 @@ const UserInterface = () => {
     document.activeElement.blur();
   }
 
-  const handleReset = ()=>{
+  const handleReset = () => {
     posRef.current = 0;
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
     updateAC();
     setResetClicked();
     setCameraTarget("Earth");
-  }
+  };
 
   return (
     <>
-      <div className="menu">
+      <div className="menu" hidden={runIntro}>
         <div className="menu-item">
           <span className="menu-header">TYCHOSIUM (beta)</span>
           <div className="zoom-controls">
@@ -147,10 +147,7 @@ const UserInterface = () => {
           </div>
         </div>
         <div className="menu-item">
-          <button
-            className="menu-button"
-            onClick={handleReset}
-          >
+          <button className="menu-button" onClick={handleReset}>
             Reset
           </button>
           <button
