@@ -135,7 +135,7 @@ const UserInterface = () => {
     <>
       <div className="menu" hidden={runIntro}>
         <div className="menu-item">
-          <span className="menu-header">TYCHOSIUM (beta)</span>
+          <span className="menu-header">The TYCHOSIUM (beta)</span>
           <div className="zoom-controls">
             <UIZoom />
             <button
