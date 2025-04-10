@@ -17,9 +17,11 @@ import Stars from "./components/Stars/Stars";
 import Zodiac from "./components/Helpers/Zodiac";
 import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
+import IntroText from "./components/Intro/IntroText";
 
 const TSNext = () => {
   const zoomLevel = useStore((s) => s.zoomLevel);
+  const runIntro = useStore((s) => s.runIntro);
 
   return (
     <>
@@ -35,6 +37,7 @@ const TSNext = () => {
       >
         <OrbitCamera />
         <PlanetCamera />
+        {runIntro && <IntroText />}
         <AnimationController />
         <PosController />
         <TraceController />

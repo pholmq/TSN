@@ -126,8 +126,10 @@ export const useStore = create((set) => ({
   hoveredObjectId: null, // New state for tracking hovered object
   setHoveredObjectId: (id) => set({ hoveredObjectId: id }), // Action to update hovered object
 
-  // starsRef: null, // Initialize the ref as null
-  // setStarsRef: (ref) => set({ starsRef: ref }), // Function to update the ref
+  endIntro: false,
+  setEndIntro: (v) => set({ endIntro: v }),
+  runIntro: true,
+  setRunIntro: (v) => set({ runIntro: v }),
 }));
 
 export const usePosStore = create((set) => ({
