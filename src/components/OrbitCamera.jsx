@@ -14,6 +14,7 @@ export default function OrbitCamera() {
   const cameraFollow = useStore((s) => s.cameraFollow);
   const cameraUpdate = useStore((s) => s.cameraUpdate);
   const resetClicked = useStore((s) => s.resetClicked);
+  const runIntro = useStore((s) => s.runIntro);
 
   const targetObjRef = useRef(null);
   const target = new Vector3();
@@ -28,7 +29,13 @@ export default function OrbitCamera() {
     if (controlsRef.current) {
       controlsRef.current.setPosition(0, 2200, 0);
     }
-  }, [resetClicked]);
+  }, [resetClicked, runIntro]);
+
+  // useEffect(() => {
+  //   if (controlsRef.current) {
+  //     controlsRef.current.setPosition(0, 2200, 0);
+  //   }
+  // }, [runIntro]);
 
   useFrame(() => {
     if (cameraFollow) {
@@ -43,14 +50,16 @@ export default function OrbitCamera() {
         makeDefault={!planetCamera}
         name="OrbitCamera"
         ref={cameraRef}
+        
         position={[-30000000, 10000000, 0]}
+        // position={[0, 2200, 0]}
         // position={[-3000, 1000, 0]}
         fov={15}
         near={0.0001}
         far={10000000000000}
       />
       <CameraControls ref={controlsRef} camera={cameraRef.current} />
-      <CameraAnimation controlsRef={controlsRef} />
+      {runIntro && <CameraAnimation controlsRef={controlsRef} />}
     </>
   );
 }

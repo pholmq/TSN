@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import TWEEN from "@tweenjs/tween.js";
-import { useStore } from "../../store";
 
 export default function CameraAnimation({ controlsRef }) {
   const controls = controlsRef.current;
   const tweenRef = useRef(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const runIntro = useStore((s) => s.runIntro);
-  const setRunIntro = useStore((s) => s.setRunIntro);
   const startPos = { x: -30000000, y: 10000000, z: 0 };
   const endPos = { x: 0, y: 2200, z: 0 };
   const duration = 8000;
@@ -30,18 +27,12 @@ export default function CameraAnimation({ controlsRef }) {
     }
   }, [isInitialized]);
 
-  useEffect(() => {
-    if (!runIntro) {
-      if (controls) controls.setPosition(endPos.x, endPos.y, endPos.z, false);
-    }
-  }, [runIntro]);
-
   useFrame(() => {
     if (controls && !isInitialized) {
       setIsInitialized(true);
       return;
     }
-    if (runIntro && tweenRef.current) {
+    if (tweenRef.current) {
       TWEEN.update();
     }
   });
