@@ -26,7 +26,7 @@ export default function OrbitCamera() {
   }, [cameraTarget, cameraUpdate, camera]);
 
   useEffect(() => {
-    if (controlsRef.current) {
+    if (controlsRef.current && !runIntro) {
       controlsRef.current.setPosition(0, 2200, 0);
     }
   }, [resetClicked, runIntro]);
