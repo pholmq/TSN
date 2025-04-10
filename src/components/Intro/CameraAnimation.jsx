@@ -21,11 +21,10 @@ export default function CameraAnimation({ controlsRef }) {
         .to(endPos, duration)
         .easing(TWEEN.Easing.Quintic.Out)
         .onUpdate(() => {
-          controls.setPosition(coords.x, coords.y, coords.z, false);
+          controls.setPosition(coords.x, coords.y, coords.z, true);
         })
         .onComplete(() => {
           tweenRef.current = null;
-          setRunIntro(false);
         })
         .start();
     }
@@ -42,7 +41,7 @@ export default function CameraAnimation({ controlsRef }) {
       setIsInitialized(true);
       return;
     }
-    if (runIntro) {
+    if (runIntro && tweenRef.current) {
       TWEEN.update();
     }
   });
