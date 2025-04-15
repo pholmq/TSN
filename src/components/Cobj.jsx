@@ -26,16 +26,16 @@ const Cobj = ({ name, children }) => {
   let orbitCentera = s.orbitCentera;
   let orbitCenterb = s.orbitCenterb;
   let orbitCenterc = s.orbitCenterc;
-  if (actualPlanetSizes) {
+  if (!actualPlanetSizes) {
     if (
       s.name === "Moon" ||
       s.name === "Moon deferent A" ||
       s.name === "Moon deferent B"
     ) {
-      orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius / 39.2078;
-      orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera / 39.2078;
-      orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb / 39.2078;
-      orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc / 39.2078;
+      orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * 39.2078;
+      orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * 39.2078;
+      orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * 39.2078;
+      orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc * 39.2078;
     }
   }
 
