@@ -10,6 +10,11 @@ const SolarSystem = () => {
               <Cobj name="Moon" />
             </Cobj>
           </Cobj>
+          <Cobj name="Actual Moon deferent A">
+            <Cobj name="Actual Moon deferent B">
+              <Cobj name="Actual Moon" />
+            </Cobj>
+          </Cobj>
           <Cobj name="Sun deferent">
             <Cobj name="Sun">
               <Cobj name="Halleys deferent">

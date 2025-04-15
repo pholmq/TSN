@@ -8,8 +8,19 @@ import EclipticGrid from "./Helpers/EclipticGrid";
 
 const Cobj = ({ name, children }) => {
   const { settings } = useSettingsStore();
-  const s = settings.find((p) => p.name === name);
-  // const s = getSetting(name);
+  let s;
+  let visible
+  let actualMoon = false;
+  //Special hack for the Moon. We have an "actual" invisible moon since the "Non actual planet size" moon has the wrong
+  // position so it can be visible
+  if (name.startsWith("Actual ")) {
+    actualMoon = true;
+    visible = false;
+    s = settings.find((p) => p.name === name.replace("Actual ", ""));
+  } else {
+    s = settings.find((p) => p.name === name);
+    visible = s.visible
+  }
 
   const containerRef = useRef();
   const orbitRef = useRef();
@@ -26,7 +37,7 @@ const Cobj = ({ name, children }) => {
   let orbitCentera = s.orbitCentera;
   let orbitCenterb = s.orbitCenterb;
   let orbitCenterc = s.orbitCenterc;
-  if (!actualPlanetSizes) {
+  if (!actualPlanetSizes && !actualMoon) {
     if (
       s.name === "Moon" ||
       s.name === "Moon deferent A" ||
@@ -50,7 +61,7 @@ const Cobj = ({ name, children }) => {
         rotation-z={s.orbitTiltb * (Math.PI / 180)}
       >
         {orbitRadius ? (
-          <group rotation-x={-Math.PI / 2} visible={s.visible}>
+          <group rotation-x={-Math.PI / 2} visible={visible}>
             <Orbit
               radius={orbitRadius}
               color={s.color}
@@ -61,8 +72,8 @@ const Cobj = ({ name, children }) => {
         ) : null}
         <group name="Orbit" ref={orbitRef}>
           <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
-            {s.axesHelper && s.visible ? <axesHelper args={[10]} /> : null}
-            {s.type === "planet" ? <Planet {...s} /> : null}
+            {s.axesHelper && visible ? <axesHelper args={[10]} /> : null}
+            {s.type === "planet" ? <Planet s={s} actualMoon={actualMoon} name={name} /> : null}
             {s.name === "Earth" && <EclipticGrid />}
             {children}
           </group>

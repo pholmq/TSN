@@ -139,8 +139,17 @@ export function getRaDecDistance(name, scene) {
   // Update the scene's matrix world once
   scene.updateMatrixWorld();
 
-  // Get world positions
-  const targetObject = scene.getObjectByName(name);
+  // Get world positions.
+  // Special hack for the Moon. We have an "actual" invisible moon since the "Non actual planet size" moon has the wrong
+  // position so it can be visible
+
+  let targetObject;
+  if (name === "Moon") {
+    targetObject = scene.getObjectByName("Actual Moon");
+  } else {
+    targetObject = scene.getObjectByName(name);
+  }
+
   const celestialSphere = scene.getObjectByName("CelestialSphere");
   const sun = scene.getObjectByName("Sun");
   const csLookAtObj = scene.getObjectByName("CSLookAtObj");
@@ -166,13 +175,9 @@ export function getRaDecDistance(name, scene) {
   const radius = sphericalPos.radius / 100;
   let distKm, distAU;
 
-  if (name === "Moon") {
-    distKm = ((radius * 149597871) / 39.2078).toFixed(0);
-    distAU = (radius / 39.2078).toFixed(2);
-  } else {
-    distKm = (radius * 149597871).toFixed(0);
-    distAU = radius.toFixed(2);
-  }
+  distKm = (radius * 149597871).toFixed(0);
+  distAU = radius.toFixed(2);
+  // }
 
   // Calculate elongation
   const earthSunDistance = csPos.distanceTo(sunPos);
