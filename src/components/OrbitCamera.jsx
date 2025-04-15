@@ -15,9 +15,26 @@ export default function OrbitCamera() {
   const cameraUpdate = useStore((s) => s.cameraUpdate);
   const resetClicked = useStore((s) => s.resetClicked);
   const runIntro = useStore((s) => s.runIntro);
+  const setRunIntro = useStore((s) => s.setRunIntro);
 
   const targetObjRef = useRef(null);
   const target = new Vector3();
+
+  useEffect(() => {
+    // Event handler function
+    const handleClick = (event) => {
+      // Check if it's a left mouse button click (button === 0)
+      if (event.button === 0) {
+        setRunIntro(false);
+      }
+    };
+    // Add event listener to the document
+    document.addEventListener("click", handleClick);
+    // Cleanup function
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     targetObjRef.current = scene.getObjectByName(cameraTarget);
@@ -50,7 +67,6 @@ export default function OrbitCamera() {
         makeDefault={!planetCamera}
         name="OrbitCamera"
         ref={cameraRef}
-        
         position={[-30000000, 10000000, 0]}
         // position={[0, 2200, 0]}
         // position={[-3000, 1000, 0]}

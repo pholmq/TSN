@@ -8,7 +8,7 @@ import PolarLine from "./Helpers/PolarLine";
 import HoverObj from "../components/HoverObj/HoverObj";
 import PlanetRings from "./PlanetRings";
 
-export default function Planet(s) {
+export default function Planet({ s, actualMoon, name }) {
   const cSphereRef = useRef();
   const planetRef = useRef();
   const materialRef = useRef();
@@ -33,7 +33,12 @@ export default function Planet(s) {
   const rotationSpeed = s.rotationSpeed || 0;
   const rotationStart = s.rotationStart || 0;
 
-  const size = actualPlanetSizes ? s.actualSize : s.size;
+  let size = actualPlanetSizes ? s.actualSize : s.size;
+  let visible = s.visible;
+  if (actualMoon) {
+    size = s.actualSize;
+    visible = false;
+  }
 
   useFrame(() => {
     if (rotationSpeed) {
@@ -49,10 +54,10 @@ export default function Planet(s) {
       <group rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
         {s.name === "Earth" && <CelestialSphere />}
         {s.name === "Earth" && <PolarLine />}
-        {s.visible && <HoverObj s={s} />}
+        {visible && <HoverObj s={s} />}
         <mesh
-          name={s.name}
-          visible={s.visible}
+          name={name}
+          visible={visible}
           ref={planetRef}
           scale={planetScale}
           rotation={[0, rotationStart || 0, 0]}
