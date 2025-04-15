@@ -66,22 +66,6 @@ const UserInterface = () => {
     }
   }, [run]);
 
-  useEffect(() => {
-    // Event handler function
-    const handleClick = (event) => {
-      // Check if it's a left mouse button click (button === 0)
-      if (event.button === 0) {
-        setRunIntro(false);
-      }
-    };
-    // Add event listener to the document
-    document.addEventListener("click", handleClick);
-    // Cleanup function
-    return () => {
-      document.removeEventListener("click", handleClick);
-    };
-  }, []);
-
   function dateKeyDown(e) {
     //Prevent planet camera from moving
     e.stopPropagation();
