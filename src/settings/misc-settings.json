@@ -1,7 +1,6 @@
 [
   {
     "name": "SystemCenter",
-    "containerPos": -90,
     "color": "#222222",
     "type": "planet",
     "visible": true,
@@ -12,8 +11,7 @@
   },
   {
     "name": "Earth",
-    "size": 4,
-    "rotationSpeed": 2301.1694948647196,
+    "earth": true,
     "color": "#287AB8",
     "type": "planet",
     "actualSize": 0.00426,
@@ -27,21 +25,18 @@
   },
   {
     "name": "Moon deferent A",
-    "size": 0.6,
     "color": "gray",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Moon deferent B",
-    "size": 0.6,
     "color": "gray",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Moon",
-    "size": 1,
     "color": "#8b8b8b",
     "type": "planet",
     "actualSize": 0.00116,
@@ -55,15 +50,12 @@
   },
   {
     "name": "Sun deferent",
-    "size": 0.6,
     "color": "yellow",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Sun",
-    "size": 8,
-    "rotationSpeed": 83.995,
     "color": "yellow",
     "type": "planet",
     "actualSize": 0.465,
@@ -79,21 +71,18 @@
   },
   {
     "name": "Mercury def A",
-    "size": 0.6,
     "color": "gray",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Mercury def B",
-    "size": 0.6,
     "color": "gray",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Mercury",
-    "size": 1.53,
     "color": "#CECCD1",
     "type": "planet",
     "actualSize": 0.00163,
@@ -107,21 +96,18 @@
   },
   {
     "name": "Venus deferent A",
-    "size": 2,
     "color": "#FFC649",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Venus deferent B",
-    "size": 0.6,
     "color": "orange",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Venus",
-    "size": 3.8,
     "color": "#FFC649",
     "type": "planet",
     "actualSize": 0.00404,
@@ -135,21 +121,18 @@
   },
   {
     "name": "Mars E deferent",
-    "size": 0.6,
     "color": "red",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Mars S deferent",
-    "size": 0.6,
     "color": "red",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Mars",
-    "size": 2.13,
     "color": "red",
     "type": "planet",
     "actualSize": 0.00227,
