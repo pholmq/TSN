@@ -50,6 +50,8 @@ const LevaUI = () => {
     setOfficialStarDistances,
     starScale,
     setStarScale,
+    editSettings,
+    setEditSettings,
   } = useStore();
 
   const {
@@ -172,6 +174,10 @@ const LevaUI = () => {
         Arrows: {
           value: arrows,
           onChange: setArrows,
+        },
+        "Edit settings": {
+          value: editSettings,
+          onChange: setEditSettings,
         },
       },
       { collapsed: true }
