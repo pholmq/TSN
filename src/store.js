@@ -130,6 +130,9 @@ export const useStore = create((set) => ({
   setEndIntro: (v) => set({ endIntro: v }),
   runIntro: true,
   setRunIntro: (v) => set({ runIntro: v }),
+
+  editSettings: false,
+  setEditSettings: (v) => set({ editSettings: v }),
 }));
 
 export const usePosStore = create((set) => ({

@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from "react";
 import { useControls, useCreateStore, Leva, folder } from "leva";
-import { useStore, useSettingsStore, usePosStore } from "../store";
+import { useStore, useSettingsStore, usePosStore } from "../../store";
 
-const Positions = () => {
-  const showPositions = useStore((s) => s.showPositions);
+const EditSettings = () => {
+  const editSettings = useStore((s) => s.editSettings);
   const positions = usePosStore((s) => s.positions);
   const { settings } = useSettingsStore();
 
@@ -12,31 +12,35 @@ const Positions = () => {
     const folders = {};
 
     settings.forEach((s) => {
-      if (s.traceable) {
         folders[s.name] = folder(
           {
             // Use unique keys for each control
             [`${s.name}ra`]: { label: "RA:", value: "", editable: false },
             [`${s.name}dec`]: { label: "Dec:", value: "", editable: false },
-            [`${s.name}dist`]: { label: "Distance:", value: "", editable: false },
-            [`${s.name}elongation`]: { label: "Elong.:", value: "", editable: false },
+            [`${s.name}dist`]: {
+              label: "Distance:",
+              value: "",
+              editable: false,
+            },
+            [`${s.name}elongation`]: {
+              label: "Elong.:",
+              value: "",
+              editable: false,
+            },
           },
           { collapsed: true }
         );
-      }
     });
 
-    folders.tip = {
-      label: "Tip:",
-      value: "Hover any planet to see its position",
-      editable: false,
-    };
+    // folders.tip = {
+    //   label: "Tip:",
+    //   value: "Hover any planet to see its position",
+    //   editable: false,
+    // };
 
     return folders;
   }, [settings]); // Only recreate if `settings` changes
 
-
-  
   // Create a custom Leva store
   const levaStore = useCreateStore();
 
@@ -44,24 +48,24 @@ const Positions = () => {
   const [, set] = useControls(() => planetFolders, { store: levaStore });
 
   // Update Leva controls when `positions` change
-  useEffect(() => {
-    for (const pos in positions) {
-      set({
-        [`${pos}ra`]: positions[pos].ra,
-        [`${pos}dec`]: positions[pos].dec,
-        [`${pos}dist`]: positions[pos].dist,
-        [`${pos}elongation`]: positions[pos].elongation,
-      });
-    }
-  }, [positions, set]);
+//   useEffect(() => {
+//     for (const pos in positions) {
+//       set({
+//         [`${pos}ra`]: positions[pos].ra,
+//         [`${pos}dec`]: positions[pos].dec,
+//         [`${pos}dist`]: positions[pos].dist,
+//         [`${pos}elongation`]: positions[pos].elongation,
+//       });
+//     }
+//   }, [positions, set]);
 
   return (
     <>
-      {showPositions && (
+      {editSettings && (
         <div className="positions-div">
           <Leva
             store={levaStore}
-            titleBar={{ drag: true, title: "Positions", filter: false }}
+            titleBar={{ drag: true, title: "Settings", filter: false }}
             fill={false}
             hideCopyButton
             theme={{
@@ -83,4 +87,4 @@ const Positions = () => {
   );
 };
 
-export default Positions;
+export default EditSettings;

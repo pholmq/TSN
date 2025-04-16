@@ -12,12 +12,13 @@ import LightEffectsMenu from "./components/Menus/LightEffectsMenu";
 import PlanetsPositionsMenu from "./components/Menus/PlanetsPositionsMenu";
 import StarsHelpersMenu from "./components/Menus/StarsHelpersMenu";
 import PosController from "./components/PosController";
-import Positions from "./components/Positions";
+import Positions from "./components/Menus/Positions";
 import Stars from "./components/Stars/Stars";
 import Zodiac from "./components/Helpers/Zodiac";
 import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
 import IntroText from "./components/Intro/IntroText";
+import EditSettings from "./components/Menus/EditSettings";
 
 const TSNext = () => {
   const zoomLevel = useStore((s) => s.zoomLevel);
@@ -28,6 +29,7 @@ const TSNext = () => {
       <div>
         <UserInterface />
         <Positions />
+        <EditSettings />
         <PlanetCameraUI />
       </div>
       <Canvas
@@ -44,6 +46,7 @@ const TSNext = () => {
         <PlanetsPositionsMenu />
         <StarsHelpersMenu />
         <LightEffectsMenu />
+
         <SolarSystem />
         <PlotSolarSystem />
         <Stars />
