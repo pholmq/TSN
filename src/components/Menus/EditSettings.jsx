@@ -5,66 +5,71 @@ import { useStore, useSettingsStore, usePosStore } from "../../store";
 const EditSettings = () => {
   const editSettings = useStore((s) => s.editSettings);
   const positions = usePosStore((s) => s.positions);
-  const { settings } = useSettingsStore();
+  const { settings, updateSetting } = useSettingsStore();
 
-  // Memoize the planetFolders object to prevent recreation on every render
-  const planetFolders = useMemo(() => {
+  const settingsFolders = useMemo(() => {
     const folders = {};
 
     settings.forEach((s) => {
-        folders[s.name] = folder(
-          {
-            // Use unique keys for each control
-            [`${s.name}ra`]: { label: "RA:", value: "", editable: false },
-            [`${s.name}dec`]: { label: "Dec:", value: "", editable: false },
-            [`${s.name}dist`]: {
-              label: "Distance:",
-              value: "",
-              editable: false,
-            },
-            [`${s.name}elongation`]: {
-              label: "Elong.:",
-              value: "",
-              editable: false,
+      folders[s.name] = folder(
+        {
+          // Use unique keys for each control
+          [`${s.name}startPos`]: {
+            label: "startPos",
+            value: "\u200B" + s.startPos, //Prifix with a whitespace to force string interpetations so that all decimals are there
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                startPos: cleanValue,
+              });
             },
           },
-          { collapsed: true }
-        );
+          [`${s.name}speed`]: {
+            label: "speed",
+            value: "\u200B" + s.speed,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                speed: cleanValue,
+              });
+            },
+          },
+          [`${s.name}dist`]: {
+            label: "Distance:",
+            value: "",
+            editable: false,
+          },
+          [`${s.name}elongation`]: {
+            label: "Elong.:",
+            value: "",
+            editable: false,
+          },
+        },
+        { collapsed: true }
+      );
     });
-
-    // folders.tip = {
-    //   label: "Tip:",
-    //   value: "Hover any planet to see its position",
-    //   editable: false,
-    // };
 
     return folders;
   }, [settings]); // Only recreate if `settings` changes
 
   // Create a custom Leva store
-  const levaStore = useCreateStore();
+  const levaSettingsStore = useCreateStore();
 
   // Set up Leva controls (only runs once)
-  const [, set] = useControls(() => planetFolders, { store: levaStore });
-
-  // Update Leva controls when `positions` change
-//   useEffect(() => {
-//     for (const pos in positions) {
-//       set({
-//         [`${pos}ra`]: positions[pos].ra,
-//         [`${pos}dec`]: positions[pos].dec,
-//         [`${pos}dist`]: positions[pos].dist,
-//         [`${pos}elongation`]: positions[pos].elongation,
-//       });
-//     }
-//   }, [positions, set]);
+  const [, set] = useControls(() => settingsFolders, {
+    store: levaSettingsStore,
+  });
 
   return (
     <>
       {editSettings && (
         <div className="positions-div">
           <Leva
-            store={levaStore}
+            store={levaSettingsStore}
             titleBar={{ drag: true, title: "Settings", filter: false }}
             fill={false}
             hideCopyButton
