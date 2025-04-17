@@ -5,70 +5,186 @@ import { useStore, useSettingsStore, usePosStore } from "../../store";
 const EditSettings = () => {
   const editSettings = useStore((s) => s.editSettings);
   const positions = usePosStore((s) => s.positions);
-  const { settings } = useSettingsStore();
+  const { settings, updateSetting } = useSettingsStore();
 
-  // Memoize the planetFolders object to prevent recreation on every render
-  const planetFolders = useMemo(() => {
+  const settingsFolders = useMemo(() => {
     const folders = {};
 
     settings.forEach((s) => {
-        folders[s.name] = folder(
-          {
-            // Use unique keys for each control
-            [`${s.name}ra`]: { label: "RA:", value: "", editable: false },
-            [`${s.name}dec`]: { label: "Dec:", value: "", editable: false },
-            [`${s.name}dist`]: {
-              label: "Distance:",
-              value: "",
-              editable: false,
-            },
-            [`${s.name}elongation`]: {
-              label: "Elong.:",
-              value: "",
-              editable: false,
+      folders[s.name] = folder(
+        {
+          // Use unique keys for each control
+          [`${s.name}startPos`]: {
+            label: "startPos",
+            value: "\u200B" + s.startPos, //Prifix with a whitespace to force string interpetations so that all decimals are there
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                startPos: cleanValue,
+              });
             },
           },
-          { collapsed: true }
-        );
+          [`${s.name}speed`]: {
+            label: "speed",
+            value: "\u200B" + s.speed,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                speed: cleanValue,
+              });
+            },
+          },
+          ...(s.rotationSpeed !== undefined
+            ? {
+                [`${s.name}rotationSpeed`]: {
+                  label: "rotationSpeed",
+                  value: "\u200B" + s.rotationSpeed,
+                  editable: true,
+                  onChange: (value) => {
+                    const cleanValue = value.replace(/\u200B/g, "");
+                    updateSetting({
+                      ...s,
+                      rotationSpeed: cleanValue,
+                    });
+                  },
+                },
+              }
+            : {}),
+          [`${s.name}tilt`]: {
+            label: "tilt",
+            value: "\u200B" + s.tilt,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                tilt: cleanValue,
+              });
+            },
+          },
+          ...(s.tiltb !== undefined
+            ? {
+                [`${s.name}tiltb`]: {
+                  label: "tiltb",
+                  value: "\u200B" + s.tiltb,
+                  editable: true,
+                  onChange: (value) => {
+                    const cleanValue = value.replace(/\u200B/g, "");
+                    updateSetting({
+                      ...s,
+                      tiltb: cleanValue,
+                    });
+                  },
+                },
+              }
+            : {}),
+          [`${s.name}orbitRadius`]: {
+            label: "orbitRadius",
+            value: "\u200B" + s.orbitRadius,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitRadius: cleanValue,
+              });
+            },
+          },
+          [`${s.name}orbitCentera`]: {
+            label: "orbitCentera",
+            value: "\u200B" + s.orbitCentera,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitCentera: cleanValue,
+              });
+            },
+          },
+          [`${s.name}orbitCenterb`]: {
+            label: "orbitCenterb",
+            value: "\u200B" + s.orbitCenterb,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitCenterb: cleanValue,
+              });
+            },
+          },
+          [`${s.name}orbitCenterc`]: {
+            label: "orbitCenterc",
+            value: "\u200B" + s.orbitCenterc,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitCenterc: cleanValue,
+              });
+            },
+          },
+          [`${s.name}orbitTilta`]: {
+            label: "orbitTilta",
+            value: "\u200B" + s.orbitTilta,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitTilta: cleanValue,
+              });
+            },
+          },
+          [`${s.name}orbitTiltb`]: {
+            label: "orbitTiltb",
+            value: "\u200B" + s.orbitTiltb,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitTiltb: cleanValue,
+              });
+            },
+          },
+        },
+        { collapsed: true }
+      );
     });
-
-    // folders.tip = {
-    //   label: "Tip:",
-    //   value: "Hover any planet to see its position",
-    //   editable: false,
-    // };
 
     return folders;
   }, [settings]); // Only recreate if `settings` changes
 
   // Create a custom Leva store
-  const levaStore = useCreateStore();
+  const levaSettingsStore = useCreateStore();
 
   // Set up Leva controls (only runs once)
-  const [, set] = useControls(() => planetFolders, { store: levaStore });
-
-  // Update Leva controls when `positions` change
-//   useEffect(() => {
-//     for (const pos in positions) {
-//       set({
-//         [`${pos}ra`]: positions[pos].ra,
-//         [`${pos}dec`]: positions[pos].dec,
-//         [`${pos}dist`]: positions[pos].dist,
-//         [`${pos}elongation`]: positions[pos].elongation,
-//       });
-//     }
-//   }, [positions, set]);
+  const [, set] = useControls(() => settingsFolders, {
+    store: levaSettingsStore,
+  });
 
   return (
     <>
       {editSettings && (
-        <div className="positions-div">
+        <div className="settings-div">
           <Leva
-            store={levaStore}
+            store={levaSettingsStore}
             titleBar={{ drag: true, title: "Settings", filter: false }}
             fill={false}
             hideCopyButton
             theme={{
+              sizes: {
+                // controlWidth: "50%", // Applies to ALL controls (text/number/color etc.)
+                // labelWidth: "40%", // Adjust label width to balance space
+              },
+
               fontSizes: {
                 root: "16px",
               },
