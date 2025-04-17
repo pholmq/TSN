@@ -1,6 +1,10 @@
 import { useEffect, useMemo } from "react";
-import { useControls, useCreateStore, Leva, folder } from "leva";
+import { useControls, useCreateStore, Leva, folder, button } from "leva";
 import { useStore, useSettingsStore, usePosStore } from "../../store";
+import {
+  saveSettingsAsJson,
+  loadSettingsFromFile,
+} from "../../utils/saveAndLoadSettings";
 
 const EditSettings = () => {
   const editSettings = useStore((s) => s.editSettings);
@@ -187,8 +191,11 @@ const EditSettings = () => {
         { collapsed: true }
       );
     });
-
-    return folders;
+    return {
+      "Load settings": button(() => loadSettingsFromFile()),
+      "Save settings": button(() => saveSettingsAsJson(settings)),
+      ...folders,
+    };
   }, [settings]); // Only recreate if `settings` changes
 
   // Create a custom Leva store
