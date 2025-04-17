@@ -14,6 +14,35 @@ const EditSettings = () => {
       folders[s.name] = folder(
         {
           // Use unique keys for each control
+          [`${s.name}size`]: {
+            label: "size",
+            value: "\u200B" + s.size, //Prifix with a whitespace to force string interpetations so that all decimals are there
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                size: cleanValue,
+              });
+            },
+          },
+          ...(s.actualSize !== undefined
+            ? {
+                [`${s.name}actualSize`]: {
+                  label: "actualSize",
+                  value: "\u200B" + s.actualSize,
+                  editable: true,
+                  onChange: (value) => {
+                    const cleanValue = value.replace(/\u200B/g, "");
+                    updateSetting({
+                      ...s,
+                      actualSize: cleanValue,
+                    });
+                  },
+                },
+              }
+            : {}),
+
           [`${s.name}startPos`]: {
             label: "startPos",
             value: "\u200B" + s.startPos, //Prifix with a whitespace to force string interpetations so that all decimals are there
