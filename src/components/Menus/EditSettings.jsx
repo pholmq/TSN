@@ -38,15 +38,121 @@ const EditSettings = () => {
               });
             },
           },
-          [`${s.name}dist`]: {
-            label: "Distance:",
-            value: "",
-            editable: false,
+          ...(s.rotationSpeed !== undefined
+            ? {
+                [`${s.name}rotationSpeed`]: {
+                  label: "rotationSpeed",
+                  value: "\u200B" + s.rotationSpeed,
+                  editable: true,
+                  onChange: (value) => {
+                    const cleanValue = value.replace(/\u200B/g, "");
+                    updateSetting({
+                      ...s,
+                      rotationSpeed: cleanValue,
+                    });
+                  },
+                },
+              }
+            : {}),
+          [`${s.name}tilt`]: {
+            label: "tilt",
+            value: "\u200B" + s.tilt,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                tilt: cleanValue,
+              });
+            },
           },
-          [`${s.name}elongation`]: {
-            label: "Elong.:",
-            value: "",
-            editable: false,
+          ...(s.tiltb !== undefined
+            ? {
+                [`${s.name}tiltb`]: {
+                  label: "tiltb",
+                  value: "\u200B" + s.tiltb,
+                  editable: true,
+                  onChange: (value) => {
+                    const cleanValue = value.replace(/\u200B/g, "");
+                    updateSetting({
+                      ...s,
+                      tiltb: cleanValue,
+                    });
+                  },
+                },
+              }
+            : {}),
+          [`${s.name}orbitRadius`]: {
+            label: "orbitRadius",
+            value: "\u200B" + s.orbitRadius,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitRadius: cleanValue,
+              });
+            },
+          },
+          [`${s.name}orbitCentera`]: {
+            label: "orbitCentera",
+            value: "\u200B" + s.orbitCentera,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitCentera: cleanValue,
+              });
+            },
+          },
+          [`${s.name}orbitCenterb`]: {
+            label: "orbitCenterb",
+            value: "\u200B" + s.orbitCenterb,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitCenterb: cleanValue,
+              });
+            },
+          },
+          [`${s.name}orbitCenterc`]: {
+            label: "orbitCenterc",
+            value: "\u200B" + s.orbitCenterc,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitCenterc: cleanValue,
+              });
+            },
+          },
+          [`${s.name}orbitTilta`]: {
+            label: "orbitTilta",
+            value: "\u200B" + s.orbitTilta,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitTilta: cleanValue,
+              });
+            },
+          },
+          [`${s.name}orbitTiltb`]: {
+            label: "orbitTiltb",
+            value: "\u200B" + s.orbitTiltb,
+            editable: true,
+            onChange: (value) => {
+              const cleanValue = value.replace(/\u200B/g, "");
+              updateSetting({
+                ...s,
+                orbitTiltb: cleanValue,
+              });
+            },
           },
         },
         { collapsed: true }
@@ -67,13 +173,18 @@ const EditSettings = () => {
   return (
     <>
       {editSettings && (
-        <div className="positions-div">
+        <div className="settings-div">
           <Leva
             store={levaSettingsStore}
             titleBar={{ drag: true, title: "Settings", filter: false }}
             fill={false}
             hideCopyButton
             theme={{
+              sizes: {
+                // controlWidth: "50%", // Applies to ALL controls (text/number/color etc.)
+                // labelWidth: "40%", // Adjust label width to balance space
+              },
+
               fontSizes: {
                 root: "16px",
               },

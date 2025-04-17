@@ -131,7 +131,7 @@ export const useStore = create((set) => ({
   runIntro: true,
   setRunIntro: (v) => set({ runIntro: v }),
 
-  editSettings: true,
+  editSettings: false,
   setEditSettings: (v) => set({ editSettings: v }),
 }));
 

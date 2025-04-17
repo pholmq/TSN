@@ -169,6 +169,16 @@ body {
   right: auto !important;
   opacity: 0.8;
 }
+/* Override Leva’s inline styles for its root element */
+.settings-div > div {
+  position: fixed;
+  top: 10px !important;
+  left: 10px !important;
+  right: auto !important;
+  height: auto;
+  width: 350px;
+  opacity: 0.8;
+}
 
 .plancam-div > div {
   position: fixed;
@@ -181,3 +191,8 @@ body {
   width: auto;
   opacity: 0.8;
 }
+
+/* .leva-c-dUhtWz {
+  width: 100% !important;
+  height: 100% !important;
+} */
