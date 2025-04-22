@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useStore } from "../store";
 import { Line } from "@react-three/drei";
 
-function Arrow({ rotation, radius, color, reverse = false, scale = 3 }) {
+function Arrow({ rotation, radius, color, reverse = false }) {
   const arrowScale = useStore((s) => s.arrowScale);
 
   let arrowDirection = 0;
@@ -29,6 +29,8 @@ export default function Orbit({
   color,
   arrows = false,
   reverse = false,
+  deferent,
+  visible,
 }) {
   const orbitRef = useRef();
 
@@ -60,41 +62,52 @@ export default function Orbit({
 
   return (
     <>
-      <group ref={orbitRef} visible={showOrbits}>
-        <group visible={arrows && showArrows}>
-          <Arrow
-            rotation={Math.PI / 4}
-            radius={radius}
-            color={color}
-            reverse={reverse}
-          />
-          <Arrow
-            rotation={(Math.PI / 4) * 3}
-            radius={radius}
-            color={color}
-            reverse={reverse}
-          />
-          <Arrow
-            rotation={(Math.PI / 4) * 5}
-            radius={radius}
-            color={color}
-            reverse={reverse}
-          />
-          <Arrow
-            rotation={(Math.PI / 4) * 7}
-            radius={radius}
-            color={color}
-            reverse={reverse}
+      {!deferent ? (
+        <group visible={showOrbits && visible}>
+          <group visible={arrows && showArrows}>
+            <Arrow
+              rotation={Math.PI / 4}
+              radius={radius}
+              color={color}
+              reverse={reverse}
+            />
+            <Arrow
+              rotation={(Math.PI / 4) * 3}
+              radius={radius}
+              color={color}
+              reverse={reverse}
+            />
+            <Arrow
+              rotation={(Math.PI / 4) * 5}
+              radius={radius}
+              color={color}
+              reverse={reverse}
+            />
+            <Arrow
+              rotation={(Math.PI / 4) * 7}
+              radius={radius}
+              color={color}
+              reverse={reverse}
+            />
+          </group>
+
+          <Line
+            points={points} // Array of points
+            color={color} // Default
+            lineWidth={orbitsLineWidth} // In pixels (default)
+            dashed={false}
           />
         </group>
-
-        <Line
-          points={points} // Array of points
-          color={color} // Default
-          lineWidth={orbitsLineWidth} // In pixels (default)
-          dashed={false}
-        />
-      </group>
+      ) : (
+        <group visible={false}>
+          <Line
+            points={points} // Array of points
+            color={color} // Default
+            lineWidth={orbitsLineWidth} // In pixels (default)
+            dashed={false}
+          />
+        </group>
+      )}
       {/* )} */}
     </>
   );

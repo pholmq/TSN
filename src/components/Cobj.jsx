@@ -9,7 +9,7 @@ import EclipticGrid from "./Helpers/EclipticGrid";
 const Cobj = ({ name, children }) => {
   const { settings } = useSettingsStore();
   let s;
-  let visible
+  let visible;
   let actualMoon = false;
   //Special hack for the Moon. We have an "actual" invisible moon since the "Non actual planet size" moon has the wrong
   // position so it can be visible
@@ -19,7 +19,7 @@ const Cobj = ({ name, children }) => {
     s = settings.find((p) => p.name === name.replace("Actual ", ""));
   } else {
     s = settings.find((p) => p.name === name);
-    visible = s.visible
+    visible = s.visible;
   }
 
   const containerRef = useRef();
@@ -61,20 +61,25 @@ const Cobj = ({ name, children }) => {
         rotation-z={s.orbitTiltb * (Math.PI / 180)}
       >
         {orbitRadius ? (
-          <group rotation-x={-Math.PI / 2} visible={visible}>
+          <group rotation-x={-Math.PI / 2}>
             <Orbit
               radius={orbitRadius}
               color={s.color}
               arrows={s.arrows}
               reverse={s.reverseArrows}
+              deferent={s.type === "deferent" ? true : false}
+              visible ={s.visible}
             />
           </group>
         ) : null}
         <group name="Orbit" ref={orbitRef}>
           <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
             {s.axesHelper && visible ? <axesHelper args={[10]} /> : null}
-            {s.type === "planet" ? <Planet s={s} actualMoon={actualMoon} name={name} /> : null}
-            {s.name === "Earth" && <EclipticGrid />}
+            {s.type === "planet" ? (
+              <Planet s={s} actualMoon={actualMoon} name={name} />
+            ) : null}
+            {/* {s.type === "deferent" ? <Deferent s={s}/> */}
+            {s.name === "Earth" ? <EclipticGrid /> : null}
             {children}
           </group>
         </group>
