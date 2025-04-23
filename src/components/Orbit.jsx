@@ -26,10 +26,11 @@ function Arrow({ rotation, radius, color, reverse = false }) {
 
 export default function Orbit({ radius, s }) {
   const color = s.color;
-  const arrows = s?.arrows === true ? true : false;
-  const reverse = s?.reverseArrows === true ? true : false;
-  const deferent = s?.type === "deferent" ? true : false;
-  const visible = s?.visible === true ? true : false;
+  const arrows = s?.arrows ? s.arrows : false;
+  const reverse = s?.reverseArrows ? s.reverseArrows : false;
+  const visible = s.visible;
+
+  console.log("arrows: " + arrows, "reverse: " + arrows);
 
   const orbitRef = useRef();
 
@@ -61,53 +62,41 @@ export default function Orbit({ radius, s }) {
 
   return (
     <>
-      {!deferent ? (
-        <group visible={showOrbits && visible}>
-          <group visible={arrows && showArrows}>
-            <Arrow
-              rotation={Math.PI / 4}
-              radius={radius}
-              color={color}
-              reverse={reverse}
-            />
-            <Arrow
-              rotation={(Math.PI / 4) * 3}
-              radius={radius}
-              color={color}
-              reverse={reverse}
-            />
-            <Arrow
-              rotation={(Math.PI / 4) * 5}
-              radius={radius}
-              color={color}
-              reverse={reverse}
-            />
-            <Arrow
-              rotation={(Math.PI / 4) * 7}
-              radius={radius}
-              color={color}
-              reverse={reverse}
-            />
-          </group>
+      <group visible={showOrbits && visible}>
+        <group visible={arrows && showArrows}>
+          <Arrow
+            rotation={Math.PI / 4}
+            radius={radius}
+            color={color}
+            reverse={reverse}
+          />
+          <Arrow
+            rotation={(Math.PI / 4) * 3}
+            radius={radius}
+            color={color}
+            reverse={reverse}
+          />
+          <Arrow
+            rotation={(Math.PI / 4) * 5}
+            radius={radius}
+            color={color}
+            reverse={reverse}
+          />
+          <Arrow
+            rotation={(Math.PI / 4) * 7}
+            radius={radius}
+            color={color}
+            reverse={reverse}
+          />
+        </group>
 
-          <Line
-            points={points} // Array of points
-            color={color} // Default
-            lineWidth={orbitsLineWidth} // In pixels (default)
-            dashed={false}
-          />
-        </group>
-      ) : (
-        <group visible={false}>
-          <Line
-            points={points} // Array of points
-            color={color} // Default
-            lineWidth={orbitsLineWidth} // In pixels (default)
-            dashed={false}
-          />
-        </group>
-      )}
-      {/* )} */}
+        <Line
+          points={points} // Array of points
+          color={color} // Default
+          lineWidth={orbitsLineWidth} // In pixels (default)
+          dashed={false}
+        />
+      </group>
     </>
   );
 }

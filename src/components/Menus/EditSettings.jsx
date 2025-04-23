@@ -9,7 +9,7 @@ import {
 const EditSettings = () => {
   const editSettings = useStore((s) => s.editSettings);
   const positions = usePosStore((s) => s.positions);
-  const { settings, updateSetting } = useSettingsStore();
+  const { settings, updateSetting, resetSettings } = useSettingsStore();
 
   const settingsFolders = useMemo(() => {
     const folders = {};
@@ -194,6 +194,8 @@ const EditSettings = () => {
     return {
       "Load settings": button(() => loadSettingsFromFile()),
       "Save settings": button(() => saveSettingsAsJson(settings)),
+      "Reset settings": button(() => resetSettings()),
+
       ...folders,
     };
   }, [settings]); // Only recreate if `settings` changes

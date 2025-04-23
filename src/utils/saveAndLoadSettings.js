@@ -1,4 +1,5 @@
 import { useSettingsStore } from "../store";
+
 export const saveSettingsAsJson = (settings) => {
   // Define the properties to include in the JSON
   const allowedProperties = [
@@ -109,3 +110,4 @@ export const loadSettingsFromFile = async () => {
     return false;
   }
 };
+

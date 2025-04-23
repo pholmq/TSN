@@ -4,6 +4,7 @@ import { folder, useControls, button } from "leva";
 import { useStore, useSettingsStore } from "../store";
 import Planet from "./Planet";
 import Orbit from "./Orbit";
+import Deferent from "./Deferent";
 import EclipticGrid from "./Helpers/EclipticGrid";
 
 const Cobj = ({ name, children }) => {
@@ -62,7 +63,11 @@ const Cobj = ({ name, children }) => {
       >
         {orbitRadius ? (
           <group rotation-x={-Math.PI / 2}>
-            <Orbit radius={orbitRadius} s={s} />
+            {s.type === "deferent" ? (
+              <Deferent s={s} />
+            ) : (
+              <Orbit radius={orbitRadius} s={s} />
+            )}
           </group>
         ) : null}
         <group name="Orbit" ref={orbitRef}>
@@ -71,7 +76,6 @@ const Cobj = ({ name, children }) => {
             {s.type === "planet" ? (
               <Planet s={s} actualMoon={actualMoon} name={name} />
             ) : null}
-            {/* {s.type === "deferent" ? <Deferent s={s}/> */}
             {s.name === "Earth" ? <EclipticGrid /> : null}
             {children}
           </group>
