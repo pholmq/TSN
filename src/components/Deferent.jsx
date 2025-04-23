@@ -4,7 +4,6 @@ import { useStore } from "../store";
 import { Line } from "@react-three/drei";
 
 export default function Orbit({ radius, visible, s }) {
-  return null;
   const color = s.color;
   const arrows = s?.arrows ? s.arrows : false;
   const reverse = s?.reverseArrows ? s.reverseArrows : false;
@@ -12,13 +11,15 @@ export default function Orbit({ radius, visible, s }) {
 
   const orbitRef = useRef();
 
-  const showArrows = useStore((s) => s.arrows);
-  const showOrbits = useStore((s) => s.orbits);
+  const showDeferents = useStore((s) => s.showDeferents);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
 
+  const centerToEdgePoints = [
+    [0, 0, 0], // Center point
+    [Math.sin(0) * radius, Math.cos(0) * radius, 0], // Edge point at start angle (0 degrees)
+  ];
+
   let points = [];
-  let arrowPoints = [];
-  let arrowStepSize = 45;
 
   // // 360 full circle will be drawn clockwise
   // for (let i = 0; i <= 360; i++) {
@@ -28,23 +29,21 @@ export default function Orbit({ radius, visible, s }) {
       Math.cos(i * (Math.PI / 180)) * radius,
       0,
     ]);
-    if (i === arrowStepSize) {
-      arrowPoints.push([
-        Math.sin(i * (Math.PI / 180)) * radius,
-        Math.cos(i * (Math.PI / 180)) * radius,
-        0,
-      ]);
-      arrowStepSize += arrowStepSize;
-    }
   }
 
   return (
     <>
-      <group visible={showOrbits}>
+      <group visible={showDeferents}>
         <Line
           points={points} // Array of points
           color={color} // Default
           lineWidth={orbitsLineWidth} // In pixels (default)
+          dashed={false}
+        />
+        <Line
+          points={centerToEdgePoints}
+          color={color}
+          lineWidth={orbitsLineWidth}
           dashed={false}
         />
       </group>

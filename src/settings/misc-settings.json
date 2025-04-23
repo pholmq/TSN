@@ -130,7 +130,7 @@
     "color": "red",
     "type": "planet",
     "visible": true,
-    "//arrows": true,
+    "arrows": true,
     "//reverseArrows": true,
     "texture": "/textures/planets/2k_mars.jpg",
     "unicodeSymbol": "&#x2642;",

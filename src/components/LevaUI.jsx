@@ -52,6 +52,8 @@ const LevaUI = () => {
     setStarScale,
     editSettings,
     setEditSettings,
+    showDeferents,
+    setShowDeferents,
   } = useStore();
 
   const {
@@ -174,6 +176,10 @@ const LevaUI = () => {
         Arrows: {
           value: arrows,
           onChange: setArrows,
+        },
+        "Show Deferents": {
+          value: showDeferents,
+          onChange: setShowDeferents,
         },
         "Edit settings": {
           value: editSettings,
