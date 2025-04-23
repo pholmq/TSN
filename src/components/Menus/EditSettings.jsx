@@ -9,7 +9,7 @@ import {
 const EditSettings = () => {
   const editSettings = useStore((s) => s.editSettings);
   const positions = usePosStore((s) => s.positions);
-  const { settings, updateSetting } = useSettingsStore();
+  const { settings, updateSetting, resetSettings } = useSettingsStore();
 
   const settingsFolders = useMemo(() => {
     const folders = {};
@@ -194,6 +194,8 @@ const EditSettings = () => {
     return {
       "Load settings": button(() => loadSettingsFromFile()),
       "Save settings": button(() => saveSettingsAsJson(settings)),
+      "Reset settings": button(() => resetSettings()),
+
       ...folders,
     };
   }, [settings]); // Only recreate if `settings` changes
@@ -205,6 +207,33 @@ const EditSettings = () => {
   const [, set] = useControls(() => settingsFolders, {
     store: levaSettingsStore,
   });
+
+  // Synchronize Leva controls with store changes
+  useEffect(() => {
+    const updatedValues = {};
+    settings.forEach((s) => {
+      updatedValues[`${s.name}size`] = "\u200B" + s.size;
+      if (s.actualSize !== undefined) {
+        updatedValues[`${s.name}actualSize`] = "\u200B" + s.actualSize;
+      }
+      updatedValues[`${s.name}startPos`] = "\u200B" + s.startPos;
+      updatedValues[`${s.name}speed`] = "\u200B" + s.speed;
+      if (s.rotationSpeed !== undefined) {
+        updatedValues[`${s.name}rotationSpeed`] = "\u200B" + s.rotationSpeed;
+      }
+      updatedValues[`${s.name}tilt`] = "\u200B" + s.tilt;
+      if (s.tiltb !== undefined) {
+        updatedValues[`${s.name}tiltb`] = "\u200B" + s.tiltb;
+      }
+      updatedValues[`${s.name}orbitRadius`] = "\u200B" + s.orbitRadius;
+      updatedValues[`${s.name}orbitCentera`] = "\u200B" + s.orbitCentera;
+      updatedValues[`${s.name}orbitCenterb`] = "\u200B" + s.orbitCenterb;
+      updatedValues[`${s.name}orbitCenterc`] = "\u200B" + s.orbitCenterc;
+      updatedValues[`${s.name}orbitTilta`] = "\u200B" + s.orbitTilta;
+      updatedValues[`${s.name}orbitTiltb`] = "\u200B" + s.orbitTiltb;
+    });
+    set(updatedValues);
+  }, [settings, set]);
 
   return (
     <>

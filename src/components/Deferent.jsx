@@ -3,34 +3,11 @@ import { useFrame } from "@react-three/fiber";
 import { useStore } from "../store";
 import { Line } from "@react-three/drei";
 
-function Arrow({ rotation, radius, color, reverse = false }) {
-  const arrowScale = useStore((s) => s.arrowScale);
-
-  let arrowDirection = 0;
-  if (reverse) {
-    arrowDirection = Math.PI;
-  }
-  return (
-    <group rotation={[0, 0, rotation]}>
-      <mesh
-        position={[radius, 0, 0]}
-        rotation={[0, 0, arrowDirection]}
-        scale={arrowScale}
-      >
-        <coneGeometry args={[3, 8]} />
-        <meshBasicMaterial color={color} opacity={0.8} transparent />
-      </mesh>
-    </group>
-  );
-}
-
 export default function Orbit({ radius, s }) {
   const color = s.color;
   const arrows = s?.arrows ? s.arrows : false;
   const reverse = s?.reverseArrows ? s.reverseArrows : false;
   const visible = s.visible;
-
-  console.log("arrows: " + arrows, "reverse: " + arrows);
 
   const orbitRef = useRef();
 
@@ -63,33 +40,6 @@ export default function Orbit({ radius, s }) {
   return (
     <>
       <group visible={showOrbits && visible}>
-        <group visible={arrows && showArrows}>
-          <Arrow
-            rotation={Math.PI / 4}
-            radius={radius}
-            color={color}
-            reverse={reverse}
-          />
-          <Arrow
-            rotation={(Math.PI / 4) * 3}
-            radius={radius}
-            color={color}
-            reverse={reverse}
-          />
-          <Arrow
-            rotation={(Math.PI / 4) * 5}
-            radius={radius}
-            color={color}
-            reverse={reverse}
-          />
-          <Arrow
-            rotation={(Math.PI / 4) * 7}
-            radius={radius}
-            color={color}
-            reverse={reverse}
-          />
-        </group>
-
         <Line
           points={points} // Array of points
           color={color} // Default

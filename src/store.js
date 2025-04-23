@@ -197,6 +197,16 @@ export const useSettingsStore = create((set, get) => ({
       return { settings: newSettings };
     });
   },
+
+  resetSettings: () =>
+    set({
+      settings: celestialSettings.map((obj1) => {
+        const [matchingObj] = miscSettings.filter(
+          (obj2) => obj2.name === obj1.name
+        );
+        return { ...obj1, ...matchingObj };
+      }),
+    }),
 }));
 
 //Store with stars
