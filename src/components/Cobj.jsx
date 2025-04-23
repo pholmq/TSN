@@ -64,9 +64,9 @@ const Cobj = ({ name, children }) => {
         {orbitRadius ? (
           <group rotation-x={-Math.PI / 2}>
             {s.type === "deferent" ? (
-              <Deferent s={s} />
+              <Deferent radius={orbitRadius} visible={visible} s={s} />
             ) : (
-              <Orbit radius={orbitRadius} s={s} />
+              <Orbit radius={orbitRadius} visible={visible} s={s} />
             )}
           </group>
         ) : null}

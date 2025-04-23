@@ -3,11 +3,12 @@ import { useFrame } from "@react-three/fiber";
 import { useStore } from "../store";
 import { Line } from "@react-three/drei";
 
-export default function Orbit({ radius, s }) {
+export default function Orbit({ radius, visible, s }) {
+  return null;
   const color = s.color;
   const arrows = s?.arrows ? s.arrows : false;
   const reverse = s?.reverseArrows ? s.reverseArrows : false;
-  const visible = s.visible;
+  // const visible = s.visible;
 
   const orbitRef = useRef();
 
@@ -39,7 +40,7 @@ export default function Orbit({ radius, s }) {
 
   return (
     <>
-      <group visible={showOrbits && visible}>
+      <group visible={showOrbits}>
         <Line
           points={points} // Array of points
           color={color} // Default
