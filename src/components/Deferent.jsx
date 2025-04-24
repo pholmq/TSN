@@ -4,6 +4,8 @@ import { useStore } from "../store";
 import { Line } from "@react-three/drei";
 
 export default function Orbit({ radius, visible, s }) {
+  console.log(s.name + " visible: " + visible);
+
   const color = s.color;
   const arrows = s?.arrows ? s.arrows : false;
   const reverse = s?.reverseArrows ? s.reverseArrows : false;
@@ -14,14 +16,15 @@ export default function Orbit({ radius, visible, s }) {
   const showDeferents = useStore((s) => s.showDeferents);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
 
-  // Subtract 90 degrees from the current angle (0 degrees)
-  const startAngle = +90 * (Math.PI / 180); // Convert -90 degrees to radians
+  const edgePosition = [
+    Math.sin(Math.PI / 2) * radius,
+    Math.cos(Math.PI / 2) * radius,
+    0,
+  ];
 
   const centerToEdgePoints = [
     [0, 0, 0], // Center point
-    [Math.sin(Math.PI / 2) * radius, Math.cos(Math.PI / 2) * radius, 0], // Edge point at -π/2 rad
-    // [Math.sin(startAngle) * radius, Math.cos(startAngle) * radius, 0], // Edge point at -90 degr
-    // [Math.sin(0) * radius, Math.cos(0) * radius, 0], // Edge point at start angle (0 degrees)
+    edgePosition,
   ];
 
   let points = [];
@@ -51,6 +54,14 @@ export default function Orbit({ radius, visible, s }) {
           lineWidth={orbitsLineWidth}
           dashed={false}
         />
+        <mesh>
+          <sphereGeometry args={[s.orbitRadius / 100, 32, 32]} />
+          <meshBasicMaterial color="white" />
+        </mesh>
+        <mesh position={edgePosition}>
+          <sphereGeometry args={[s.orbitRadius / 100, 32, 32]} />
+          <meshBasicMaterial color="red" />
+        </mesh>
       </group>
     </>
   );

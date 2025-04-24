@@ -18,9 +18,21 @@ const EditSettings = () => {
       folders[s.name] = folder(
         {
           // Use unique keys for each control
+          [`${s.name}visible`]: {
+            label: "Show / Hide",
+            value: s.visible,
+            editable: true,
+            onChange: (value) => {
+              s.visible = value;
+              updateSetting({
+                ...s,
+                visible: value,
+              });
+            },
+          },
           [`${s.name}size`]: {
             label: "size",
-            value: "\u200B" + s.size, //Prifix with a whitespace to force string interpetations so that all decimals are there
+            value: "\u200B" + s.size, //Prefix with a whitespace to force string interpetations so that all decimals are there
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
@@ -51,7 +63,7 @@ const EditSettings = () => {
 
           [`${s.name}startPos`]: {
             label: "startPos",
-            value: "\u200B" + s.startPos, //Prifix with a whitespace to force string interpetations so that all decimals are there
+            value: "\u200B" + s.startPos, //Prefix with a whitespace to force string interpetations so that all decimals are there
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
