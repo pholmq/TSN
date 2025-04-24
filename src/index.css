@@ -192,7 +192,17 @@ body {
   opacity: 0.8;
 }
 
-/* .leva-c-dUhtWz {
-  width: 100% !important;
-  height: 100% !important;
-} */
+.name-label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* background-color: rgba(17, 24, 39, 0.8); Semi-transparent dark background */
+  color: white;
+  font-size: 1.2rem;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.25rem;
+  user-select: none;
+  white-space: nowrap; /* Prevent text wrapping */
+  pointer-events: none;
+}

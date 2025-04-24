@@ -52,8 +52,8 @@ const LevaUI = () => {
     setStarScale,
     editSettings,
     setEditSettings,
-    showDeferents,
-    setShowDeferents,
+    showLables,
+    setShowLables,
   } = useStore();
 
   const {
@@ -248,6 +248,10 @@ const LevaUI = () => {
           max: 5,
           step: 0.1,
           onChange: setStarScale,
+        },
+        "Show lables": {
+          value: showLables,
+          onChange: setShowLables,
         },
       },
       { collapsed: true }

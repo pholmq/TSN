@@ -133,6 +133,9 @@ export const useStore = create((set) => ({
 
   editSettings: false,
   setEditSettings: (v) => set({ editSettings: v }),
+
+  showLables: true,
+  setShowLables: (v) => set({ showLables: v }),
 }));
 
 export const usePosStore = create((set) => ({

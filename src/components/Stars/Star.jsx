@@ -12,6 +12,7 @@ import {
 import HoverObj from "../HoverObj/HoverObj";
 import createCircleTexture from "../../utils/createCircleTexture";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
+import NameLabel from "../NameLabel";
 
 export default function Star({ name }) {
   const { camera, invalidate } = useThree();
@@ -94,6 +95,7 @@ export default function Star({ name }) {
 
   return (
     <group ref={groupRef} visible={s.visible}>
+      <NameLabel s={s} />
       <sprite material={spriteMaterial} scale={[size, size, size]} />
       <mesh name={s.name} ref={meshRef}>
         <sphereGeometry args={[radius, 32, 32]} />
