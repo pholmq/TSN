@@ -193,8 +193,8 @@
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" },
     "rings": {
-      "innerRadius": 0.7,
-      "outerRadius": 5,
+      "innerRadius": 0,
+      "outerRadius": 1,
       "texture": "/textures/saturn_ring.jpg",
       "opacity": 0.8
     }

@@ -1,11 +1,13 @@
 import { useRef } from "react";
+import { SpriteMaterial } from "three";
+
 import { useFrame } from "@react-three/fiber";
 import { useStore } from "../store";
 import { Line } from "@react-three/drei";
+import HoverObj from "../components/HoverObj/HoverObj";
+import createCircleTexture from "../utils/createCircleTexture";
 
 export default function Orbit({ radius, visible, s }) {
-  console.log(s.name + " visible: " + visible);
-
   const color = s.color;
   const arrows = s?.arrows ? s.arrows : false;
   const reverse = s?.reverseArrows ? s.reverseArrows : false;
@@ -13,7 +15,6 @@ export default function Orbit({ radius, visible, s }) {
 
   const orbitRef = useRef();
 
-  const showDeferents = useStore((s) => s.showDeferents);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
 
   const edgePosition = [
@@ -39,9 +40,21 @@ export default function Orbit({ radius, visible, s }) {
     ]);
   }
 
+  const markerSize = s.orbitRadius < 0.01 ? 0.01 : s.orbitRadius / 100;
+
+  const circleTexture = createCircleTexture("red");
+  const spriteMaterial = new SpriteMaterial({
+    map: circleTexture,
+    transparent: true,
+    opacity: 1,
+    sizeAttenuation: false,
+    // depthTest: false,
+  });
+
   return (
     <>
-      <group visible={visible}>
+      <group visible={visible} name={s.name}>
+        {visible && <HoverObj s={s} />}
         <Line
           points={points} // Array of points
           color={color} // Default
@@ -54,14 +67,15 @@ export default function Orbit({ radius, visible, s }) {
           lineWidth={orbitsLineWidth}
           dashed={false}
         />
-        <mesh>
-          <sphereGeometry args={[s.orbitRadius / 100, 32, 32]} />
+        <sprite material={spriteMaterial} scale={[0.005, 0.005, 0.005]} />
+        {/* <mesh>
+          <sphereGeometry args={[markerSize, 32, 32]} />
           <meshBasicMaterial color="white" />
         </mesh>
         <mesh position={edgePosition}>
-          <sphereGeometry args={[s.orbitRadius / 100, 32, 32]} />
+          <sphereGeometry args={[markerSize, 32, 32]} />
           <meshBasicMaterial color="red" />
-        </mesh>
+        </mesh> */}
       </group>
     </>
   );
