@@ -52,6 +52,8 @@ const LevaUI = () => {
     setStarScale,
     editSettings,
     setEditSettings,
+    showDeferents,
+    setShowDeferents,
   } = useStore();
 
   const {

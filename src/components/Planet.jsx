@@ -81,6 +81,7 @@ export default function Planet({ s, actualMoon, name }) {
               outerRadius={s.rings.outerRadius + s.size}
               texture={s.rings.texture}
               opacity={s.rings.opacity}
+              actualSize={s.actualSize}
             />
           )}
         </mesh>

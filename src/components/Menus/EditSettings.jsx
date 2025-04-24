@@ -18,12 +18,25 @@ const EditSettings = () => {
       folders[s.name] = folder(
         {
           // Use unique keys for each control
+          [`${s.name}visible`]: {
+            label: "Show / Hide",
+            value: s.visible,
+            editable: true,
+            onChange: (value) => {
+              s.visible = value;
+              updateSetting({
+                ...s,
+                visible: value,
+              });
+            },
+          },
           [`${s.name}size`]: {
             label: "size",
-            value: "\u200B" + s.size, //Prifix with a whitespace to force string interpetations so that all decimals are there
+            value: "\u200B" + s.size, //Prefix with a whitespace to force string interpetations so that all decimals are there
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
+              s.size = cleanValue;
               updateSetting({
                 ...s,
                 size: cleanValue,
@@ -38,6 +51,7 @@ const EditSettings = () => {
                   editable: true,
                   onChange: (value) => {
                     const cleanValue = value.replace(/\u200B/g, "");
+                    s.actualSize = cleanValue;
                     updateSetting({
                       ...s,
                       actualSize: cleanValue,
@@ -49,10 +63,11 @@ const EditSettings = () => {
 
           [`${s.name}startPos`]: {
             label: "startPos",
-            value: "\u200B" + s.startPos, //Prifix with a whitespace to force string interpetations so that all decimals are there
+            value: "\u200B" + s.startPos, //Prefix with a whitespace to force string interpetations so that all decimals are there
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
+              s.startPos = cleanValue;
               updateSetting({
                 ...s,
                 startPos: cleanValue,
@@ -65,6 +80,7 @@ const EditSettings = () => {
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
+              s.speed = cleanValue;
               updateSetting({
                 ...s,
                 speed: cleanValue,
@@ -79,6 +95,7 @@ const EditSettings = () => {
                   editable: true,
                   onChange: (value) => {
                     const cleanValue = value.replace(/\u200B/g, "");
+                    s.rotationSpeed = cleanValue;
                     updateSetting({
                       ...s,
                       rotationSpeed: cleanValue,
@@ -93,6 +110,7 @@ const EditSettings = () => {
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
+              s.tilt = cleanValue;
               updateSetting({
                 ...s,
                 tilt: cleanValue,
@@ -107,6 +125,7 @@ const EditSettings = () => {
                   editable: true,
                   onChange: (value) => {
                     const cleanValue = value.replace(/\u200B/g, "");
+                    s.tiltb = cleanValue;
                     updateSetting({
                       ...s,
                       tiltb: cleanValue,
@@ -121,6 +140,7 @@ const EditSettings = () => {
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
+              s.orbitRadius = cleanValue;
               updateSetting({
                 ...s,
                 orbitRadius: cleanValue,
@@ -133,6 +153,7 @@ const EditSettings = () => {
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
+              s.orbitCentera = cleanValue;
               updateSetting({
                 ...s,
                 orbitCentera: cleanValue,
@@ -145,6 +166,7 @@ const EditSettings = () => {
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
+              s.orbitCenterb = cleanValue;
               updateSetting({
                 ...s,
                 orbitCenterb: cleanValue,
@@ -157,6 +179,7 @@ const EditSettings = () => {
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
+              s.orbitCenterc = cleanValue;
               updateSetting({
                 ...s,
                 orbitCenterc: cleanValue,
@@ -169,6 +192,7 @@ const EditSettings = () => {
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
+              s.orbitTilta = cleanValue;
               updateSetting({
                 ...s,
                 orbitTilta: cleanValue,
@@ -181,6 +205,7 @@ const EditSettings = () => {
             editable: true,
             onChange: (value) => {
               const cleanValue = value.replace(/\u200B/g, "");
+              s.orbitTiltb = cleanValue;
               updateSetting({
                 ...s,
                 orbitTiltb: cleanValue,

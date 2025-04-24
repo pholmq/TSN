@@ -1,9 +1,7 @@
 import { useRef, useEffect } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
-import { SpriteMaterial, CanvasTexture, MathUtils, Vector3 } from "three";
+import { SpriteMaterial, MathUtils, Vector3 } from "three";
 import FakeGlowMaterial from "../../utils/FakeGlowMaterial";
-import useFrameInterval from "../../utils/useFrameInterval";
 import { useStore, useStarStore } from "../../store";
 import {
   declinationToRadians,
@@ -48,18 +46,6 @@ export default function Star({ name }) {
       }
     }
   };
-
-  //The object will only shrink to a certain size, regadless of camera distance
-  // useFrameInterval(({ camera }) => {
-  //   const posChanged = !camera.position.equals(prevCameraPos.current);
-  //   const fovChanged = camera.fov !== prevFov.current;
-
-  //   if (posChanged || fovChanged) {
-  //     updateScale(camera);
-  //     prevCameraPos.current.copy(camera.position);
-  //     prevFov.current = camera.fov;
-  //   }
-  // });
 
   useEffect(() => {
     if (meshRef.current) {

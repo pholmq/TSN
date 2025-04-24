@@ -24,13 +24,11 @@ function Arrow({ rotation, radius, color, reverse = false }) {
   );
 }
 
-export default function Orbit({ radius, s }) {
+export default function Orbit({ radius, visible, s }) {
   const color = s.color;
   const arrows = s?.arrows ? s.arrows : false;
   const reverse = s?.reverseArrows ? s.reverseArrows : false;
-  const visible = s.visible;
 
-  console.log("arrows: " + arrows, "reverse: " + arrows);
 
   const orbitRef = useRef();
 
