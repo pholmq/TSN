@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TextureLoader } from "three";
-import * as THREE from 'three'; // Import Three.js for constants
+import * as THREE from "three"; // Import Three.js for constants
 
 // Custom hook for loading textures
 export default function useTextureLoader(textureUrl) {
@@ -13,18 +13,10 @@ export default function useTextureLoader(textureUrl) {
       textureUrl,
       (loadedTexture) => {
         loadedTexture.colorSpace = THREE.SRGBColorSpace;
-        // console.log(`Texture loaded for ${textureUrl}:`, loadedTexture);
         setTexture(loadedTexture);
         setIsLoading(false);
       },
-      // (progress) => {
-      //   console.log(
-      //     `Loading ${textureUrl}: ${(
-      //       (progress.loaded / progress.total) *
-      //       100
-      //     ).toFixed(2)}%`
-      //   );
-      // },
+
       (error) => {
         console.error(`Error loading ${textureUrl}:`, error);
         setIsLoading(false);

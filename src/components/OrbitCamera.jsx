@@ -21,18 +21,20 @@ export default function OrbitCamera() {
   const target = new Vector3();
 
   useEffect(() => {
-    // Event handler function
-    const handleClick = (event) => {
-      // Check if it's a left mouse button click (button === 0)
+    // Event handler function for mousedown
+    const handleMouseDown = (event) => {
+      // Check if it's a left mouse button (button === 0)
       if (event.button === 0) {
         setRunIntro(false);
       }
     };
-    // Add event listener to the document
-    document.addEventListener("click", handleClick);
+
+    // Add event listener to the document for mousedown
+    document.addEventListener("mousedown", handleMouseDown);
+
     // Cleanup function
     return () => {
-      document.removeEventListener("click", handleClick);
+      document.removeEventListener("mousedown", handleMouseDown);
     };
   }, []);
 

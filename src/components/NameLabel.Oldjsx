@@ -3,13 +3,13 @@ import { useStore } from "../store";
 import { useRef } from "react";
 
 const NameLabel = ({ s }) => {
-  const showLables = useStore((s) => s.showLables);
+  const showLabels = useStore((s) => s.showLabels);
 
   const portalRef = useRef(document.body);
 
   return (
     <Html
-      visible={showLables}
+      visible={showLabels}
       portal={{ current: portalRef.current }} // Render in body to avoid scaling issues
     >
       <div

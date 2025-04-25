@@ -134,8 +134,8 @@ export const useStore = create((set) => ({
   editSettings: false,
   setEditSettings: (v) => set({ editSettings: v }),
 
-  showLables: true,
-  setShowLables: (v) => set({ showLables: v }),
+  showLabels: true,
+  setShowLables: (v) => set({ showLabels: v }),
 }));
 
 export const usePosStore = create((set) => ({

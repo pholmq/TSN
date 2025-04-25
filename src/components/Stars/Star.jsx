@@ -12,7 +12,7 @@ import {
 import HoverObj from "../HoverObj/HoverObj";
 import createCircleTexture from "../../utils/createCircleTexture";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
-import NameLabel from "../NameLabel";
+import NameLabel from "../Labels/NameLabel";
 
 export default function Star({ name }) {
   const { camera, invalidate } = useThree();

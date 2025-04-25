@@ -298,7 +298,6 @@ function julianDateToDays(sDate) {
   return jd - 2451717;
 }
 
-//console.log(daysToDate(0))
 
 function julianCalDayToDate(g) {
   let jDay = g + 2451717; //+ 10;

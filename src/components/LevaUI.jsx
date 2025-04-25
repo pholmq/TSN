@@ -52,7 +52,7 @@ const LevaUI = () => {
     setStarScale,
     editSettings,
     setEditSettings,
-    showLables,
+    showLabels,
     setShowLables,
   } = useStore();
 
@@ -250,7 +250,7 @@ const LevaUI = () => {
           onChange: setStarScale,
         },
         "Show lables": {
-          value: showLables,
+          value: showLabels,
           onChange: setShowLables,
         },
       },
