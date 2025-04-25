@@ -249,7 +249,7 @@ const LevaUI = () => {
           step: 0.1,
           onChange: setStarScale,
         },
-        "Show lables": {
+        "Show labels": {
           value: showLabels,
           onChange: setShowLables,
         },

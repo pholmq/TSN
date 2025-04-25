@@ -3,53 +3,68 @@ import { Vector3 } from "three";
 
 export const useLabelStore = create((set, get) => ({
   labels: [],
-  registerLabel: (id, ref, star) => {
-    set(state => ({
+  registerLabel: (id, divRef, position) => {
+    set((state) => ({
       labels: [
-        ...state.labels.filter(l => l.id !== id),
-        { id, ref, star, visible: true },
+        ...state.labels.filter((l) => l.id !== id),
+        { 
+          id,
+          divRef,
+          position,
+          visible: true,
+          distance: Infinity
+        },
       ],
     }));
   },
-  unregisterLabel: id => {
-    set(state => ({
-      labels: state.labels.filter(l => l.id !== id),
+  unregisterLabel: (id) => {
+    set((state) => ({
+      labels: state.labels.filter((l) => l.id !== id),
     }));
   },
-  checkOverlaps: camera => {
+  updateLabelVisibility: (camera) => {
     const { labels } = get();
-    labels.forEach(l => {
-      if (l.ref.current) {
-        l.ref.current.style.display = "block";
-      }
+    const visibleLabels = labels.filter(l => l.divRef.current);
+    
+    // First pass: calculate distances
+    visibleLabels.forEach(label => {
+      label.distance = new Vector3(...label.position).distanceTo(camera.position);
     });
 
-    for (let i = 0; i < labels.length; i++) {
-      for (let j = i + 1; j < labels.length; j++) {
-        const label1 = labels[i];
-        const label2 = labels[j];
-        if (!label1.ref.current || !label2.ref.current) continue;
+    // Sort by distance (closest first)
+    visibleLabels.sort((a, b) => a.distance - b.distance);
 
-        const rect1 = label1.ref.current.getBoundingClientRect();
-        const rect2 = label2.ref.current.getBoundingClientRect();
-        const buffer = 2;
+    // Second pass: detect and mark overlaps
+    for (let i = 0; i < visibleLabels.length; i++) {
+      const label = visibleLabels[i];
+      if (!label.divRef.current) continue;
+
+      const rect = label.divRef.current.getBoundingClientRect();
+      label.visible = true;
+
+      // Check against all closer labels
+      for (let j = 0; j < i; j++) {
+        const closerLabel = visibleLabels[j];
+        if (!closerLabel.divRef.current || !closerLabel.visible) continue;
+
+        const closerRect = closerLabel.divRef.current.getBoundingClientRect();
+        const buffer = 5; // Pixel buffer
+        
         const isOverlapping = !(
-          rect1.right + buffer < rect2.left ||
-          rect1.left > rect2.right + buffer ||
-          rect1.bottom + buffer < rect2.top ||
-          rect1.top > rect2.bottom + buffer
+          rect.right + buffer < closerRect.left ||
+          rect.left > closerRect.right + buffer ||
+          rect.bottom + buffer < closerRect.top ||
+          rect.top > closerRect.bottom + buffer
         );
 
         if (isOverlapping) {
-          const dist1 = new Vector3(...label1.star.position).distanceTo(camera.position);
-          const dist2 = new Vector3(...label2.star.position).distanceTo(camera.position);
-          if (dist1 < dist2) {
-            label2.ref.current.style.display = "none";
-          } else {
-            label1.ref.current.style.display = "none";
-          }
+          label.visible = false;
+          break;
         }
       }
     }
-  },
+
+    // Update state to trigger re-renders
+    set({ labels: [...labels] });
+  }
 }));

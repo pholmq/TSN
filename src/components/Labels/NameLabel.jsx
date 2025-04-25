@@ -1,38 +1,21 @@
 import { Html } from "@react-three/drei";
 import { useStore } from "../../store";
-import { useLabelStore } from "./labelStore";
-
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 
 const NameLabel = ({ s }) => {
-  const showLabels = useStore((s) => {
-    return s.showLabels;
-  });
-  const registerLabel = useLabelStore((s) => s.registerLabel);
-  const unregisterLabel = useLabelStore((s) => s.unregisterLabel);
-  const portalRef = useRef(document.body);
-  const divRef = useRef();
+  const showLabels = useStore((s) => s.showLabels);
 
-  useEffect(() => {
-    if (divRef.current) {
-      registerLabel(s.name, divRef, s);
-    }
-    return () => unregisterLabel(s.name);
-  }, [s, registerLabel, unregisterLabel]);
+  const portalRef = useRef(document.body);
 
   return (
     <Html
       visible={showLabels}
-      portal={{ current: portalRef.current }}
-      position={s.position}
+      portal={{ current: portalRef.current }} // Render in body to avoid scaling issues
+      style={{ pointerEvents: "none" }}
     >
       <div
-        ref={divRef}
         className="name-label"
-        style={{
-          transform: "translateX(-55%) translateY(-150%)",
-          display: showLabels ? "block" : "none",
-        }}
+        style={{ transform: "translateX(-55%) translateY(-170%)" }}
       >
         <span>{s.name}</span>
       </div>
