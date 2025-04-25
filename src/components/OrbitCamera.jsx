@@ -31,10 +31,12 @@ export default function OrbitCamera() {
 
     // Add event listener to the document for mousedown
     document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("wheel", handleMouseDown);
 
     // Cleanup function
     return () => {
       document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("wheel", handleMouseDown);
     };
   }, []);
 
@@ -50,11 +52,6 @@ export default function OrbitCamera() {
     }
   }, [resetClicked, runIntro]);
 
-  // useEffect(() => {
-  //   if (controlsRef.current) {
-  //     controlsRef.current.setPosition(0, 2200, 0);
-  //   }
-  // }, [runIntro]);
 
   useFrame(() => {
     if (cameraFollow) {
