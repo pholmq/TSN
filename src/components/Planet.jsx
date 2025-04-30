@@ -7,6 +7,7 @@ import PolarLine from "./Helpers/PolarLine";
 
 import HoverObj from "../components/HoverObj/HoverObj";
 import PlanetRings from "./PlanetRings";
+import NameLabel from "./Labels/NameLabel";
 
 export default function Planet({ s, actualMoon, name }) {
   const cSphereRef = useRef();
@@ -54,6 +55,7 @@ export default function Planet({ s, actualMoon, name }) {
       <group rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
         {s.name === "Earth" && <CelestialSphere />}
         {s.name === "Earth" && <PolarLine />}
+        {visible && <NameLabel s={s} />}
         {visible && <HoverObj s={s} />}
         <mesh
           name={name}

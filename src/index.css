@@ -192,7 +192,12 @@ body {
   opacity: 0.8;
 }
 
-/* .leva-c-dUhtWz {
-  width: 100% !important;
-  height: 100% !important;
-} */
+.name-label {
+  color: white;
+  font-size: 1rem;
+  font-family: Arial, Helvetica, sans-serif;
+  opacity: 0.8;
+  user-select: none;
+  white-space: nowrap; /*Prevent text wrapping*/
+  pointer-events: none;
+}

@@ -52,8 +52,8 @@ const LevaUI = () => {
     setStarScale,
     editSettings,
     setEditSettings,
-    showDeferents,
-    setShowDeferents,
+    showLabels,
+    setShowLables,
   } = useStore();
 
   const {
@@ -118,6 +118,10 @@ const LevaUI = () => {
           onChange: setShowPositions,
         },
         "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
+        "Show labels": {
+          value: showLabels,
+          onChange: setShowLables,
+        },
       },
       { collapsed: false }
     ),
