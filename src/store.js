@@ -68,6 +68,8 @@ export const useStore = create((set) => ({
   showLevaMenu: true,
   toggleShowLevaMenu: () =>
     set((state) => ({ showLevaMenu: !state.showLevaMenu })),
+  showMenu: true,
+  toggleShowMenu: () => set((state) => ({ showMenu: !state.showMenu })),
 
   sunLight: 2,
 
