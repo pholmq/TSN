@@ -62,11 +62,13 @@ body {
 }
 
 .menu-header {
+  /* position: absolute; */
+  /* left: 50%; */
+  /* transform: translateX(-78%); Adjust this value (e.g., -45%, -47%) */
   font-family: Cambria, Georgia, serif;
-  text-align: center;
   font-weight: bold;
-  font-size: 1.5rem;
-  margin: 0.25rem 0;
+  font-size: 2rem;
+  white-space: nowrap;
 }
 
 .menu-header-button {
@@ -74,12 +76,12 @@ body {
 }
 
 .menu-item {
+  position: relative; /* Needed for absolute child positioning */
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin: 0.25rem 0;
-  width: 100%; /* Ensure it takes full width of parent */
-  flex-wrap: wrap; /* Allow wrapping if needed */
+  width: 100%;
 }
 
 .menu-button {

@@ -7,6 +7,8 @@ import {
   FaBars,
   FaTimes,
   FaShareAlt,
+  FaExternalLinkAlt,
+  FaGithub,
 } from "react-icons/fa";
 
 import LevaUI from "./LevaUI";
@@ -38,6 +40,8 @@ const UserInterface = () => {
     speedMultiplier,
     showLevaMenu,
     toggleShowLevaMenu,
+    showMenu,
+    toggleShowMenu,
     setResetClicked,
     setCameraTarget,
     runIntro,
@@ -115,21 +119,66 @@ const UserInterface = () => {
     setCameraTarget("Earth");
   };
 
+  const handleToggleMenu = () => {
+    if (showLevaMenu) {
+      toggleShowLevaMenu();
+      return;
+    }
+    if (showMenu) {
+      toggleShowMenu();
+      return;
+    }
+    toggleShowLevaMenu();
+    toggleShowMenu();
+  };
+
   return (
     <>
-      <div className="menu" hidden={runIntro}>
+      <button
+        hidden={showMenu}
+        className="menu-toggle-button"
+        onClick={handleToggleMenu} // Make sure you have this toggle function
+        style={{
+          position: "fixed",
+          top: "14px",
+          right: "12px",
+          zIndex: 20,
+          background: "#374151",
+          border: "none",
+          borderRadius: "6px",
+          padding: "12px",
+          color: "white",
+          cursor: "pointer",
+        }}
+      ></button>
+      <div className="menu" hidden={runIntro || !showMenu}>
         <div className="menu-item">
-          <span className="menu-header">The TYCHOSIUM (beta)</span>
+          <span className="menu-header"> The TYCHOSIUM</span>
+          <button
+            className="menu-button menu-header-button"
+            title="www.tychos.space"
+            onClick={() => window.open("https://www.tychos.space", "_blank")}
+          >
+            <FaExternalLinkAlt />
+          </button>
+          {/* <button className="menu-button menu-header-button" onClick={() => {}}>
+            <FaShareAlt />
+          </button> */}
+          {/* <button className="menu-button menu-header-button" onClick={() => {}}>
+            <FaGithub />
+          </button> */}
           <div className="zoom-controls">
             <UIZoom />
             <button
               className="menu-button menu-header-button"
-              onClick={toggleShowLevaMenu}
+              onClick={handleToggleMenu}
             >
               {showLevaMenu ? <FaTimes /> : <FaBars />}
+              {/* {showLevaMenu ? <FaTimes /> : <FaGripVertical />} */}
             </button>
           </div>
         </div>
+
         <div className="menu-item">
           <button className="menu-button" onClick={handleReset}>
             Reset
