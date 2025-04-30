@@ -8,19 +8,6 @@ const NameLabel = ({ s }) => {
   const runIntro = useStore((s) => s.runIntro);
 
   const portalRef = useRef(document.body);
-  const labelRef = useRef();
-
-  //   useFrame((state, delta) => {
-  //     if (!runIntro) return;
-  //     if (labelRef.current) {
-  //       if (labelRef.current.style.opacity <= 0.8) {
-  //         labelRef.current.style.opacity += 0.1;
-  //         // Fade in slowly
-  //       } else {
-  //         setRunIntro(false);
-  //       }
-  //     }
-  //   });
 
   return (
     // Hide lables while intro is running
@@ -31,7 +18,6 @@ const NameLabel = ({ s }) => {
         style={{ pointerEvents: "none" }}
       >
         <div
-          ref={labelRef}
           className="name-label"
           style={{ transform: "translateX(-55%) translateY(-170%)" }}
         >
