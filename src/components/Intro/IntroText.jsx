@@ -6,6 +6,7 @@ import { useStore } from "../../store";
 export default function IntroText() {
   const materialRef = useRef(); // Create a ref for the material
   const setRunIntro = useStore((s) => s.setRunIntro);
+  
   // Animate opacity over time using the ref
   useFrame((state, delta) => {
     if (materialRef.current) {
