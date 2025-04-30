@@ -23,7 +23,8 @@ const NameLabel = ({ s }) => {
   //   });
 
   return (
-    !runIntro && (
+    // Hide lables while intro is running
+    !runIntro && showLabels ? (
       <Html
         visible={showLabels}
         portal={{ current: portalRef.current }} // Render in body to avoid scaling issues
@@ -37,7 +38,7 @@ const NameLabel = ({ s }) => {
           <span>{s.name}</span>
         </div>
       </Html>
-    )
+    ) : null
   );
 };
 

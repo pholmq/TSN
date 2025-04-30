@@ -118,6 +118,10 @@ const LevaUI = () => {
           onChange: setShowPositions,
         },
         "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
+        "Show labels": {
+          value: showLabels,
+          onChange: setShowLables,
+        },
       },
       { collapsed: false }
     ),
@@ -248,10 +252,6 @@ const LevaUI = () => {
           max: 5,
           step: 0.1,
           onChange: setStarScale,
-        },
-        "Show labels": {
-          value: showLabels,
-          onChange: setShowLables,
         },
       },
       { collapsed: true }
