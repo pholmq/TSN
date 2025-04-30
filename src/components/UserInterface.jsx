@@ -173,8 +173,7 @@ const UserInterface = () => {
               className="menu-button menu-header-button"
               onClick={handleToggleMenu}
             >
-              {showLevaMenu ? <FaTimes /> : <FaBars />}
-              {/* {showLevaMenu ? <FaTimes /> : <FaGripVertical />} */}
+              {showLevaMenu ? <FaBars /> : <FaTimes />}
             </button>
           </div>
         </div>
