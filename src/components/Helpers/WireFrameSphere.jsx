@@ -1,16 +1,26 @@
 import { useRef } from "react";
 
-const WireframeSphere = ({ s, size, visible, planetScale }) => {
+const WireFrameSphere = ({ s, size, visible }) => {
   const meshRef = useRef();
+  const sphereSize = size * 1.01; // 5% larger than the planet
 
-  const sphereSize = size + 0.0000001;
+  // Debug log to verify values
+  console.log(
+    `Planet: ${s.name}, size: ${size}, wireframeSize: ${sphereSize}, visible: ${visible}`
+  );
 
   return (
-    <mesh ref={meshRef}>
-      <sphereGeometry args={[sphereSize, 16, 16]} />
-      <meshBasicMaterial color="white" wireframe />
+    <mesh ref={meshRef} visible={visible}>
+      <sphereGeometry args={[sphereSize, 32, 32]} />
+      <meshBasicMaterial
+        color="cyan" // Brighter color for visibility
+        wireframe
+        polygonOffset
+        polygonOffsetFactor={-1}
+        polygonOffsetUnits={-1}
+      />
     </mesh>
   );
 };
 
-export default WireframeSphere;
+export default WireFrameSphere;
