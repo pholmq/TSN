@@ -163,6 +163,15 @@ body {
   min-width: 150px;
 }
 
+.panel-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.25rem 0;
+  width: 100%; /* Ensure it takes full width of parent */
+  flex-wrap: wrap; /* Allow wrapping if needed */
+}
+
 /* Override Leva’s inline styles for its root element */
 .positions-div > div {
   position: fixed;

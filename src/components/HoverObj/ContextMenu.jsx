@@ -67,13 +67,13 @@ const ContextMenu = ({ setContextMenu, pinned, setPinned, s }) => {
         className="info-panel"
         style={{ transform: "translateX(-60%)" }}
       >
-        <div className="menu-item">
+        <div className="panel-item">
           <label className="menu-label-centered" style={{ fontWeight: "bold" }}>
             {s.name}{" "}
             <span dangerouslySetInnerHTML={{ __html: s.unicodeSymbol }} />
           </label>
         </div>
-        <div className="menu-item">
+        <div className="panel-item">
           <button
             className="menu-button"
             onClick={() => setCameraTarget(s.name)}
@@ -81,7 +81,7 @@ const ContextMenu = ({ setContextMenu, pinned, setPinned, s }) => {
             Center camera
           </button>
         </div>
-        <div className="menu-item">
+        <div className="panel-item">
           <button
             className="menu-button"
             onClick={() => {

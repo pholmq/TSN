@@ -173,11 +173,7 @@ export function getRaDecDistance(name, scene) {
 
   // Calculate distance
   const radius = sphericalPos.radius / 100;
-  let distKm, distAU;
-
-  distKm = (radius * 149597871).toFixed(0);
-  distAU = radius.toFixed(2);
-  // }
+  const distAU = radius.toFixed(2);
 
   // Calculate elongation
   const earthSunDistance = csPos.distanceTo(sunPos);
@@ -191,13 +187,21 @@ export function getRaDecDistance(name, scene) {
   const denominator = 2.0 * earthSunDistance * earthTargetPlanetDistance;
 
   const elongationRadians = Math.acos(numerator / denominator);
-  const elongation = ((180.0 * elongationRadians) / Math.PI).toFixed(2);
+  const elongation = ((180.0 * elongationRadians) / Math.PI).toFixed(3);
+
+  let distance = `${distAU} AU`;
+  if (distAU > 10000) {
+    distance = `${(distAU * 0.0000158125).toFixed(3)} ly`;
+  }
+  if (distAU < 0.01) {
+    distance = `${(radius * 149597871).toFixed(0)} km`;
+  }
 
   return {
     ra,
     dec,
     elongation,
-    dist: distAU < 0.01 ? `${distKm} km` : `${distAU} AU`,
+    dist: distance,
   };
 }
 
