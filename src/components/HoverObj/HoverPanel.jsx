@@ -69,7 +69,7 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
             }}
             onDoubleClick={() => setCameraTarget(s.name)}
           >
-            <div className="menu-item">
+            <div className="panel-item">
               <label
                 className="menu-label-centered"
                 style={{ fontWeight: "bold" }}
@@ -78,23 +78,23 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
                 <span dangerouslySetInnerHTML={{ __html: s.unicodeSymbol }} />
               </label>
             </div>
-            <div className="menu-item">
+            <div className="panel-item">
               <label className="menu-label">RA:</label>
               <input className="menu-input" ref={raRef} disabled />
             </div>
-            <div className="menu-item">
+            <div className="panel-item">
               <label className="menu-label">Dec:</label>
               <input className="menu-input" ref={decRef} disabled />
             </div>
-            <div className="menu-item">
+            <div className="panel-item">
               <label className="menu-label">Dist:</label>
               <input className="menu-input" ref={distRef} disabled />
             </div>
-            <div className="menu-item">
+            <div className="panel-item">
               <label className="menu-label">Elongation:</label>
               <input className="menu-input" ref={eloRef} disabled />
             </div>
-            <div className="menu-item">
+            <div className="panel-item">
               <label className="menu-label-centered">
                 Doubleclick - Center cam. <br /> Right click - Menu.
               </label>

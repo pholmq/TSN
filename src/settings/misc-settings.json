@@ -3,7 +3,7 @@
     "name": "SystemCenter",
     "color": "#222222",
     "type": "planet",
-    "visible": true,
+    "visible": false,
     "texture": "",
     "unicodeSymbol": "",
     "planetCamera": true,
