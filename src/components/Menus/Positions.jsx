@@ -59,7 +59,7 @@ const Positions = () => {
         [`${pos}elongation`]: positions[pos].elongation,
       });
     }
-  }, [positions, set]);
+  }, [JSON.stringify(positions), set]); // Serialize to detect deep changes
 
   return (
     <>
