@@ -56,7 +56,7 @@ export default function Planet({ s, actualMoon, name }) {
   return (
     <group rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
       {s.name === "Earth" && <CelestialSphere />}
-      {(s.name === "Earth" || s.name === "Sun") && <PolarLine />}
+      {(s.name === "Earth" || s.name === "Sun") && <PolarLine visible={visible} />}
       {visible && <NameLabel s={s} />}
       {visible && <HoverObj s={s} />}
       <group ref={groupRef} scale={planetScale}>

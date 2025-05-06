@@ -2,7 +2,7 @@ import { Line } from "@react-three/drei";
 import { useStore } from "../../store";
 
 // Component version
-export default function PolarLine() {
+export default function PolarLine({ visible }) {
   const polarLine = useStore((s) => s.polarLine);
   const southLine = useStore((s) => s.southLine);
   const polarLineSize = useStore((s) => s.polarLineSize);
@@ -13,7 +13,7 @@ export default function PolarLine() {
 
   return (
     <>
-      {polarLine && (
+      {polarLine && visible ? (
         <Line
           points={[
             [0, 0, 0], // bottom point
@@ -22,8 +22,8 @@ export default function PolarLine() {
           color="red"
           lineWidth={1.5}
         />
-      )}
-      {southLine && (
+      ) : null}
+      {southLine && visible ? (
         <Line
           points={[
             [0, -polarLineSize, 0], // bottom point
@@ -32,7 +32,7 @@ export default function PolarLine() {
           color="white"
           lineWidth={1.5}
         />
-      )}
+      ) : null}
     </>
   );
 }
