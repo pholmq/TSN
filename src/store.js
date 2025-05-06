@@ -138,6 +138,9 @@ export const useStore = create((set) => ({
 
   showLabels: true,
   setShowLables: (v) => set({ showLabels: v }),
+
+  geoSphere: false,
+  setGeoSphere: (v) => set({ geoSphere: v }),
 }));
 
 export const usePosStore = create((set) => ({

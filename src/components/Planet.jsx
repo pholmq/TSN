@@ -7,7 +7,6 @@ import PolarLine from "./Helpers/PolarLine";
 import HoverObj from "../components/HoverObj/HoverObj";
 import PlanetRings from "./PlanetRings";
 import NameLabel from "./Labels/NameLabel";
-import WireFrameSphere from "./Helpers/WireFrameSphere"; // Exact naming
 import GeoSphere from "./Helpers/GeoSphere";
 
 export default function Planet({ s, actualMoon, name }) {
@@ -18,6 +17,7 @@ export default function Planet({ s, actualMoon, name }) {
   const sunLight = useStore((state) => state.sunLight);
   const planetScale = useStore((state) => state.planetScale);
   const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
+  const geoSphere = useStore((state) => state.geoSphere);
   const { texture, isLoading } = s.texture
     ? useTextureLoader(s.texture)
     : { texture: null, isLoading: false };
@@ -74,8 +74,9 @@ export default function Planet({ s, actualMoon, name }) {
           />
           {s.light && <pointLight intensity={sunLight * 100000} />}
         </mesh>
-        {s.name === "Earth" && <GeoSphere size={size} visible={visible} />}
-        {/* <WireFrameSphere s={s} size={size} visible={visible} /> */}
+        {s.name === "Earth" && geoSphere ? (
+          <GeoSphere s={s} size={size} visible={visible} />
+        ) : null}
         {s.rings && (
           <PlanetRings
             innerRadius={s.rings.innerRadius + s.size}

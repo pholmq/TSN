@@ -54,6 +54,8 @@ const LevaUI = () => {
     setEditSettings,
     showLabels,
     setShowLables,
+    geoSphere,
+    setGeoSphere,
   } = useStore();
 
   const {
@@ -201,11 +203,11 @@ const LevaUI = () => {
           step: 0.1,
           onChange: setZodiacSize,
         },
-        "Polar line": {
+        "Polar lines": {
           value: polarLine,
           onChange: setPolarLine,
         },
-        "South line": {
+        "South lines": {
           value: southLine,
           onChange: setSouthLine,
         },
@@ -214,6 +216,10 @@ const LevaUI = () => {
           min: 5,
           step: 1,
           onChange: setPolarLineSize,
+        },
+        Graticule: {
+          value: geoSphere,
+          onChange: setGeoSphere,
         },
         "Celestial sphere": {
           value: celestialSphere,
