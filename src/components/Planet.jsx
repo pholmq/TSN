@@ -8,6 +8,7 @@ import HoverObj from "../components/HoverObj/HoverObj";
 import PlanetRings from "./PlanetRings";
 import NameLabel from "./Labels/NameLabel";
 import WireFrameSphere from "./Helpers/WireFrameSphere"; // Exact naming
+import GeoSphere from "./Helpers/GeoSphere";
 
 export default function Planet({ s, actualMoon, name }) {
   const groupRef = useRef(); // Group for rotation and scaling
@@ -73,7 +74,8 @@ export default function Planet({ s, actualMoon, name }) {
           />
           {s.light && <pointLight intensity={sunLight * 100000} />}
         </mesh>
-        <WireFrameSphere s={s} size={size} visible={visible} />
+        {s.name === "Earth" && <GeoSphere size={size} visible={visible} />}
+        {/* <WireFrameSphere s={s} size={size} visible={visible} /> */}
         {s.rings && (
           <PlanetRings
             innerRadius={s.rings.innerRadius + s.size}
