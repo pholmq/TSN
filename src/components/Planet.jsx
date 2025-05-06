@@ -1,22 +1,23 @@
-import { useRef, useMemo, useEffect, useState } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
+import { useRef, useEffect } from "react";
 import { useStore } from "../store";
 import useTextureLoader from "../utils/useTextureLoader";
 import CelestialSphere from "./Helpers/CelestialSphere";
 import PolarLine from "./Helpers/PolarLine";
-
 import HoverObj from "../components/HoverObj/HoverObj";
 import PlanetRings from "./PlanetRings";
 import NameLabel from "./Labels/NameLabel";
+import GeoSphere from "./Helpers/GeoSphere";
 
 export default function Planet({ s, actualMoon, name }) {
-  const cSphereRef = useRef();
+  const groupRef = useRef(); // Group for rotation and scaling
   const planetRef = useRef();
   const materialRef = useRef();
   const posRef = useStore((state) => state.posRef);
   const sunLight = useStore((state) => state.sunLight);
   const planetScale = useStore((state) => state.planetScale);
   const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
+  const geoSphere = useStore((state) => state.geoSphere);
   const { texture, isLoading } = s.texture
     ? useTextureLoader(s.texture)
     : { texture: null, isLoading: false };
@@ -41,29 +42,25 @@ export default function Planet({ s, actualMoon, name }) {
     visible = false;
   }
 
+  // Rotate the group containing planet and wireframe
   useFrame(() => {
-    if (rotationSpeed) {
-      planetRef.current.rotation.y =
+    if (rotationSpeed && groupRef.current) {
+      groupRef.current.rotation.y =
         rotationStart + rotationSpeed * posRef.current;
     }
   });
 
   const tilt = s.tilt || 0;
   const tiltb = s.tiltb || 0;
+
   return (
-    <>
-      <group rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
-        {s.name === "Earth" && <CelestialSphere />}
-        {s.name === "Earth" && <PolarLine />}
-        {visible && <NameLabel s={s} />}
-        {visible && <HoverObj s={s} />}
-        <mesh
-          name={name}
-          visible={visible}
-          ref={planetRef}
-          scale={planetScale}
-          rotation={[0, rotationStart || 0, 0]}
-        >
+    <group rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
+      {s.name === "Earth" && <CelestialSphere />}
+      {(s.name === "Earth" || s.name === "Sun") && <PolarLine visible={visible} />}
+      {visible && <NameLabel s={s} />}
+      {visible && <HoverObj s={s} />}
+      <group ref={groupRef} scale={planetScale}>
+        <mesh name={name} visible={visible} ref={planetRef}>
           <sphereGeometry args={[size, 256, 256]} />
           <meshStandardMaterial
             ref={materialRef}
@@ -75,19 +72,21 @@ export default function Planet({ s, actualMoon, name }) {
             transparent={s.opacity ? true : false}
             opacity={s.opacity ? s.opacity : 1}
           />
-
           {s.light && <pointLight intensity={sunLight * 100000} />}
-          {s.rings && (
-            <PlanetRings
-              innerRadius={s.rings.innerRadius + s.size}
-              outerRadius={s.rings.outerRadius + s.size}
-              texture={s.rings.texture}
-              opacity={s.rings.opacity}
-              actualSize={s.actualSize}
-            />
-          )}
         </mesh>
+        {s.name === "Earth" && geoSphere ? (
+          <GeoSphere s={s} size={size} visible={visible} />
+        ) : null}
+        {s.rings && (
+          <PlanetRings
+            innerRadius={s.rings.innerRadius + s.size}
+            outerRadius={s.rings.outerRadius + s.size}
+            texture={s.rings.texture}
+            opacity={s.rings.opacity}
+            actualSize={s.actualSize}
+          />
+        )}
       </group>
-    </>
+    </group>
   );
 }

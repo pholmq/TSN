@@ -64,6 +64,7 @@
     "planetCamera": true,
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 10, "stepFact": "sYear" }
+
   },
   {
     "name": "Mercury def A",
