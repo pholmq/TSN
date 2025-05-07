@@ -2,7 +2,6 @@
   {
     "name": "Polaris",
     "type": "star",
-    "size": 21.52,
     "colorTemp": 6450,
     "visible": true,
     "magnitude": 2.09,
@@ -13,7 +12,6 @@
   {
     "name": "Sirius",
     "type": "star",
-    "size": 0.8,
     "colorTemp": 9750,
     "visible": true,
     "magnitude": -1.09,
@@ -24,7 +22,6 @@
   {
     "name": "Proxima Centauri",
     "type": "star",
-    "size": 0.07,
     "colorTemp": 5800,
     "visible": true,
     "magnitude": 11.13,
@@ -35,7 +32,6 @@
   {
     "name": "Deneb Algedi",
     "type": "star",
-    "size": 0.465,
     "colorTemp": 8750,
     "visible": true,
     "magnitude": 2.94,
@@ -46,7 +42,6 @@
   {
     "name": "Vega",
     "type": "star",
-    "size": 1.1,
     "colorTemp": 7001,
     "visible": true,
     "magnitude": 0.09,
@@ -57,7 +52,6 @@
   {
     "name": "Thuban",
     "type": "star",
-    "size": 1.1,
     "colorTemp": 7001,
     "visible": true,
     "magnitude": 3.65,
@@ -68,12 +62,41 @@
   {
     "name": "Capella",
     "type": "star",
-    "size": 0.46,
     "colorTemp": 5500,
     "visible": true,
     "magnitude": 0.24,
     "ra": "05h 16m42.1s",
     "dec": " +45°59'50.2",
     "distLy": 42.8
+  },
+  {
+    "name": "Altair",
+    "type": "star",
+    "colorTemp": 7600,
+    "visible": true,
+    "magnitude": 0.76,
+    "ra": "19h 50m 46.9s",
+    "dec": "+08° 52' 05.9″",
+    "distly": 16.73
+  },
+  {
+    "name": "Arcturus",
+    "type": "star",
+    "colorTemp": 4286,
+    "visible": true,
+    "magnitude": -0.05,
+    "ra": "14h 15m 39.7s",
+    "dec": "+19° 10' 56.0″",
+    "distly": 36.7
+  },
+  {
+    "name": "Barnard's star",
+    "type": "star",
+    "colorTemp": 3195,
+    "visible": true,
+    "magnitude": 13.2,
+    "ra": "17h 57m 47.13s",
+    "dec": "+04° 41' 34.0″",
+    "distly": 5.96
   }
 ]
