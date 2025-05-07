@@ -98,5 +98,15 @@
     "ra": "17h 57m 47.13s",
     "dec": "+04° 41' 34.0″",
     "distLy": 5.96
+  },
+  {
+    "name": "Kruger 60",
+    "type": "star",
+    "colorTemp": 3200,
+    "visible": true,
+    "magnitude": 11.5,
+    "ra": "22h 27m 59.00s",
+    "dec": "+57° 42' 03.2″",
+    "distLy": 13.07
   }
 ]
