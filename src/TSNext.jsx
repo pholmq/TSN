@@ -39,7 +39,7 @@ const TSNext = () => {
       >
         <OrbitCamera />
         <PlanetCamera />
-        {runIntro && <IntroText />}
+        <IntroText />
         <AnimationController />
         <PosController />
         <TraceController />
