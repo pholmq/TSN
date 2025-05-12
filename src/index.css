@@ -193,17 +193,13 @@ body {
 
 .plancam-div > div {
   position: fixed;
-  bottom: 10px !important; /* Anchor to bottom */
+  top: 1000px !important;
   left: 10px !important;
   right: auto !important;
-  top: auto !important; /* Prevent top from overriding */
-  max-height: 25vh; /* Limit height */
-  height: auto; /* Let content define height up to max-height */
-  width: auto;
   opacity: 0.8;
 }
 
-.name-label {
+ .name-label {
   color: white;
   font-size: 1rem;
   font-family: Arial, Helvetica, sans-serif;
