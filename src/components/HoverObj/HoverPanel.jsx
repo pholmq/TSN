@@ -86,7 +86,7 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
               <input className="menu-input" ref={decRef} disabled />
             </div>
             <div className="panel-item">
-              <label className="menu-label">Dist:</label>
+              <label className="menu-label">Distance:</label>
               <input className="menu-input" ref={distRef} disabled />
             </div>
             <div className="panel-item">

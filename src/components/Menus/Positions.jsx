@@ -24,7 +24,7 @@ const Positions = () => {
               editable: false,
             },
             [`${s.name}elongation`]: {
-              label: "Elong.:",
+              label: "Elongation:",
               value: "",
               editable: false,
             },
