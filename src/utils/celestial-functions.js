@@ -187,7 +187,9 @@ export function getRaDecDistance(name, scene) {
   const denominator = 2.0 * earthSunDistance * earthTargetPlanetDistance;
 
   const elongationRadians = Math.acos(numerator / denominator);
-  const elongation = ((180.0 * elongationRadians) / Math.PI).toFixed(3);
+  let elongation = ((180.0 * elongationRadians) / Math.PI).toFixed(3);
+  elongation =
+    isNaN(elongation) || Number(elongation) === 0 ? "-" : `${elongation}\u00B0`;
 
   let distance = `${distAU} AU`;
   if (distAU > 10000) {
