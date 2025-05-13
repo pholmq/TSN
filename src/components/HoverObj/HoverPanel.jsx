@@ -26,8 +26,7 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
     raRef.current.value = ra;
     decRef.current.value = dec;
     distRef.current.value = dist;
-    eloRef.current.value =
-      isNaN(elongation) || Number(elongation) === 0 ? "-" : elongation;
+    eloRef.current.value = elongation;
   }
 
   useEffect(() => {
