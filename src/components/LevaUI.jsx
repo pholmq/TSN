@@ -56,6 +56,8 @@ const LevaUI = () => {
     setShowLables,
     geoSphere,
     setGeoSphere,
+    ephimerides,
+    setEphimerides,
   } = useStore();
 
   const {
@@ -110,20 +112,25 @@ const LevaUI = () => {
           value: actualPlanetSizes,
           onChange: setActualPlanetSizes,
         },
-        "Planet camera": {
-          value: planetCameraHelper,
-          onChange: setPlanetCameraHelper,
+        "Show labels": {
+          value: showLabels,
+          onChange: setShowLables,
         },
         "Show positions": {
           value: showPositions,
           hint: "Keep unchecked for best performance",
           onChange: setShowPositions,
         },
-        "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
-        "Show labels": {
-          value: showLabels,
-          onChange: setShowLables,
+        Ephimerides: {
+          value: ephimerides,
+          onChange: setEphimerides,
         },
+
+        "Planet camera": {
+          value: planetCameraHelper,
+          onChange: setPlanetCameraHelper,
+        },
+        "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
       },
       { collapsed: false }
     ),
