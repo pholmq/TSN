@@ -141,6 +141,9 @@ export const useStore = create((set) => ({
 
   geoSphere: false,
   setGeoSphere: (v) => set({ geoSphere: v }),
+
+  ephimerides: false,
+  setEphimerides: (v) => set({ ephimerides: v }),
 }));
 
 export const usePosStore = create((set) => ({
