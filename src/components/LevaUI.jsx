@@ -121,10 +121,10 @@ const LevaUI = () => {
           hint: "Keep unchecked for best performance",
           onChange: setShowPositions,
         },
-        Ephimerides: {
-          value: ephimerides,
-          onChange: setEphimerides,
-        },
+        // Ephimerides: {
+        //   value: ephimerides,
+        //   onChange: setEphimerides,
+        // },
 
         "Planet camera": {
           value: planetCameraHelper,

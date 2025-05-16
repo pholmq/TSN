@@ -1,8 +1,10 @@
 import React, { useRef, useState } from "react";
 import { Text3D } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import { useStore } from "../../store";
 
 export default function IntroText() {
+  const setRunIntro = useStore((s) => s.setRunIntro);
   const materialRef = useRef(); // Create a ref for the material
   const [visible, setVisible] = useState(true);
 
@@ -16,6 +18,7 @@ export default function IntroText() {
         ); // Fade out slowly
       } else {
         setVisible(false);
+        setRunIntro(false);
       }
     }
   });
