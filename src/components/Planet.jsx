@@ -10,8 +10,8 @@ import NameLabel from "./Labels/NameLabel";
 import GeoSphere from "./Helpers/GeoSphere";
 
 export default function Planet({ s, actualMoon, name }) {
-  const groupRef = useRef(); // Group for rotation and scaling
-  const planetRef = useRef();
+  const planetRef = useRef(); // Group for rotation and scaling
+  const pivotRef = useRef();
   const materialRef = useRef();
   const posRef = useStore((state) => state.posRef);
   const sunLight = useStore((state) => state.sunLight);
@@ -42,10 +42,10 @@ export default function Planet({ s, actualMoon, name }) {
     visible = false;
   }
 
-  // Rotate the group containing planet and wireframe
+  // Rotate the group containing the planet
   useFrame(() => {
-    if (rotationSpeed && groupRef.current) {
-      groupRef.current.rotation.y =
+    if (rotationSpeed && planetRef.current) {
+      planetRef.current.rotation.y =
         rotationStart + rotationSpeed * posRef.current;
     }
   });
@@ -54,12 +54,12 @@ export default function Planet({ s, actualMoon, name }) {
   const tiltb = s.tiltb || 0;
 
   return (
-    <group rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
+    <group ref={pivotRef} rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
       {s.name === "Earth" && <CelestialSphere />}
       {(s.name === "Earth" || s.name === "Sun") && <PolarLine visible={visible} />}
       {visible && <NameLabel s={s} />}
       {visible && <HoverObj s={s} />}
-      <group ref={groupRef} scale={planetScale}>
+      <group ref={planetRef} scale={planetScale}>
         <mesh name={name} visible={visible} ref={planetRef}>
           <sphereGeometry args={[size, 256, 256]} />
           <meshStandardMaterial
