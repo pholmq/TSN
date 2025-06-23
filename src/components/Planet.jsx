@@ -43,18 +43,17 @@ export default function Planet({ s, actualMoon, name }) {
   }
 
   useFrame(() => {
+    const orbitRotation =
+      s.speed * posRef.current - s.startPos * (Math.PI / 180);
+    if (s.fixedTilt && pivotRef.current) {
+      //Adjust the tilt so that it's fixed in respect to the orbit
+      pivotRef.current.rotation.y = -(s.speed * posRef.current - s.startPos * (Math.PI / 180));
+    }
+
     if (rotationSpeed && planetRef.current) {
-      
       // Rotate the group containing the planet
       planetRef.current.rotation.y =
         rotationStart + rotationSpeed * posRef.current;
-    }
-    if (s.fixedTilt && pivotRef.current) {
-      // console.log("iran")
-      //Adjust the tilt so that it's fixed in respect to the orbit
-      // pivotRef.current.rotation.y = -(s.speed * posRef.current - s.startPos * (Math.PI / 180)) * orbitSpeed;
-      pivotRef.current.rotation.z += -0.01;
-      // console.log(pivotRef.current.rotation)
     }
   });
 
