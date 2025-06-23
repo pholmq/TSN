@@ -42,11 +42,19 @@ export default function Planet({ s, actualMoon, name }) {
     visible = false;
   }
 
-  // Rotate the group containing the planet
   useFrame(() => {
     if (rotationSpeed && planetRef.current) {
+      
+      // Rotate the group containing the planet
       planetRef.current.rotation.y =
         rotationStart + rotationSpeed * posRef.current;
+    }
+    if (s.fixedTilt && pivotRef.current) {
+      // console.log("iran")
+      //Adjust the tilt so that it's fixed in respect to the orbit
+      // pivotRef.current.rotation.y = -(s.speed * posRef.current - s.startPos * (Math.PI / 180)) * orbitSpeed;
+      pivotRef.current.rotation.z += -0.01;
+      // console.log(pivotRef.current.rotation)
     }
   });
 
@@ -54,9 +62,14 @@ export default function Planet({ s, actualMoon, name }) {
   const tiltb = s.tiltb || 0;
 
   return (
-    <group ref={pivotRef} rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}>
+    <group
+      ref={pivotRef}
+      rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}
+    >
       {s.name === "Earth" && <CelestialSphere />}
-      {(s.name === "Earth" || s.name === "Sun") && <PolarLine visible={visible} />}
+      {(s.name === "Earth" || s.name === "Sun") && (
+        <PolarLine visible={visible} />
+      )}
       {visible && <NameLabel s={s} />}
       {visible && <HoverObj s={s} />}
       <group ref={planetRef} scale={planetScale}>
