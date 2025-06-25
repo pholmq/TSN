@@ -1,7 +1,8 @@
 import { useRef, useMemo } from "react";
 import * as THREE from "three";
 
-function GeoSphere({ s, size, visible }) {
+function GeoSphere({ s, size, visible, color = 0x00ffff }) {
+  // Use provided color or fallback to default cyan
   const meshRef = useRef();
   const geoSphereSize = size * 1.01;
 
@@ -9,13 +10,13 @@ function GeoSphere({ s, size, visible }) {
     const grid = new THREE.Group();
 
     // Use provided color or fallback to default cyan
-    const color = 0x00ffff;
+    // const color = 0x00ffff;
 
     // Regular grid material
     const gridMaterial = new THREE.LineBasicMaterial({
       color: color,
       transparent: true,
-      opacity: 0.5,
+      opacity: 1,
       depthTest: true,
     });
 
@@ -23,16 +24,16 @@ function GeoSphere({ s, size, visible }) {
     // Create a torus geometry that sits exactly on the equator
     const equatorGeometry = new THREE.TorusGeometry(
       geoSphereSize, // radius
-      geoSphereSize * 0.004, // tube thickness (adjust for desired thickness)
+      geoSphereSize * 0.01, // tube thickness (adjust for desired thickness)
       16, // radial segments
       64 // tubular segments
     );
     equatorGeometry.rotateX(Math.PI / 2); // Rotate to align with equator
 
     const equatorMaterial = new THREE.MeshBasicMaterial({
-      color: color,
+      color: new THREE.Color(color),
       transparent: true,
-      opacity: 0.8,
+      opacity: 1,
       depthTest: true,
     });
 
@@ -85,13 +86,6 @@ function GeoSphere({ s, size, visible }) {
   return (
     <group visible={visible}>
       <mesh name="GeoSphere" ref={meshRef}>
-        {/* <sphereGeometry args={[geoSphereSize, 64, 64]} />
-        <meshBasicMaterial 
-          color={0xffffff} // Explicit white
-          transparent
-          opacity={0}
-          depthWrite={false}
-        /> */}
         <primitive object={latLongGrid} />
       </mesh>
     </group>

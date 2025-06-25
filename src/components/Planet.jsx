@@ -47,7 +47,10 @@ export default function Planet({ s, actualMoon, name }) {
       s.speed * posRef.current - s.startPos * (Math.PI / 180);
     if (s.fixedTilt && pivotRef.current) {
       //Adjust the tilt so that it's fixed in respect to the orbit
-      pivotRef.current.rotation.y = -(s.speed * posRef.current - s.startPos * (Math.PI / 180));
+      pivotRef.current.rotation.y = -(
+        s.speed * posRef.current -
+        s.startPos * (Math.PI / 180)
+      );
     }
 
     if (rotationSpeed && planetRef.current) {
@@ -86,8 +89,8 @@ export default function Planet({ s, actualMoon, name }) {
           />
           {s.light && <pointLight intensity={sunLight * 100000} />}
         </mesh>
-        {s.name === "Earth" && geoSphere ? (
-          <GeoSphere s={s} size={size} visible={visible} />
+        {s.geoSphere && geoSphere ? (
+          <GeoSphere s={s} size={size} visible={visible} color={s.geoSphereColor} />
         ) : null}
         {s.rings && (
           <PlanetRings
