@@ -81,10 +81,10 @@ export const useStore = create((set) => ({
   setZodiacSize: (v) => set({ zodiacSize: v }),
 
   polarLine: false,
-  setPolarLine: (v) => set({ polarLine: v }),
+  setPolarLine: (v) => set({ polarLine: v, southLine: v }),
   southLine: false,
   setSouthLine: (v) => set({ southLine: v }),
-  polarLineSize: 10,
+  polarLineSize: 15,
   setPolarLineSize: (v) => set({ polarLineSize: v }),
 
   celestialSphere: false,
