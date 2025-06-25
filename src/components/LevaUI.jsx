@@ -199,7 +199,7 @@ const LevaUI = () => {
     ),
     "Stars & Helpers": folder(
       {
-        Zodiac: {
+        "Sidereal Zodiac": {
           value: zodiac,
           onChange: setZodiac,
         },
@@ -210,14 +210,14 @@ const LevaUI = () => {
           step: 0.1,
           onChange: setZodiacSize,
         },
-        "Polar lines": {
+        "Polar line": {
           value: polarLine,
           onChange: setPolarLine,
         },
-        "South lines": {
-          value: southLine,
-          onChange: setSouthLine,
-        },
+        // "South lines": {
+        //   value: southLine,
+        //   onChange: setSouthLine,
+        // },
         "Line length": {
           value: polarLineSize,
           min: 5,
