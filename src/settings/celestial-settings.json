@@ -90,7 +90,6 @@
     "rotationSpeed": 83.995,
     "tilt": 0,
     "tiltb": 0,
-    "fixedTilt": true,
     "orbitRadius": 100,
     "orbitCentera": 1.2,
     "orbitCenterb": -0.1,

@@ -210,7 +210,7 @@ const LevaUI = () => {
           step: 0.1,
           onChange: setZodiacSize,
         },
-        "Polar line": {
+        "Polar lines": {
           value: polarLine,
           onChange: setPolarLine,
         },
@@ -224,7 +224,7 @@ const LevaUI = () => {
           step: 1,
           onChange: setPolarLineSize,
         },
-        Graticule: {
+        Graticules: {
           value: geoSphere,
           onChange: setGeoSphere,
         },
