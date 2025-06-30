@@ -16,7 +16,6 @@ const PosController = () => {
   usePosStore.setState(() => ({ trackedObjects: tracked }));
 
   function updatePositions() {
-    // console.log("iran")
     let positions = {}; // Fresh object for positions
 
     for (const item of tracked) {
@@ -29,12 +28,11 @@ const PosController = () => {
   let previousPosRef = null;
 
   useFrameInterval(() => {
-    console.log("iran")
     if (!showPositions) return;
     const currentPosRef = useStore.getState().posRef.current;
     // Only update if posRef.current has changed
     // if (currentPosRef === previousPosRef) return;
-    
+
     updatePositions();
 
     // Update the previous value for the next check

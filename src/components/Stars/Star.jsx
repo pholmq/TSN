@@ -14,13 +14,26 @@ import createCircleTexture from "../../utils/createCircleTexture";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
 import NameLabel from "../Labels/NameLabel";
 
-export default function Star({ name }) {
+export default function Star({ name, bscStar = false, bscStarData = null }) {
   const { camera, invalidate } = useThree();
   const { settings } = useStarStore();
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starScale = useStore((s) => s.starScale);
+
+  if (bscStar) {
+    // console.log("BSCStar " + JSON.stringify(bscStarData, null, 2));
+    // if (!bscStarData.name.length) {
+    //   //No common name, use HIP number
+
+    // } else {
+
+    // }
+    return null;
+  }
+
   const s = settings.find((obj) => obj.name === name);
+
   const radius = s.size;
   // const color = s.color;
   const color = colorTemperature2rgb(s.colorTemp);

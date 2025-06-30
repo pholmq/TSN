@@ -1,8 +1,9 @@
-// BSCStars.js
-import { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import { useThree } from "@react-three/fiber";
 import { Vector3, Quaternion } from "three";
-import { usePlotStore, useBSCStore } from "../../store";
+import { usePlotStore } from "../../store";
+import { useBSCStore } from "./BSCStore";
+
 import Star from "./Star";
 import { dateTimeToPos } from "../../utils/time-date-functions";
 
@@ -23,6 +24,12 @@ const BSCStars = () => {
   const worldPosition = new Vector3();
   const worldQuaternion = new Quaternion();
 
+  // Memoize starsArray to compute only once unless bscSettings changes
+  const starsArray = useMemo(() => {
+    console.log("Computing starsArray");
+    return Array.from(bscSettings.values());
+  }, [bscSettings]);
+
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
@@ -35,24 +42,21 @@ const BSCStars = () => {
       starGroupRef.current.position.copy(worldPosition);
       starGroupRef.current.quaternion.copy(worldQuaternion);
     }
-  }, [plotObjects]);
-
-  // Convert the Map to an array for rendering
-  const starsArray = Array.from(bscSettings.values());
+  }, [plotObjects]); // Keep dependency for now; see notes for optimization
 
   return (
     <group ref={starGroupRef}>
       {/* <axesHelper args={[10]} /> */}
       {starsArray.map((starData, index) => (
-        <Star 
-          key={index} 
-          name={starData.n} 
-          // Pass any additional star data needed by your Star component
-          {...starData}
+        <Star
+          key={index}
+          name={starData.n}
+          bscStar={true}
+          bscStarData={starData}
         />
       ))}
     </group>
   );
 };
 
-export default BSCStars;
+export default React.memo(BSCStars);

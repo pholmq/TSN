@@ -1,4 +1,4 @@
-import create from "zustand";
+import {create} from "zustand";
 import bscSettings from "../../settings/BSC.json";
 
 export const useBSCStore = create((set, get) => {
