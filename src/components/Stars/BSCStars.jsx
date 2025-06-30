@@ -4,7 +4,7 @@ import { Vector3, Quaternion } from "three";
 import { usePlotStore } from "../../store";
 import { useBSCStore } from "./BSCStore";
 
-import Star from "./Star";
+import BSCStar from "./BSCStar";
 import { dateTimeToPos } from "../../utils/time-date-functions";
 
 function moveModel(plotObjects, plotPos) {
@@ -48,7 +48,7 @@ const BSCStars = () => {
     <group ref={starGroupRef}>
       {/* <axesHelper args={[10]} /> */}
       {starsArray.map((starData, index) => (
-        <Star
+        <BSCStar
           key={index}
           name={starData.n}
           bscStar={true}
