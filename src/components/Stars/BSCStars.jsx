@@ -26,7 +26,7 @@ const BSCStars = () => {
 
   // Memoize starsArray to compute only once unless bscSettings changes
   const starsArray = useMemo(() => {
-    console.log("Computing starsArray");
+    // console.log("Computing starsArray");
     return Array.from(bscSettings.values());
   }, [bscSettings]);
 
@@ -50,9 +50,7 @@ const BSCStars = () => {
       {starsArray.map((starData, index) => (
         <BSCStar
           key={index}
-          name={starData.n}
-          bscStar={true}
-          bscStarData={starData}
+          starData={starData}
         />
       ))}
     </group>

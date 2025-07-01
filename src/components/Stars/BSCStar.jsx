@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { SpriteMaterial, MathUtils, Vector3 } from "three";
+import { SpriteMaterial, MathUtils, Vector3, Color } from "three";
 import FakeGlowMaterial from "../../utils/FakeGlowMaterial";
 import { useStore, useStarStore } from "../../store";
 import {
@@ -14,29 +14,38 @@ import createCircleTexture from "../../utils/createCircleTexture";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
 import NameLabel from "../Labels/NameLabel";
 
-export default function Star({ name, bscStar = false, bscStarData = null }) {
+export default function Star({ starData }) {
   const { camera, invalidate } = useThree();
   const { settings } = useStarStore();
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starScale = useStore((s) => s.starScale);
   let s = {};
-  if (bscStar) {
-    // console.log("BSCStar " + JSON.stringify(bscStarData, null, 2));
-    if (!bscStarData.name.length) {
-      //No common name, use HIP number
-      s.name = bscStarData.hip
-    } else {
-      s.name = bscStarData.name[0]
-    }
-    return null;
-  } else { //if bscStar
-    s = settings.find((obj) => obj.name === name);
+  if (!starData.name.length) {
+    //No common name, use HIP number
+    s.name = starData.hip;
+  } else {
+    s.name = starData.name[0];
+    // console.log(JSON.stringify(starData, null, 2));
   }
 
-  const radius = s.size;
-  // const color = s.color;
-  const color = colorTemperature2rgb(s.colorTemp);
+  let color;
+  if (!starData.K) {
+    // console.log( starData.hip + " starData.K empty")
+    color = new Color(1, 1, 1);
+  } else {
+    color = new Color(starData.K.r, starData.K.g, starData.K.b);
+  }
+
+  s.raRad = starData.r;
+  s.raDec = starData.d;
+  s.N = starData.N;
+
+  s.distLy = 3261.56 / starData.p;
+
+  // return null;
+
+  // const color = colorTemperature2rgb(s.colorTemp);
 
   const meshRef = useRef();
   const groupRef = useRef();
@@ -63,8 +72,8 @@ export default function Star({ name, bscStar = false, bscStarData = null }) {
 
   useEffect(() => {
     if (meshRef.current) {
-      const raRad = rightAscensionToRadians(s.ra); // Convert RA to radians
-      const decRad = declinationToRadians(s.dec); // Convert Dec to radians
+      const raRad = s.raRad; // Convert RA to radians
+      const decRad = s.decRad; // Convert Dec to radians
       let dist;
       if (!officialStarDistances) {
         dist = 20000;
@@ -94,32 +103,42 @@ export default function Star({ name, bscStar = false, bscStarData = null }) {
     // depthTest: false,
   });
   let starsize;
-  if (s.magnitude < 1) {
-    starsize = 1.2;
-  } else if (s.magnitude > 1 && s.magnitude < 3) {
-    starsize = 0.6;
-  } else if (s.magnitude > 3 && s.magnitude < 5) {
-    starsize = 0.4;
+  // if (s.magnitude < 1) {
+  //   starsize = 1.2;
+  // } else if (s.magnitude > 1 && s.magnitude < 3) {
+  //   starsize = 0.6;
+  // } else if (s.magnitude > 3 && s.magnitude < 5) {
+  //   starsize = 0.4;
+  // } else {
+  //   starsize = 0.2;
+  // }
+
+  if (s.N > 10) {
+    starsize = 1.2; // Brightest stars, e.g., Sirius (N = 21.1339), Vega (N = 45.2616), Capella (N = 125.6358), Arcturus (N = 103.3502), Altair (N = 10.2895)
+  } else if (s.N > 5 && s.N <= 10) {
+    starsize = 0.6; // Medium-bright stars, e.g., Deneb Algedi (N = 7.9694)
+  } else if (s.N > 1 && s.N <= 5) {
+    starsize = 0.4; // Fainter stars, e.g., Thuban (N = 173.5587)
   } else {
-    starsize = 0.2;
+    starsize = 0.2; // Faintest stars, e.g., HD166 (N = 0.5395)
   }
 
   const size = (starsize / 500) * starScale;
 
   return (
-    <group ref={groupRef} visible={s.visible}>
+    <group ref={groupRef}>
       <NameLabel s={s} />
       <sprite material={spriteMaterial} scale={[size, size, size]} />
       <mesh name={s.name} ref={meshRef}>
-        <sphereGeometry args={[radius, 32, 32]} />
+        <sphereGeometry args={[1, 32, 32]} />
         <FakeGlowMaterial
-          glowColor={color}
+          glowColor={`#${color.getHexString()}`}
           falloff={1}
           glowInternalRadius={2}
           glowSharpness={1}
         />
       </mesh>
-      {s.visible && <HoverObj s={s} starColor={color} />}
+      <HoverObj s={s} starColor={color} />
     </group>
   );
 }

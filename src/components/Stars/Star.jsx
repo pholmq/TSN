@@ -23,8 +23,6 @@ export default function Star({ name }) {
 
   const s = settings.find((obj) => obj.name === name);
 
-  const radius = s.size;
-  // const color = s.color;
   const color = colorTemperature2rgb(s.colorTemp);
 
   const meshRef = useRef();
@@ -100,7 +98,7 @@ export default function Star({ name }) {
       <NameLabel s={s} />
       <sprite material={spriteMaterial} scale={[size, size, size]} />
       <mesh name={s.name} ref={meshRef}>
-        <sphereGeometry args={[radius, 32, 32]} />
+        <sphereGeometry args={[1, 32, 32]} />
         <FakeGlowMaterial
           glowColor={color}
           falloff={1}
