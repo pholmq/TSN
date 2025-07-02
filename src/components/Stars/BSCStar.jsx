@@ -72,8 +72,9 @@ export default function Star({ starData }) {
 
   useEffect(() => {
     if (meshRef.current) {
-      const raRad = s.raRad; // Convert RA to radians
-      const decRad = s.decRad; // Convert Dec to radians
+      const raRad = s.raRad;
+      const decRad = s.raDec;
+      console.log("raRad: " + raRad + "raDec: " + s.raDec);
       let dist;
       if (!officialStarDistances) {
         dist = 20000;
@@ -89,6 +90,7 @@ export default function Star({ starData }) {
 
       // Set the position of the star
       groupRef.current.position.set(x, y, z);
+      console.log("position for " + s.name + "x: " + x + "y: " + y, "z: " + z);
       // updateScale(camera);
       invalidate();
     }
@@ -124,9 +126,10 @@ export default function Star({ starData }) {
   }
 
   const size = (starsize / 500) * starScale;
-
+  // console.log(s);
   return (
     <group ref={groupRef}>
+      <axesHelper args={[100]} />
       <NameLabel s={s} />
       <sprite material={spriteMaterial} scale={[size, size, size]} />
       <mesh name={s.name} ref={meshRef}>

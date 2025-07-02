@@ -4,6 +4,7 @@ import { useStore } from "../../store";
 import { useRef } from "react";
 
 const NameLabel = ({ s }) => {
+  // console.log("Rendering NameLabel for:", s.name);
   const showLabels = useStore((s) => s.showLabels);
   const runIntro = useStore((s) => s.runIntro);
 

@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { SpriteMaterial, MathUtils, Vector3 } from "three";
 import FakeGlowMaterial from "../../utils/FakeGlowMaterial";
-import { useStore, useStarStore } from "../../store";
+import { useStore } from "../../store";
 import {
   declinationToRadians,
   rightAscensionToRadians,
@@ -14,14 +14,17 @@ import createCircleTexture from "../../utils/createCircleTexture";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
 import NameLabel from "../Labels/NameLabel";
 
-export default function Star({ name }) {
+export default function Star({ sData }) {
   const { camera, invalidate } = useThree();
-  const { settings } = useStarStore();
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starScale = useStore((s) => s.starScale);
 
-  const s = settings.find((obj) => obj.name === name);
+  // const s = settings.find((obj) => obj.name === name);
+
+  const s = sData;
+
+  // console.log(s)
 
   const color = colorTemperature2rgb(s.colorTemp);
 
@@ -95,7 +98,7 @@ export default function Star({ name }) {
 
   return (
     <group ref={groupRef} visible={s.visible}>
-      <NameLabel s={s} />
+      {s.visible && <NameLabel s={s} />}
       <sprite material={spriteMaterial} scale={[size, size, size]} />
       <mesh name={s.name} ref={meshRef}>
         <sphereGeometry args={[1, 32, 32]} />

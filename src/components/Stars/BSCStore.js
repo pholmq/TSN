@@ -1,9 +1,11 @@
-import {create} from "zustand";
+import { create } from "zustand";
 import bscSettings from "../../settings/BSC.json";
 
 export const useBSCStore = create((set, get) => {
   // Convert JSON array to Map for O(1) lookups by name
-  const settingsMap = new Map(bscSettings.map((setting) => [setting.n, setting]));
+  const settingsMap = new Map(
+    bscSettings.map((setting) => [setting.HR, setting])
+  );
 
   return {
     settings: settingsMap,
