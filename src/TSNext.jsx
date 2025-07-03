@@ -22,8 +22,9 @@ import IntroText from "./components/Intro/IntroText";
 import EditSettings from "./components/Menus/EditSettings";
 
 const TSNext = () => {
-  const zoomLevel = useStore((s) => s.zoomLevel);
-  const runIntro = useStore((s) => s.runIntro);
+  // const zoomLevel = useStore((s) => s.zoomLevel);
+  // const runIntro = useStore((s) => s.runIntro);
+  const BSCStarsOn = useStore((s) => s.BSCStars);
 
   return (
     <>
@@ -51,7 +52,8 @@ const TSNext = () => {
         <SolarSystem />
         <PlotSolarSystem />
         <Stars />
-        {/* <BSCStars /> */}
+        {BSCStarsOn && <BSCStars />}
+
         <Zodiac />
       </Canvas>
     </>

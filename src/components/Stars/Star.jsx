@@ -96,6 +96,10 @@ export default function Star({ sData }) {
 
   const size = (starsize / 500) * starScale;
 
+  if (s.BSCStar) {
+    return null
+  }
+
   return (
     <group ref={groupRef} visible={s.visible}>
       {s.visible && <NameLabel s={s} />}

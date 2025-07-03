@@ -49,7 +49,7 @@ const BSCStars = () => {
     <group ref={starGroupRef}>
       {/* <axesHelper args={[10]} /> */}
       {starsArray.map((s, index) => (
-        <Star
+         <Star
           key={index}
           sData={{
             colorTemp: s.K,
@@ -59,6 +59,7 @@ const BSCStars = () => {
             name: s.N ? s.N : "HR " + s.HR,
             ra: s.RA,
             type: "star",
+            BSCStar: true,
             visible: true,
           }}
         />
