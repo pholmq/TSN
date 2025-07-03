@@ -1,4 +1,4 @@
-// BSCStars.js
+// BSCStars.jsx
 import { useRef, useEffect, useMemo } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import { Vector3, Quaternion } from "three";
