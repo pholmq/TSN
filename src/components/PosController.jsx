@@ -26,12 +26,11 @@ const PosController = () => {
   }
 
   let previousPosRef = null;
+
   useFrameInterval(() => {
     if (!showPositions) return;
     const currentPosRef = useStore.getState().posRef.current;
-    // Only update if posRef.current has changed
-    if (currentPosRef === previousPosRef) return;
-    
+
     updatePositions();
 
     // Update the previous value for the next check

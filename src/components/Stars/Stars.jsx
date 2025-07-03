@@ -42,7 +42,7 @@ const Stars = () => {
     <group ref={starGroupRef}>
        {/* <axesHelper args={[10]} /> */}
       {starSettings.map((item, index) => (
-        <Star key={index} name={item.name} />
+        <Star key={index} sData={item} />
       ))}
     </group>
   );

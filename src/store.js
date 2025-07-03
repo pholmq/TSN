@@ -107,6 +107,9 @@ export const useStore = create((set) => ({
   starScale: 1,
   setStarScale: (v) => set({ starScale: v }),
 
+  BSCStars: false,
+  setBSCStars: (v) => set({ BSCStars: v }),
+
   //Trigger update flags
   resetClicked: false,
   setResetClicked: () =>

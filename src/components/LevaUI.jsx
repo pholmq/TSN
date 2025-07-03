@@ -58,6 +58,8 @@ const LevaUI = () => {
     setGeoSphere,
     ephimerides,
     setEphimerides,
+    BSCStars,
+    setBSCStars,
   } = useStore();
 
   const {
@@ -265,6 +267,10 @@ const LevaUI = () => {
           max: 5,
           step: 0.1,
           onChange: setStarScale,
+        },
+        "BSCStars (experimental)": {
+          value: BSCStars,
+          onChange: setBSCStars,
         },
       },
       { collapsed: true }
