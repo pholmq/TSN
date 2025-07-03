@@ -7,8 +7,6 @@ import { useBSCStore } from "./BSCStore";
 import Star from "./Star";
 import { dateTimeToPos } from "../../utils/time-date-functions";
 
-import BSCStar from "./BSCStar";
-
 function moveModel(plotObjects, plotPos) {
   plotObjects.forEach((pObj) => {
     pObj.orbitRef.current.rotation.y =
@@ -49,7 +47,7 @@ const BSCStars = () => {
     <group ref={starGroupRef}>
       {/* <axesHelper args={[10]} /> */}
       {starsArray.map((s, index) => (
-         <Star
+        <Star
           key={index}
           sData={{
             colorTemp: s.K,
