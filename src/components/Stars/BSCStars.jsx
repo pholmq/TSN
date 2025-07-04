@@ -6,6 +6,13 @@ import { usePlotStore } from "../../store";
 import bscSettings from "../../settings/BSC.json";
 import { dateTimeToPos } from "../../utils/time-date-functions";
 
+import {
+  declinationToRadians,
+  rightAscensionToRadians,
+  sphericalToCartesian,
+  convertMagnitude,
+} from "../../utils/celestial-functions";
+
 // Parse RA (e.g., '00h 05m 09.9s') to decimal hours
 function parseRA(raStr) {
   if (typeof raStr !== "string") return NaN;
@@ -189,13 +196,12 @@ const BSCStars = () => {
     };
   }, []); // Empty deps since BSC.json is static
 
-
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
       const worldPosition = new Vector3();
       const worldQuaternion = new Quaternion();
-          //We move the plot model to Epoch J2000 and copy Earths position and tilt
+      //We move the plot model to Epoch J2000 and copy Earths position and tilt
       moveModel(plotObjects, epochJ2000Pos);
       const earthObj = plotObjects.find((p) => p.name === "Earth");
       earthObj.cSphereRef.current.getWorldPosition(worldPosition);
@@ -203,8 +209,7 @@ const BSCStars = () => {
       //And then we set the starGroup to this so that RA and Dec will be correct
       starGroupRef.current.position.copy(worldPosition);
       starGroupRef.current.quaternion.copy(worldQuaternion);
-
-    } 
+    }
   }, [plotObjects]);
 
   // Handle mouseover events
