@@ -1,6 +1,7 @@
 import { useRef, useMemo, useState, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { Vector3, Quaternion } from "three";
 import { usePlotStore } from "../../store";
 import bscSettings from "../../settings/BSC.json";
 import { dateTimeToPos } from "../../utils/time-date-functions";
@@ -188,25 +189,22 @@ const BSCStars = () => {
     };
   }, []); // Empty deps since BSC.json is static
 
-  // Position star group at Earth's J2000 position
+
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
+      const worldPosition = new Vector3();
+      const worldQuaternion = new Quaternion();
+          //We move the plot model to Epoch J2000 and copy Earths position and tilt
       moveModel(plotObjects, epochJ2000Pos);
       const earthObj = plotObjects.find((p) => p.name === "Earth");
-      if (earthObj && earthObj.cSphereRef.current) {
-        const worldPosition = new THREE.Vector3();
-        const worldQuaternion = new THREE.Quaternion();
-        earthObj.cSphereRef.current.getWorldPosition(worldPosition);
-        earthObj.cSphereRef.current.getWorldQuaternion(worldQuaternion);
-        // Set star group position and orientation to match Earth's J2000 position
-        starGroupRef.current.position.copy(worldPosition);
-        starGroupRef.current.quaternion.copy(worldQuaternion);
-        console.log("Star group position:", worldPosition.toArray());
-      } else {
-        console.warn("Earth object or cSphereRef not found");
-      }
-    }
+      earthObj.cSphereRef.current.getWorldPosition(worldPosition);
+      earthObj.cSphereRef.current.getWorldQuaternion(worldQuaternion);
+      //And then we set the starGroup to this so that RA and Dec will be correct
+      starGroupRef.current.position.copy(worldPosition);
+      starGroupRef.current.quaternion.copy(worldQuaternion);
+
+    } 
   }, [plotObjects]);
 
   // Handle mouseover events
