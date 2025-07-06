@@ -1,3 +1,4 @@
+//BSCStore.js
 import { create } from "zustand";
 import bscSettings from "../../settings/BSC.json";
 
