@@ -210,27 +210,10 @@ const BSCStars = () => {
     }
   };
 
-  // Update sizes for hover effect
-  // useFrame(() => {
-  //   if (hoveredPoint !== null && pointsRef.current) {
-  //     const sizesAttr = pointsRef.current.geometry.attributes.size;
-  //     const sizesArray = sizesAttr.array;
-  //     for (let i = 0; i < sizesArray.length; i++) {
-  //       sizesArray[i] = sizes[i];
-  //     }
-  //     sizesArray[hoveredPoint] = sizes[hoveredPoint] * 2;
-  //     sizesAttr.needsUpdate = true;
-  //   }
-  // });
-
   return (
     <group ref={starGroupRef}>
       {/* <axesHelper args={[1000]} /> */}
-      <points
-        ref={pointsRef}
-        onPointerMove={handlePointerMove}
-        onPointerOut={() => setHoveredPoint(null)}
-      >
+      <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
@@ -253,20 +236,6 @@ const BSCStars = () => {
         </bufferGeometry>
         <shaderMaterial attach="material" args={[pointShaderMaterial]} />
       </points>
-      {hoveredPoint !== null && (
-        <group
-          position={[
-            positions[hoveredPoint * 3],
-            positions[hoveredPoint * 3 + 1],
-            positions[hoveredPoint * 3 + 2],
-          ]}
-        >
-          <mesh>
-            <sphereGeometry args={[0.1, 16, 16]} />
-            <meshBasicMaterial color="white" transparent opacity={0.5} />
-          </mesh>
-        </group>
-      )}
     </group>
   );
 };
