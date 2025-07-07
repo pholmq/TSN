@@ -48,7 +48,42 @@ const BSCStars = () => {
   const starScale = useStore((s) => s.starScale);
 
   // Create circular texture
-  const circleTexture = useMemo(() => createCircleTexture(), []);
+  // const circleTexture = useMemo(() => createCircleTexture(), []);
+
+  // Create ShaderMaterial
+  const pointShaderMaterial = useMemo(
+    () => ({
+      uniforms: {
+        pointTexture: { value: createCircleTexture() },
+        opacity: { value: 1.0 },
+        alphaTest: { value: 0.1 },
+      },
+      vertexShader: `
+    attribute float size;
+    varying vec3 vColor;
+    void main() {
+      vColor = color;
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = size; // Pixel-based size
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+      fragmentShader: `
+    uniform sampler2D pointTexture;
+    uniform float opacity;
+    uniform float alphaTest;
+    varying vec3 vColor;
+    void main() {
+      vec4 texColor = texture2D(pointTexture, gl_PointCoord);
+      if (texColor.a < alphaTest) discard;
+      gl_FragColor = vec4(vColor, texColor.a * opacity);
+    }
+  `,
+      vertexColors: true,
+      transparent: true,
+    }),
+    []
+  );
 
   // Memoize star attributes directly from BSC.json
   const { positions, colors, sizes, starData } = useMemo(() => {
@@ -100,21 +135,19 @@ const BSCStars = () => {
         starsize = 0.2;
       }
 
-      // console.log(starsize, starScale);
-      // const size = (starsize / 500) * starScale;
-      const size = starsize * starScale;
+      const size = starsize * starScale * 10;
 
       sizes.push(size);
 
       // Store metadata for mouseover
-      // starData.push({
-      //   name: s.N ? s.N : "HR " + s.HR,
-      //   magnitude: isNaN(magnitude) ? 5 : magnitude,
-      //   colorTemp,
-      //   ra: raHours,
-      //   dec: decDegrees,
-      //   distLy,
-      // });
+      starData.push({
+        name: s.N ? s.N : "HR " + s.HR,
+        magnitude: isNaN(magnitude) ? 5 : magnitude,
+        colorTemp,
+        ra: s.RA,
+        dec: s.Dec,
+        distLy,
+      });
     });
 
     return {
@@ -133,9 +166,16 @@ const BSCStars = () => {
         "position",
         new THREE.BufferAttribute(positions, 3)
       );
+      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
       geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-      // console.log("Sizes attribute:", geometry.attributes.size.array);
+      console.log(
+        "Sizes attribute:",
+        Array.from(geometry.attributes.size.array)
+      );
+      console.log("Geometry attributes:", geometry.attributes);
+      console.log("Material:", pointsRef.current.material);
       geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.color.needsUpdate = true;
       geometry.attributes.size.needsUpdate = true;
     }
   }, [positions, sizes]);
@@ -211,15 +251,7 @@ const BSCStars = () => {
             itemSize={1}
           />
         </bufferGeometry>
-        <pointsMaterial
-          // size={20}
-          sizeAttenuation={false}
-          vertexColors
-          transparent
-          opacity={1}
-          alphaTest={0.5}
-          map={circleTexture}
-        />
+        <shaderMaterial attach="material" args={[pointShaderMaterial]} />
       </points>
       {hoveredPoint !== null && (
         <group
