@@ -50,6 +50,8 @@ const BSCStars = () => {
 
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
+  const starScale = useStore((s) => s.starScale);
+
   // Create circular texture
   const circleTexture = useMemo(() => createCircleTexture(), []);
 
@@ -90,38 +92,26 @@ const BSCStars = () => {
       // console.log(x, y, z);
       positions.push(x, y, z);
 
-      // Color based on colorTemp
-      // let r, g, b;
-      // if (colorTemp < 3500) {
-      //   r = 1.0;
-      //   g = Math.max(0, (colorTemp - 2000) / 1500);
-      //   b = 0;
-      // } else if (colorTemp < 6000) {
-      //   r = 1.0;
-      //   g = 1.0;
-      //   b = Math.max(0, (colorTemp - 3500) / 2500);
-      // } else {
-      //   r = Math.max(0, (10000 - colorTemp) / 4000);
-      //   g = Math.max(0, (8000 - colorTemp) / 2000);
-      //   b = 1.0;
-      // }
-
       const { red, green, blue } = colorTemperature2rgb(colorTemp, true);
 
       colors.push(red, green, blue);
 
       // Size based on magnitude
-      const size = Math.max(
-        0.1,
-        1.0 / (1 + (isNaN(magnitude) ? 5 : magnitude))
-      );
-      if (isNaN(size)) {
-        console.warn(`Invalid size for star ${s.N || s.HR} at index ${index}`, {
-          magnitude,
-          size,
-        });
-        return;
+      let starsize;
+      if (magnitude < 1) {
+        starsize = 1.2;
+      } else if (magnitude > 1 && magnitude < 3) {
+        starsize = 0.6;
+      } else if (magnitude > 3 && magnitude < 5) {
+        starsize = 0.4;
+      } else {
+        starsize = 0.2;
       }
+
+      // console.log(starsize, starScale);
+      // const size = (starsize / 500) * starScale;
+      const size = starsize * starScale;
+
       sizes.push(size);
 
       // Store metadata for mouseover
@@ -141,7 +131,7 @@ const BSCStars = () => {
       sizes: new Float32Array(sizes),
       starData,
     };
-  }, [officialStarDistances, starDistanceModifier]); // Update if these changes
+  }, [officialStarDistances, starDistanceModifier, starScale]); // Update if these changes
 
   // Update buffer attributes when positions or sizes change
   useEffect(() => {
@@ -152,6 +142,7 @@ const BSCStars = () => {
         new THREE.BufferAttribute(positions, 3)
       );
       geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+      console.log("Sizes attribute:", geometry.attributes.size.array);
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.size.needsUpdate = true;
     }
@@ -188,17 +179,17 @@ const BSCStars = () => {
   };
 
   // Update sizes for hover effect
-  useFrame(() => {
-    if (hoveredPoint !== null && pointsRef.current) {
-      const sizesAttr = pointsRef.current.geometry.attributes.size;
-      const sizesArray = sizesAttr.array;
-      for (let i = 0; i < sizesArray.length; i++) {
-        sizesArray[i] = sizes[i];
-      }
-      sizesArray[hoveredPoint] = sizes[hoveredPoint] * 2;
-      sizesAttr.needsUpdate = true;
-    }
-  });
+  // useFrame(() => {
+  //   if (hoveredPoint !== null && pointsRef.current) {
+  //     const sizesAttr = pointsRef.current.geometry.attributes.size;
+  //     const sizesArray = sizesAttr.array;
+  //     for (let i = 0; i < sizesArray.length; i++) {
+  //       sizesArray[i] = sizes[i];
+  //     }
+  //     sizesArray[hoveredPoint] = sizes[hoveredPoint] * 2;
+  //     sizesAttr.needsUpdate = true;
+  //   }
+  // });
 
   return (
     <group ref={starGroupRef}>
@@ -229,7 +220,7 @@ const BSCStars = () => {
           />
         </bufferGeometry>
         <pointsMaterial
-          size={5}
+          size={2}
           sizeAttenuation={false}
           vertexColors
           transparent
