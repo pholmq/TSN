@@ -10,9 +10,9 @@ import {
   declinationToRadians,
   rightAscensionToRadians,
   sphericalToCartesian,
-  convertMagnitude,
 } from "../../utils/celestial-functions";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
+// import createCircleTexture from "../../utils/createCircleTexture";
 
 function moveModel(plotObjects, plotPos) {
   plotObjects.forEach((pObj) => {
@@ -21,21 +21,16 @@ function moveModel(plotObjects, plotPos) {
   });
 }
 
-// Create a circular texture for points
 function createCircleTexture() {
-  const size = 64; // Texture size (pixels)
+  const size = 256;
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const context = canvas.getContext("2d");
-
-  // Draw a white circle with transparent background
   context.beginPath();
   context.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
   context.fillStyle = "white";
   context.fill();
-
-  // Create Three.js texture
   const texture = new THREE.Texture(canvas);
   texture.needsUpdate = true;
   return texture;
@@ -66,9 +61,6 @@ const BSCStars = () => {
     // Iterate over BSC.json
     bscSettings.forEach((s, index) => {
       // Parse string fields to numbers
-      // const raHours = parseRA(s.RA);
-      // const decDegrees = parseDec(s.Dec);
-      const parallax = parseFloat(s.P);
       const magnitude = parseFloat(s.V);
       const colorTemp = parseFloat(s.K) || 5778;
 
@@ -142,7 +134,7 @@ const BSCStars = () => {
         new THREE.BufferAttribute(positions, 3)
       );
       geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-      console.log("Sizes attribute:", geometry.attributes.size.array);
+      // console.log("Sizes attribute:", geometry.attributes.size.array);
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.size.needsUpdate = true;
     }
@@ -220,7 +212,7 @@ const BSCStars = () => {
           />
         </bufferGeometry>
         <pointsMaterial
-          size={2}
+          // size={20}
           sizeAttenuation={false}
           vertexColors
           transparent
