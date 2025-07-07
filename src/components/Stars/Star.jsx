@@ -80,6 +80,7 @@ export default function Star({ sData }) {
     map: circleTexture,
     transparent: true,
     opacity: 1,
+    alphaTest: 0.5,
     sizeAttenuation: false,
     // depthTest: false,
   });
@@ -97,7 +98,7 @@ export default function Star({ sData }) {
   const size = (starsize / 500) * starScale;
 
   if (s.BSCStar) {
-    return null
+    return null;
   }
 
   return (

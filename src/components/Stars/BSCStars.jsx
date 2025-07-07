@@ -5,36 +5,14 @@ import { Vector3, Quaternion } from "three";
 import { usePlotStore } from "../../store";
 import bscSettings from "../../settings/BSC.json";
 import { dateTimeToPos } from "../../utils/time-date-functions";
-
+import { useStore } from "../../store";
 import {
   declinationToRadians,
   rightAscensionToRadians,
   sphericalToCartesian,
   convertMagnitude,
 } from "../../utils/celestial-functions";
-
-// Parse RA (e.g., '00h 05m 09.9s') to decimal hours
-function parseRA(raStr) {
-  if (typeof raStr !== "string") return NaN;
-  const match = raStr.match(/(\d+)h\s*(\d+)m\s*([\d.]+)s/);
-  if (!match) return NaN;
-  const hours = parseFloat(match[1]);
-  const minutes = parseFloat(match[2]);
-  const seconds = parseFloat(match[3]);
-  return hours + minutes / 60 + seconds / 3600;
-}
-
-// Parse Dec (e.g., '+45° 13′ 45″') to decimal degrees
-function parseDec(decStr) {
-  if (typeof decStr !== "string") return NaN;
-  const match = decStr.match(/([+-]?)(\d+)°\s*(\d+)′\s*([\d.]+)″/);
-  if (!match) return NaN;
-  const sign = match[1] === "-" ? -1 : 1;
-  const degrees = parseFloat(match[2]);
-  const arcminutes = parseFloat(match[3]);
-  const arcseconds = parseFloat(match[4]);
-  return sign * (degrees + arcminutes / 60 + arcseconds / 3600);
-}
+import colorTemperature2rgb from "../../utils/colorTempToRGB";
 
 function moveModel(plotObjects, plotPos) {
   plotObjects.forEach((pObj) => {
@@ -70,25 +48,10 @@ const BSCStars = () => {
   const { scene, raycaster, camera, pointer } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
 
+  const officialStarDistances = useStore((s) => s.officialStarDistances);
+  const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   // Create circular texture
   const circleTexture = useMemo(() => createCircleTexture(), []);
-
-  // Log camera settings for debugging
-  useEffect(() => {
-    console.log("Camera settings:", {
-      position: camera.position.toArray(),
-      near: camera.near,
-      far: camera.far,
-      fov: camera.fov,
-    });
-    // Optional: Adjust camera for testing
-    /*
-    camera.position.set(0, 0, 1000);
-    camera.lookAt(0, 0, 0);
-    camera.far = 10000;
-    camera.updateProjectionMatrix();
-    */
-  }, [camera]);
 
   // Memoize star attributes directly from BSC.json
   const { positions, colors, sizes, starData } = useMemo(() => {
@@ -101,56 +64,51 @@ const BSCStars = () => {
     // Iterate over BSC.json
     bscSettings.forEach((s, index) => {
       // Parse string fields to numbers
-      const raHours = parseRA(s.RA);
-      const decDegrees = parseDec(s.Dec);
+      // const raHours = parseRA(s.RA);
+      // const decDegrees = parseDec(s.Dec);
       const parallax = parseFloat(s.P);
       const magnitude = parseFloat(s.V);
       const colorTemp = parseFloat(s.K) || 5778;
 
-      // Validate data
-      if (isNaN(raHours) || isNaN(decDegrees) || isNaN(parallax)) {
-        console.warn(`Invalid data for star ${s.N || s.HR} at index ${index}`, {
-          RA: s.RA,
-          Dec: s.Dec,
-          P: s.P,
-          parsed: { raHours, decDegrees, parallax },
-        });
-        return;
+      const raRad = rightAscensionToRadians(s.RA); // RA in hours to radians
+      const decRad = declinationToRadians(s.Dec); // Dec in degrees to radians
+
+      const distLy = parseFloat(s.P) * 3.26156378; // Parsecs to light-years
+      let dist;
+      if (!officialStarDistances) {
+        dist = 20000;
+      } else {
+        //Convert light year distance to world units (1Ly = 63241 AU, 1 AU = 100 world units)
+        const worldDist = distLy * 63241 * 100;
+        dist =
+          worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1); // Distance
       }
 
-      const ra = raHours * (Math.PI / 12); // RA in hours to radians
-      const dec = decDegrees * (Math.PI / 180); // Dec in degrees to radians
-      const distLy = parallax * 3.26156378; // Parsecs to light-years
-
-      // Convert spherical to Cartesian
-      const x = distLy * Math.cos(dec) * Math.cos(ra) * scale;
-      const y = distLy * Math.cos(dec) * Math.sin(ra) * scale;
-      const z = distLy * Math.sin(dec) * scale;
-      if (isNaN(x) || isNaN(y) || isNaN(z)) {
-        console.warn(
-          `Invalid position for star ${s.N || s.HR} at index ${index}`,
-          { x, y, z }
-        );
-        return;
-      }
+      // Convert spherical coordinates (RA, Dec, Dist) to Cartesian coordinates (x, y, z)
+      const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
+      // Set the position of the star
+      // console.log(x, y, z);
       positions.push(x, y, z);
 
       // Color based on colorTemp
-      let r, g, b;
-      if (colorTemp < 3500) {
-        r = 1.0;
-        g = Math.max(0, (colorTemp - 2000) / 1500);
-        b = 0;
-      } else if (colorTemp < 6000) {
-        r = 1.0;
-        g = 1.0;
-        b = Math.max(0, (colorTemp - 3500) / 2500);
-      } else {
-        r = Math.max(0, (10000 - colorTemp) / 4000);
-        g = Math.max(0, (8000 - colorTemp) / 2000);
-        b = 1.0;
-      }
-      colors.push(r, g, b);
+      // let r, g, b;
+      // if (colorTemp < 3500) {
+      //   r = 1.0;
+      //   g = Math.max(0, (colorTemp - 2000) / 1500);
+      //   b = 0;
+      // } else if (colorTemp < 6000) {
+      //   r = 1.0;
+      //   g = 1.0;
+      //   b = Math.max(0, (colorTemp - 3500) / 2500);
+      // } else {
+      //   r = Math.max(0, (10000 - colorTemp) / 4000);
+      //   g = Math.max(0, (8000 - colorTemp) / 2000);
+      //   b = 1.0;
+      // }
+
+      const { red, green, blue } = colorTemperature2rgb(colorTemp, true);
+
+      colors.push(red, green, blue);
 
       // Size based on magnitude
       const size = Math.max(
@@ -167,26 +125,15 @@ const BSCStars = () => {
       sizes.push(size);
 
       // Store metadata for mouseover
-      starData.push({
-        name: s.N ? s.N : "HR " + s.HR,
-        magnitude: isNaN(magnitude) ? 5 : magnitude,
-        colorTemp,
-        ra: raHours,
-        dec: decDegrees,
-        distLy,
-      });
+      // starData.push({
+      //   name: s.N ? s.N : "HR " + s.HR,
+      //   magnitude: isNaN(magnitude) ? 5 : magnitude,
+      //   colorTemp,
+      //   ra: raHours,
+      //   dec: decDegrees,
+      //   distLy,
+      // });
     });
-
-    // Log for debugging
-    console.log("Star count:", starData.length);
-    console.log("Sample positions:", positions.slice(0, 12));
-    console.log("Sample sizes:", sizes.slice(0, 4));
-
-    // Add a test point at origin
-    positions.push(0, 0, 0);
-    colors.push(1, 1, 1); // White
-    sizes.push(5); // Large size
-    starData.push({ name: "Test Point", magnitude: 0, distLy: 0 });
 
     return {
       positions: new Float32Array(positions),
@@ -194,7 +141,21 @@ const BSCStars = () => {
       sizes: new Float32Array(sizes),
       starData,
     };
-  }, []); // Empty deps since BSC.json is static
+  }, [officialStarDistances, starDistanceModifier]); // Update if these changes
+
+  // Update buffer attributes when positions or sizes change
+  useEffect(() => {
+    if (pointsRef.current) {
+      const geometry = pointsRef.current.geometry;
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+      geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.size.needsUpdate = true;
+    }
+  }, [positions, sizes]);
 
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
@@ -241,7 +202,7 @@ const BSCStars = () => {
 
   return (
     <group ref={starGroupRef}>
-      <axesHelper args={[1000]} />
+      {/* <axesHelper args={[1000]} /> */}
       <points
         ref={pointsRef}
         onPointerMove={handlePointerMove}
@@ -272,6 +233,7 @@ const BSCStars = () => {
           sizeAttenuation={false}
           vertexColors
           transparent
+          opacity={1}
           alphaTest={0.5}
           map={circleTexture}
         />

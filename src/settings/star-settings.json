@@ -5,8 +5,8 @@
     "colorTemp": 6450,
     "visible": true,
     "magnitude": 2.09,
-    "ra": "02h 32m 45.2s",
-    "dec": "+89° 16' 00.9″",
+    "ra": "02h 31m 48.7s",
+    "dec": "+89° 15′ 51″",
     "distLy": 432.57
   },
   {
@@ -15,8 +15,8 @@
     "colorTemp": 9750,
     "visible": true,
     "magnitude": -1.09,
-    "ra": "06h 45m 09s",
-    "dec": "-16° 43′ 04″",
+    "ra": "06h 45m 08.9s",
+    "dec": "-16° 42′ 58″",
     "distLy": 8.6
   },
   {
@@ -25,8 +25,8 @@
     "colorTemp": 5800,
     "visible": true,
     "magnitude": 11.13,
-    "ra": "14h 29m40.9s",
-    "dec": "-62°40'22.6",
+    "ra": "14h 29m42.9s",
+    "dec": "-62°40'46.1",
     "distLy": 4.24
   },
   {
@@ -35,8 +35,8 @@
     "colorTemp": 8750,
     "visible": true,
     "magnitude": 2.94,
-    "ra": "21h 47m 00.4s",
-    "dec": "-16°07'45.3",
+    "ra": "21h 47m 02.4s",
+    "dec": "-16° 07′ 38″",
     "distLy": 38.7
   },
   {
@@ -45,8 +45,8 @@
     "colorTemp": 7001,
     "visible": true,
     "magnitude": 0.09,
-    "ra": "18h 36m54.0s",
-    "dec": "+38°47'04.6",
+    "ra": "18h 36m 56.3s",
+    "dec": "+38° 47′ 01″",
     "distLy": 25.04
   },
   {
