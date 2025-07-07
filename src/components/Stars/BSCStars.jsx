@@ -168,12 +168,12 @@ const BSCStars = () => {
       );
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
       geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-      console.log(
-        "Sizes attribute:",
-        Array.from(geometry.attributes.size.array)
-      );
-      console.log("Geometry attributes:", geometry.attributes);
-      console.log("Material:", pointsRef.current.material);
+      // console.log(
+      //   "Sizes attribute:",
+      //   Array.from(geometry.attributes.size.array)
+      // );
+      // console.log("Geometry attributes:", geometry.attributes);
+      // console.log("Material:", pointsRef.current.material);
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.color.needsUpdate = true;
       geometry.attributes.size.needsUpdate = true;
