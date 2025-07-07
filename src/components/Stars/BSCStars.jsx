@@ -5,36 +5,14 @@ import { Vector3, Quaternion } from "three";
 import { usePlotStore } from "../../store";
 import bscSettings from "../../settings/BSC.json";
 import { dateTimeToPos } from "../../utils/time-date-functions";
-
+import { useStore } from "../../store";
 import {
   declinationToRadians,
   rightAscensionToRadians,
   sphericalToCartesian,
-  convertMagnitude,
 } from "../../utils/celestial-functions";
-
-// Parse RA (e.g., '00h 05m 09.9s') to decimal hours
-function parseRA(raStr) {
-  if (typeof raStr !== "string") return NaN;
-  const match = raStr.match(/(\d+)h\s*(\d+)m\s*([\d.]+)s/);
-  if (!match) return NaN;
-  const hours = parseFloat(match[1]);
-  const minutes = parseFloat(match[2]);
-  const seconds = parseFloat(match[3]);
-  return hours + minutes / 60 + seconds / 3600;
-}
-
-// Parse Dec (e.g., '+45° 13′ 45″') to decimal degrees
-function parseDec(decStr) {
-  if (typeof decStr !== "string") return NaN;
-  const match = decStr.match(/([+-]?)(\d+)°\s*(\d+)′\s*([\d.]+)″/);
-  if (!match) return NaN;
-  const sign = match[1] === "-" ? -1 : 1;
-  const degrees = parseFloat(match[2]);
-  const arcminutes = parseFloat(match[3]);
-  const arcseconds = parseFloat(match[4]);
-  return sign * (degrees + arcminutes / 60 + arcseconds / 3600);
-}
+import colorTemperature2rgb from "../../utils/colorTempToRGB";
+// import createCircleTexture from "../../utils/createCircleTexture";
 
 function moveModel(plotObjects, plotPos) {
   plotObjects.forEach((pObj) => {
@@ -43,21 +21,16 @@ function moveModel(plotObjects, plotPos) {
   });
 }
 
-// Create a circular texture for points
 function createCircleTexture() {
-  const size = 64; // Texture size (pixels)
+  const size = 256;
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const context = canvas.getContext("2d");
-
-  // Draw a white circle with transparent background
   context.beginPath();
   context.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
   context.fillStyle = "white";
   context.fill();
-
-  // Create Three.js texture
   const texture = new THREE.Texture(canvas);
   texture.needsUpdate = true;
   return texture;
@@ -70,25 +43,47 @@ const BSCStars = () => {
   const { scene, raycaster, camera, pointer } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
 
-  // Create circular texture
-  const circleTexture = useMemo(() => createCircleTexture(), []);
+  const officialStarDistances = useStore((s) => s.officialStarDistances);
+  const starDistanceModifier = useStore((s) => s.starDistanceModifier);
+  const starScale = useStore((s) => s.starScale);
 
-  // Log camera settings for debugging
-  useEffect(() => {
-    console.log("Camera settings:", {
-      position: camera.position.toArray(),
-      near: camera.near,
-      far: camera.far,
-      fov: camera.fov,
-    });
-    // Optional: Adjust camera for testing
-    /*
-    camera.position.set(0, 0, 1000);
-    camera.lookAt(0, 0, 0);
-    camera.far = 10000;
-    camera.updateProjectionMatrix();
-    */
-  }, [camera]);
+  // Create circular texture
+  // const circleTexture = useMemo(() => createCircleTexture(), []);
+
+  // Create ShaderMaterial
+  const pointShaderMaterial = useMemo(
+    () => ({
+      uniforms: {
+        pointTexture: { value: createCircleTexture() },
+        opacity: { value: 1.0 },
+        alphaTest: { value: 0.1 },
+      },
+      vertexShader: `
+    attribute float size;
+    varying vec3 vColor;
+    void main() {
+      vColor = color;
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = size; // Pixel-based size
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+      fragmentShader: `
+    uniform sampler2D pointTexture;
+    uniform float opacity;
+    uniform float alphaTest;
+    varying vec3 vColor;
+    void main() {
+      vec4 texColor = texture2D(pointTexture, gl_PointCoord);
+      if (texColor.a < alphaTest) discard;
+      gl_FragColor = vec4(vColor, texColor.a * opacity);
+    }
+  `,
+      vertexColors: true,
+      transparent: true,
+    }),
+    []
+  );
 
   // Memoize star attributes directly from BSC.json
   const { positions, colors, sizes, starData } = useMemo(() => {
@@ -101,69 +96,47 @@ const BSCStars = () => {
     // Iterate over BSC.json
     bscSettings.forEach((s, index) => {
       // Parse string fields to numbers
-      const raHours = parseRA(s.RA);
-      const decDegrees = parseDec(s.Dec);
-      const parallax = parseFloat(s.P);
       const magnitude = parseFloat(s.V);
       const colorTemp = parseFloat(s.K) || 5778;
 
-      // Validate data
-      if (isNaN(raHours) || isNaN(decDegrees) || isNaN(parallax)) {
-        console.warn(`Invalid data for star ${s.N || s.HR} at index ${index}`, {
-          RA: s.RA,
-          Dec: s.Dec,
-          P: s.P,
-          parsed: { raHours, decDegrees, parallax },
-        });
-        return;
+      const raRad = rightAscensionToRadians(s.RA); // RA in hours to radians
+      const decRad = declinationToRadians(s.Dec); // Dec in degrees to radians
+
+      const distLy = parseFloat(s.P) * 3.26156378; // Parsecs to light-years
+      let dist;
+      if (!officialStarDistances) {
+        dist = 20000;
+      } else {
+        //Convert light year distance to world units (1Ly = 63241 AU, 1 AU = 100 world units)
+        const worldDist = distLy * 63241 * 100;
+        dist =
+          worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1); // Distance
       }
 
-      const ra = raHours * (Math.PI / 12); // RA in hours to radians
-      const dec = decDegrees * (Math.PI / 180); // Dec in degrees to radians
-      const distLy = parallax * 3.26156378; // Parsecs to light-years
-
-      // Convert spherical to Cartesian
-      const x = distLy * Math.cos(dec) * Math.cos(ra) * scale;
-      const y = distLy * Math.cos(dec) * Math.sin(ra) * scale;
-      const z = distLy * Math.sin(dec) * scale;
-      if (isNaN(x) || isNaN(y) || isNaN(z)) {
-        console.warn(
-          `Invalid position for star ${s.N || s.HR} at index ${index}`,
-          { x, y, z }
-        );
-        return;
-      }
+      // Convert spherical coordinates (RA, Dec, Dist) to Cartesian coordinates (x, y, z)
+      const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
+      // Set the position of the star
+      // console.log(x, y, z);
       positions.push(x, y, z);
 
-      // Color based on colorTemp
-      let r, g, b;
-      if (colorTemp < 3500) {
-        r = 1.0;
-        g = Math.max(0, (colorTemp - 2000) / 1500);
-        b = 0;
-      } else if (colorTemp < 6000) {
-        r = 1.0;
-        g = 1.0;
-        b = Math.max(0, (colorTemp - 3500) / 2500);
-      } else {
-        r = Math.max(0, (10000 - colorTemp) / 4000);
-        g = Math.max(0, (8000 - colorTemp) / 2000);
-        b = 1.0;
-      }
-      colors.push(r, g, b);
+      const { red, green, blue } = colorTemperature2rgb(colorTemp, true);
+
+      colors.push(red, green, blue);
 
       // Size based on magnitude
-      const size = Math.max(
-        0.1,
-        1.0 / (1 + (isNaN(magnitude) ? 5 : magnitude))
-      );
-      if (isNaN(size)) {
-        console.warn(`Invalid size for star ${s.N || s.HR} at index ${index}`, {
-          magnitude,
-          size,
-        });
-        return;
+      let starsize;
+      if (magnitude < 1) {
+        starsize = 1.2;
+      } else if (magnitude > 1 && magnitude < 3) {
+        starsize = 0.6;
+      } else if (magnitude > 3 && magnitude < 5) {
+        starsize = 0.4;
+      } else {
+        starsize = 0.2;
       }
+
+      const size = starsize * starScale * 10;
+
       sizes.push(size);
 
       // Store metadata for mouseover
@@ -171,22 +144,11 @@ const BSCStars = () => {
         name: s.N ? s.N : "HR " + s.HR,
         magnitude: isNaN(magnitude) ? 5 : magnitude,
         colorTemp,
-        ra: raHours,
-        dec: decDegrees,
+        ra: s.RA,
+        dec: s.Dec,
         distLy,
       });
     });
-
-    // Log for debugging
-    console.log("Star count:", starData.length);
-    console.log("Sample positions:", positions.slice(0, 12));
-    console.log("Sample sizes:", sizes.slice(0, 4));
-
-    // Add a test point at origin
-    positions.push(0, 0, 0);
-    colors.push(1, 1, 1); // White
-    sizes.push(5); // Large size
-    starData.push({ name: "Test Point", magnitude: 0, distLy: 0 });
 
     return {
       positions: new Float32Array(positions),
@@ -194,7 +156,29 @@ const BSCStars = () => {
       sizes: new Float32Array(sizes),
       starData,
     };
-  }, []); // Empty deps since BSC.json is static
+  }, [officialStarDistances, starDistanceModifier, starScale]); // Update if these changes
+
+  // Update buffer attributes when positions or sizes change
+  useEffect(() => {
+    if (pointsRef.current) {
+      const geometry = pointsRef.current.geometry;
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions, 3)
+      );
+      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+      // console.log(
+      //   "Sizes attribute:",
+      //   Array.from(geometry.attributes.size.array)
+      // );
+      // console.log("Geometry attributes:", geometry.attributes);
+      // console.log("Material:", pointsRef.current.material);
+      geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.color.needsUpdate = true;
+      geometry.attributes.size.needsUpdate = true;
+    }
+  }, [positions, sizes]);
 
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
@@ -226,27 +210,10 @@ const BSCStars = () => {
     }
   };
 
-  // Update sizes for hover effect
-  useFrame(() => {
-    if (hoveredPoint !== null && pointsRef.current) {
-      const sizesAttr = pointsRef.current.geometry.attributes.size;
-      const sizesArray = sizesAttr.array;
-      for (let i = 0; i < sizesArray.length; i++) {
-        sizesArray[i] = sizes[i];
-      }
-      sizesArray[hoveredPoint] = sizes[hoveredPoint] * 2;
-      sizesAttr.needsUpdate = true;
-    }
-  });
-
   return (
     <group ref={starGroupRef}>
-      <axesHelper args={[1000]} />
-      <points
-        ref={pointsRef}
-        onPointerMove={handlePointerMove}
-        onPointerOut={() => setHoveredPoint(null)}
-      >
+      {/* <axesHelper args={[1000]} /> */}
+      <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
@@ -267,29 +234,8 @@ const BSCStars = () => {
             itemSize={1}
           />
         </bufferGeometry>
-        <pointsMaterial
-          size={5}
-          sizeAttenuation={false}
-          vertexColors
-          transparent
-          alphaTest={0.5}
-          map={circleTexture}
-        />
+        <shaderMaterial attach="material" args={[pointShaderMaterial]} />
       </points>
-      {hoveredPoint !== null && (
-        <group
-          position={[
-            positions[hoveredPoint * 3],
-            positions[hoveredPoint * 3 + 1],
-            positions[hoveredPoint * 3 + 2],
-          ]}
-        >
-          <mesh>
-            <sphereGeometry args={[0.1, 16, 16]} />
-            <meshBasicMaterial color="white" transparent opacity={0.5} />
-          </mesh>
-        </group>
-      )}
     </group>
   );
 };
