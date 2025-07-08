@@ -12,7 +12,7 @@ export default function EclipticGrid() {
 
     // Create the main grid helper
     const grid = new THREE.GridHelper(
-      eclipticGridSize * 2,
+      2,
       30,
       "#008800",
       "#000088"
@@ -25,16 +25,16 @@ export default function EclipticGrid() {
   if (!eclipticGrid) return null;
 
   return (
-    <group>
+    <group scale={[eclipticGridSize, eclipticGridSize, eclipticGridSize]}>
       <primitive object={gridGroup} />
 
       {/* Seasonal Markers */}
 
       {/* Vernal Equinox (March) - Right (+X) */}
       <Text
-        position={[eclipticGridSize * 0.9, 0, 0]}
+        position={[1, 0.03, 0]}
         rotation={[0, -Math.PI / 2, 0]}
-        fontSize={eclipticGridSize * 0.05}
+        fontSize={0.05}
         color="#FF4500"
         anchorX="center"
         anchorY="middle"
@@ -44,9 +44,9 @@ export default function EclipticGrid() {
 
       {/* Autumnal Equinox (September) - Left (-X) */}
       <Text
-        position={[-eclipticGridSize * 0.9, 0, 0]}
+        position={[-1, 0.03, 0]}
         rotation={[0, Math.PI / 2, 0]}
-        fontSize={eclipticGridSize * 0.05}
+        fontSize={0.05}
         color="#FF4500"
         anchorX="center"
         anchorY="middle"
@@ -56,9 +56,9 @@ export default function EclipticGrid() {
 
       {/* Summer Solstice (June) - Front (+Z) - Facing correct direction */}
       <Text
-        position={[0, 0, eclipticGridSize * 0.9]}
+        position={[0, 0.03, 1]}
         rotation={[0, Math.PI, 0]} // Flipped 180 degrees
-        fontSize={eclipticGridSize * 0.05}
+        fontSize={0.05}
         color="#FF8C00"
         anchorX="center"
         anchorY="middle"
@@ -68,9 +68,9 @@ export default function EclipticGrid() {
 
       {/* Winter Solstice (December) - Back (-Z) - Facing correct direction */}
       <Text
-        position={[0, 0, -eclipticGridSize * 0.9]}
+        position={[0, 0.03, -1]}
         rotation={[0, 0, 0]} // Reset to 0 rotation
-        fontSize={eclipticGridSize * 0.05}
+        fontSize={0.05}
         color="#FF8C00"
         anchorX="center"
         anchorY="middle"
