@@ -207,9 +207,8 @@ const LevaUI = () => {
         },
         "Zodiac size": {
           value: zodiacSize,
-          min: 0.1,
-          max: 5,
-          step: 0.1,
+          min: 1,
+          step: 1,
           onChange: setZodiacSize,
         },
         "Polar lines": {
