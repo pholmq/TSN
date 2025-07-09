@@ -39,11 +39,16 @@ function createCircleTexture() {
 const BSCStars = () => {
   const pointsRef = useRef();
   const starGroupRef = useRef();
+  const [hoveredPoint, setHoveredPoint] = useState(null);
+  const { scene, raycaster, camera, pointer } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
 
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const starScale = useStore((s) => s.starScale);
+
+  // Create circular texture
+  // const circleTexture = useMemo(() => createCircleTexture(), []);
 
   // Create ShaderMaterial
   const pointShaderMaterial = useMemo(
@@ -80,24 +85,7 @@ const BSCStars = () => {
     []
   );
 
-  //Put the starGroup in Epoch J2000 orientation
-  useEffect(() => {
-    if (plotObjects.length > 0 && starGroupRef.current) {
-      const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
-      const worldPosition = new Vector3();
-      const worldQuaternion = new Quaternion();
-      //We move the plot model to Epoch J2000 and copy Earths position and tilt
-      moveModel(plotObjects, epochJ2000Pos);
-      const earthObj = plotObjects.find((p) => p.name === "Earth");
-      earthObj.cSphereRef.current.getWorldPosition(worldPosition);
-      earthObj.cSphereRef.current.getWorldQuaternion(worldQuaternion);
-      //And then we set the starGroup to this so that RA and Dec will be correct
-      starGroupRef.current.position.copy(worldPosition);
-      starGroupRef.current.quaternion.copy(worldQuaternion);
-    }
-  }, [plotObjects]);
-
-  // Memoize star attributes from BSC.json
+  // Memoize star attributes directly from BSC.json
   const { positions, colors, sizes, starData } = useMemo(() => {
     const positions = [];
     const colors = [];
@@ -135,7 +123,7 @@ const BSCStars = () => {
 
       colors.push(red, green, blue);
 
-      // Size is based on magnitude
+      // Size based on magnitude
       let starsize;
       if (magnitude < 1) {
         starsize = 1.2;
@@ -168,7 +156,7 @@ const BSCStars = () => {
       sizes: new Float32Array(sizes),
       starData,
     };
-  }, [officialStarDistances, starDistanceModifier, starScale]); // Update if these change
+  }, [officialStarDistances, starDistanceModifier, starScale]); // Update if these changes
 
   // Update buffer attributes when positions or sizes change
   useEffect(() => {
@@ -180,11 +168,47 @@ const BSCStars = () => {
       );
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
       geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+      // console.log(
+      //   "Sizes attribute:",
+      //   Array.from(geometry.attributes.size.array)
+      // );
+      // console.log("Geometry attributes:", geometry.attributes);
+      // console.log("Material:", pointsRef.current.material);
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.color.needsUpdate = true;
       geometry.attributes.size.needsUpdate = true;
     }
   }, [positions, sizes]);
+
+  useEffect(() => {
+    if (plotObjects.length > 0 && starGroupRef.current) {
+      const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
+      const worldPosition = new Vector3();
+      const worldQuaternion = new Quaternion();
+      //We move the plot model to Epoch J2000 and copy Earths position and tilt
+      moveModel(plotObjects, epochJ2000Pos);
+      const earthObj = plotObjects.find((p) => p.name === "Earth");
+      earthObj.cSphereRef.current.getWorldPosition(worldPosition);
+      earthObj.cSphereRef.current.getWorldQuaternion(worldQuaternion);
+      //And then we set the starGroup to this so that RA and Dec will be correct
+      starGroupRef.current.position.copy(worldPosition);
+      starGroupRef.current.quaternion.copy(worldQuaternion);
+    }
+  }, [plotObjects]);
+
+  // Handle mouseover events
+  const handlePointerMove = (event) => {
+    raycaster.setFromCamera(pointer, camera);
+    const intersects = raycaster.intersectObject(pointsRef.current);
+    if (intersects.length > 0) {
+      const { index } = intersects[0];
+      setHoveredPoint(index);
+      document.body.style.cursor = "pointer";
+    } else {
+      setHoveredPoint(null);
+      document.body.style.cursor = "default";
+    }
+  };
 
   return (
     <group ref={starGroupRef}>
