@@ -1,20 +1,4 @@
 import { useFrame, useThree } from "@react-three/fiber";
-// const useFrameInterval = (fn, delay = 10, invalidateFr = false) => {
-//   let start = performance.now();
-//   const { invalidate } = useThree();
-//   useFrame(() => {
-//     let current = performance.now();
-//     let delta = current - start;
-
-//     if (delta >= delay) {
-//       //Since we have frameloop=demand we sometimes need to force a redraw
-//       if (invalidateFr) invalidate();
-
-//       fn.call();
-//       start = performance.now();
-//     }
-//   });
-// };
 
 const useFrameInterval = (fn, delay = 10, invalidateFr = false) => {
   let start = performance.now();
@@ -35,6 +19,5 @@ const useFrameInterval = (fn, delay = 10, invalidateFr = false) => {
     }
   });
 };
-
 
 export default useFrameInterval;

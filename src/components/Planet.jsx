@@ -1,4 +1,5 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
+import { Vector3 } from "three";
 import { useRef, useEffect } from "react";
 import { useStore } from "../store";
 import useTextureLoader from "../utils/useTextureLoader";
@@ -8,6 +9,7 @@ import HoverObj from "../components/HoverObj/HoverObj";
 import PlanetRings from "./PlanetRings";
 import NameLabel from "./Labels/NameLabel";
 import GeoSphere from "./Helpers/GeoSphere";
+import useFrameInterval from "../utils/useFrameInterval";
 
 export default function Planet({ s, actualMoon, name }) {
   const planetRef = useRef(); // Group for rotation and scaling
@@ -43,8 +45,8 @@ export default function Planet({ s, actualMoon, name }) {
   }
 
   useFrame(() => {
-    const orbitRotation =
-      s.speed * posRef.current - s.startPos * (Math.PI / 180);
+    // const orbitRotation =
+    //   s.speed * posRef.current - s.startPos * (Math.PI / 180);
     if (s.fixedTilt && pivotRef.current) {
       //Adjust the tilt so that it's fixed in respect to the orbit
       pivotRef.current.rotation.y = -(
@@ -73,7 +75,6 @@ export default function Planet({ s, actualMoon, name }) {
         <PolarLine visible={visible} />
       )}
       {visible && <NameLabel s={s} />}
-      {visible && <HoverObj s={s} />}
       <group ref={planetRef} scale={planetScale}>
         <mesh name={name} visible={visible} ref={planetRef}>
           <sphereGeometry args={[size, 256, 256]} />
@@ -90,7 +91,12 @@ export default function Planet({ s, actualMoon, name }) {
           {s.light && <pointLight intensity={sunLight * 100000} />}
         </mesh>
         {s.geoSphere && geoSphere ? (
-          <GeoSphere s={s} size={size} visible={visible} color={s.geoSphereColor} />
+          <GeoSphere
+            s={s}
+            size={size}
+            visible={visible}
+            color={s.geoSphereColor}
+          />
         ) : null}
         {s.rings && (
           <PlanetRings

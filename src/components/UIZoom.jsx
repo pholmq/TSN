@@ -8,17 +8,6 @@ const UIZoom = () => {
   // // const {zoomLevel, zoomIn, zoomOut} = useStore();
   const { zoomLevel, zoomIn, zoomOut } = useStore();
 
-  // const zoomIn = () => {
-  //   if (zoomLevel < 120) {
-  //     setZoomLevel((prev) => prev + 10); // Increase by 10%
-  //   }
-  // };
-
-  // const zoomOut = () => {
-  //   if (zoomLevel > 60) {
-  //     setZoomLevel((prev) => prev - 10); // Decrease by 10%
-  //   }
-  // };
 
   useEffect(() => {
     changeZoom(zoomLevel);

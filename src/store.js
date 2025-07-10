@@ -77,7 +77,7 @@ export const useStore = create((set) => ({
   setZodiac: (v) => set({ zodiac: v }),
   zodiacSize: 1,
   setZodiacSize: (v) => set({ zodiacSize: v }),
-  zodiacSize: 1,
+  zodiacSize: 100,
   setZodiacSize: (v) => set({ zodiacSize: v }),
 
   polarLine: false,
@@ -89,12 +89,12 @@ export const useStore = create((set) => ({
 
   celestialSphere: false,
   setCelestialSphere: (v) => set({ celestialSphere: v }),
-  celestialSphereSize: 50,
+  celestialSphereSize: 20000,
   setCelestialSphereSize: (v) => set({ celestialSphereSize: v }),
 
   eclipticGrid: false,
   setEclipticGrid: (v) => set({ eclipticGrid: v }),
-  eclipticGridSize: 100,
+  eclipticGridSize: 25000,
   setEclipticGridSize: (v) => set({ eclipticGridSize: v }),
 
   officialStarDistances: false,
@@ -109,6 +109,8 @@ export const useStore = create((set) => ({
 
   BSCStars: false,
   setBSCStars: (v) => set({ BSCStars: v }),
+
+  maxLabelDistance: 200000,
 
   //Trigger update flags
   resetClicked: false,
