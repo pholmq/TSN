@@ -168,12 +168,6 @@ const BSCStars = () => {
       );
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
       geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-      // console.log(
-      //   "Sizes attribute:",
-      //   Array.from(geometry.attributes.size.array)
-      // );
-      // console.log("Geometry attributes:", geometry.attributes);
-      // console.log("Material:", pointsRef.current.material);
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.color.needsUpdate = true;
       geometry.attributes.size.needsUpdate = true;
@@ -195,20 +189,6 @@ const BSCStars = () => {
       starGroupRef.current.quaternion.copy(worldQuaternion);
     }
   }, [plotObjects]);
-
-  // Handle mouseover events
-  const handlePointerMove = (event) => {
-    raycaster.setFromCamera(pointer, camera);
-    const intersects = raycaster.intersectObject(pointsRef.current);
-    if (intersects.length > 0) {
-      const { index } = intersects[0];
-      setHoveredPoint(index);
-      document.body.style.cursor = "pointer";
-    } else {
-      setHoveredPoint(null);
-      document.body.style.cursor = "default";
-    }
-  };
 
   return (
     <group ref={starGroupRef}>
