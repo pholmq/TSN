@@ -352,7 +352,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
             positions[starIndex * 3 + 1],
             positions[starIndex * 3 + 2]
           );
-          onStarHover({ star, position, index: starIndex });
+          onStarHover({ star, position, index: starIndex }, event);
         }
       }
     } else {

@@ -110,6 +110,8 @@ export const useStore = create((set) => ({
   BSCStars: false,
   setBSCStars: (v) => set({ BSCStars: v }),
 
+  maxLabelDistance: 200000,
+
   //Trigger update flags
   resetClicked: false,
   setResetClicked: () =>
