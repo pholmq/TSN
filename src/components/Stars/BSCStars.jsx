@@ -254,9 +254,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     window.addEventListener("resize", updateRenderTarget);
     updateRenderTarget();
 
-    // Add event listeners
+    // Add event listener
     const canvas = gl.domElement;
-    canvas.addEventListener("click", handleClick);
     canvas.addEventListener("mousemove", handleHover);
 
     // Debug toggle
@@ -278,50 +277,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       }
     };
   }, [gl, camera]);
-
-  // Handle click
-  const handleClick = (event) => {
-    if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
-
-    const { clientX, clientY } = event;
-    const { width, height } = gl.domElement;
-    const rect = gl.domElement.getBoundingClientRect();
-
-    const x = Math.round((clientX - rect.left) * (width / rect.width));
-    const y = Math.round((clientY - rect.top) * (height / rect.height));
-
-    gl.setRenderTarget(pickingRenderTarget.current);
-    gl.render(pickingScene.current, camera);
-    gl.setRenderTarget(null);
-
-    if (debugPicking.current) {
-      gl.render(pickingScene.current, camera);
-    }
-
-    const pixelBuffer = new Uint8Array(4);
-    gl.readRenderTargetPixels(
-      pickingRenderTarget.current,
-      x,
-      height - y,
-      1,
-      1,
-      pixelBuffer
-    );
-
-    const hexColor =
-      (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | pixelBuffer[2];
-    const starIndex = colorMap.current.get(hexColor);
-
-    if (starIndex !== undefined && onStarClick) {
-      const star = starData[starIndex];
-      const position = new THREE.Vector3(
-        positions[starIndex * 3],
-        positions[starIndex * 3 + 1],
-        positions[starIndex * 3 + 2]
-      );
-      onStarClick({ star, position, index: starIndex });
-    }
-  };
 
   // Handle hover (throttled)
   const handleHover = (event) => {
@@ -366,15 +321,21 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         currentHoverIndex.current = starIndex;
         setHoveredPoint(starIndex);
 
-        if (onStarHover) {
-          const star = starData[starIndex];
-          const position = new THREE.Vector3(
-            positions[starIndex * 3],
-            positions[starIndex * 3 + 1],
-            positions[starIndex * 3 + 2]
-          );
-          onStarHover({ star, position, index: starIndex }, event);
-        }
+        const star = starData[starIndex];
+        // Get the position attribute
+        const positions =
+          pickingPointsRef.current.geometry.attributes.position.array;
+        // console.log(positions);
+        // Get the specific point's local position
+        const x = positions[starIndex * 3];
+        const y = positions[starIndex * 3 + 1];
+        const z = positions[starIndex * 3 + 2];
+
+        // Create a Vector3 and transform to world space
+        const worldPosition = new THREE.Vector3(x, y, z);
+        pickingPointsRef.current.localToWorld(worldPosition);
+
+        onStarHover({ star, position: worldPosition, index: starIndex }, event);
       }
     } else {
       if (currentHoverIndex.current !== null) {

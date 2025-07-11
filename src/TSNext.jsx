@@ -21,6 +21,7 @@ import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
 import IntroText from "./components/Intro/IntroText";
 import EditSettings from "./components/Menus/EditSettings";
+import StarDataPanel from "./components/starDataPanel/starDataPanel";
 
 const TSNext = () => {
   // const zoomLevel = useStore((s) => s.zoomLevel);
@@ -34,6 +35,7 @@ const TSNext = () => {
         <Positions />
         <EditSettings />
         <PlanetCameraUI />
+        <StarDataPanel />
       </div>
       <Canvas
         id="canvas"

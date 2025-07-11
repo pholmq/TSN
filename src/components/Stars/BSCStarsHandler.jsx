@@ -1,68 +1,34 @@
-import { useState, useRef } from "react";
-import { Html } from "@react-three/drei";
+// components/Stars/BSCStarsHandler.js
+import { useThree } from "@react-three/fiber";
 import BSCStars from "./BSCStars";
+import { useStarDataStore } from "../starDataPanel/starDataStore";
+import { getRaDecDistanceFromPosition } from "../../utils/celestial-functions";
 
 export default function BSCStarsHandler() {
-  const [hoverData, setHoverData] = useState(null);
-  const portalRef = useRef(document.body);
-  //portal={{ current: portalRef.current }} => Render in bod to avoid scaling issues
+  const { scene } = useThree();
+  const setHoveredStar = useStarDataStore((state) => state.setHoveredStar);
+  const clearHoveredStar = useStarDataStore((state) => state.clearHoveredStar);
+
   return (
-    <>
-      <BSCStars
-        onStarClick={({ star, position, index }) => {
-          // console.log("Clicked star:", star.name, "at position:", position);
-        }}
-        onStarHover={(data, event) => {
-          if (data) {
-            console.log(data);
-            // console.log("Hovering over:", data.star.name);
-            console.log(event.clientX);
-            setHoverData({
-              star: data.star,
-              position: { x: event.clientX, y: event.clientY },
-            });
-          } else {
-            // console.log("No star hovered");
-            setHoverData(null);
-          }
-        }}
-      />
-      {hoverData && (
-        <Html portal={{ current: portalRef.current }}>
-          <div
-            style={{
-              position: "absolute",
-              backgroundColor: "#1f2937",
-              color: "#ffffff",
-              padding: "16px",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              zIndex: 10,
-              maxWidth: "300px",
-              left: "0px", // Top-left corner
-              top: "0px", // Top-left corner
-              // left: `${hoverData.position.x}px`, // Mouse X (screen coords)
-              // top: `${hoverData.position.y}px`, // Below mouse (20px offset)
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "18px",
-                fontWeight: "bold",
-                marginBottom: "8px",
-              }}
-            >
-              {hoverData.star.name}
-            </h3>
-            <p style={{ margin: "4px 0", whiteSpace: "nowrap" }}>
-              RA: {hoverData.star.ra}
-            </p>
-            <p style={{ margin: "4px 0" }}>Dec: {hoverData.star.dec}</p>
-            <p style={{ margin: "4px 0" }}>Magnitude: {hoverData.star.mag}</p>
-            <p style={{ margin: "4px 0" }}>Distance: {hoverData.star.dist}</p>
-          </div>
-        </Html>
-      )}
-    </>
+    <BSCStars
+      onStarHover={(data, event) => {
+        if (data) {
+          // console.log(data.position);
+          // console.log(getRaDecDistanceFromPosition(data.position, scene));
+          const raDec = getRaDecDistanceFromPosition(data.position, scene);
+          const star = {};
+          star.name = data.star.name;
+          star.ra = raDec.ra;
+          star.dec = raDec.dec;
+          star.dist = raDec.dist;
+          star.elongation = raDec.elongation;
+          star.magnitude = data.star.magnitude;
+          star.colorTemp = data.star.colorTemp;
+          setHoveredStar(star);
+        } else {
+          clearHoveredStar();
+        }
+      }}
+    />
   );
 }
