@@ -125,12 +125,22 @@ export function rAandDecFromLocal(lat, lon, time, az, alt) {
 }
 
 export function getRaDecDistance(name, scene) {
-  //
-  //getRaDecDistance optimized by Deepseek AI
-  //
-
-  // Reuse vectors and objects to avoid allocations
   const objectPos = new Vector3();
+  let targetObject;
+
+  if (name === "Moon") {
+    targetObject = scene.getObjectByName("Actual Moon");
+  } else {
+    targetObject = scene.getObjectByName(name);
+  }
+
+  targetObject.getWorldPosition(objectPos);
+
+  return getRaDecDistanceFromPosition(objectPos, scene);
+}
+
+export function getRaDecDistanceFromPosition(position, scene) {
+  // Reuse vectors and objects to avoid allocations
   const csPos = new Vector3();
   const sunPos = new Vector3();
   const sphericalPos = new Spherical();
@@ -139,33 +149,22 @@ export function getRaDecDistance(name, scene) {
   // Update the scene's matrix world once
   scene.updateMatrixWorld();
 
-  // Get world positions.
-  // Special hack for the Moon. We have an "actual" invisible moon since the "Non actual planet size" moon has the wrong
-  // position so it can be visible
-
-  let targetObject;
-  if (name === "Moon") {
-    targetObject = scene.getObjectByName("Actual Moon");
-  } else {
-    targetObject = scene.getObjectByName(name);
-  }
-
+  // Get world positions for celestial sphere and sun
   const celestialSphere = scene.getObjectByName("CelestialSphere");
   const sun = scene.getObjectByName("Sun");
   const csLookAtObj = scene.getObjectByName("CSLookAtObj");
 
-  if (!targetObject || !celestialSphere || !sun || !csLookAtObj) {
+  if (!celestialSphere || !sun || !csLookAtObj) {
     throw new Error("Required objects not found in the scene.");
   }
 
-  targetObject.getWorldPosition(objectPos);
   celestialSphere.getWorldPosition(csPos);
   sun.getWorldPosition(sunPos);
 
   // Calculate RA and Dec
-  csLookAtObj.lookAt(objectPos);
+  csLookAtObj.lookAt(position);
   lookAtDir.applyQuaternion(csLookAtObj.quaternion);
-  lookAtDir.setLength(csPos.distanceTo(objectPos));
+  lookAtDir.setLength(csPos.distanceTo(position));
   sphericalPos.setFromVector3(lookAtDir);
 
   const ra = radToRa(sphericalPos.theta);
@@ -177,14 +176,14 @@ export function getRaDecDistance(name, scene) {
 
   // Calculate elongation
   const earthSunDistance = csPos.distanceTo(sunPos);
-  const earthTargetPlanetDistance = csPos.distanceTo(objectPos);
-  const sunTargetPlanetDistance = sunPos.distanceTo(objectPos);
+  const earthTargetPositionDistance = csPos.distanceTo(position);
+  const sunTargetPositionDistance = sunPos.distanceTo(position);
 
   const numerator =
     earthSunDistance * earthSunDistance +
-    earthTargetPlanetDistance * earthTargetPlanetDistance -
-    sunTargetPlanetDistance * sunTargetPlanetDistance;
-  const denominator = 2.0 * earthSunDistance * earthTargetPlanetDistance;
+    earthTargetPositionDistance * earthTargetPositionDistance -
+    sunTargetPositionDistance * sunTargetPositionDistance;
+  const denominator = 2.0 * earthSunDistance * earthTargetPositionDistance;
 
   const elongationRadians = Math.acos(numerator / denominator);
   let elongation = ((180.0 * elongationRadians) / Math.PI).toFixed(3);

@@ -52,6 +52,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const starScale = useStore((s) => s.starScale);
+  const starPickingSensitivity = useStore((s) => s.starPickingSensitivity);
 
   // Create ShaderMaterial for visible stars
   const pointShaderMaterial = useMemo(
@@ -121,98 +122,118 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     []
   );
 
-  // Memoize star attributes directly from BSC.json
-  const { positions, colors, sizes, starData, pickingColors } = useMemo(() => {
-    const positions = [];
-    const colors = [];
-    const pickingColors = [];
-    const sizes = [];
-    const starData = [];
-    const scale = 0.1;
+  // Memoize star attributes with selective picking sensitivity
+  const { positions, colors, sizes, pickingSizes, starData, pickingColors } =
+    useMemo(() => {
+      const positions = [];
+      const colors = [];
+      const pickingColors = [];
+      const sizes = [];
+      const pickingSizes = [];
+      const starData = [];
+      const scale = 0.1;
 
-    // Clear previous color mapping
-    colorMap.current.clear();
+      // Clear previous color mapping
+      colorMap.current.clear();
 
-    // Iterate over BSC.json
-    bscSettings.forEach((s, index) => {
-      // Parse string fields to numbers
-      const magnitude = parseFloat(s.V);
-      const colorTemp = parseFloat(s.K) || 5778;
+      // Iterate over BSC.json
+      bscSettings.forEach((s, index) => {
+        // Parse string fields to numbers
+        const magnitude = parseFloat(s.V);
+        const colorTemp = parseFloat(s.K) || 5778;
 
-      const raRad = rightAscensionToRadians(s.RA);
-      const decRad = declinationToRadians(s.Dec);
+        const raRad = rightAscensionToRadians(s.RA);
+        const decRad = declinationToRadians(s.Dec);
 
-      const distLy = parseFloat(s.P) * 3.26156378;
-      let dist;
-      if (!officialStarDistances) {
-        dist = 20000;
-      } else {
-        const worldDist = distLy * 63241 * 100;
-        dist =
-          worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1);
-      }
+        const distLy = parseFloat(s.P) * 3.26156378;
+        let dist;
+        if (!officialStarDistances) {
+          dist = 20000;
+        } else {
+          const worldDist = distLy * 63241 * 100;
+          dist =
+            worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1);
+        }
 
-      const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
-      positions.push(x, y, z);
+        const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
+        positions.push(x, y, z);
 
-      const { red, green, blue } = colorTemperature2rgb(colorTemp, true);
-      colors.push(red, green, blue);
+        const { red, green, blue } = colorTemperature2rgb(colorTemp, true);
+        colors.push(red, green, blue);
 
-      // Generate unique picking color for this star
-      const colorIndex = index + 1; // Start from 1 to avoid black
-      const r = (colorIndex & 0xff) / 255;
-      const g = ((colorIndex >> 8) & 0xff) / 255;
-      const b = ((colorIndex >> 16) & 0xff) / 255;
+        // Generate unique picking color for this star
+        const colorIndex = index + 1; // Start from 1 to avoid black
+        const r = (colorIndex & 0xff) / 255;
+        const g = ((colorIndex >> 8) & 0xff) / 255;
+        const b = ((colorIndex >> 16) & 0xff) / 255;
 
-      pickingColors.push(r, g, b);
+        pickingColors.push(r, g, b);
 
-      // Create hex color for lookup
-      const rInt = Math.round(r * 255);
-      const gInt = Math.round(g * 255);
-      const bInt = Math.round(b * 255);
-      const hexColor = (rInt << 16) | (gInt << 8) | bInt;
+        // Create hex color for lookup
+        const rInt = Math.round(r * 255);
+        const gInt = Math.round(g * 255);
+        const bInt = Math.round(b * 255);
+        const hexColor = (rInt << 16) | (gInt << 8) | bInt;
 
-      colorMap.current.set(hexColor, index);
+        colorMap.current.set(hexColor, index);
 
-      // Size based on magnitude
-      let starsize;
-      if (magnitude < 1) {
-        starsize = 1.2;
-      } else if (magnitude > 1 && magnitude < 3) {
-        starsize = 0.6;
-      } else if (magnitude > 3 && magnitude < 5) {
-        starsize = 0.4;
-      } else {
-        starsize = 0.2;
-      }
+        // Size based on magnitude
+        let starsize;
+        if (magnitude < 1) {
+          starsize = 1.2;
+        } else if (magnitude > 1 && magnitude < 3) {
+          starsize = 0.6;
+        } else if (magnitude > 3 && magnitude < 5) {
+          starsize = 0.4;
+        } else {
+          starsize = 0.2;
+        }
 
-      const size = starsize * starScale * 10;
-      sizes.push(size);
+        const visualSize = starsize * starScale * 10;
 
-      // Store metadata for mouseover
-      starData.push({
-        name: s.N ? s.N : "HR " + s.HR,
-        magnitude: isNaN(magnitude) ? 5 : magnitude,
-        colorTemp,
-        ra: s.RA,
-        dec: s.Dec,
-        distLy,
-        index: index,
+        // Apply picking sensitivity only to dim stars (magnitude 3+)
+        let pickingSize;
+        if (magnitude >= 3) {
+          // Use sensitivity multiplier for dim stars
+          pickingSize = visualSize * starPickingSensitivity;
+        } else {
+          // Bright stars keep their visual size for picking
+          pickingSize = visualSize;
+        }
+
+        sizes.push(visualSize);
+        pickingSizes.push(pickingSize);
+
+        // Store metadata for mouseover
+        starData.push({
+          name: s.N ? s.N : "HR " + s.HR,
+          magnitude: isNaN(magnitude) ? 5 : magnitude,
+          colorTemp,
+          ra: s.RA,
+          dec: s.Dec,
+          distLy,
+          index: index,
+        });
       });
-    });
 
-    console.log(
-      `Generated ${colorMap.current.size} unique colors for ${bscSettings.length} stars`
-    );
+      console.log(
+        `Generated ${colorMap.current.size} unique colors for ${bscSettings.length} stars`
+      );
 
-    return {
-      positions: new Float32Array(positions),
-      colors: new Float32Array(colors),
-      pickingColors: new Float32Array(pickingColors),
-      sizes: new Float32Array(sizes),
-      starData,
-    };
-  }, [officialStarDistances, starDistanceModifier, starScale]);
+      return {
+        positions: new Float32Array(positions),
+        colors: new Float32Array(colors),
+        pickingColors: new Float32Array(pickingColors),
+        sizes: new Float32Array(sizes),
+        pickingSizes: new Float32Array(pickingSizes),
+        starData,
+      };
+    }, [
+      officialStarDistances,
+      starDistanceModifier,
+      starScale,
+      starPickingSensitivity,
+    ]);
 
   // Initialize picking setup
   useEffect(() => {
@@ -233,9 +254,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     window.addEventListener("resize", updateRenderTarget);
     updateRenderTarget();
 
-    // Add event listeners
+    // Add event listener
     const canvas = gl.domElement;
-    canvas.addEventListener("click", handleClick);
     canvas.addEventListener("mousemove", handleHover);
 
     // Debug toggle
@@ -257,50 +277,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       }
     };
   }, [gl, camera]);
-
-  // Handle click
-  const handleClick = (event) => {
-    if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
-
-    const { clientX, clientY } = event;
-    const { width, height } = gl.domElement;
-    const rect = gl.domElement.getBoundingClientRect();
-
-    const x = Math.round((clientX - rect.left) * (width / rect.width));
-    const y = Math.round((clientY - rect.top) * (height / rect.height));
-
-    gl.setRenderTarget(pickingRenderTarget.current);
-    gl.render(pickingScene.current, camera);
-    gl.setRenderTarget(null);
-
-    if (debugPicking.current) {
-      gl.render(pickingScene.current, camera);
-    }
-
-    const pixelBuffer = new Uint8Array(4);
-    gl.readRenderTargetPixels(
-      pickingRenderTarget.current,
-      x,
-      height - y,
-      1,
-      1,
-      pixelBuffer
-    );
-
-    const hexColor =
-      (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | pixelBuffer[2];
-    const starIndex = colorMap.current.get(hexColor);
-
-    if (starIndex !== undefined && onStarClick) {
-      const star = starData[starIndex];
-      const position = new THREE.Vector3(
-        positions[starIndex * 3],
-        positions[starIndex * 3 + 1],
-        positions[starIndex * 3 + 2]
-      );
-      onStarClick({ star, position, index: starIndex });
-    }
-  };
 
   // Handle hover (throttled)
   const handleHover = (event) => {
@@ -345,15 +321,21 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         currentHoverIndex.current = starIndex;
         setHoveredPoint(starIndex);
 
-        if (onStarHover) {
-          const star = starData[starIndex];
-          const position = new THREE.Vector3(
-            positions[starIndex * 3],
-            positions[starIndex * 3 + 1],
-            positions[starIndex * 3 + 2]
-          );
-          onStarHover({ star, position, index: starIndex }, event);
-        }
+        const star = starData[starIndex];
+        // Get the position attribute
+        const positions =
+          pickingPointsRef.current.geometry.attributes.position.array;
+        // console.log(positions);
+        // Get the specific point's local position
+        const x = positions[starIndex * 3];
+        const y = positions[starIndex * 3 + 1];
+        const z = positions[starIndex * 3 + 2];
+
+        // Create a Vector3 and transform to world space
+        const worldPosition = new THREE.Vector3(x, y, z);
+        pickingPointsRef.current.localToWorld(worldPosition);
+
+        onStarHover({ star, position: worldPosition, index: starIndex }, event);
       }
     } else {
       if (currentHoverIndex.current !== null) {
@@ -366,7 +348,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   };
 
-  // Update buffer attributes when positions or sizes change
+  // Update buffer attributes when positions, sizes, or picking sensitivity change
   useEffect(() => {
     if (pointsRef.current) {
       const geometry = pointsRef.current.geometry;
@@ -391,12 +373,12 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         "color",
         new THREE.BufferAttribute(pickingColors, 3)
       );
-      geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+      geometry.setAttribute("size", new THREE.BufferAttribute(pickingSizes, 1));
       geometry.attributes.position.needsUpdate = true;
       geometry.attributes.color.needsUpdate = true;
       geometry.attributes.size.needsUpdate = true;
     }
-  }, [positions, colors, pickingColors, sizes]);
+  }, [positions, colors, pickingColors, sizes, pickingSizes]);
 
   // Update picking scene when star group transforms
   useEffect(() => {
@@ -462,7 +444,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         </points>
       </group>
 
-      {/* Picking stars (invisible, separate from scene) */}
+      {/* Picking stars with selective sensitivity for dim stars */}
       <points ref={pickingPointsRef}>
         <bufferGeometry>
           <bufferAttribute
@@ -479,8 +461,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           />
           <bufferAttribute
             attach="attributes-size"
-            array={sizes}
-            count={sizes.length}
+            array={pickingSizes}
+            count={pickingSizes.length}
             itemSize={1}
           />
         </bufferGeometry>
