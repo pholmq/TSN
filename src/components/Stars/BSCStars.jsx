@@ -269,7 +269,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
     return () => {
       window.removeEventListener("resize", updateRenderTarget);
-      canvas.removeEventListener("click", handleClick);
       canvas.removeEventListener("mousemove", handleHover);
       window.removeEventListener("keydown", toggleDebug);
       if (pickingRenderTarget.current) {
