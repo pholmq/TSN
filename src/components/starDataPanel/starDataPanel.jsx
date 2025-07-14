@@ -4,11 +4,11 @@ import { useStarDataStore } from "./starDataStore";
 const StarDataPanel = () => {
   const hoveredStar = useStarDataStore((state) => state.hoveredStar);
   const [panelPosition, setPanelPosition] = useState({ x: 0, y: 0 });
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (!hoveredStar) return;
 
-    // Set panel position only once when hoveredStar changes
     const handleInitialPosition = (event) => {
       const root = document.getElementById("root");
       let scale = 1;
@@ -25,19 +25,21 @@ const StarDataPanel = () => {
 
       setPanelPosition({ x: adjustedX - 70, y: adjustedY + 20 });
 
-      // Remove the listener after setting initial position
       document.removeEventListener("mousemove", handleInitialPosition);
     };
 
     document.addEventListener("mousemove", handleInitialPosition);
 
+    // Delay fade-in until after position is set
+    setTimeout(() => setVisible(true), 0);
+
     return () => {
       document.removeEventListener("mousemove", handleInitialPosition);
+      setVisible(false);
     };
-  }, [hoveredStar]); // Only re-run when hoveredStar changes
+  }, [hoveredStar]);
 
-  if (!hoveredStar) return null;
-
+  // ✅ Always render, fade with opacity
   return (
     <div
       style={{
@@ -52,6 +54,9 @@ const StarDataPanel = () => {
         zIndex: 1000,
         maxWidth: "300px",
         pointerEvents: "none",
+        opacity: visible ? 1 : 0,
+        transition: "opacity 0.3s ease",
+        display: hoveredStar ? "block" : "none",
       }}
     >
       <h3
@@ -62,19 +67,19 @@ const StarDataPanel = () => {
           textAlign: "center",
         }}
       >
-        {hoveredStar.name}
+        {hoveredStar?.name}
       </h3>
       <p style={{ margin: "4px 0", whiteSpace: "nowrap", fontSize: "16px" }}>
-        RA: {hoveredStar.ra}
+        RA: {hoveredStar?.ra}
       </p>
       <p style={{ margin: "4px 0", fontSize: "16px" }}>
-        Dec: {hoveredStar.dec}
+        Dec: {hoveredStar?.dec}
       </p>
       <p style={{ margin: "4px 0", fontSize: "16px" }}>
-        Magnitude: {hoveredStar.magnitude}
+        Magnitude: {hoveredStar?.magnitude}
       </p>
       <p style={{ margin: "4px 0", fontSize: "16px" }}>
-        Distance: {hoveredStar.dist}
+        Distance: {hoveredStar?.dist}
       </p>
     </div>
   );

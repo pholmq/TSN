@@ -282,7 +282,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
 
     const now = performance.now();
-    if (now - lastHoverTime.current < 500) return; // Throttle to 10Hz
+    if (now - lastHoverTime.current < 300) return; // Throttle to 10Hz
     lastHoverTime.current = now;
 
     const { clientX, clientY } = event;
