@@ -61,7 +61,7 @@ const StarDataPanel = () => {
     >
       <h3
         style={{
-          fontSize: "18px",
+          fontSize: "20px",
           fontWeight: "bold",
           marginBottom: "16px",
           textAlign: "center",
@@ -69,17 +69,20 @@ const StarDataPanel = () => {
       >
         {hoveredStar?.name}
       </h3>
-      <p style={{ margin: "4px 0", whiteSpace: "nowrap", fontSize: "16px" }}>
+      <p style={{ margin: "4px 0", whiteSpace: "nowrap", fontSize: "18px" }}>
         RA: {hoveredStar?.ra}
       </p>
-      <p style={{ margin: "4px 0", fontSize: "16px" }}>
+      <p style={{ margin: "4px 0", fontSize: "18px" }}>
         Dec: {hoveredStar?.dec}
       </p>
-      <p style={{ margin: "4px 0", fontSize: "16px" }}>
-        Magnitude: {hoveredStar?.magnitude}
-      </p>
-      <p style={{ margin: "4px 0", fontSize: "16px" }}>
+      <p style={{ margin: "4px 0", fontSize: "18px" }}>
         Distance: {hoveredStar?.dist}
+      </p>
+      <p style={{ margin: "4px 0", fontSize: "18px" }}>
+        Elongation: {hoveredStar?.elongation}
+      </p>
+      <p style={{ margin: "4px 0", fontSize: "18px" }}>
+        Magnitude: {hoveredStar?.magnitude}
       </p>
     </div>
   );

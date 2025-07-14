@@ -23,6 +23,7 @@ import IntroText from "./components/Intro/IntroText";
 import EditSettings from "./components/Menus/EditSettings";
 import StarDataPanel from "./components/StarDataPanel/StarDataPanel";
 import StarSearch from "./components/StarSearch/StarSearch";
+import HighlightSelectedStar from "./components/StarSearch/HighlightSelectedStar";
 
 const TSNext = () => {
   // const zoomLevel = useStore((s) => s.zoomLevel);
@@ -59,6 +60,7 @@ const TSNext = () => {
         <Stars />
         {BSCStarsOn && <BSCStarsH />}
         {/* <BSCStarsH /> */}
+        <HighlightSelectedStar />
         <Zodiac />
       </Canvas>
     </>

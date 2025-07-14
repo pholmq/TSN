@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import starsData from "../../settings/BSC.json";
+import { useStore } from "../../store";
 
 export default function StarSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
+
+  const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
+  const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
 
   const indexedStars = starsData.map((star) => ({
     ...star,
@@ -16,6 +20,7 @@ export default function StarSearch() {
 
     if (value === "") {
       setResults([]);
+      setSelectedStarPosition(null);
       return;
     }
 
@@ -53,7 +58,9 @@ export default function StarSearch() {
   };
 
   const handleSelect = (star) => {
-    console.log("Selected star:", star);
+    // console.log("Selected star:", star);
+    setSelectedStarHR(star.HR);
+
     setQuery(star.N || star.HR_display);
     setResults([]);
   };
