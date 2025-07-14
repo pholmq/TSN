@@ -1,5 +1,5 @@
 // LightEffectsMenu.js
-import {useEffect} from "react";
+import { useEffect } from "react";
 import { Stats } from "@react-three/drei";
 import {
   EffectComposer,
@@ -31,15 +31,15 @@ const LightEffectsMenu = () => {
       },
       glow: {
         label: "Glow",
-        value: false,
+        value: true,
         hint: "Glow can affect performance",
       },
       glowIntensity: {
         label: "Glow strength",
-        value: 2,
-        min: 1,
-        max: 10,
-        step: 1,
+        value: 0.5,
+        min: 0.1,
+        max: 2,
+        step: 0.1,
         hint: "Glow can affect performance",
       },
       antialiasing: {
@@ -53,8 +53,6 @@ const LightEffectsMenu = () => {
       },
     });
 
- 
-
   return (
     <>
       <ambientLight intensity={ambientLight} />
@@ -63,7 +61,6 @@ const LightEffectsMenu = () => {
         {antialiasing === "FXAA" && <FXAA />}
         {antialiasing === "SMAA" && <SMAA />}
         {glow && <Bloom luminanceThreshold={0} intensity={glowIntensity / 2} />}
-     
       </EffectComposer>
       {stats && <Stats />}
     </>
