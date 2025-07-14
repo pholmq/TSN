@@ -21,7 +21,9 @@ import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
 import IntroText from "./components/Intro/IntroText";
 import EditSettings from "./components/Menus/EditSettings";
-import StarDataPanel from "./components/starDataPanel/starDataPanel";
+import StarDataPanel from "./components/StarDataPanel/StarDataPanel";
+import StarSearch from "./components/StarSearch/StarSearch";
+import HighlightSelectedStar from "./components/StarSearch/HighlightSelectedStar";
 
 const TSNext = () => {
   // const zoomLevel = useStore((s) => s.zoomLevel);
@@ -36,6 +38,7 @@ const TSNext = () => {
         <EditSettings />
         <PlanetCameraUI />
         <StarDataPanel />
+        {BSCStarsOn && <StarSearch />}
       </div>
       <Canvas
         id="canvas"
@@ -57,6 +60,7 @@ const TSNext = () => {
         <Stars />
         {BSCStarsOn && <BSCStarsH />}
         {/* <BSCStarsH /> */}
+        <HighlightSelectedStar />
         <Zodiac />
       </Canvas>
     </>

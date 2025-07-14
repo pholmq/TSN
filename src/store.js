@@ -149,6 +149,12 @@ export const useStore = create((set) => ({
 
   ephimerides: false,
   setEphimerides: (v) => set({ ephimerides: v }),
+
+  selectedStarHR: null,
+  setSelectedStarHR: (starHR) => set({ selectedStarHR: starHR }),
+  selectedStarPosition: null,
+  setSelectedStarPosition: (position) =>
+    set({ selectedStarPosition: position }),
 }));
 
 export const usePosStore = create((set) => ({

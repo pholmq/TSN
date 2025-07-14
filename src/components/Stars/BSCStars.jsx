@@ -54,6 +54,52 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const starScale = useStore((s) => s.starScale);
   const starPickingSensitivity = useStore((s) => s.starPickingSensitivity);
 
+  const selectedStarHR = useStore((s) => s.selectedStarHR);
+  const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
+
+  useEffect(() => {
+    //Used by StarSearch
+    // if (!starData || !starData.length) return;
+    if (selectedStarHR && starData.length > 0 && pointsRef.current) {
+      const star = starData.find(
+        (s) => parseInt(s.HR) === parseInt(selectedStarHR)
+      );
+      // console.log(starData);
+      if (!star) {
+        console.warn(`Star with HR ${selectedStarHR} not found.`);
+        setSelectedStarPosition(null);
+        return;
+      }
+
+      const starIndex = star.index;
+
+      const positions =
+        pickingPointsRef.current.geometry.attributes.position.array;
+      const x = positions[starIndex * 3];
+      const y = positions[starIndex * 3 + 1];
+      const z = positions[starIndex * 3 + 2];
+
+      // Create a Vector3 and transform to world space
+      const pos = new THREE.Vector3(x, y, z);
+      pickingPointsRef.current.localToWorld(pos);
+
+      setSelectedStarPosition(pos);
+
+      console.log(
+        "star forund. index: " +
+          starIndex +
+          " Position: " +
+          pos.x +
+          ", " +
+          pos.y +
+          ", " +
+          pos.z
+      );
+    } else {
+      setSelectedStarPosition(null);
+    }
+  }, [selectedStarHR]);
+
   // Create ShaderMaterial for visible stars
   const pointShaderMaterial = useMemo(
     () => ({
@@ -207,6 +253,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         // Store metadata for mouseover
         starData.push({
           name: s.N ? s.N : "HR " + s.HR,
+          HR: s.HR,
           magnitude: isNaN(magnitude) ? 5 : magnitude,
           colorTemp,
           ra: s.RA,
@@ -282,7 +329,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
 
     const now = performance.now();
-    if (now - lastHoverTime.current < 100) return; // Throttle to 10Hz
+    if (now - lastHoverTime.current < 300) return; // Throttle to 10Hz
     lastHoverTime.current = now;
 
     const { clientX, clientY } = event;

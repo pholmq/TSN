@@ -140,6 +140,11 @@ body {
   box-sizing: border-box; /* Include padding in width calculation */
 }
 
+/* Placeholder styling */
+.menu-input::placeholder {
+  color: #e5e7eb; /* Light gray color for the placeholder */
+}
+
 .menu-input:focus {
   box-shadow: 0 0 0 2px #60a5fa; /* Add focus state */
 }
@@ -199,7 +204,7 @@ body {
   opacity: 0.8;
 }
 
- .name-label {
+.name-label {
   color: white;
   font-size: 1rem;
   font-family: Arial, Helvetica, sans-serif;
@@ -207,4 +212,8 @@ body {
   user-select: none;
   white-space: nowrap; /*Prevent text wrapping*/
   pointer-events: none;
+}
+
+.starSearch-input::placeholder {
+  color: #d1d5db; /* Brighter placeholder text color */
 }
