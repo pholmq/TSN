@@ -54,7 +54,7 @@ const StarDataPanel = () => {
         zIndex: 1000,
         maxWidth: "300px",
         pointerEvents: "none",
-        opacity: visible ? 1 : 0,
+        opacity: visible ? 0.8 : 0,
         transition: "opacity 0.3s ease",
         display: hoveredStar ? "block" : "none",
       }}

@@ -1,7 +1,7 @@
 // components/Stars/BSCStarsHandler.js
 import { useThree } from "@react-three/fiber";
 import BSCStars from "./BSCStars";
-import { useStarDataStore } from "../starDataPanel/starDataStore";
+import { useStarDataStore } from "../StarDataPanel/starDataStore";
 import { getRaDecDistanceFromPosition } from "../../utils/celestial-functions";
 
 export default function BSCStarsHandler() {
