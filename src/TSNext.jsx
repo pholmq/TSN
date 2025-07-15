@@ -1,5 +1,5 @@
 import "./index.css";
-
+import { useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useStore } from "./store";
 import UserInterface from "./components/UserInterface";
@@ -25,10 +25,28 @@ import StarDataPanel from "./components/StarDataPanel/StarDataPanel";
 import StarSearch from "./components/StarSearch/StarSearch";
 import HighlightSelectedStar from "./components/StarSearch/HighlightSelectedStar";
 
+const isTouchDevice = () => {
+  return (
+    "ontouchstart" in window ||
+    navigator.maxTouchPoints > 0 ||
+    navigator.msMaxTouchPoints > 0
+  );
+};
+
 const TSNext = () => {
   // const zoomLevel = useStore((s) => s.zoomLevel);
-  // const runIntro = useStore((s) => s.runIntro);
+  const toggleShowMenu = useStore((s) => s.toggleShowMenu);
+  const toggleShowLevaMenu = useStore((s) => s.toggleShowLevaMenu);
   const BSCStarsOn = useStore((s) => s.BSCStars);
+
+  const isTouchDev = isTouchDevice();
+
+  useEffect(() => {
+    if (isTouchDevice()) {
+      toggleShowMenu();
+      toggleShowLevaMenu();
+    }
+  }, []);
 
   return (
     <>
@@ -38,7 +56,7 @@ const TSNext = () => {
         <EditSettings />
         <PlanetCameraUI />
         <StarDataPanel />
-        {BSCStarsOn && <StarSearch />}
+        {BSCStarsOn && !isTouchDev && <StarSearch />}
       </div>
       <Canvas
         id="canvas"
@@ -54,7 +72,6 @@ const TSNext = () => {
         <PlanetsPositionsMenu />
         <StarsHelpersMenu />
         <LightEffectsMenu />
-
         <SolarSystem />
         <PlotSolarSystem />
         <Stars />
