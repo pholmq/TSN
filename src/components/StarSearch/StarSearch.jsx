@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import starsData from "../../settings/BSC.json";
 import { useStore } from "../../store";
 
@@ -8,6 +8,23 @@ export default function StarSearch() {
 
   const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
   const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
+  const officialStarDistances = useStore((s) => s.officialStarDistances);
+
+  //setSelectedStarHR(null) on component mount
+  useEffect(() => {
+    setQuery("");
+    setResults([]);
+    // setSelectedStarPosition(null);
+    setSelectedStarHR(null);
+  }, []);
+
+  // If officialStarDistances changes (toggles), clear the search field and results
+  useEffect(() => {
+    setQuery("");
+    setResults([]);
+
+    setSelectedStarHR(null);
+  }, [officialStarDistances]);
 
   const indexedStars = starsData.map((star) => ({
     ...star,
@@ -20,7 +37,7 @@ export default function StarSearch() {
 
     if (value === "") {
       setResults([]);
-      setSelectedStarPosition(null);
+      setSelectedStarHR(null);
       return;
     }
 
@@ -80,7 +97,7 @@ export default function StarSearch() {
         type="text"
         value={query}
         onChange={handleChange}
-        placeholder="Search by star name or HR number"
+        placeholder="Search stars by name or HR number"
         style={{
           fontSize: "18px",
           color: "#ffffff",
