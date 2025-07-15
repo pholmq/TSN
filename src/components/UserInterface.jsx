@@ -71,16 +71,18 @@ const UserInterface = () => {
   }, [run]);
 
   function dateKeyDown(e) {
-    //Prevent planet camera from moving
+    // Prevent planet camera from moving
     e.stopPropagation();
 
-    if (e.key !== "Enter") {
+    if (e.key !== "Enter" && e.key !== "Tab") {
       return;
     }
+    
     if (!isValidDate(dateRef.current.value)) {
       dateRef.current.value = posToDate(posRef.current);
       return;
     }
+    
     posRef.current = dateTimeToPos(
       dateRef.current.value,
       posToTime(posRef.current)
@@ -88,18 +90,25 @@ const UserInterface = () => {
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
     updateAC();
-    document.activeElement.blur();
+    
+    if (e.key === "Enter") {
+      document.activeElement.blur();
+    }
+    // For Tab key, let the default behavior occur (moving focus to next element)
   }
 
   function timeKeyDown(e) {
     e.stopPropagation();
-    if (e.key !== "Enter") {
+    
+    if (e.key !== "Enter" && e.key !== "Tab") {
       return;
     }
+    
     if (!isValidTime(timeRef.current.value)) {
       timeRef.current.value = posToTime(posRef.current);
       return;
     }
+    
     posRef.current = dateTimeToPos(
       posToDate(posRef.current),
       timeRef.current.value
@@ -107,7 +116,11 @@ const UserInterface = () => {
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
     updateAC();
-    document.activeElement.blur();
+    
+    if (e.key === "Enter") {
+      document.activeElement.blur();
+    }
+    // For Tab key, let the default behavior occur
   }
 
   const handleReset = () => {
@@ -137,7 +150,7 @@ const UserInterface = () => {
       <button
         hidden={showMenu}
         className="menu-toggle-button"
-        onClick={handleToggleMenu} // Make sure you have this toggle function
+        onClick={handleToggleMenu}
         style={{
           position: "fixed",
           top: "14px",
@@ -161,12 +174,6 @@ const UserInterface = () => {
           >
             <FaExternalLinkAlt />
           </button>
-          {/* <button className="menu-button menu-header-button" onClick={() => {}}>
-            <FaShareAlt />
-          </button> */}
-          {/* <button className="menu-button menu-header-button" onClick={() => {}}>
-            <FaGithub />
-          </button> */}
           <div className="zoom-controls">
             <UIZoom />
             <button
@@ -206,8 +213,6 @@ const UserInterface = () => {
             className="menu-button"
             onClick={() => {
               if (speedFact === sYear) {
-                //If it is a year or month, we need some special logic
-                //so that we step a calendar year/month
                 posRef.current =
                   dateToDays(
                     addYears(dateRef.current.value, -speedMultiplier)
@@ -241,8 +246,6 @@ const UserInterface = () => {
             className="menu-button"
             onClick={() => {
               if (speedFact === sYear) {
-                //If it is a year or month, we need some special logic
-                //so that we step a calendar year/month
                 posRef.current =
                   dateToDays(addYears(dateRef.current.value, speedMultiplier)) *
                     sDay +
@@ -273,7 +276,11 @@ const UserInterface = () => {
             className="menu-input"
             ref={dateRef}
             onKeyDown={dateKeyDown}
-            onBlur={() => (dateRef.current.value = posToDate(posRef.current))}
+            onBlur={(e) => {
+              if (!isValidDate(e.target.value)) {
+                dateRef.current.value = posToDate(posRef.current);
+              }
+            }}
           />
         </div>
         <div className="menu-item">
@@ -282,7 +289,11 @@ const UserInterface = () => {
             className="menu-input"
             ref={timeRef}
             onKeyDown={timeKeyDown}
-            onBlur={() => (timeRef.current.value = posToTime(posRef.current))}
+            onBlur={(e) => {
+              if (!isValidTime(e.target.value)) {
+                timeRef.current.value = posToTime(posRef.current);
+              }
+            }}
           />
         </div>
         <div className="menu-item">
