@@ -17,13 +17,16 @@ import { useStore } from "../store";
 import {
   posToDate,
   posToTime,
+  posToJulianDay,
   isValidDate,
   dateTimeToPos,
+  julianDayTimeToPos,
   dateToDays,
   addYears,
   addMonths,
   timeToPos,
   isValidTime,
+  isNumeric,
   sDay,
   sMonth,
   sYear,
@@ -50,11 +53,13 @@ const UserInterface = () => {
 
   const dateRef = useRef();
   const timeRef = useRef();
+  const julianRef = useRef();
   const intervalRef = useRef();
 
   useEffect(() => {
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
 
     if (run) {
       intervalRef.current = setInterval(() => {
@@ -63,6 +68,9 @@ const UserInterface = () => {
         }
         if (document.activeElement !== timeRef.current) {
           timeRef.current.value = posToTime(posRef.current);
+        }
+        if (document.activeElement !== julianRef.current) {
+          julianRef.current.value = posToJulianDay(posRef.current);
         }
       }, 100);
     } else {
@@ -77,20 +85,21 @@ const UserInterface = () => {
     if (e.key !== "Enter" && e.key !== "Tab") {
       return;
     }
-    
+
     if (!isValidDate(dateRef.current.value)) {
       dateRef.current.value = posToDate(posRef.current);
       return;
     }
-    
+
     posRef.current = dateTimeToPos(
       dateRef.current.value,
       posToTime(posRef.current)
     );
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
-    
+
     if (e.key === "Enter") {
       document.activeElement.blur();
     }
@@ -99,24 +108,52 @@ const UserInterface = () => {
 
   function timeKeyDown(e) {
     e.stopPropagation();
-    
+
     if (e.key !== "Enter" && e.key !== "Tab") {
       return;
     }
-    
+
     if (!isValidTime(timeRef.current.value)) {
       timeRef.current.value = posToTime(posRef.current);
       return;
     }
-    
+
     posRef.current = dateTimeToPos(
       posToDate(posRef.current),
       timeRef.current.value
     );
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
-    
+
+    if (e.key === "Enter") {
+      document.activeElement.blur();
+    }
+    // For Tab key, let the default behavior occur
+  }
+
+  function julianKeyDown(e) {
+    e.stopPropagation();
+
+    if (e.key !== "Enter" && e.key !== "Tab") {
+      return;
+    }
+
+    if (!isNumeric(julianRef.current.value)) {
+      julianRef.current.value = posToJulianDay(posRef.current);
+      return;
+    }
+
+    posRef.current = julianDayTimeToPos(
+      julianRef.current.value,
+      posToTime(posRef.current)
+    );
+    dateRef.current.value = posToDate(posRef.current);
+    timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
+    updateAC();
+
     if (e.key === "Enter") {
       document.activeElement.blur();
     }
@@ -127,6 +164,7 @@ const UserInterface = () => {
     posRef.current = 0;
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
     setResetClicked();
     setCameraTarget("Earth");
@@ -204,6 +242,7 @@ const UserInterface = () => {
               posRef.current = todayPos;
               dateRef.current.value = posToDate(posRef.current);
               timeRef.current.value = posToTime(posRef.current);
+              julianRef.current.value = posToJulianDay(posRef.current);
               updateAC();
             }}
           >
@@ -234,6 +273,7 @@ const UserInterface = () => {
 
               dateRef.current.value = posToDate(posRef.current);
               timeRef.current.value = posToTime(posRef.current);
+              julianRef.current.value = posToJulianDay(posRef.current);
               updateAC();
             }}
           >
@@ -264,6 +304,7 @@ const UserInterface = () => {
               }
               dateRef.current.value = posToDate(posRef.current);
               timeRef.current.value = posToTime(posRef.current);
+              julianRef.current.value = posToJulianDay(posRef.current);
               updateAC();
             }}
           >
@@ -292,6 +333,19 @@ const UserInterface = () => {
             onBlur={(e) => {
               if (!isValidTime(e.target.value)) {
                 timeRef.current.value = posToTime(posRef.current);
+              }
+            }}
+          />
+        </div>
+        <div className="menu-item">
+          <label className="menu-label">Julian day:</label>
+          <input
+            className="menu-input"
+            ref={julianRef}
+            onKeyDown={julianKeyDown}
+            onBlur={(e) => {
+              if (!isNumeric(e.target.value)) {
+                julianRef.current.value = posToJulianDay(posRef.current);
               }
             }}
           />
