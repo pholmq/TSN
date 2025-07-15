@@ -17,13 +17,16 @@ import { useStore } from "../store";
 import {
   posToDate,
   posToTime,
+  posToJulianDay,
   isValidDate,
   dateTimeToPos,
+  julianDayTimeToPos,
   dateToDays,
   addYears,
   addMonths,
   timeToPos,
   isValidTime,
+  isNumeric,
   sDay,
   sMonth,
   sYear,
@@ -50,11 +53,13 @@ const UserInterface = () => {
 
   const dateRef = useRef();
   const timeRef = useRef();
+  const julianRef = useRef();
   const intervalRef = useRef();
 
   useEffect(() => {
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
 
     if (run) {
       intervalRef.current = setInterval(() => {
@@ -64,6 +69,9 @@ const UserInterface = () => {
         if (document.activeElement !== timeRef.current) {
           timeRef.current.value = posToTime(posRef.current);
         }
+        if (document.activeElement !== julianRef.current) {
+          julianRef.current.value = posToJulianDay(posRef.current);
+        }
       }, 100);
     } else {
       clearInterval(intervalRef.current);
@@ -71,49 +79,92 @@ const UserInterface = () => {
   }, [run]);
 
   function dateKeyDown(e) {
-    //Prevent planet camera from moving
+    // Prevent planet camera from moving
     e.stopPropagation();
 
-    if (e.key !== "Enter") {
+    if (e.key !== "Enter" && e.key !== "Tab") {
       return;
     }
+
     if (!isValidDate(dateRef.current.value)) {
       dateRef.current.value = posToDate(posRef.current);
       return;
     }
+
     posRef.current = dateTimeToPos(
       dateRef.current.value,
       posToTime(posRef.current)
     );
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
-    document.activeElement.blur();
+
+    if (e.key === "Enter") {
+      document.activeElement.blur();
+    }
+    // For Tab key, let the default behavior occur (moving focus to next element)
   }
 
   function timeKeyDown(e) {
     e.stopPropagation();
-    if (e.key !== "Enter") {
+
+    if (e.key !== "Enter" && e.key !== "Tab") {
       return;
     }
+
     if (!isValidTime(timeRef.current.value)) {
       timeRef.current.value = posToTime(posRef.current);
       return;
     }
+
     posRef.current = dateTimeToPos(
       posToDate(posRef.current),
       timeRef.current.value
     );
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
-    document.activeElement.blur();
+
+    if (e.key === "Enter") {
+      document.activeElement.blur();
+    }
+    // For Tab key, let the default behavior occur
+  }
+
+  function julianKeyDown(e) {
+    e.stopPropagation();
+
+    if (e.key !== "Enter" && e.key !== "Tab") {
+      return;
+    }
+
+    if (!isNumeric(julianRef.current.value)) {
+      julianRef.current.value = posToJulianDay(posRef.current);
+      return;
+    }
+
+    posRef.current = julianDayTimeToPos(
+      julianRef.current.value,
+      posToTime(posRef.current)
+    );
+    dateRef.current.value = posToDate(posRef.current);
+    timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
+    updateAC();
+
+    if (e.key === "Enter") {
+      document.activeElement.blur();
+    }
+    // For Tab key, let the default behavior occur
   }
 
   const handleReset = () => {
     posRef.current = 0;
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
     setResetClicked();
     setCameraTarget("Earth");
@@ -137,7 +188,7 @@ const UserInterface = () => {
       <button
         hidden={showMenu}
         className="menu-toggle-button"
-        onClick={handleToggleMenu} // Make sure you have this toggle function
+        onClick={handleToggleMenu}
         style={{
           position: "fixed",
           top: "14px",
@@ -161,12 +212,6 @@ const UserInterface = () => {
           >
             <FaExternalLinkAlt />
           </button>
-          {/* <button className="menu-button menu-header-button" onClick={() => {}}>
-            <FaShareAlt />
-          </button> */}
-          {/* <button className="menu-button menu-header-button" onClick={() => {}}>
-            <FaGithub />
-          </button> */}
           <div className="zoom-controls">
             <UIZoom />
             <button
@@ -197,6 +242,7 @@ const UserInterface = () => {
               posRef.current = todayPos;
               dateRef.current.value = posToDate(posRef.current);
               timeRef.current.value = posToTime(posRef.current);
+              julianRef.current.value = posToJulianDay(posRef.current);
               updateAC();
             }}
           >
@@ -206,8 +252,6 @@ const UserInterface = () => {
             className="menu-button"
             onClick={() => {
               if (speedFact === sYear) {
-                //If it is a year or month, we need some special logic
-                //so that we step a calendar year/month
                 posRef.current =
                   dateToDays(
                     addYears(dateRef.current.value, -speedMultiplier)
@@ -229,6 +273,7 @@ const UserInterface = () => {
 
               dateRef.current.value = posToDate(posRef.current);
               timeRef.current.value = posToTime(posRef.current);
+              julianRef.current.value = posToJulianDay(posRef.current);
               updateAC();
             }}
           >
@@ -241,8 +286,6 @@ const UserInterface = () => {
             className="menu-button"
             onClick={() => {
               if (speedFact === sYear) {
-                //If it is a year or month, we need some special logic
-                //so that we step a calendar year/month
                 posRef.current =
                   dateToDays(addYears(dateRef.current.value, speedMultiplier)) *
                     sDay +
@@ -261,6 +304,7 @@ const UserInterface = () => {
               }
               dateRef.current.value = posToDate(posRef.current);
               timeRef.current.value = posToTime(posRef.current);
+              julianRef.current.value = posToJulianDay(posRef.current);
               updateAC();
             }}
           >
@@ -273,7 +317,11 @@ const UserInterface = () => {
             className="menu-input"
             ref={dateRef}
             onKeyDown={dateKeyDown}
-            onBlur={() => (dateRef.current.value = posToDate(posRef.current))}
+            onBlur={(e) => {
+              if (!isValidDate(e.target.value)) {
+                dateRef.current.value = posToDate(posRef.current);
+              }
+            }}
           />
         </div>
         <div className="menu-item">
@@ -282,7 +330,24 @@ const UserInterface = () => {
             className="menu-input"
             ref={timeRef}
             onKeyDown={timeKeyDown}
-            onBlur={() => (timeRef.current.value = posToTime(posRef.current))}
+            onBlur={(e) => {
+              if (!isValidTime(e.target.value)) {
+                timeRef.current.value = posToTime(posRef.current);
+              }
+            }}
+          />
+        </div>
+        <div className="menu-item">
+          <label className="menu-label">Julian day:</label>
+          <input
+            className="menu-input"
+            ref={julianRef}
+            onKeyDown={julianKeyDown}
+            onBlur={(e) => {
+              if (!isNumeric(e.target.value)) {
+                julianRef.current.value = posToJulianDay(posRef.current);
+              }
+            }}
           />
         </div>
         <div className="menu-item">

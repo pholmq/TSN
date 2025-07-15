@@ -97,7 +97,7 @@ export const useStore = create((set) => ({
   eclipticGridSize: 25000,
   setEclipticGridSize: (v) => set({ eclipticGridSize: v }),
 
-  officialStarDistances: false,
+  officialStarDistances: true,
   setOfficialStarDistances: (v) => set({ officialStarDistances: v }),
 
   // starDistanceModifier: 10,
@@ -107,7 +107,7 @@ export const useStore = create((set) => ({
   starScale: 1,
   setStarScale: (v) => set({ starScale: v }),
 
-  BSCStars: false,
+  BSCStars: true,
   setBSCStars: (v) => set({ BSCStars: v }),
 
   starPickingSensitivity: 2.0, // 2x the visual size

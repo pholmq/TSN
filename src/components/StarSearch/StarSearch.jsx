@@ -9,6 +9,7 @@ export default function StarSearch() {
   const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
   const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
+  const runIntro = useStore((s) => s.runIntro);
 
   //setSelectedStarHR(null) on component mount
   useEffect(() => {
@@ -83,70 +84,73 @@ export default function StarSearch() {
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: "20px",
-        left: "20px",
-        zIndex: 1000,
-        width: "300px",
-        opacity: 0.8,
-      }}
-    >
-      <input
-        type="text"
-        value={query}
-        onChange={handleChange}
-        placeholder="Search stars by name or HR number"
+    !runIntro && (
+      <div
         style={{
-          fontSize: "18px",
-          color: "#ffffff",
-          backgroundColor: "#374151",
-          borderRadius: "0.25rem",
-          padding: "0.5rem",
-          border: "none",
-          outline: "none",
-          flexGrow: 1,
-          width: "100%",
-          boxSizing: "border-box",
+          position: "fixed",
+          top: "20px",
+          left: "20px",
+          zIndex: 1000,
+          width: "310px",
+          opacity: 0.8,
+          // hidden: { !runIntro },
         }}
-        // For placeholder styling, you would need to use CSS for ::placeholder
-        className="starSearch-input"
-      />
-
-      {results.length > 0 && (
-        <ul
+      >
+        <input
+          type="text"
+          value={query}
+          onChange={handleChange}
+          placeholder="Search stars by name or HR number"
           style={{
+            fontSize: "18px",
+            color: "#ffffff",
+            backgroundColor: "#374151",
+            borderRadius: "0.25rem",
+            padding: "0.5rem",
+            border: "none",
+            outline: "none",
+            flexGrow: 1,
             width: "100%",
-            backgroundColor: "#1f2937",
-            borderRadius: "0 0 8px 8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            maxHeight: "200px",
-            overflowY: "auto",
-            marginTop: "4px",
-            listStyle: "none",
-            padding: 0,
+            boxSizing: "border-box",
           }}
-        >
-          {results.map((star, index) => (
-            <li
-              key={index}
-              onClick={() => handleSelect(star)}
-              style={{
-                padding: "10px",
-                color: "#fff",
-                fontSize: "18px", // << bigger text
-                cursor: "pointer",
-                borderBottom: "1px solid #444",
-              }}
-            >
-              {star.N
-                ? `${star.N} / ${star.HR_display || ""}`
-                : star.HR_display}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+          // For placeholder styling, you would need to use CSS for ::placeholder
+          className="starSearch-input"
+        />
+
+        {results.length > 0 && (
+          <ul
+            style={{
+              width: "100%",
+              backgroundColor: "#1f2937",
+              borderRadius: "0 0 8px 8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              maxHeight: "200px",
+              overflowY: "auto",
+              marginTop: "4px",
+              listStyle: "none",
+              padding: 0,
+            }}
+          >
+            {results.map((star, index) => (
+              <li
+                key={index}
+                onClick={() => handleSelect(star)}
+                style={{
+                  padding: "10px",
+                  color: "#fff",
+                  fontSize: "18px", // << bigger text
+                  cursor: "pointer",
+                  borderBottom: "1px solid #444",
+                }}
+              >
+                {star.N
+                  ? `${star.N} / ${star.HR_display || ""}`
+                  : star.HR_display}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    )
   );
 }
