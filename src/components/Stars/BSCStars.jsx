@@ -84,17 +84,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       pickingPointsRef.current.localToWorld(pos);
 
       setSelectedStarPosition(pos);
-
-      console.log(
-        "star forund. index: " +
-          starIndex +
-          " Position: " +
-          pos.x +
-          ", " +
-          pos.y +
-          ", " +
-          pos.z
-      );
     } else {
       setSelectedStarPosition(null);
     }
@@ -263,9 +252,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         });
       });
 
-      console.log(
-        `Generated ${colorMap.current.size} unique colors for ${bscSettings.length} stars`
-      );
+      // console.log(
+      //   `Generated ${colorMap.current.size} unique colors for ${bscSettings.length} stars`
+      // );
 
       return {
         positions: new Float32Array(positions),

@@ -59,8 +59,7 @@ const TSNext = () => {
         <PlotSolarSystem />
         <Stars />
         {BSCStarsOn && <BSCStarsH />}
-        {/* <BSCStarsH /> */}
-        <HighlightSelectedStar />
+        {BSCStarsOn && <HighlightSelectedStar />}
         <Zodiac />
       </Canvas>
     </>

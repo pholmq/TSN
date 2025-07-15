@@ -13,11 +13,12 @@ export default function BSCStarsHandler() {
     <BSCStars
       onStarHover={(data, event) => {
         if (data) {
-          // console.log(data.position);
+          // console.log(data);
           // console.log(getRaDecDistanceFromPosition(data.position, scene));
           const raDec = getRaDecDistanceFromPosition(data.position, scene);
           const star = {};
           star.name = data.star.name;
+          star.HR = data.star.HR;
           star.ra = raDec.ra;
           star.dec = raDec.dec;
           star.dist = raDec.dist;

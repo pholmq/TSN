@@ -1,13 +1,19 @@
 import { useState, useEffect } from "react";
 import { useStarDataStore } from "./starDataStore";
+import starSettings from "../../settings/star-settings.json";
+const starSettingsHRs = new Set(starSettings.map(s => String(s.HR)).filter(Boolean));
 
 const StarDataPanel = () => {
   const hoveredStar = useStarDataStore((state) => state.hoveredStar);
   const [panelPosition, setPanelPosition] = useState({ x: 0, y: 0 });
   const [visible, setVisible] = useState(false);
 
+   
+
   useEffect(() => {
     if (!hoveredStar) return;
+
+    // console.log(starSettingsHRs)
 
     const handleInitialPosition = (event) => {
       const root = document.getElementById("root");
@@ -38,6 +44,11 @@ const StarDataPanel = () => {
       setVisible(false);
     };
   }, [hoveredStar]);
+
+   // Check if the star should be ignored
+   if (hoveredStar && starSettingsHRs.has(String(hoveredStar.HR))) {
+    return null;
+  }
 
   // ✅ Always render, fade with opacity
   return (

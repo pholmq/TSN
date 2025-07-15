@@ -75,11 +75,6 @@ const LevaUI = () => {
     setStepMultiplier,
   } = useTraceStore();
 
-  // const toggleTrace = () => {
-  //   useTraceStore.setState({ trace: !traceOnOff });
-  //   setTraceOnOff(!traceOnOff);
-  // };
-
   //We use a spearate levaStore for the first items so we can hide the rest of the
   //Leva UI when showLevaMenu is false
   const [, set1] = useControls(
@@ -123,11 +118,6 @@ const LevaUI = () => {
           hint: "Keep unchecked for best performance",
           onChange: setShowPositions,
         },
-        // Ephimerides: {
-        //   value: ephimerides,
-        //   onChange: setEphimerides,
-        // },
-
         "Planet camera": {
           value: planetCameraHelper,
           onChange: setPlanetCameraHelper,
@@ -192,6 +182,15 @@ const LevaUI = () => {
           value: arrows,
           onChange: setArrows,
         },
+        // Moved here:
+        "Polar lines": {
+          value: polarLine,
+          onChange: setPolarLine,
+        },
+        Graticules: {
+          value: geoSphere,
+          onChange: setGeoSphere,
+        },
         "Edit settings": {
           value: editSettings,
           onChange: setEditSettings,
@@ -201,55 +200,11 @@ const LevaUI = () => {
     ),
     "Stars & Helpers": folder(
       {
-        "Sidereal Zodiac": {
-          value: zodiac,
-          onChange: setZodiac,
+        // Moved to the top of "Stars & Helpers"
+        "BSC Stars": {
+          value: BSCStars,
+          onChange: setBSCStars,
         },
-        "Zodiac size": {
-          value: zodiacSize,
-          min: 1,
-          step: 1,
-          onChange: setZodiacSize,
-        },
-        "Polar lines": {
-          value: polarLine,
-          onChange: setPolarLine,
-        },
-        // "South lines": {
-        //   value: southLine,
-        //   onChange: setSouthLine,
-        // },
-        "Line length": {
-          value: polarLineSize,
-          min: 5,
-          step: 1,
-          onChange: setPolarLineSize,
-        },
-        Graticules: {
-          value: geoSphere,
-          onChange: setGeoSphere,
-        },
-        "Celestial sphere": {
-          value: celestialSphere,
-          onChange: setCelestialSphere,
-        },
-        "Sphere size": {
-          value: celestialSphereSize,
-          min: 5,
-          step: 1,
-          onChange: setCelestialSphereSize,
-        },
-        "Ecliptic grid": {
-          value: eclipticGrid,
-          onChange: setEclipticGrid,
-        },
-        "Grid size": {
-          value: eclipticGridSize,
-          min: 5,
-          step: 1,
-          onChange: setEclipticGridSize,
-        },
-
         "Use star distances": {
           value: officialStarDistances,
           onChange: setOfficialStarDistances,
@@ -260,17 +215,57 @@ const LevaUI = () => {
           step: 100,
           onChange: setStarDistanceModifier,
         },
-        "Star sizes": {
-          value: starScale,
-          min: 0.1,
-          max: 5,
-          step: 0.1,
-          onChange: setStarScale,
+        // Remaining top-level items in "Stars & Helpers"
+        "Celestial sphere": {
+          value: celestialSphere,
+          onChange: setCelestialSphere,
         },
-        "BSCStars (experimental)": {
-          value: BSCStars,
-          onChange: setBSCStars,
+        "Ecliptic grid": {
+          value: eclipticGrid,
+          onChange: setEclipticGrid,
         },
+        // Moved here:
+        "Sidereal Zodiac": {
+          value: zodiac,
+          onChange: setZodiac,
+        },
+        // Moved to the bottom of "Stars & Helpers"
+        Settings: folder(
+          {
+            "Star sizes": {
+              value: starScale,
+              min: 0.1,
+              max: 5,
+              step: 0.1,
+              onChange: setStarScale,
+            },
+            "Zodiac size": {
+              value: zodiacSize,
+              min: 1,
+              step: 1,
+              onChange: setZodiacSize,
+            },
+            "Polar line length": {
+              value: polarLineSize,
+              min: 5,
+              step: 1,
+              onChange: setPolarLineSize,
+            },
+            "Celestial sphere size": {
+              value: celestialSphereSize,
+              min: 5,
+              step: 1,
+              onChange: setCelestialSphereSize,
+            },
+            "Ecliptic grid size": {
+              value: eclipticGridSize,
+              min: 5,
+              step: 1,
+              onChange: setEclipticGridSize,
+            },
+          },
+          { collapsed: true }
+        ),
       },
       { collapsed: true }
     ),
@@ -298,7 +293,7 @@ const LevaUI = () => {
           colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
         }}
       />
-      {/* TODO: Sort out the scollbar apperance so that it appears 
+      {/* TODO: Sort out the scollbar apperance so that it appears
       and you can scroll through the entire leva menu */}
       <div
         hidden={!showLevaMenu}
