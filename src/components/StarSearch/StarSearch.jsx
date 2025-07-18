@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import starsData from "../../settings/BSC.json";
 import { useStore } from "../../store";
+import createCrosshairTexture from "../../utils/createCrosshairTexture";
 
 export default function StarSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
 
+  const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
-  const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const runIntro = useStore((s) => s.runIntro);
 
@@ -15,7 +16,6 @@ export default function StarSearch() {
   useEffect(() => {
     setQuery("");
     setResults([]);
-    // setSelectedStarPosition(null);
     setSelectedStarHR(null);
   }, []);
 
@@ -23,7 +23,6 @@ export default function StarSearch() {
   useEffect(() => {
     setQuery("");
     setResults([]);
-
     setSelectedStarHR(null);
   }, [officialStarDistances]);
 
@@ -76,12 +75,28 @@ export default function StarSearch() {
   };
 
   const handleSelect = (star) => {
-    // console.log("Selected star:", star);
     setSelectedStarHR(star.HR);
-
     setQuery(star.N || star.HR_display);
     setResults([]);
   };
+
+  // Derive star info from selectedStarHR
+  const selectedStar = useMemo(() => {
+    return selectedStarHR
+      ? starsData.find((star) => star.HR?.toString() === selectedStarHR)
+      : null;
+  }, [selectedStarHR]);
+
+  const hrHipString = useMemo(() => {
+    if (!selectedStar) return "N/A";
+    const hr = selectedStar.HR ? `HR ${selectedStar.HR}` : null;
+    const hip = selectedStar.HIP ? `HIP ${selectedStar.HIP}` : null;
+    return hr && hip ? `${hr} / ${hip}` : hr || hip || "N/A";
+  }, [selectedStar]);
+
+  // Create crosshair texture once
+  const crosshairTexture = useMemo(() => createCrosshairTexture(), []);
+  const crosshairImageSrc = crosshairTexture.image.toDataURL(); // Convert to base64 src
 
   return (
     !runIntro && (
@@ -149,6 +164,43 @@ export default function StarSearch() {
               </li>
             ))}
           </ul>
+        )}
+        {/* Selected star info */}
+        {selectedStarHR && (
+          <div
+            style={{
+              marginTop: "10px",
+              backgroundColor: "#1f2937",
+              color: "white",
+              padding: "10px",
+              borderRadius: "8px",
+              fontSize: "14px",
+              lineHeight: "1.5",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <img
+                src={crosshairImageSrc}
+                alt="Crosshair"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  filter: "brightness(2.5) drop-shadow(0 0 6px yellow)",
+                  flexShrink: 0,
+                }}
+              />
+              <strong>{hrHipString}</strong>
+            </div>
+            <div>
+              <strong>RA:</strong> {selectedStar.RA || "N/A"}
+            </div>
+            <div>
+              <strong>Dec:</strong> {selectedStar.Dec || "N/A"}
+            </div>
+            {/* <div>
+              <strong>Mag:</strong> {selectedStar.Mag || "N/A"}
+            </div> */}
+          </div>
         )}
       </div>
     )
