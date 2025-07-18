@@ -27,9 +27,9 @@ export default function IntroText() {
     visible && (
       <Text3D
         font="/fonts/Cambria_Regular.json"
-        position={[-200, 0, -400]}
+        position={[-140, 0, -230]}
         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-        size={70}
+        size={40}
         height={8}
         curveSegments={12}
         bevelEnabled
