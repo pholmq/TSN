@@ -313,6 +313,20 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     };
   }, [gl, camera]);
 
+  // Helper function to get the currently active camera
+  const getActiveCamera = () => {
+    const planetCamera = scene.getObjectByName("PlanetCamera");
+    const planetCameraEnabled = useStore.getState().planetCamera;
+
+    // If planet camera mode is enabled in the store and the camera exists, use it
+    if (planetCameraEnabled && planetCamera) {
+      return planetCamera;
+    }
+
+    // Otherwise use the orbit camera
+    return camera;
+  };
+
   // Handle hover (throttled)
   const handleHover = (event) => {
     if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
@@ -328,13 +342,16 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     const x = Math.round((clientX - rect.left) * (width / rect.width));
     const y = Math.round((clientY - rect.top) * (height / rect.height));
 
+    // Get the currently active camera
+    const activeCamera = getActiveCamera();
+
     gl.setRenderTarget(pickingRenderTarget.current);
     gl.clear();
-    gl.render(pickingScene.current, camera);
+    gl.render(pickingScene.current, activeCamera);
     gl.setRenderTarget(null);
 
     if (debugPicking.current) {
-      gl.render(pickingScene.current, camera);
+      gl.render(pickingScene.current, activeCamera);
     }
 
     const pixelBuffer = new Uint8Array(4);
@@ -360,7 +377,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         // Get the position attribute
         const positions =
           pickingPointsRef.current.geometry.attributes.position.array;
-        // console.log(positions);
         // Get the specific point's local position
         const x = positions[starIndex * 3];
         const y = positions[starIndex * 3 + 1];
