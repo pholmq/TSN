@@ -9,7 +9,7 @@ import {
   FaShareAlt,
   FaExternalLinkAlt,
   FaGithub,
-  FaQuestionCircle,
+  FaInfoCircle,
 } from "react-icons/fa";
 
 import LevaUI from "./LevaUI";
@@ -212,21 +212,16 @@ const UserInterface = () => {
             className="menu-button menu-header-button"
             title="Help"
             onClick={() => setShowHelp(true)}
-            style={{ marginRight: "0.25rem" }} // Add spacing
+            style={{ marginRight: "0.25rem", marginLeft: "0.5rem" }} // Add spacing
           >
-            <FaQuestionCircle />
+            <FaInfoCircle />
           </button>
-          <button
-            className="menu-button menu-header-button"
-            title="www.tychos.space"
-            onClick={() => window.open("https://www.tychos.space", "_blank")}
-          >
-            <FaExternalLinkAlt />
-          </button>
+
           <div className="zoom-controls">
             <UIZoom />
             <button
               className="menu-button menu-header-button"
+              title="Hide/Show Menu"
               onClick={handleToggleMenu}
             >
               {showLevaMenu ? <FaBars /> : <FaTimes />}
