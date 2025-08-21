@@ -118,7 +118,7 @@ const Help = () => {
               title="GitHub Repository"
               onClick={(e) => {
                 e.stopPropagation(); // Prevent triggering drag
-                window.open("https://github.com/SimonShap/TYCHOSIUM", "_blank");
+                window.open("https://github.com/pholmq/TSN", "_blank");
               }}
               style={{ fontSize: "18px" }}
             >
