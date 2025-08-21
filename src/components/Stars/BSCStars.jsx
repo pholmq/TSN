@@ -57,6 +57,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
 
+  const planetCamera = useStore((s) => s.planetCamera);
+
   useEffect(() => {
     //Used by StarSearch
     // if (!starData || !starData.length) return;
@@ -311,21 +313,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         pickingRenderTarget.current.dispose();
       }
     };
-  }, [gl, camera]);
-
-  // Helper function to get the currently active camera
-  const getActiveCamera = () => {
-    const planetCamera = scene.getObjectByName("PlanetCamera");
-    const planetCameraEnabled = useStore.getState().planetCamera;
-
-    // If planet camera mode is enabled in the store and the camera exists, use it
-    if (planetCameraEnabled && planetCamera) {
-      return planetCamera;
-    }
-
-    // Otherwise use the orbit camera
-    return camera;
-  };
+  }, [gl, camera, planetCamera]);
 
   // Handle hover (throttled)
   const handleHover = (event) => {
@@ -342,16 +330,13 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     const x = Math.round((clientX - rect.left) * (width / rect.width));
     const y = Math.round((clientY - rect.top) * (height / rect.height));
 
-    // Get the currently active camera
-    const activeCamera = getActiveCamera();
-
     gl.setRenderTarget(pickingRenderTarget.current);
     gl.clear();
-    gl.render(pickingScene.current, activeCamera);
+    gl.render(pickingScene.current, camera);
     gl.setRenderTarget(null);
 
     if (debugPicking.current) {
-      gl.render(pickingScene.current, activeCamera);
+      gl.render(pickingScene.current, camera);
     }
 
     const pixelBuffer = new Uint8Array(4);
@@ -377,6 +362,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         // Get the position attribute
         const positions =
           pickingPointsRef.current.geometry.attributes.position.array;
+        // console.log(positions);
         // Get the specific point's local position
         const x = positions[starIndex * 3];
         const y = positions[starIndex * 3 + 1];
