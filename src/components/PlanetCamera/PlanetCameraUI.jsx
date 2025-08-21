@@ -20,17 +20,23 @@ const PlanetCameraUI = () => {
   const setPlanCamDirection = useStore((s) => s.setPlanCamDirection);
   const planCamFov = useStore((s) => s.planCamFov);
   const setPlanCamFov = useStore((s) => s.setPlanCamFov);
+  const planCamZoom = 121 - planCamFov;
   const planCamFar = useStore((s) => s.planCamFar);
   const setPlanCamFar = useStore((s) => s.setPlanCamFar);
+
+  const setPlanCamZoom = (zoomValue) => {
+    const fovValue = 121 - zoomValue;
+    setPlanCamFov(fovValue);
+  };
 
   // Create a Leva store & panel
   const plancamUIStore = useCreateStore();
   const [, set] = useControls(
     () => ({
-      "On/Off": {
-        value: planetCamera,
-        onChange: setPlanetCamera,
-      },
+      // "On/Off": {
+      //   value: planetCamera,
+      //   onChange: setPlanetCamera,
+      // },
       Latitude: {
         value: planCamLat,
         max: 90,
@@ -69,21 +75,21 @@ const PlanetCameraUI = () => {
         min: 0,
         onChange: setPlanCamDirection,
       },
-      "Field of view": {
-        value: planCamFov,
-        hint: "Camera field of view",
+      Zoom: {
+        value: planCamZoom,
+        hint: "Camera zoom level",
         max: 120,
         min: 1,
-        onChange: setPlanCamFov,
+        onChange: setPlanCamZoom, // Just use the function directly!
       },
-      "Viewing dist in Ly": {
-        value: planCamFar,
-        hint: "Camera viewing distance in light years",
-        max: 500,
-        min: 0.01,
-        step: 0.01,
-        onChange: setPlanCamFar,
-      },
+      // "Viewing dist in Ly": {
+      //   value: planCamFar,
+      //   hint: "Camera viewing distance in light years",
+      //   max: 500,
+      //   min: 0.01,
+      //   step: 0.01,
+      //   onChange: setPlanCamFar,
+      // },
     }),
     { store: plancamUIStore }
   );
@@ -121,10 +127,10 @@ const PlanetCameraUI = () => {
       onWheel: planetCamera
         ? ({ delta: [, dy] }) => {
             const sensitivity = 0.02;
-            const fov = planCamFov + dy * sensitivity;
-            if (fov <= 120 && fov >= 1) {
-              setPlanCamFov(fov);
-              set({ "Field of view": fov });
+            const newZoom = planCamZoom - dy * sensitivity; // Changed from + to -
+            if (newZoom <= 120 && newZoom >= 1) {
+              setPlanCamZoom(newZoom);
+              set({ Zoom: newZoom });
             }
           }
         : () => {},
@@ -137,7 +143,7 @@ const PlanetCameraUI = () => {
 
   return (
     <>
-      {planetCameraHelper && (
+      {planetCamera && (
         <div className="plancam-div">
           <Leva
             store={plancamUIStore}
