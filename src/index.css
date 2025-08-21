@@ -198,10 +198,13 @@ body {
 
 .plancam-div > div {
   position: fixed;
-  top: 1000px !important;
+  bottom: 10px !important;
+  top: auto !important; /* Override any top positioning */
   left: 10px !important;
   right: auto !important;
   opacity: 0.8;
+  max-height: calc(100vh - 100px) !important; /* Don't exceed viewport */
+  overflow-y: auto !important;
 }
 
 .name-label {
