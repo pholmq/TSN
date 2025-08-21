@@ -9,6 +9,7 @@ import {
   FaShareAlt,
   FaExternalLinkAlt,
   FaGithub,
+  FaQuestionCircle,
 } from "react-icons/fa";
 
 import LevaUI from "./LevaUI";
@@ -49,6 +50,8 @@ const UserInterface = () => {
     setCameraTarget,
     runIntro,
     setRunIntro,
+    showHelp,
+    setShowHelp,
   } = useStore();
 
   const dateRef = useRef();
@@ -205,6 +208,14 @@ const UserInterface = () => {
       <div className="menu" hidden={runIntro || !showMenu}>
         <div className="menu-item">
           <span className="menu-header"> The TYCHOSIUM</span>
+          <button
+            className="menu-button menu-header-button"
+            title="Help"
+            onClick={() => setShowHelp(true)}
+            style={{ marginRight: "0.25rem" }} // Add spacing
+          >
+            <FaQuestionCircle />
+          </button>
           <button
             className="menu-button menu-header-button"
             title="www.tychos.space"
