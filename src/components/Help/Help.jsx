@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useStore } from "../../store";
+import { FaExternalLinkAlt, FaGithub } from "react-icons/fa";
+import ReactMarkdown from "react-markdown";
+import helpContent from "./HelpContent.md";
 
 const Help = () => {
   const showHelp = useStore((s) => s.showHelp);
@@ -8,7 +11,16 @@ const Help = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [markdownContent, setMarkdownContent] = useState("");
   const helpRef = useRef(null);
+
+  // Load markdown content
+  useEffect(() => {
+    fetch(helpContent)
+      .then((response) => response.text())
+      .then((text) => setMarkdownContent(text))
+      .catch((error) => console.error("Error loading help content:", error));
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -56,9 +68,9 @@ const Help = () => {
       style={{
         position: "fixed",
         top: "50%",
-        left: "50%",
-        transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-        backgroundColor: "rgba(17, 24, 39, 0.95)",
+        left: `${30 + position.x}px`,
+        transform: `translateY(calc(-50% + ${position.y}px))`,
+        backgroundColor: "#111827",
         color: "white",
         padding: "0",
         borderRadius: "12px",
@@ -69,6 +81,7 @@ const Help = () => {
         overflow: "hidden",
         border: "1px solid #374151",
         userSelect: isDragging ? "none" : "auto",
+        opacity: 0.8,
       }}
     >
       <div
@@ -81,12 +94,38 @@ const Help = () => {
           padding: "20px 30px",
           cursor: isDragging ? "grabbing" : "grab",
           borderBottom: "1px solid #374151",
-          backgroundColor: "rgba(17, 24, 39, 1)",
+          backgroundColor: "#111827",
         }}
       >
-        <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "bold" }}>
-          The TYCHOSIUM Help
-        </h2>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "bold" }}>
+            The TYCHOSIUM
+          </h2>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              className="menu-button menu-header-button"
+              title="Learn about the TYCHOS model at www.tychos.space"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering drag
+                window.open("https://www.tychos.space", "_blank");
+              }}
+              style={{ fontSize: "18px" }}
+            >
+              <FaExternalLinkAlt />
+            </button>
+            <button
+              className="menu-button menu-header-button"
+              title="GitHub Repository"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering drag
+                window.open("https://github.com/pholmq/TSN", "_blank");
+              }}
+              style={{ fontSize: "18px" }}
+            >
+              <FaGithub />
+            </button>
+          </div>
+        </div>
         <button
           onClick={() => setShowHelp(false)}
           style={{
@@ -104,160 +143,85 @@ const Help = () => {
       </div>
 
       <div
+        className="markdown-content"
         style={{
           padding: "30px",
-          maxHeight: "calc(80vh - 80px)",
-          overflow: "auto",
+          paddingBottom: "50px",
+          height: "calc(80vh - 80px)",
+          overflowY: "auto",
+          overflowX: "hidden",
           lineHeight: "1.6",
           fontSize: "16px",
+          boxSizing: "border-box",
         }}
       >
-        <section style={{ marginBottom: "24px" }}>
-          <h3
-            style={{ color: "#60a5fa", marginBottom: "12px", fontSize: "18px" }}
-          >
-            🎮 Basic Controls
-          </h3>
-          <ul style={{ paddingLeft: "20px", margin: 0 }}>
-            <li>
-              <strong>Mouse:</strong> Drag to rotate view, scroll to zoom
-            </li>
-            <li>
-              <strong>Time Controls:</strong> Play/pause simulation, step
-              forward/backward
-            </li>
-            <li>
-              <strong>Date/Time:</strong> Set specific dates and times to
-              observe
-            </li>
-            <li>
-              <strong>Julian Day:</strong> Scientific time reference for precise
-              positioning
-            </li>
-          </ul>
-        </section>
-
-        <section style={{ marginBottom: "24px" }}>
-          <h3
-            style={{ color: "#60a5fa", marginBottom: "12px", fontSize: "18px" }}
-          >
-            🌍 Planet Camera
-          </h3>
-          <ul style={{ paddingLeft: "20px", margin: 0 }}>
-            <li>
-              <strong>Activate:</strong> Check "Planet camera" in Controls
-            </li>
-            <li>
-              <strong>Navigate:</strong> Use arrow keys to move around the
-              planet
-            </li>
-            <li>
-              <strong>Position Controls:</strong> Check "Show planet camera
-              position" to see controls panel
-            </li>
-            <li>
-              <strong>Mouse:</strong> Drag to look around, scroll to zoom
-            </li>
-          </ul>
-        </section>
-
-        <section style={{ marginBottom: "24px" }}>
-          <h3
-            style={{ color: "#60a5fa", marginBottom: "12px", fontSize: "18px" }}
-          >
-            ⭐ Stars & Objects
-          </h3>
-          <ul style={{ paddingLeft: "20px", margin: 0 }}>
-            <li>
-              <strong>Hover Stars:</strong> Hover over stars to see detailed
-              information
-            </li>
-            <li>
-              <strong>Search Stars:</strong> Use the search box (top-left) to
-              find specific stars
-            </li>
-            <li>
-              <strong>Planet Info:</strong> Check "Show positions" to see
-              planetary coordinates
-            </li>
-            <li>
-              <strong>Labels:</strong> Toggle "Show labels" to display object
-              names
-            </li>
-          </ul>
-        </section>
-
-        <section style={{ marginBottom: "24px" }}>
-          <h3
-            style={{ color: "#60a5fa", marginBottom: "12px", fontSize: "18px" }}
-          >
-            🎯 Useful Features
-          </h3>
-          <ul style={{ paddingLeft: "20px", margin: 0 }}>
-            <li>
-              <strong>Trace:</strong> Enable planetary orbit traces to see paths
-            </li>
-            <li>
-              <strong>Camera Follow:</strong> Lock camera to follow a selected
-              object
-            </li>
-            <li>
-              <strong>Actual Planet Sizes:</strong> Toggle realistic vs. visible
-              planet scaling
-            </li>
-            <li>
-              <strong>Zodiac & Helpers:</strong> Show celestial reference
-              systems
-            </li>
-          </ul>
-        </section>
-
-        <section style={{ marginBottom: "24px" }}>
-          <h3
-            style={{ color: "#60a5fa", marginBottom: "12px", fontSize: "18px" }}
-          >
-            ⚡ Keyboard Shortcuts
-          </h3>
-          <ul style={{ paddingLeft: "20px", margin: 0 }}>
-            <li>
-              <strong>Arrow Keys:</strong> Navigate latitude/longitude in planet
-              camera mode
-            </li>
-            <li>
-              <strong>Shift + Arrows:</strong> Fine control (0.1° steps)
-            </li>
-            <li>
-              <strong>Ctrl + Arrows:</strong> Coarse control (5° steps)
-            </li>
-            <li>
-              <strong>Space:</strong> Play/pause time simulation
-            </li>
-          </ul>
-        </section>
-
-        <section>
-          <h3
-            style={{ color: "#60a5fa", marginBottom: "12px", fontSize: "18px" }}
-          >
-            📚 About TYCHOS
-          </h3>
-          <p style={{ margin: 0 }}>
-            The TYCHOSIUM is an interactive 3D model based on the TYCHOS theory
-            of our solar system. Explore celestial mechanics, planetary
-            positions, and stellar observations from both Earth and planetary
-            surfaces.
-          </p>
-          <p style={{ marginTop: "12px", marginBottom: 0 }}>
-            <a
-              href="https://www.tychos.space"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#60a5fa", textDecoration: "none" }}
-            >
-              Learn more at tychos.space →
-            </a>
-          </p>
-        </section>
+        <ReactMarkdown
+          components={{
+            // Custom styling for markdown elements
+            h1: ({ children }) => (
+              <h3
+                style={{
+                  color: "#60a5fa",
+                  marginBottom: "12px",
+                  fontSize: "18px",
+                  marginTop: "24px",
+                }}
+              >
+                {children}
+              </h3>
+            ),
+            h2: ({ children }) => (
+              <h3
+                style={{
+                  color: "#60a5fa",
+                  marginBottom: "12px",
+                  fontSize: "18px",
+                  marginTop: "24px",
+                }}
+              >
+                {children}
+              </h3>
+            ),
+            h3: ({ children }) => (
+              <h3
+                style={{
+                  color: "#60a5fa",
+                  marginBottom: "12px",
+                  fontSize: "18px",
+                  marginTop: "24px",
+                }}
+              >
+                {children}
+              </h3>
+            ),
+            ul: ({ children }) => (
+              <ul style={{ paddingLeft: "20px", margin: "0 0 16px 0" }}>
+                {children}
+              </ul>
+            ),
+            li: ({ children }) => (
+              <li style={{ marginBottom: "8px" }}>{children}</li>
+            ),
+            p: ({ children }) => (
+              <p style={{ margin: "0 0 12px 0" }}>{children}</p>
+            ),
+            a: ({ href, children }) => (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#60a5fa", textDecoration: "none" }}
+              >
+                {children}
+              </a>
+            ),
+            strong: ({ children }) => (
+              <strong style={{ fontWeight: "bold" }}>{children}</strong>
+            ),
+          }}
+        >
+          {markdownContent}
+        </ReactMarkdown>
       </div>
     </div>
   );
