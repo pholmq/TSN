@@ -57,6 +57,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
 
+  const planetCamera = useStore((s) => s.planetCamera);
+
   useEffect(() => {
     //Used by StarSearch
     // if (!starData || !starData.length) return;
@@ -311,7 +313,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         pickingRenderTarget.current.dispose();
       }
     };
-  }, [gl, camera]);
+  }, [gl, camera, planetCamera]);
 
   // Handle hover (throttled)
   const handleHover = (event) => {
