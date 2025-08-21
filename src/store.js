@@ -28,7 +28,7 @@ export const useStore = create((set) => ({
   setCameraFollow: (v) => set({ cameraFollow: v }),
 
   planetCamera: false,
-  setPlanetCamera: (v) => set({ planetCamera: v }),
+  setPlanetCamera: (v) => set({ planetCamera: v, actualPlanetSizes: v }),
   planetCameraTarget: "Earth",
   setPlanetCameraTarget: (v) => {
     set({ planetCameraTarget: v });
@@ -39,14 +39,16 @@ export const useStore = create((set) => ({
   setPlanCamLat: (v) => set({ planCamLat: v }),
   planCamLong: 0,
   setPlanCamLong: (v) => set({ planCamLong: v }),
-  planCamHeight: 6500,
+  planCamHeight: 6600,
   setPlanCamHeight: (v) => set({ planCamHeight: v }),
   planCamAngle: 0,
   setPlanCamAngle: (v) => set({ planCamAngle: v }),
   planCamDirection: 0,
   setPlanCamDirection: (v) => set({ planCamDirection: v }),
-  planCamFov: 50,
+  planCamFov: 51,
   setPlanCamFov: (v) => set({ planCamFov: v }),
+  // planCamZoom: 121 - 50, // Derived from FOV
+  // setPlanCamZoom: (v) => set({ planCamFov: 121 - v, planCamZoom: v }),
   planCamFar: 100,
   setPlanCamFar: (v) => set({ planCamFar: v }),
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useControls, useCreateStore, Leva, folder, levaStore } from "leva";
 import { useStore, useTraceStore, useSettingsStore } from "../store";
 import { speedFactOpts } from "../utils/time-date-functions";
@@ -12,6 +12,8 @@ const LevaUI = () => {
     setSpeedFact,
     cameraFollow,
     setCameraFollow,
+    planetCamera,
+    setPlanetCamera,
     planetCameraHelper,
     setPlanetCameraHelper,
     orbits,
@@ -119,9 +121,13 @@ const LevaUI = () => {
           onChange: setShowPositions,
         },
         "Planet camera": {
-          value: planetCameraHelper,
-          onChange: setPlanetCameraHelper,
+          value: planetCamera,
+          onChange: setPlanetCamera,
         },
+        // "Show planet camera position": {
+        //   value: planetCameraHelper,
+        //   onChange: setPlanetCameraHelper,
+        // },
         "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
       },
       { collapsed: false }
@@ -275,6 +281,13 @@ const LevaUI = () => {
       { collapsed: true }
     ),
   }));
+
+  useEffect(() => {
+    // Only update actualPlanetSizes in the UI, don't touch planetCamera
+    set2({
+      "Actual planet sizes": actualPlanetSizes,
+    });
+  }, [actualPlanetSizes, set2]);
 
   return (
     <>
