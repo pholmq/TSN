@@ -157,6 +157,9 @@ export const useStore = create((set) => ({
   selectedStarPosition: null,
   setSelectedStarPosition: (position) =>
     set({ selectedStarPosition: position }),
+
+  showHelp: false,
+  setShowHelp: (v) => set({ showHelp: v }),
 }));
 
 export const usePosStore = create((set) => ({
