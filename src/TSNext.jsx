@@ -25,6 +25,7 @@ import StarDataPanel from "./components/StarDataPanel/StarDataPanel";
 import StarSearch from "./components/StarSearch/StarSearch";
 import HighlightSelectedStar from "./components/StarSearch/HighlightSelectedStar";
 import Help from "./components/Help/Help";
+import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
 
 const isTouchDevice = () => {
   return (
@@ -57,6 +58,7 @@ const TSNext = () => {
         <EditSettings />
         <PlanetCameraUI />
         <StarDataPanel />
+        <PlanetCameraCompass />
         <Help />
         {BSCStarsOn && !isTouchDev && <StarSearch />}
       </div>
