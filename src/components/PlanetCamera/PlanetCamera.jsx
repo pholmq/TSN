@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { CameraHelper, Vector3 } from "three";
-
+import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { PerspectiveCamera, useHelper } from "@react-three/drei";
 import { useStore } from "../../store";
@@ -27,18 +27,6 @@ export default function PlanetCamera() {
   const planetCameraHelper = useStore((s) => s.planetCameraHelper);
   const planetCameraTarget = useStore((s) => s.planetCameraTarget);
 
-  useLayoutEffect(() => {
-    targetObjRef.current = scene.getObjectByName(planetCameraTarget);
-    targetObjRef.current.add(planetCamSystemRef.current);
-    planetCamRef.current.updateProjectionMatrix();
-  }, [planetCameraTarget]);
-
-  useHelper(
-    //Only show helper if planetCamera is not active
-    planetCameraHelper && !planetCamera ? planetCamRef : false,
-    CameraHelper
-  );
-
   const planCamLat = useStore((s) => s.planCamLat);
   const planCamLong = useStore((s) => s.planCamLong);
   const planCamHeight = useStore((s) => s.planCamHeight);
@@ -46,6 +34,17 @@ export default function PlanetCamera() {
   const planCamDirection = useStore((s) => s.planCamDirection);
   const planCamFov = useStore((s) => s.planCamFov);
   const planCamFar = useStore((s) => s.planCamFar);
+
+  useLayoutEffect(() => {
+    targetObjRef.current = scene.getObjectByName(planetCameraTarget);
+    targetObjRef.current.add(planetCamSystemRef.current);
+    planetCamRef.current.updateProjectionMatrix();
+  }, [planetCameraTarget]);
+
+  useHelper(
+    planetCameraHelper && !planetCamera ? planetCamRef : false,
+    CameraHelper
+  );
 
   useEffect(() => {
     if (!latAxisRef.current) return;
@@ -68,23 +67,34 @@ export default function PlanetCamera() {
     planCamFar,
   ]);
 
+  // Adjustable multipliers for compass position
+  const compassDistanceMultiplier = 10000000; // Adjust this to move markers farther/closer
+  const compassHeightMultiplier = 0.4; // Adjust this to move markers up/down (higher = lower in view)
+
+  // Calculate compass distance and height based on camera height
+  const baseDistance = Math.max(
+    50,
+    Math.min(500, kmToUnits(planCamHeight) * compassDistanceMultiplier)
+  );
+  const compassDistance = baseDistance;
+  const compassHeight = -baseDistance * compassHeightMultiplier;
+
   return (
     <>
       <group ref={planetCamSystemRef} rotation={[0, 0, 0]}>
-        {/* We put the camera system in a group and rotate it so that lat and long are at 0 */}
         <group ref={longAxisRef}>
           <group ref={latAxisRef}>
             <group ref={camMountRef} position={[0, 0, 0]}>
+              {/* Camera */}
               <group>
                 <PerspectiveCamera
                   name="PlanetCamera"
                   rotation={[0, Math.PI, 0]}
                   near={0.00007}
-                  // far={1000000000000}
                   makeDefault={planetCamera}
                   ref={planetCamRef}
                   rotation-order={"YXZ"}
-                ></PerspectiveCamera>
+                />
               </group>
             </group>
           </group>
