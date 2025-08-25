@@ -47,8 +47,6 @@ export const useStore = create((set) => ({
   setPlanCamDirection: (v) => set({ planCamDirection: v }),
   planCamFov: 51,
   setPlanCamFov: (v) => set({ planCamFov: v }),
-  // planCamZoom: 121 - 50, // Derived from FOV
-  // setPlanCamZoom: (v) => set({ planCamFov: 121 - v, planCamZoom: v }),
   planCamFar: 100,
   setPlanCamFar: (v) => set({ planCamFar: v }),
 
