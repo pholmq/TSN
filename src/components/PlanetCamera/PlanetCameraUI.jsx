@@ -1,13 +1,10 @@
 import { useEffect, useRef } from "react";
+import { useControls, Leva, useCreateStore } from "leva";
 import { useGesture } from "@use-gesture/react";
-import { useControls, useCreateStore, Leva, folder } from "leva";
-import { useStore, useSettingsStore, usePosStore } from "../../store";
+import { useStore } from "../../store";
 
 const PlanetCameraUI = () => {
   const planetCamera = useStore((s) => s.planetCamera);
-  const setPlanetCamera = useStore((s) => s.setPlanetCamera);
-  const planetCameraHelper = useStore((s) => s.planetCameraHelper);
-
   const planCamLat = useStore((s) => s.planCamLat);
   const setPlanCamLat = useStore((s) => s.setPlanCamLat);
   const planCamLong = useStore((s) => s.planCamLong);
@@ -18,69 +15,142 @@ const PlanetCameraUI = () => {
   const setPlanCamAngle = useStore((s) => s.setPlanCamAngle);
   const planCamDirection = useStore((s) => s.planCamDirection);
   const setPlanCamDirection = useStore((s) => s.setPlanCamDirection);
+  // const planCamZoom = useStore((s) => s.planCamZoom);
+  // const setPlanCamZoom = useStore((s) => s.setPlanCamZoom);
   const planCamFov = useStore((s) => s.planCamFov);
   const setPlanCamFov = useStore((s) => s.setPlanCamFov);
-  const planCamZoom = 121 - planCamFov;
   const planCamFar = useStore((s) => s.planCamFar);
   const setPlanCamFar = useStore((s) => s.setPlanCamFar);
 
+  const plancamUIStore = useCreateStore();
+
+  // Track if we're updating from a city selection
+  const isUpdatingFromCity = useRef(false);
+
+  // Calculate zoom from FOV (not stored in state)
+  const planCamZoom = 121 - planCamFov;
   const setPlanCamZoom = (zoomValue) => {
-    const fovValue = 121 - zoomValue;
-    setPlanCamFov(fovValue);
+    setPlanCamFov(121 - zoomValue);
   };
 
-  // Create a Leva store & panel
-  const plancamUIStore = useCreateStore();
+  // Major cities with their coordinates
+  const cities = {
+    "-": { lat: null, long: null },
+    "Rome, Italy": { lat: 41.9, long: 12.5 },
+    "Stockholm, Sweden": { lat: 59.33, long: 18.07 },
+    "Paris, France": { lat: 48.86, long: 2.35 },
+    "Berlin, Germany": { lat: 52.52, long: 13.41 },
+    "London, UK": { lat: 51.51, long: -0.13 },
+    "New York, USA": { lat: 40.71, long: -74.01 },
+    "Tokyo, Japan": { lat: 35.68, long: 139.69 },
+    "Sydney, Aus.": { lat: -33.87, long: 151.21 },
+    "Mumbai, India": { lat: 19.08, long: 72.88 },
+    "Beijing, China": { lat: 39.9, long: 116.41 },
+    "Moscow, Russia": { lat: 55.76, long: 37.62 },
+    "Cairo, Egypt": { lat: 30.04, long: 31.24 },
+    "Rio de Jan., Brazil": { lat: -22.91, long: -43.17 },
+    "Los Angeles, USA": { lat: 34.05, long: -118.24 },
+    "Mexico City, Mexico": { lat: 19.43, long: -99.13 },
+    "Istanbul, Turkey": { lat: 41.01, long: 28.98 },
+    "Bangkok, Thailand": { lat: 13.76, long: 100.5 },
+    "Singapore, Singap.": { lat: 1.35, long: 103.82 },
+    "Hong Kong, China": { lat: 22.32, long: 114.17 },
+    "Dubai, UAE": { lat: 25.2, long: 55.27 },
+    "Cape Town, S.A.": { lat: -33.92, long: 18.42 },
+    "Toronto, Canada": { lat: 43.65, long: -79.38 },
+    "Buenos Aires, Arg.": { lat: -34.6, long: -58.38 },
+    "Seoul, South Korea": { lat: 37.57, long: 126.98 },
+    "Nairobi, Kenya": { lat: -1.29, long: 36.82 },
+    "Reykjavik, Iceland": { lat: 64.15, long: -21.94 },
+    "Athens, Greece": { lat: 37.98, long: 23.73 },
+    "Wellington, N.Z.": { lat: -41.29, long: 174.78 },
+    "Santiago, Chile": { lat: -33.45, long: -70.67 },
+    "Anchorage, USA": { lat: 61.22, long: -149.9 },
+  };
+
   const [, set] = useControls(
     () => ({
-      // "On/Off": {
-      //   value: planetCamera,
-      //   onChange: setPlanetCamera,
-      // },
+      Location: {
+        value: "-",
+        options: Object.keys(cities),
+        onChange: (cityName) => {
+          const city = cities[cityName];
+          if (city.lat !== null && city.long !== null) {
+            // Set flag to indicate we're updating from city selection
+            isUpdatingFromCity.current = true;
+            // Update latitude and longitude
+            setPlanCamLat(city.lat);
+            setPlanCamLong(city.long);
+            // Also update the Leva controls to reflect the new values
+            set({ Latitude: city.lat, Longitude: city.long });
+            // Reset flag after a short delay
+            setTimeout(() => {
+              isUpdatingFromCity.current = false;
+            }, 100);
+          }
+        },
+      },
       Latitude: {
         value: planCamLat,
+        hint: "Latitude in degrees (-90 to 90)",
         max: 90,
         min: -90,
         step: 0.01,
-        hint: "Camera latitude in decimal degrees",
-        onChange: setPlanCamLat,
+        onChange: (v) => {
+          setPlanCamLat(v);
+          // Only reset city selection if this is a manual change
+          if (!isUpdatingFromCity.current) {
+            set({ Location: "-" });
+          }
+        },
       },
-
       Longitude: {
         value: planCamLong,
+        hint: "Longitude in degrees (-180 to 180)",
         max: 180,
         min: -180,
-        step: 0.1,
-        hint: "Camera longitude in decimal degrees",
-        onChange: setPlanCamLong,
+        step: 0.01,
+        onChange: (v) => {
+          setPlanCamLong(v);
+          // Only reset city selection if this is a manual change
+          if (!isUpdatingFromCity.current) {
+            set({ Location: "-" });
+          }
+        },
       },
-      "Height in km": {
+      "Height (km)": {
         value: planCamHeight,
+        hint: "Height above surface in km",
+        max: 100000,
         min: 0,
         step: 10,
-        hint: "Camera height in kilometers above planet center",
         onChange: setPlanCamHeight,
       },
       Angle: {
         value: planCamAngle,
-        hint: "Camera angle/elevation",
+        hint: "Vertical viewing angle",
         max: 90,
         min: -90,
+        step: 0.1,
         onChange: setPlanCamAngle,
       },
       Direction: {
         value: planCamDirection,
-        hint: "Camera direction/azimuth",
+        hint: "Compass direction",
         max: 360,
         min: 0,
+        step: 0.1,
         onChange: setPlanCamDirection,
       },
       Zoom: {
         value: planCamZoom,
-        hint: "Camera zoom level",
+        hint: "Zoom level",
         max: 120,
         min: 1,
-        onChange: setPlanCamZoom, // Just use the function directly!
+        step: 0.1,
+        onChange: (v) => {
+          setPlanCamZoom(v);
+        },
       },
       // "Viewing dist in Ly": {
       //   value: planCamFar,

@@ -24,33 +24,33 @@
   position: absolute;
   color: #ffffff;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 20px; /* Increased from 14px */
   font-family: Arial, sans-serif;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
   transform: translate(-50%, -50%);
 }
 
 .compass-direction.north {
-  top: 8px;
+  top: 15px; /* Moved inward from 8px */
   left: 50%;
   color: #ff4444;
   transform: translate(-50%, -50%) rotate(0deg);
 }
 
 .compass-direction.south {
-  bottom: 8px;
+  bottom: 15px; /* Moved inward from 8px */
   left: 50%;
   transform: translate(-50%, 50%) rotate(180deg);
 }
 
 .compass-direction.east {
-  right: 8px;
+  right: 15px; /* Moved inward from 8px */
   top: 50%;
   transform: translate(50%, -50%) rotate(90deg);
 }
 
 .compass-direction.west {
-  left: 8px;
+  left: 15px; /* Moved inward from 8px */
   top: 50%;
   transform: translate(-50%, -50%) rotate(-90deg);
 }
@@ -58,11 +58,11 @@
 .compass-center {
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: calc(50% + 6px); /* Shifted 2px to the right to compensate */
   transform: translate(-50%, -50%);
   color: #ffffff;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 24px; /* Increased from 18px */
   font-family: Arial, sans-serif;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
   text-align: center;
