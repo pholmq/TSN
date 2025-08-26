@@ -19,7 +19,7 @@
 
     "arrows": true,
     "reverseArrows": true,
-    "texture": "/textures/planets/2k_earth_daymap.jpg",
+    "texture": "/textures/8k_earth_daymap.jpg",
     "unicodeSymbol": "&#x1F728;",
     "planetCamera": true,
     "description": "EARTH orbital Ø: 113 230 656 km (the “PVP” orbit), Orbital circumference: 355 724 597 km, Diameter at equator: 12756.3 km, Equatorial circumference: 40075 km"
