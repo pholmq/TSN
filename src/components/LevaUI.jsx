@@ -62,6 +62,8 @@ const LevaUI = () => {
     setEphimerides,
     BSCStars,
     setBSCStars,
+    hScale,
+    sethScale,
   } = useStore();
 
   const {
@@ -221,7 +223,6 @@ const LevaUI = () => {
           step: 100,
           onChange: setStarDistanceModifier,
         },
-        // Remaining top-level items in "Stars & Helpers"
         "Celestial sphere": {
           value: celestialSphere,
           onChange: setCelestialSphere,
@@ -230,12 +231,17 @@ const LevaUI = () => {
           value: eclipticGrid,
           onChange: setEclipticGrid,
         },
-        // Moved here:
         "Sidereal Zodiac": {
           value: zodiac,
           onChange: setZodiac,
         },
-        // Moved to the bottom of "Stars & Helpers"
+        "Sphere/Grid/Zodiac size": {
+          value: hScale,
+          min: 0.5,
+          max: 100,
+          step: 0.5,
+          onChange: sethScale,
+        },
         Settings: folder(
           {
             "Star sizes": {
