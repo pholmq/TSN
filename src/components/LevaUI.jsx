@@ -62,6 +62,8 @@ const LevaUI = () => {
     setEphimerides,
     BSCStars,
     setBSCStars,
+    hScale,
+    sethScale,
   } = useStore();
 
   const {
@@ -76,6 +78,10 @@ const LevaUI = () => {
     stepMultiplier,
     setStepMultiplier,
   } = useTraceStore();
+
+  const setEquidistantStars = (value) => {
+    setOfficialStarDistances(!value);
+  };
 
   //We use a spearate levaStore for the first items so we can hide the rest of the
   //Leva UI when showLevaMenu is false
@@ -211,17 +217,23 @@ const LevaUI = () => {
           value: BSCStars,
           onChange: setBSCStars,
         },
-        "Use star distances": {
-          value: officialStarDistances,
-          onChange: setOfficialStarDistances,
-        },
+        // "Use star distances": {
+        //   value: officialStarDistances,
+        //   onChange: setOfficialStarDistances,
+        // },
+
         "Divide distances by": {
           value: starDistanceModifier,
           min: 1,
           step: 100,
           onChange: setStarDistanceModifier,
         },
-        // Remaining top-level items in "Stars & Helpers"
+        "Equidistant stars": {
+          value: false,
+          min: 1,
+          step: 100,
+          onChange: setEquidistantStars,
+        },
         "Celestial sphere": {
           value: celestialSphere,
           onChange: setCelestialSphere,
@@ -230,12 +242,17 @@ const LevaUI = () => {
           value: eclipticGrid,
           onChange: setEclipticGrid,
         },
-        // Moved here:
         "Sidereal Zodiac": {
           value: zodiac,
           onChange: setZodiac,
         },
-        // Moved to the bottom of "Stars & Helpers"
+        "Sphere/Grid/Zodiac size": {
+          value: hScale,
+          min: 0.5,
+          max: 100,
+          step: 0.5,
+          onChange: sethScale,
+        },
         Settings: folder(
           {
             "Star sizes": {

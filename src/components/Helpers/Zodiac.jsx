@@ -83,13 +83,15 @@ function ZodiacLabels() {
 export default function Zodiac() {
   const zodiac = useStore((s) => s.zodiac);
   const zodiacSize = useStore((s) => s.zodiacSize);
+  const hScale = useStore((s) => s.hScale);
+  const size = (zodiacSize * hScale) / 100;
   return (
     <>
       {zodiac && (
         <group
           position={[37.8453, -3, 0]}
           rotation={[0, -Math.PI / 3, 0]}
-          scale={zodiacSize}
+          scale={size}
         >
           <polarGridHelper args={[260, 24, 1, 64, 0x000000, 0x555555]} />
           <ZodiacLabels />

@@ -6,17 +6,13 @@ import { useStore } from "../../store";
 export default function EclipticGrid() {
   const eclipticGrid = useStore((s) => s.eclipticGrid);
   const eclipticGridSize = useStore((s) => s.eclipticGridSize);
+  const hScale = useStore((s) => s.hScale);
 
   const gridGroup = useMemo(() => {
     const group = new THREE.Group();
 
     // Create the main grid helper
-    const grid = new THREE.GridHelper(
-      2,
-      30,
-      "#008800",
-      "#000088"
-    );
+    const grid = new THREE.GridHelper(2, 30, "#008800", "#000088");
     group.add(grid);
 
     return group;
@@ -24,8 +20,10 @@ export default function EclipticGrid() {
 
   if (!eclipticGrid) return null;
 
+  const size = (eclipticGridSize * hScale) / 100;
+
   return (
-    <group scale={[eclipticGridSize, eclipticGridSize, eclipticGridSize]}>
+    <group scale={[size, size, size]}>
       <primitive object={gridGroup} />
 
       {/* Seasonal Markers */}

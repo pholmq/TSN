@@ -18,6 +18,7 @@ export default function Star({ sData }) {
   const { camera, invalidate } = useThree();
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
+  const hScale = useStore((s) => s.hScale);
   const starScale = useStore((s) => s.starScale);
 
   // const s = settings.find((obj) => obj.name === name);
@@ -57,7 +58,7 @@ export default function Star({ sData }) {
       const decRad = declinationToRadians(s.dec); // Convert Dec to radians
       let dist;
       if (!officialStarDistances) {
-        dist = 20000;
+        dist = (20000 * hScale) / 100;
       } else {
         //Convert light year distance to world units (1Ly = 63241 AU, 1 AU = 100 world units)
         const worldDist = s.distLy * 63241 * 100;
@@ -73,7 +74,7 @@ export default function Star({ sData }) {
       // updateScale(camera);
       invalidate();
     }
-  }, [s, starDistanceModifier, officialStarDistances]);
+  }, [s, starDistanceModifier, officialStarDistances, hScale]);
 
   const circleTexture = createCircleTexture(color);
   const spriteMaterial = new SpriteMaterial({
