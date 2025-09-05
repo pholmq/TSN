@@ -23,7 +23,7 @@ export default function EclipticGrid() {
   const size = (eclipticGridSize * hScale) / 100;
 
   return (
-    <group scale={[size, size, size]}>
+    <group position={[0, -1, 0]} scale={[size, size, size]}>
       <primitive object={gridGroup} />
 
       {/* Seasonal Markers */}
