@@ -79,6 +79,10 @@ const LevaUI = () => {
     setStepMultiplier,
   } = useTraceStore();
 
+  const setEquidistantStars = (value) => {
+    setOfficialStarDistances(!value);
+  };
+
   //We use a spearate levaStore for the first items so we can hide the rest of the
   //Leva UI when showLevaMenu is false
   const [, set1] = useControls(
@@ -213,15 +217,22 @@ const LevaUI = () => {
           value: BSCStars,
           onChange: setBSCStars,
         },
-        "Use star distances": {
-          value: officialStarDistances,
-          onChange: setOfficialStarDistances,
-        },
+        // "Use star distances": {
+        //   value: officialStarDistances,
+        //   onChange: setOfficialStarDistances,
+        // },
+
         "Divide distances by": {
           value: starDistanceModifier,
           min: 1,
           step: 100,
           onChange: setStarDistanceModifier,
+        },
+        "Equidistant stars": {
+          value: false,
+          min: 1,
+          step: 100,
+          onChange: setEquidistantStars,
         },
         "Celestial sphere": {
           value: celestialSphere,

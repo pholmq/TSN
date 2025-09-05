@@ -51,6 +51,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
+  const hScale = useStore((s) => s.hScale);
   const starScale = useStore((s) => s.starScale);
   const starPickingSensitivity = useStore((s) => s.starPickingSensitivity);
 
@@ -185,7 +186,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         const distLy = parseFloat(s.P) * 3.26156378;
         let dist;
         if (!officialStarDistances) {
-          dist = 20000;
+          dist = (20000 * hScale) / 100;
         } else {
           const worldDist = distLy * 63241 * 100;
           dist =
@@ -268,6 +269,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       };
     }, [
       officialStarDistances,
+      hScale,
       starDistanceModifier,
       starScale,
       starPickingSensitivity,
