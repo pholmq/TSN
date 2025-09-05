@@ -74,7 +74,7 @@ export default function Star({ sData }) {
       // updateScale(camera);
       invalidate();
     }
-  }, [s, starDistanceModifier, officialStarDistances]);
+  }, [s, starDistanceModifier, officialStarDistances, hScale]);
 
   const circleTexture = createCircleTexture(color);
   const spriteMaterial = new SpriteMaterial({
