@@ -97,7 +97,7 @@ export const useStore = create((set) => ({
   eclipticGridSize: 25000,
   setEclipticGridSize: (v) => set({ eclipticGridSize: v }),
 
-  hScale: 1,
+  hScale: 50,
   sethScale: (v) => set({ hScale: v }),
 
   officialStarDistances: true,
