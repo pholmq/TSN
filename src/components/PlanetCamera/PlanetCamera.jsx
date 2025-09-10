@@ -12,6 +12,7 @@ import {
   altToRad,
   dirToRad,
 } from "../../utils/celestial-functions";
+import { Ground } from "./Ground";
 
 export default function PlanetCamera() {
   const planetCamRef = useRef(null);
@@ -84,6 +85,7 @@ export default function PlanetCamera() {
       <group ref={planetCamSystemRef} rotation={[0, 0, 0]}>
         <group ref={longAxisRef}>
           <group ref={latAxisRef}>
+            <Ground />
             <group ref={camMountRef} position={[0, 0, 0]}>
               {/* Camera */}
               <group>
