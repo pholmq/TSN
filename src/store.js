@@ -50,6 +50,10 @@ export const useStore = create((set) => ({
   planCamFar: 100,
   setPlanCamFar: (v) => set({ planCamFar: v }),
 
+  groundOn: true,
+  groundSize: 40,
+  groundHeight: 6000,
+
   orbits: true,
   setOrbits: (v) => set({ orbits: v }),
   orbitsLineWidth: 1.5,

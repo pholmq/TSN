@@ -117,15 +117,7 @@ const LevaUI = () => {
           value: actualPlanetSizes,
           onChange: setActualPlanetSizes,
         },
-        "Show labels": {
-          value: showLabels,
-          onChange: setShowLables,
-        },
-        "Show positions": {
-          value: showPositions,
-          hint: "Keep unchecked for best performance",
-          onChange: setShowPositions,
-        },
+
         "Planet camera": {
           value: planetCamera,
           onChange: setPlanetCamera,
@@ -135,6 +127,19 @@ const LevaUI = () => {
         //   onChange: setPlanetCameraHelper,
         // },
         "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
+        Labels: {
+          value: showLabels,
+          onChange: setShowLables,
+        },
+        Orbits: {
+          value: orbits,
+          onChange: setOrbits,
+        },
+        Positions: {
+          value: showPositions,
+          hint: "Keep unchecked for best performance",
+          onChange: setShowPositions,
+        },
       },
       { collapsed: false }
     ),
@@ -179,10 +184,7 @@ const LevaUI = () => {
           step: 0.1,
           onChange: setPlanetScale,
         },
-        "Show Orbits": {
-          value: orbits,
-          onChange: setOrbits,
-        },
+
         "Orbits linewidth": {
           value: orbitsLineWidth,
           min: 0.5,

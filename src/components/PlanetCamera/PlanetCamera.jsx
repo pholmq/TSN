@@ -17,10 +17,10 @@ import { Ground } from "./Ground";
 export default function PlanetCamera() {
   const planetCamRef = useRef(null);
   const planetCamSystemRef = useRef(null);
-  const camBoxRef = useRef(null);
   const longAxisRef = useRef(null);
   const latAxisRef = useRef(null);
   const camMountRef = useRef(null);
+  const groundMountRef = useRef(null);
   const targetObjRef = useRef(null);
 
   const { scene } = useThree();
@@ -36,6 +36,8 @@ export default function PlanetCamera() {
   const planCamFov = useStore((s) => s.planCamFov);
   const planCamFar = useStore((s) => s.planCamFar);
 
+  const groundHeight = kmToUnits(useStore((s) => s.groundHeight));
+
   useLayoutEffect(() => {
     targetObjRef.current = scene.getObjectByName(planetCameraTarget);
     targetObjRef.current.add(planetCamSystemRef.current);
@@ -46,6 +48,18 @@ export default function PlanetCamera() {
     planetCameraHelper && !planetCamera ? planetCamRef : false,
     CameraHelper
   );
+
+  useEffect(() => {
+    if (!latAxisRef.current) return;
+    if (planCamHeight < 6600) {
+      targetObjRef.current.visible = false;
+      groundMountRef.current.visible = true;
+    } else {
+      targetObjRef.current.visible = true;
+      groundMountRef.current.visible = false;
+    }
+    planetCamRef.current.updateProjectionMatrix();
+  }, [planCamHeight]);
 
   useEffect(() => {
     if (!latAxisRef.current) return;
@@ -66,26 +80,17 @@ export default function PlanetCamera() {
     planCamDirection,
     planCamFov,
     planCamFar,
+    latAxisRef,
   ]);
-
-  // Adjustable multipliers for compass position
-  const compassDistanceMultiplier = 10000000; // Adjust this to move markers farther/closer
-  const compassHeightMultiplier = 0.4; // Adjust this to move markers up/down (higher = lower in view)
-
-  // Calculate compass distance and height based on camera height
-  const baseDistance = Math.max(
-    50,
-    Math.min(500, kmToUnits(planCamHeight) * compassDistanceMultiplier)
-  );
-  const compassDistance = baseDistance;
-  const compassHeight = -baseDistance * compassHeightMultiplier;
 
   return (
     <>
       <group ref={planetCamSystemRef} rotation={[0, 0, 0]}>
         <group ref={longAxisRef}>
           <group ref={latAxisRef}>
-            <Ground />
+            <group ref={groundMountRef} position={[0, groundHeight, 0]}>
+              <Ground />
+            </group>
             <group ref={camMountRef} position={[0, 0, 0]}>
               {/* Camera */}
               <group>
