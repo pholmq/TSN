@@ -348,6 +348,12 @@ export function kmToUnits(kilometers) {
   return units;
 }
 
+export function unitsToKm(units) {
+  const kilometers = units * 1495978.707;
+  //Units is multiplied by this since 100 units in the model is 1 AU
+  return kilometers;
+}
+
 export function lyToUnits(lightYears) {
   return lightYears * 6324100;
 }

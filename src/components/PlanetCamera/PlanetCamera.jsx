@@ -12,14 +12,15 @@ import {
   altToRad,
   dirToRad,
 } from "../../utils/celestial-functions";
+import { Ground } from "./Ground";
 
 export default function PlanetCamera() {
   const planetCamRef = useRef(null);
   const planetCamSystemRef = useRef(null);
-  const camBoxRef = useRef(null);
   const longAxisRef = useRef(null);
   const latAxisRef = useRef(null);
   const camMountRef = useRef(null);
+  const groundMountRef = useRef(null);
   const targetObjRef = useRef(null);
 
   const { scene } = useThree();
@@ -35,6 +36,9 @@ export default function PlanetCamera() {
   const planCamFov = useStore((s) => s.planCamFov);
   const planCamFar = useStore((s) => s.planCamFar);
 
+  const groundHeight = kmToUnits(useStore((s) => s.groundHeight));
+  const showGround = useStore((s) => s.showGround);
+
   useLayoutEffect(() => {
     targetObjRef.current = scene.getObjectByName(planetCameraTarget);
     targetObjRef.current.add(planetCamSystemRef.current);
@@ -45,6 +49,80 @@ export default function PlanetCamera() {
     planetCameraHelper && !planetCamera ? planetCamRef : false,
     CameraHelper
   );
+
+  useEffect(() => {
+    if (groundMountRef.current) {
+      groundMountRef.current.traverse((child) => {
+        if (child.isMesh && child.geometry) {
+          if (child.geometry.type === "SphereGeometry") {
+            // Only control the sphere visibility, leave torus alone
+            child.visible = showGround;
+          }
+          // TorusGeometry is left unchanged - always visible
+        }
+      });
+    }
+  }, [showGround]);
+
+  useEffect(() => {
+    if (!latAxisRef.current) return;
+
+    if (targetObjRef.current && targetObjRef.current.material) {
+      // Swift transition around 6600km - much narrower zone
+      const lowHeight = 6580; // Start transition
+      const highHeight = 6620; // End transition (40km range for swift fade)
+
+      // Calculate fade factor (0 to 1)
+      let planetOpacity, groundOpacity;
+
+      if (planCamHeight <= lowHeight) {
+        planetOpacity = 0;
+        groundOpacity = 1;
+      } else if (planCamHeight >= highHeight) {
+        planetOpacity = 1;
+        groundOpacity = 0;
+      } else {
+        const fadeProgress =
+          (planCamHeight - lowHeight) / (highHeight - lowHeight);
+        // More aggressive curve for sharper transition
+        const aggressiveFade = Math.pow(fadeProgress, 3); // Cubic curve for swift change
+        planetOpacity = aggressiveFade;
+        groundOpacity = 1 - aggressiveFade;
+      }
+
+      // Apply opacity to planet
+      targetObjRef.current.material.opacity = planetOpacity;
+      targetObjRef.current.material.needsUpdate = true;
+
+      // Apply opacity to ground
+      if (groundMountRef.current) {
+        groundMountRef.current.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.opacity = groundOpacity;
+            child.material.needsUpdate = true;
+          }
+        });
+
+        // Control visibility for performance
+        groundMountRef.current.visible = groundOpacity > 0;
+      }
+      if (!planetCamera) {
+        //Show planet and hide ground if planet camera is inactive
+        targetObjRef.current.material.opacity = 1;
+        targetObjRef.current.material.needsUpdate = true;
+        if (groundMountRef.current) {
+          groundMountRef.current.traverse((child) => {
+            if (child.isMesh && child.material) {
+              child.material.opacity = 0;
+              child.material.needsUpdate = true;
+            }
+          });
+        }
+      }
+    }
+
+    planetCamRef.current.updateProjectionMatrix();
+  }, [planCamHeight, planetCamera]);
 
   useEffect(() => {
     if (!latAxisRef.current) return;
@@ -65,25 +143,17 @@ export default function PlanetCamera() {
     planCamDirection,
     planCamFov,
     planCamFar,
+    latAxisRef,
   ]);
-
-  // Adjustable multipliers for compass position
-  const compassDistanceMultiplier = 10000000; // Adjust this to move markers farther/closer
-  const compassHeightMultiplier = 0.4; // Adjust this to move markers up/down (higher = lower in view)
-
-  // Calculate compass distance and height based on camera height
-  const baseDistance = Math.max(
-    50,
-    Math.min(500, kmToUnits(planCamHeight) * compassDistanceMultiplier)
-  );
-  const compassDistance = baseDistance;
-  const compassHeight = -baseDistance * compassHeightMultiplier;
 
   return (
     <>
       <group ref={planetCamSystemRef} rotation={[0, 0, 0]}>
         <group ref={longAxisRef}>
           <group ref={latAxisRef}>
+            <group ref={groundMountRef} position={[0, groundHeight, 0]}>
+              <Ground />
+            </group>
             <group ref={camMountRef} position={[0, 0, 0]}>
               {/* Camera */}
               <group>

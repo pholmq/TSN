@@ -8,7 +8,7 @@ import {
   FXAA,
   SMAA,
 } from "@react-three/postprocessing";
-import { useControls } from "leva";
+import { useControls, folder } from "leva";
 import { useStore } from "../../store";
 
 const LightEffectsMenu = () => {
@@ -51,6 +51,54 @@ const LightEffectsMenu = () => {
         value: false,
         label: "Show FPS",
       },
+      Settings: folder(
+        {
+          "Star sizes": {
+            value: useStore.getState().starScale,
+            min: 0.1,
+            max: 5,
+            step: 0.1,
+            onChange: (v) => useStore.setState({ starScale: v }),
+          },
+          "Zodiac size": {
+            value: useStore.getState().zodiacSize,
+            min: 1,
+            step: 1,
+            onChange: (v) => useStore.setState({ zodiacSize: v }),
+          },
+          "Polar line length": {
+            value: useStore.getState().polarLineSize,
+            min: 5,
+            step: 1,
+            onChange: (v) => useStore.setState({ polarLineSize: v }),
+          },
+          "Celestial sphere size": {
+            value: useStore.getState().celestialSphereSize,
+            min: 5,
+            step: 1,
+            onChange: (v) => useStore.setState({ celestialSphereSize: v }),
+          },
+          "Ecliptic grid size": {
+            value: useStore.getState().eclipticGridSize,
+            min: 5,
+            step: 1,
+            onChange: (v) => useStore.setState({ eclipticGridSize: v }),
+          },
+          "Ground size": {
+            value: useStore.getState().groundSize,
+            min: 5,
+            step: 1,
+            onChange: (v) => useStore.setState({ groundSize: v }),
+          },
+          "Ground height": {
+            value: useStore.getState().groundHeight,
+            min: 5,
+            step: 1,
+            onChange: (v) => useStore.setState({ groundHeight: v }),
+          },
+        },
+        { collapsed: true }
+      ),
     });
 
   return (

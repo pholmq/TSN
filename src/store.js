@@ -39,7 +39,7 @@ export const useStore = create((set) => ({
   setPlanCamLat: (v) => set({ planCamLat: v }),
   planCamLong: 0,
   setPlanCamLong: (v) => set({ planCamLong: v }),
-  planCamHeight: 6600,
+  planCamHeight: 6370,
   setPlanCamHeight: (v) => set({ planCamHeight: v }),
   planCamAngle: 0,
   setPlanCamAngle: (v) => set({ planCamAngle: v }),
@@ -49,6 +49,11 @@ export const useStore = create((set) => ({
   setPlanCamFov: (v) => set({ planCamFov: v }),
   planCamFar: 100,
   setPlanCamFar: (v) => set({ planCamFar: v }),
+
+  showGround: true,
+  setShowGround: (v) => set({ showGround: v }),
+  groundSize: 40,
+  groundHeight: 6000,
 
   orbits: true,
   setOrbits: (v) => set({ orbits: v }),

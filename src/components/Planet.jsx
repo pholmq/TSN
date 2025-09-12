@@ -82,8 +82,9 @@ export default function Planet({ s, actualMoon, name }) {
             emissiveIntensity={s.light && sunLight}
             roughness={0.7}
             metalness={0.2}
-            transparent={s.opacity ? true : false}
+            transparent={true}
             opacity={s.opacity ? s.opacity : 1}
+            depthWrite={false}
           />
           {s.light && <pointLight intensity={sunLight * 100000} />}
         </mesh>

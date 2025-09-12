@@ -1,10 +1,14 @@
 import { useEffect, useRef } from "react";
 import { useControls, Leva, useCreateStore } from "leva";
 import { useGesture } from "@use-gesture/react";
-import { useStore } from "../../store";
+import { useStore, useSettingsStore } from "../../store";
+import { unitsToKm } from "../../utils/celestial-functions";
 
 const PlanetCameraUI = () => {
   const planetCamera = useStore((s) => s.planetCamera);
+  const planetCameraTarget = useStore((s) => s.planetCameraTarget);
+  const getSetting = useSettingsStore((s) => s.getSetting);
+
   const planCamLat = useStore((s) => s.planCamLat);
   const setPlanCamLat = useStore((s) => s.setPlanCamLat);
   const planCamLong = useStore((s) => s.planCamLong);
@@ -21,6 +25,14 @@ const PlanetCameraUI = () => {
   const setPlanCamFov = useStore((s) => s.setPlanCamFov);
   const planCamFar = useStore((s) => s.planCamFar);
   const setPlanCamFar = useStore((s) => s.setPlanCamFar);
+  const showGround = useStore((s) => s.showGround);
+  const setShowGround = useStore((s) => s.setShowGround);
+
+  // Get planet radius and calculate surface height
+  const planetSettings = getSetting(planetCameraTarget);
+  const planetRadiusInUnits = planetSettings?.actualSize || 0.00426; // Default to Earth if not found
+  const planetRadiusKm = unitsToKm(planetRadiusInUnits);
+  const surfaceHeight = planCamHeight - planetRadiusKm;
 
   const plancamUIStore = useCreateStore();
 
@@ -70,6 +82,7 @@ const PlanetCameraUI = () => {
 
   const [, set] = useControls(
     () => ({
+      Ground: { value: showGround, onChange: setShowGround },
       Location: {
         value: "-",
         options: Object.keys(cities),
@@ -119,12 +132,12 @@ const PlanetCameraUI = () => {
         },
       },
       "Height (km)": {
-        value: planCamHeight,
-        hint: "Height above surface in km",
+        value: surfaceHeight, // Display height above surface
+        hint: "Height above planet surface in km",
         max: 100000,
         min: 0,
         step: 10,
-        onChange: setPlanCamHeight,
+        onChange: (value) => setPlanCamHeight(value + planetRadiusKm), // Convert back to center height
       },
       Angle: {
         value: planCamAngle,
