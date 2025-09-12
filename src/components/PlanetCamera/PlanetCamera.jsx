@@ -51,15 +51,63 @@ export default function PlanetCamera() {
 
   useEffect(() => {
     if (!latAxisRef.current) return;
-    if (planCamHeight < 6600) {
-      targetObjRef.current.visible = false;
-      groundMountRef.current.visible = true;
-    } else {
-      targetObjRef.current.visible = true;
-      groundMountRef.current.visible = false;
+
+    if (targetObjRef.current && targetObjRef.current.material) {
+      // Swift transition around 6600km - much narrower zone
+      const lowHeight = 6580; // Start transition
+      const highHeight = 6620; // End transition (40km range for swift fade)
+
+      // Calculate fade factor (0 to 1)
+      let planetOpacity, groundOpacity;
+
+      if (planCamHeight <= lowHeight) {
+        planetOpacity = 0;
+        groundOpacity = 1;
+      } else if (planCamHeight >= highHeight) {
+        planetOpacity = 1;
+        groundOpacity = 0;
+      } else {
+        const fadeProgress =
+          (planCamHeight - lowHeight) / (highHeight - lowHeight);
+        // More aggressive curve for sharper transition
+        const aggressiveFade = Math.pow(fadeProgress, 3); // Cubic curve for swift change
+        planetOpacity = aggressiveFade;
+        groundOpacity = 1 - aggressiveFade;
+      }
+
+      // Apply opacity to planet
+      targetObjRef.current.material.opacity = planetOpacity;
+      targetObjRef.current.material.needsUpdate = true;
+
+      // Apply opacity to ground
+      if (groundMountRef.current) {
+        groundMountRef.current.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.opacity = groundOpacity;
+            child.material.needsUpdate = true;
+          }
+        });
+
+        // Control visibility for performance
+        groundMountRef.current.visible = groundOpacity > 0;
+      }
+      if (!planetCamera) {
+        //Show planet and hide ground if planet camera is inactive
+        targetObjRef.current.material.opacity = 1;
+        targetObjRef.current.material.needsUpdate = true;
+        if (groundMountRef.current) {
+          groundMountRef.current.traverse((child) => {
+            if (child.isMesh && child.material) {
+              child.material.opacity = 0;
+              child.material.needsUpdate = true;
+            }
+          });
+        }
+      }
     }
+
     planetCamRef.current.updateProjectionMatrix();
-  }, [planCamHeight]);
+  }, [planCamHeight, planetCamera]);
 
   useEffect(() => {
     if (!latAxisRef.current) return;
