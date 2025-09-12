@@ -255,42 +255,6 @@ const LevaUI = () => {
           step: 0.5,
           onChange: sethScale,
         },
-        Settings: folder(
-          {
-            "Star sizes": {
-              value: starScale,
-              min: 0.1,
-              max: 5,
-              step: 0.1,
-              onChange: setStarScale,
-            },
-            "Zodiac size": {
-              value: zodiacSize,
-              min: 1,
-              step: 1,
-              onChange: setZodiacSize,
-            },
-            "Polar line length": {
-              value: polarLineSize,
-              min: 5,
-              step: 1,
-              onChange: setPolarLineSize,
-            },
-            "Celestial sphere size": {
-              value: celestialSphereSize,
-              min: 5,
-              step: 1,
-              onChange: setCelestialSphereSize,
-            },
-            "Ecliptic grid size": {
-              value: eclipticGridSize,
-              min: 5,
-              step: 1,
-              onChange: setEclipticGridSize,
-            },
-          },
-          { collapsed: true }
-        ),
       },
       { collapsed: true }
     ),

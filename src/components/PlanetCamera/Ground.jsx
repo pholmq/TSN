@@ -12,7 +12,7 @@ export function Ground({ size = 0.01 }) {
             color="green"
             side={THREE.DoubleSide}
             transparent={true}
-            opacity={1}
+            opacity={0.1}
           />
         </mesh>
 

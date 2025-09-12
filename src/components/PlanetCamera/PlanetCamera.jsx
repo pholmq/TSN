@@ -37,6 +37,7 @@ export default function PlanetCamera() {
   const planCamFar = useStore((s) => s.planCamFar);
 
   const groundHeight = kmToUnits(useStore((s) => s.groundHeight));
+  const showGround = useStore((s) => s.showGround);
 
   useLayoutEffect(() => {
     targetObjRef.current = scene.getObjectByName(planetCameraTarget);
@@ -48,6 +49,20 @@ export default function PlanetCamera() {
     planetCameraHelper && !planetCamera ? planetCamRef : false,
     CameraHelper
   );
+
+  useEffect(() => {
+    if (groundMountRef.current) {
+      groundMountRef.current.traverse((child) => {
+        if (child.isMesh && child.geometry) {
+          if (child.geometry.type === "SphereGeometry") {
+            // Only control the sphere visibility, leave torus alone
+            child.visible = showGround;
+          }
+          // TorusGeometry is left unchanged - always visible
+        }
+      });
+    }
+  }, [showGround]);
 
   useEffect(() => {
     if (!latAxisRef.current) return;
