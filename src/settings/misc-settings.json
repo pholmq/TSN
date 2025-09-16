@@ -13,7 +13,6 @@
     "name": "Earth",
     "color": "#287AB8",
     "type": "planet",
-    "rotationStart": 0,
     "visible": true,
     "geoSphere": true,
     "geoSphereColor": "#00ffff",

@@ -363,7 +363,11 @@ export function altToRad(degrees) {
 }
 
 export function dirToRad(degrees) {
-  return Math.PI - (Math.PI / 180) * degrees;
+  // Correct for 12-degree offset between compass and celestial coordinates
+  // This aligns the planet camera's azimuth with true astronomical directions
+  // const astronomicalAzimuth = (degrees + 12) % 360;
+  const astronomicalAzimuth = degrees % 360;
+  return Math.PI - (Math.PI / 180) * astronomicalAzimuth;
 }
 
 function leadZero(n, plus) {
