@@ -1,7 +1,9 @@
 import * as THREE from "three";
-import { Html } from "@react-three/drei";
+import { useStore } from "../../store";
 
-export function Ground({ size = 0.01 }) {
+export function Ground() {
+  // const positions = usePosStore((s) => s.positions);
+  let size = useStore((s) => s.groundSize) / 10000;
   return (
     <>
       {/* <axesHelper args={[40]} position={[0, 0, 0]} /> */}

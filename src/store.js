@@ -52,8 +52,8 @@ export const useStore = create((set) => ({
 
   showGround: true,
   setShowGround: (v) => set({ showGround: v }),
-  groundSize: 40,
-  groundHeight: 6000,
+  groundSize: 154,
+  groundHeight: 0,
 
   orbits: true,
   setOrbits: (v) => set({ orbits: v }),

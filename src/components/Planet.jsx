@@ -34,6 +34,7 @@ export default function Planet({ s, actualMoon, name }) {
 
   const rotationSpeed = s.rotationSpeed || 0;
   const rotationStart = s.rotationStart || 0;
+  // if (s.name === "Earth") console.log(rotationStart);
 
   let size = actualPlanetSizes ? s.actualSize : s.size;
   let visible = s.visible;

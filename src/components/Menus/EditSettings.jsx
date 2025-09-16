@@ -87,6 +87,23 @@ const EditSettings = () => {
               });
             },
           },
+          ...(s.rotationStart !== undefined
+            ? {
+                [`${s.name}rotationStart`]: {
+                  label: "rotationStart",
+                  value: "\u200B" + s.rotationStart,
+                  editable: true,
+                  onChange: (value) => {
+                    const cleanValue = value.replace(/\u200B/g, "");
+                    s.rotationStart = cleanValue;
+                    updateSetting({
+                      ...s,
+                      rotationStart: cleanValue,
+                    });
+                  },
+                },
+              }
+            : {}),
           ...(s.rotationSpeed !== undefined
             ? {
                 [`${s.name}rotationSpeed`]: {
