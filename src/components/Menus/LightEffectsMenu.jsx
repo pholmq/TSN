@@ -86,14 +86,14 @@ const LightEffectsMenu = () => {
           },
           "Ground size": {
             value: useStore.getState().groundSize,
-            min: 5,
+            min: 1,
             step: 1,
             onChange: (v) => useStore.setState({ groundSize: v }),
           },
           "Ground height": {
             value: useStore.getState().groundHeight,
-            min: 5,
-            step: 1,
+            min: 0.1,
+            step: 0.1,
             onChange: (v) => useStore.setState({ groundHeight: v }),
           },
         },
