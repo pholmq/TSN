@@ -27,13 +27,13 @@ export default function CameraAnimation({ controlsRef }) {
     }
   }, [isInitialized]);
 
-  useFrame(() => {
+  useFrame((state, delta) => {
     if (controls && !isInitialized) {
       setIsInitialized(true);
       return;
     }
     if (tweenRef.current) {
-      TWEEN.update();
+      TWEEN.update(state.clock.elapsedTime * 1000); // Use explicit time
     }
   });
 

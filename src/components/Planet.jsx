@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, memo } from "react";
 import { useStore } from "../store";
 import useTextureLoader from "../utils/useTextureLoader";
 import CelestialSphere from "./Helpers/CelestialSphere";
@@ -9,7 +9,7 @@ import PlanetRings from "./PlanetRings";
 import NameLabel from "./Labels/NameLabel";
 import GeoSphere from "./Helpers/GeoSphere";
 
-export default function Planet({ s, actualMoon, name }) {
+const Planet = memo(function Planet({ s, actualMoon, name }) {
   const planetRef = useRef(); // Group for rotation and scaling
   const pivotRef = useRef();
   const materialRef = useRef();
@@ -18,6 +18,7 @@ export default function Planet({ s, actualMoon, name }) {
   const planetScale = useStore((state) => state.planetScale);
   const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
   const geoSphere = useStore((state) => state.geoSphere);
+
   const { texture, isLoading } = s.texture
     ? useTextureLoader(s.texture)
     : { texture: null, isLoading: false };
@@ -30,11 +31,10 @@ export default function Planet({ s, actualMoon, name }) {
       }
       materialRef.current.needsUpdate = true;
     }
-  }, [texture]);
+  }, [texture, s.light]);
 
   const rotationSpeed = s.rotationSpeed || 0;
   const rotationStart = s.rotationStart || 0;
-  // if (s.name === "Earth") console.log(rotationStart);
 
   let size = actualPlanetSizes ? s.actualSize : s.size;
   let visible = s.visible;
@@ -109,4 +109,6 @@ export default function Planet({ s, actualMoon, name }) {
       </group>
     </group>
   );
-}
+});
+
+export default Planet;
