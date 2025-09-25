@@ -5,15 +5,19 @@ import { useStore } from "../../store";
 
 export default function IntroText() {
   const runIntro = useStore((s) => s.runIntro);
+  const setRunIntro = useStore((s) => s.setRunIntro);
   const materialRef = useRef();
 
   // Animate opacity over time using the ref
   useFrame((state, delta) => {
+    if (!runIntro) return;
     if (materialRef.current && materialRef.current.opacity > 0.01) {
       materialRef.current.opacity = Math.max(
         materialRef.current.opacity - delta * 0.07,
         0
       );
+    } else {
+      setRunIntro(setRunIntro(false));
     }
   });
 
