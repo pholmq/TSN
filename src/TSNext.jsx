@@ -1,5 +1,5 @@
 import "./index.css";
-import { useEffect } from "react";
+import { useEffect, Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useStore } from "./store";
 import UserInterface from "./components/UserInterface";
@@ -20,6 +20,7 @@ import Zodiac from "./components/Helpers/Zodiac";
 import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
 import IntroText from "./components/Intro/IntroText";
+import IntroQuote from "./components/Intro/IntroQuote";
 import EditSettings from "./components/Menus/EditSettings";
 import StarDataPanel from "./components/StarDataPanel/StarDataPanel";
 import StarSearch from "./components/StarSearch/StarSearch";
@@ -35,8 +36,25 @@ const isTouchDevice = () => {
   );
 };
 
+// Component that signals when Suspense is complete
+const SuspenseCompleteSignal = ({ onComplete }) => {
+  useEffect(() => {
+    // Small delay to ensure all components are fully mounted
+    const timer = setTimeout(() => {
+      onComplete();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  return null;
+};
+
 const TSNext = () => {
-  // const zoomLevel = useStore((s) => s.zoomLevel);
+  const [canvasVisible, setCanvasVisible] = useState(false);
+
+  // Get runIntro state from store
+  const runIntro = useStore((s) => s.runIntro);
+
   const toggleShowMenu = useStore((s) => s.toggleShowMenu);
   const toggleShowLevaMenu = useStore((s) => s.toggleShowLevaMenu);
   const BSCStarsOn = useStore((s) => s.BSCStars);
@@ -49,6 +67,26 @@ const TSNext = () => {
       toggleShowLevaMenu();
     }
   }, []);
+
+  const handleSuspenseComplete = () => {
+    setCanvasVisible(true);
+  };
+
+  // Calculate canvas opacity and transition based on runIntro state
+  const getCanvasStyle = () => {
+    if (!runIntro) {
+      // If intro is interrupted, immediately show canvas with no transition
+      return {
+        opacity: 1,
+        transition: "none",
+      };
+    }
+    // Otherwise, use the canvasVisible state for the fade-in effect
+    return {
+      opacity: canvasVisible ? 1 : 0,
+      transition: "opacity 5s ease-in-out",
+    };
+  };
 
   return (
     <>
@@ -65,23 +103,31 @@ const TSNext = () => {
       <Canvas
         id="canvas"
         frameloop="demand"
-        gl={{ logarithmicDepthBuffer: true }} //Fixes depth buffer issues due to extreme Camera far
+        gl={{ logarithmicDepthBuffer: true }}
+        style={getCanvasStyle()}
       >
-        <OrbitCamera />
-        <PlanetCamera />
-        <IntroText />
-        <AnimationController />
-        <PosController />
-        <TraceController />
-        <PlanetsPositionsMenu />
-        <StarsHelpersMenu />
-        <LightEffectsMenu />
-        <SolarSystem />
-        <PlotSolarSystem />
-        <Stars />
-        {BSCStarsOn && <BSCStarsH />}
-        {BSCStarsOn && <HighlightSelectedStar />}
-        <Zodiac />
+        {/* IntroQuote is always rendered and visible */}
+        <IntroQuote />
+
+        {/* Other components wrapped in Suspense */}
+        <Suspense fallback={null}>
+          <SuspenseCompleteSignal onComplete={handleSuspenseComplete} />
+          <OrbitCamera />
+          <PlanetCamera />
+          <IntroText />
+          <AnimationController />
+          <PosController />
+          <TraceController />
+          <PlanetsPositionsMenu />
+          <StarsHelpersMenu />
+          <LightEffectsMenu />
+          <SolarSystem />
+          <PlotSolarSystem />
+          <Stars />
+          {BSCStarsOn && <BSCStarsH />}
+          {BSCStarsOn && !isTouchDev && <HighlightSelectedStar />}
+          <Zodiac />
+        </Suspense>
       </Canvas>
     </>
   );
