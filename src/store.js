@@ -16,6 +16,8 @@ export const useStore = create((set) => ({
   setSpeedMultiplier: (v) => set({ speedMultiplier: v }),
   showPositions: false,
   setShowPositions: (v) => set({ showPositions: v }),
+  searchStars: true,
+  setSearchStars: (v) => set({ searchStars: v }),
   activeCamera: "orbit",
   cameraTarget: "Earth",
   cameraUpdate: 0, // Add a trigger value

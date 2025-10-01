@@ -58,6 +58,7 @@ const TSNext = () => {
   const toggleShowMenu = useStore((s) => s.toggleShowMenu);
   const toggleShowLevaMenu = useStore((s) => s.toggleShowLevaMenu);
   const BSCStarsOn = useStore((s) => s.BSCStars);
+  const searchStars = useStore((s) => s.searchStars);
 
   const isTouchDev = isTouchDevice();
 
@@ -98,7 +99,7 @@ const TSNext = () => {
         <StarDataPanel />
         <PlanetCameraCompass />
         <Help />
-        {BSCStarsOn && !isTouchDev && <StarSearch />}
+        {BSCStarsOn && !isTouchDev && searchStars && <StarSearch />}
       </div>
       <Canvas
         id="canvas"
