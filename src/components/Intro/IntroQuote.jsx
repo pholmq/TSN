@@ -65,7 +65,7 @@ const IntroQuote = ({ duration = 10000, fade = 2000 }) => {
       <div
         className="name-label"
         style={{
-          transform: "translateX(-50%) translateY(-400px)",
+          transform: "translateX(-50%) translateY(-40vh)",
           opacity: isVisible ? 1 : 0,
           transition: `opacity ${fade}ms ease-in-out`,
           fontFamily: "'Times New Roman', serif",
@@ -74,7 +74,7 @@ const IntroQuote = ({ duration = 10000, fade = 2000 }) => {
           textAlign: "center",
           color: "grey",
           textShadow: "2px 2px 6px rgba(0,0,0,0.7)",
-          width: "800px", // Use fixed width instead of maxWidth
+          width: "800px",
           padding: "0 20px",
           whiteSpace: "normal",
           wordWrap: "break-word",

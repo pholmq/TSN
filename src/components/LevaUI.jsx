@@ -64,6 +64,8 @@ const LevaUI = () => {
     setBSCStars,
     hScale,
     sethScale,
+    searchStars,
+    setSearchStars,
   } = useStore();
 
   const {
@@ -134,6 +136,11 @@ const LevaUI = () => {
         Orbits: {
           value: orbits,
           onChange: setOrbits,
+        },
+        "Search stars": {
+          value: searchStars,
+          hint: "Keep unchecked for best performance",
+          onChange: setSearchStars,
         },
         Positions: {
           value: showPositions,
