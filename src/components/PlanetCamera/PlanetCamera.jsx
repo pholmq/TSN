@@ -69,8 +69,8 @@ export default function PlanetCamera() {
 
     if (targetObjRef.current && targetObjRef.current.material) {
       // Swift transition around 6600km - much narrower zone
-      const lowHeight = 6580; // Start transition
-      const highHeight = 6620; // End transition (40km range for swift fade)
+      const lowHeight = 6480; // Start transition
+      const highHeight = lowHeight + 40; // End transition (40km range for swift fade)
 
       // Calculate fade factor (0 to 1)
       let planetOpacity, groundOpacity;
