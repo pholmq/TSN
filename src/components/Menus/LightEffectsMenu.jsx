@@ -10,6 +10,7 @@ import {
 } from "@react-three/postprocessing";
 import { useControls, folder } from "leva";
 import { useStore } from "../../store";
+import { usePlanetCameraStore } from "../PlanetCamera/planetCameraStore";
 
 const LightEffectsMenu = () => {
   const { ambientLight, glow, glowIntensity, antialiasing, stats } =
@@ -85,16 +86,16 @@ const LightEffectsMenu = () => {
             onChange: (v) => useStore.setState({ eclipticGridSize: v }),
           },
           "Ground size": {
-            value: useStore.getState().groundSize,
+            value: usePlanetCameraStore.getState().groundSize,
             min: 1,
             step: 1,
-            onChange: (v) => useStore.setState({ groundSize: v }),
+            onChange: (v) => usePlanetCameraStore.setState({ groundSize: v }),
           },
           "Ground height": {
-            value: useStore.getState().groundHeight,
+            value: usePlanetCameraStore.getState().groundHeight,
             min: 0.1,
             step: 0.1,
-            onChange: (v) => useStore.setState({ groundHeight: v }),
+            onChange: (v) => usePlanetCameraStore.setState({ groundHeight: v }),
           },
         },
         { collapsed: true }

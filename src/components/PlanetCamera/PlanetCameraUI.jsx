@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useControls, Leva, useCreateStore } from "leva";
 import { useGesture } from "@use-gesture/react";
 import { useStore, useSettingsStore } from "../../store";
+import { usePlanetCameraStore } from "./planetCameraStore";
 import { unitsToKm } from "../../utils/celestial-functions";
 
 const PlanetCameraUI = () => {
@@ -9,24 +10,24 @@ const PlanetCameraUI = () => {
   const planetCameraTarget = useStore((s) => s.planetCameraTarget);
   const getSetting = useSettingsStore((s) => s.getSetting);
 
-  const planCamLat = useStore((s) => s.planCamLat);
-  const setPlanCamLat = useStore((s) => s.setPlanCamLat);
-  const planCamLong = useStore((s) => s.planCamLong);
-  const setPlanCamLong = useStore((s) => s.setPlanCamLong);
-  const planCamHeight = useStore((s) => s.planCamHeight);
-  const setPlanCamHeight = useStore((s) => s.setPlanCamHeight);
-  const planCamAngle = useStore((s) => s.planCamAngle);
-  const setPlanCamAngle = useStore((s) => s.setPlanCamAngle);
-  const planCamDirection = useStore((s) => s.planCamDirection);
-  const setPlanCamDirection = useStore((s) => s.setPlanCamDirection);
-  // const planCamZoom = useStore((s) => s.planCamZoom);
-  // const setPlanCamZoom = useStore((s) => s.setPlanCamZoom);
-  const planCamFov = useStore((s) => s.planCamFov);
-  const setPlanCamFov = useStore((s) => s.setPlanCamFov);
-  const planCamFar = useStore((s) => s.planCamFar);
-  const setPlanCamFar = useStore((s) => s.setPlanCamFar);
-  const showGround = useStore((s) => s.showGround);
-  const setShowGround = useStore((s) => s.setShowGround);
+  const planCamLat = usePlanetCameraStore((s) => s.planCamLat);
+  const setPlanCamLat = usePlanetCameraStore((s) => s.setPlanCamLat);
+  const planCamLong = usePlanetCameraStore((s) => s.planCamLong);
+  const setPlanCamLong = usePlanetCameraStore((s) => s.setPlanCamLong);
+  const planCamHeight = usePlanetCameraStore((s) => s.planCamHeight);
+  const setPlanCamHeight = usePlanetCameraStore((s) => s.setPlanCamHeight);
+  const planCamAngle = usePlanetCameraStore((s) => s.planCamAngle);
+  const setPlanCamAngle = usePlanetCameraStore((s) => s.setPlanCamAngle);
+  const planCamDirection = usePlanetCameraStore((s) => s.planCamDirection);
+  const setPlanCamDirection = usePlanetCameraStore(
+    (s) => s.setPlanCamDirection
+  );
+  const planCamFov = usePlanetCameraStore((s) => s.planCamFov);
+  const setPlanCamFov = usePlanetCameraStore((s) => s.setPlanCamFov);
+  const planCamFar = usePlanetCameraStore((s) => s.planCamFar);
+  const setPlanCamFar = usePlanetCameraStore((s) => s.setPlanCamFar);
+  const showGround = usePlanetCameraStore((s) => s.showGround);
+  const setShowGround = usePlanetCameraStore((s) => s.setShowGround);
 
   // Get planet radius and calculate surface height
   const planetSettings = getSetting(planetCameraTarget);
