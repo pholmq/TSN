@@ -1,10 +1,11 @@
 import React, { useRef, useEffect } from "react";
 import { useStore } from "../../store";
+import { usePlanetCameraStore } from "./planetCameraStore";
 import "./PlanetCameraCompass.css";
 
 const PlanetCameraCompass = () => {
   const planetCamera = useStore((s) => s.planetCamera);
-  const planCamDirection = useStore((s) => s.planCamDirection);
+  const planCamDirection = usePlanetCameraStore((s) => s.planCamDirection);
   const compassRef = useRef(null);
   const lastRotationRef = useRef(0);
 
