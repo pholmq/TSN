@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { PerspectiveCamera, useHelper } from "@react-three/drei";
 import { useStore } from "../../store";
+import { usePlanetCameraStore } from "./planetCameraStore";
 import {
   latToRad,
   longToRad,
@@ -28,16 +29,16 @@ export default function PlanetCamera() {
   const planetCameraHelper = useStore((s) => s.planetCameraHelper);
   const planetCameraTarget = useStore((s) => s.planetCameraTarget);
 
-  const planCamLat = useStore((s) => s.planCamLat);
-  const planCamLong = useStore((s) => s.planCamLong);
-  const planCamHeight = useStore((s) => s.planCamHeight);
-  const planCamAngle = useStore((s) => s.planCamAngle);
-  const planCamDirection = useStore((s) => s.planCamDirection);
-  const planCamFov = useStore((s) => s.planCamFov);
-  const planCamFar = useStore((s) => s.planCamFar);
+  const planCamLat = usePlanetCameraStore((s) => s.planCamLat);
+  const planCamLong = usePlanetCameraStore((s) => s.planCamLong);
+  const planCamHeight = usePlanetCameraStore((s) => s.planCamHeight);
+  const planCamAngle = usePlanetCameraStore((s) => s.planCamAngle);
+  const planCamDirection = usePlanetCameraStore((s) => s.planCamDirection);
+  const planCamFov = usePlanetCameraStore((s) => s.planCamFov);
+  const planCamFar = usePlanetCameraStore((s) => s.planCamFar);
 
-  const groundHeight = kmToUnits(useStore((s) => s.groundHeight));
-  const showGround = useStore((s) => s.showGround);
+  const groundHeight = kmToUnits(usePlanetCameraStore((s) => s.groundHeight));
+  const showGround = usePlanetCameraStore((s) => s.showGround);
 
   useLayoutEffect(() => {
     targetObjRef.current = scene.getObjectByName(planetCameraTarget);
