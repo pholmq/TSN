@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { usePlanetCameraStore } from "./planetCameraStore";
+import { useStore } from "../../store";
 
 export function Ground() {
   // const positions = usePosStore((s) => s.positions);
-  let size = usePlanetCameraStore((s) => s.groundSize) / 10000;
+  let size = useStore((s) => s.groundSize) / 10000;
   return (
     <>
       {/* <axesHelper args={[40]} position={[0, 0, 0]} /> */}
