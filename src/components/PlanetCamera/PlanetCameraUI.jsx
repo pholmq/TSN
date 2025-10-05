@@ -184,7 +184,8 @@ const PlanetCameraUI = () => {
       //   onChange: setPlanCamFar,
       // },
     }),
-    { store: plancamUIStore }
+    { store: plancamUIStore },
+    [planetRadiusKm, surfaceHeight, planetCameraTarget]
   );
 
   const canvasRef = useRef(null);
