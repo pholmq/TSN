@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef, useEffect, memo } from "react";
 import { useStore } from "../store";
+import { usePlanetCameraStore } from "./PlanetCamera/planetCameraStore";
 import useTextureLoader from "../utils/useTextureLoader";
 import CelestialSphere from "./Helpers/CelestialSphere";
 import PolarLine from "./Helpers/PolarLine";
@@ -18,6 +19,10 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const planetScale = useStore((state) => state.planetScale);
   const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
   const geoSphere = useStore((state) => state.geoSphere);
+  const planetCamera = useStore((state) => state.planetCamera);
+  const planetCameraTarget = usePlanetCameraStore(
+    (state) => state.planetCameraTarget
+  );
 
   const { texture, isLoading } = s.texture
     ? useTextureLoader(s.texture)
@@ -62,6 +67,9 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const tilt = s.tilt || 0;
   const tiltb = s.tiltb || 0;
 
+  // Hide label if this planet is the active planet camera target
+  const showLabel = visible && !(planetCamera && s.name === planetCameraTarget);
+
   return (
     <group
       ref={pivotRef}
@@ -71,7 +79,7 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
       {(s.name === "Earth" || s.name === "Sun") && (
         <PolarLine visible={visible} />
       )}
-      {visible && <NameLabel s={s} />}
+      {showLabel && <NameLabel s={s} />}
       {visible && <HoverObj s={s} />}
       <group ref={planetRef} scale={planetScale}>
         <mesh name={name} visible={visible} ref={planetRef}>

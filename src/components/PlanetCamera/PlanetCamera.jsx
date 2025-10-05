@@ -25,6 +25,7 @@ export default function PlanetCamera() {
   const camMountRef = useRef(null);
   const groundMountRef = useRef(null);
   const targetObjRef = useRef(null);
+  const prevTargetRef = useRef(null); // ADD THIS LINE
 
   const { scene } = useThree();
   const planetCamera = useStore((s) => s.planetCamera);
@@ -49,6 +50,12 @@ export default function PlanetCamera() {
   console.log("planet camera " + planetRadiusKm);
 
   useLayoutEffect(() => {
+    // Reset previous target's opacity if it exists
+    if (prevTargetRef.current && prevTargetRef.current.material) {
+      prevTargetRef.current.material.opacity = 1;
+      prevTargetRef.current.material.needsUpdate = true;
+    }
+
     // Remove camera system from previous parent
     if (planetCamSystemRef.current.parent) {
       planetCamSystemRef.current.parent.remove(planetCamSystemRef.current);
@@ -60,6 +67,9 @@ export default function PlanetCamera() {
       targetObjRef.current.add(planetCamSystemRef.current);
       planetCamRef.current.updateProjectionMatrix();
     }
+
+    // Store current target for next switch
+    prevTargetRef.current = targetObjRef.current;
   }, [planetCameraTarget, scene]);
 
   useHelper(
