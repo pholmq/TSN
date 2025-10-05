@@ -7,7 +7,10 @@ import { unitsToKm } from "../../utils/celestial-functions";
 
 const PlanetCameraUI = () => {
   const planetCamera = useStore((s) => s.planetCamera);
-  const planetCameraTarget = useStore((s) => s.planetCameraTarget);
+  const planetCameraTarget = usePlanetCameraStore((s) => s.planetCameraTarget);
+  const setPlanetCameraTarget = usePlanetCameraStore(
+    (s) => s.setPlanetCameraTarget
+  );
   const getSetting = useSettingsStore((s) => s.getSetting);
 
   const planCamLat = usePlanetCameraStore((s) => s.planCamLat);
@@ -33,6 +36,7 @@ const PlanetCameraUI = () => {
   const planetSettings = getSetting(planetCameraTarget);
   const planetRadiusInUnits = planetSettings?.actualSize || 0.00426; // Default to Earth if not found
   const planetRadiusKm = unitsToKm(planetRadiusInUnits);
+  console.log("planet camera ui: " + planetRadiusKm);
   const surfaceHeight = planCamHeight - planetRadiusKm;
 
   const plancamUIStore = useCreateStore();
@@ -83,6 +87,11 @@ const PlanetCameraUI = () => {
 
   const [, set] = useControls(
     () => ({
+      Planet: {
+        value: planetCameraTarget,
+        options: ["Earth", "Moon", "Mars", "Sun", "Mercury", "Venus"], // or get from settings
+        onChange: setPlanetCameraTarget,
+      },
       Ground: { value: showGround, onChange: setShowGround },
       Location: {
         value: "-",
