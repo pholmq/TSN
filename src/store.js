@@ -31,10 +31,7 @@ export const useStore = create((set) => ({
 
   planetCamera: false,
   setPlanetCamera: (v) => set({ planetCamera: v, actualPlanetSizes: v }),
-  planetCameraTarget: "Earth",
-  setPlanetCameraTarget: (v) => {
-    set({ planetCameraTarget: v });
-  },
+
   planetCameraHelper: false,
   setPlanetCameraHelper: (v) => set({ planetCameraHelper: v }),
 
@@ -48,10 +45,6 @@ export const useStore = create((set) => ({
   setActualPlanetSizes: (v) => set({ actualPlanetSizes: v }),
   arrows: false,
   setArrows: (v) => set({ arrows: v }),
-  arrowScale: 1,
-  menuRight: false,
-  showStats: false,
-  showTexture: true,
 
   showLevaMenu: true,
   toggleShowLevaMenu: () =>
@@ -63,8 +56,6 @@ export const useStore = create((set) => ({
 
   zodiac: false,
   setZodiac: (v) => set({ zodiac: v }),
-  zodiacSize: 1,
-  setZodiacSize: (v) => set({ zodiacSize: v }),
   zodiacSize: 100,
   setZodiacSize: (v) => set({ zodiacSize: v }),
 

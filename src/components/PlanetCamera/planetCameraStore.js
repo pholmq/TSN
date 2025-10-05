@@ -1,6 +1,9 @@
 import { create } from "zustand";
 
 export const usePlanetCameraStore = create((set) => ({
+  planetCameraTarget: "Earth",
+  setPlanetCameraTarget: (v) => set({ planetCameraTarget: v }),
+
   planCamLat: 0,
   setPlanCamLat: (v) => set({ planCamLat: v }),
 
@@ -19,7 +22,7 @@ export const usePlanetCameraStore = create((set) => ({
   planCamFov: 51,
   setPlanCamFov: (v) => set({ planCamFov: v }),
 
-  planCamFar: 100,
+  planCamFar: 10000,
   setPlanCamFar: (v) => set({ planCamFar: v }),
 
   showGround: true,

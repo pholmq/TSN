@@ -4,11 +4,13 @@ import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { PerspectiveCamera, useHelper } from "@react-three/drei";
 import { useStore } from "../../store";
+import { useSettingsStore } from "../../store";
 import { usePlanetCameraStore } from "./planetCameraStore";
 import {
   latToRad,
   longToRad,
   kmToUnits,
+  unitsToKm,
   lyToUnits,
   altToRad,
   dirToRad,
@@ -23,11 +25,12 @@ export default function PlanetCamera() {
   const camMountRef = useRef(null);
   const groundMountRef = useRef(null);
   const targetObjRef = useRef(null);
+  const prevTargetRef = useRef(null); // ADD THIS LINE
 
   const { scene } = useThree();
   const planetCamera = useStore((s) => s.planetCamera);
   const planetCameraHelper = useStore((s) => s.planetCameraHelper);
-  const planetCameraTarget = useStore((s) => s.planetCameraTarget);
+  const planetCameraTarget = usePlanetCameraStore((s) => s.planetCameraTarget);
 
   const planCamLat = usePlanetCameraStore((s) => s.planCamLat);
   const planCamLong = usePlanetCameraStore((s) => s.planCamLong);
@@ -40,11 +43,34 @@ export default function PlanetCamera() {
   const groundHeight = kmToUnits(usePlanetCameraStore((s) => s.groundHeight));
   const showGround = usePlanetCameraStore((s) => s.showGround);
 
+  const getSetting = useSettingsStore((s) => s.getSetting);
+  const planetSettings = getSetting(planetCameraTarget);
+  const planetRadiusInUnits = planetSettings?.actualSize || 0.00426;
+  const planetRadiusKm = unitsToKm(planetRadiusInUnits);
+  console.log("planet camera " + planetRadiusKm);
+
   useLayoutEffect(() => {
+    // Reset previous target's opacity if it exists
+    if (prevTargetRef.current && prevTargetRef.current.material) {
+      prevTargetRef.current.material.opacity = 1;
+      prevTargetRef.current.material.needsUpdate = true;
+    }
+
+    // Remove camera system from previous parent
+    if (planetCamSystemRef.current.parent) {
+      planetCamSystemRef.current.parent.remove(planetCamSystemRef.current);
+    }
+
+    // Add to new planet
     targetObjRef.current = scene.getObjectByName(planetCameraTarget);
-    targetObjRef.current.add(planetCamSystemRef.current);
-    planetCamRef.current.updateProjectionMatrix();
-  }, [planetCameraTarget]);
+    if (targetObjRef.current) {
+      targetObjRef.current.add(planetCamSystemRef.current);
+      planetCamRef.current.updateProjectionMatrix();
+    }
+
+    // Store current target for next switch
+    prevTargetRef.current = targetObjRef.current;
+  }, [planetCameraTarget, scene]);
 
   useHelper(
     planetCameraHelper && !planetCamera ? planetCamRef : false,
@@ -69,11 +95,10 @@ export default function PlanetCamera() {
     if (!latAxisRef.current) return;
 
     if (targetObjRef.current && targetObjRef.current.material) {
-      // Swift transition around 6600km - much narrower zone
-      const lowHeight = 6480; // Start transition
-      const highHeight = lowHeight + 40; // End transition (40km range for swift fade)
+      // Dynamic transition based on planet radius - relative scaling
+      const lowHeight = planetRadiusKm * 1.03; // Start fade at 3% above surface
+      const highHeight = planetRadiusKm * 1.04; // End fade at 4% above surface
 
-      // Calculate fade factor (0 to 1)
       let planetOpacity, groundOpacity;
 
       if (planCamHeight <= lowHeight) {
@@ -85,8 +110,7 @@ export default function PlanetCamera() {
       } else {
         const fadeProgress =
           (planCamHeight - lowHeight) / (highHeight - lowHeight);
-        // More aggressive curve for sharper transition
-        const aggressiveFade = Math.pow(fadeProgress, 3); // Cubic curve for swift change
+        const aggressiveFade = Math.pow(fadeProgress, 3);
         planetOpacity = aggressiveFade;
         groundOpacity = 1 - aggressiveFade;
       }
@@ -108,9 +132,21 @@ export default function PlanetCamera() {
         groundMountRef.current.visible = groundOpacity > 0;
       }
       if (!planetCamera) {
-        //Show planet and hide ground if planet camera is inactive
-        targetObjRef.current.material.opacity = 1;
-        targetObjRef.current.material.needsUpdate = true;
+        // Get all settings for celestial objects
+        const { settings } = useSettingsStore.getState();
+
+        // Reset only planets that have planetCamera enabled
+        settings.forEach((setting) => {
+          if (setting.planetCamera === true) {
+            const planetObj = scene.getObjectByName(setting.name);
+            if (planetObj && planetObj.material) {
+              planetObj.material.opacity = 1;
+              planetObj.material.needsUpdate = true;
+            }
+          }
+        });
+
+        // Hide ground
         if (groundMountRef.current) {
           groundMountRef.current.traverse((child) => {
             if (child.isMesh && child.material) {
@@ -123,13 +159,14 @@ export default function PlanetCamera() {
     }
 
     planetCamRef.current.updateProjectionMatrix();
-  }, [planCamHeight, planetCamera]);
+  }, [planCamHeight, planetCamera, planetRadiusKm]);
 
   useEffect(() => {
     if (!latAxisRef.current) return;
     latAxisRef.current.rotation.x = latToRad(planCamLat);
     longAxisRef.current.rotation.y = longToRad(planCamLong);
     camMountRef.current.position.y = kmToUnits(planCamHeight);
+    console.log("useEffect PlanetCamera planCamHeight: ", planCamHeight);
     planetCamRef.current.rotation.x = altToRad(planCamAngle);
     planetCamRef.current.rotation.y = dirToRad(planCamDirection);
     planetCamRef.current.fov = planCamFov;
@@ -147,12 +184,21 @@ export default function PlanetCamera() {
     latAxisRef,
   ]);
 
+  useEffect(() => {
+    // Reset camera to surface when switching planets
+    const setPlanCamHeight = usePlanetCameraStore.getState().setPlanCamHeight;
+    setPlanCamHeight(planetRadiusKm);
+  }, [planetCameraTarget, planetRadiusKm]);
+
   return (
     <>
       <group ref={planetCamSystemRef} rotation={[0, 0, 0]}>
         <group ref={longAxisRef}>
           <group ref={latAxisRef}>
-            <group ref={groundMountRef} position={[0, groundHeight, 0]}>
+            <group
+              ref={groundMountRef}
+              position={[0, kmToUnits(planetRadiusKm) + groundHeight, 0]}
+            >
               <Ground />
             </group>
             <group ref={camMountRef} position={[0, 0, 0]}>
