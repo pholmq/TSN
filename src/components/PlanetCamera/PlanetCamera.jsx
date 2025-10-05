@@ -122,9 +122,21 @@ export default function PlanetCamera() {
         groundMountRef.current.visible = groundOpacity > 0;
       }
       if (!planetCamera) {
-        //Show planet and hide ground if planet camera is inactive
-        targetObjRef.current.material.opacity = 1;
-        targetObjRef.current.material.needsUpdate = true;
+        // Get all settings for celestial objects
+        const { settings } = useSettingsStore.getState();
+
+        // Reset only planets that have planetCamera enabled
+        settings.forEach((setting) => {
+          if (setting.planetCamera === true) {
+            const planetObj = scene.getObjectByName(setting.name);
+            if (planetObj && planetObj.material) {
+              planetObj.material.opacity = 1;
+              planetObj.material.needsUpdate = true;
+            }
+          }
+        });
+
+        // Hide ground
         if (groundMountRef.current) {
           groundMountRef.current.traverse((child) => {
             if (child.isMesh && child.material) {
