@@ -13,6 +13,8 @@ import {
 } from "../../utils/celestial-functions";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
 
+import { pointShaderMaterial, pickingShaderMaterial } from "./starShaders";
+
 function moveModel(plotObjects, plotPos) {
   plotObjects.forEach((pObj) => {
     pObj.orbitRef.current.rotation.y =
@@ -91,74 +93,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       setSelectedStarPosition(null);
     }
   }, [selectedStarHR]);
-
-  // Create ShaderMaterial for visible stars
-  const pointShaderMaterial = useMemo(
-    () => ({
-      uniforms: {
-        pointTexture: { value: createCircleTexture() },
-        opacity: { value: 1.0 },
-        alphaTest: { value: 0.1 },
-      },
-      vertexShader: `
-        attribute float size;
-        varying vec3 vColor;
-        void main() {
-          vColor = color;
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = size;
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D pointTexture;
-        uniform float opacity;
-        uniform float alphaTest;
-        varying vec3 vColor;
-        void main() {
-          vec4 texColor = texture2D(pointTexture, gl_PointCoord);
-          if (texColor.a < alphaTest) discard;
-          gl_FragColor = vec4(vColor, texColor.a * opacity);
-        }
-      `,
-      vertexColors: true,
-      transparent: true,
-    }),
-    []
-  );
-
-  // Create ShaderMaterial for picking
-  const pickingShaderMaterial = useMemo(
-    () => ({
-      uniforms: {
-        pointTexture: { value: createCircleTexture() },
-        alphaTest: { value: 0.1 },
-      },
-      vertexShader: `
-        attribute float size;
-        varying vec3 vColor;
-        void main() {
-          vColor = color;
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = size;
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D pointTexture;
-        uniform float alphaTest;
-        varying vec3 vColor;
-        void main() {
-          vec4 texColor = texture2D(pointTexture, gl_PointCoord);
-          if (texColor.a < alphaTest) discard;
-          gl_FragColor = vec4(vColor, texColor.a);
-        }
-      `,
-      vertexColors: true,
-      transparent: false,
-    }),
-    []
-  );
 
   // Memoize star attributes with selective picking sensitivity
   const { positions, colors, sizes, pickingSizes, starData, pickingColors } =

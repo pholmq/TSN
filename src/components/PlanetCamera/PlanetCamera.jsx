@@ -47,7 +47,6 @@ export default function PlanetCamera() {
   const planetSettings = getSetting(planetCameraTarget);
   const planetRadiusInUnits = planetSettings?.actualSize || 0.00426;
   const planetRadiusKm = unitsToKm(planetRadiusInUnits);
-  console.log("planet camera " + planetRadiusKm);
 
   useLayoutEffect(() => {
     // Reset previous target's opacity if it exists
@@ -166,7 +165,6 @@ export default function PlanetCamera() {
     latAxisRef.current.rotation.x = latToRad(planCamLat);
     longAxisRef.current.rotation.y = longToRad(planCamLong);
     camMountRef.current.position.y = kmToUnits(planCamHeight);
-    console.log("useEffect PlanetCamera planCamHeight: ", planCamHeight);
     planetCamRef.current.rotation.x = altToRad(planCamAngle);
     planetCamRef.current.rotation.y = dirToRad(planCamDirection);
     planetCamRef.current.fov = planCamFov;
