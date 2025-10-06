@@ -178,7 +178,17 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
         // Store metadata for mouseover
         starData.push({
-          name: s.N ? s.N : "HR " + s.HR,
+          // Show name and HIP, or just HIP, or just HR:
+          name: (() => {
+            if (s.N && s.HIP) {
+              return `${s.N} / HIP ${s.HIP}`;
+            } else if (s.HIP) {
+              return `HIP ${s.HIP}`;
+            } else if (s.HR) {
+              return `HR ${s.HR}`;
+            }
+            return "Unknown";
+          })(),
           HR: s.HR,
           magnitude: isNaN(magnitude) ? 5 : magnitude,
           colorTemp,
