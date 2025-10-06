@@ -276,8 +276,9 @@ const LevaUI = () => {
     // Only update actualPlanetSizes in the UI, don't touch planetCamera
     set2({
       "Actual planet sizes": actualPlanetSizes,
+      Orbits: orbits,
     });
-  }, [actualPlanetSizes, set2]);
+  }, [actualPlanetSizes, orbits, set2]);
 
   return (
     <>
