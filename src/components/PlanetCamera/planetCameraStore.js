@@ -19,7 +19,7 @@ export const usePlanetCameraStore = create((set) => ({
   planCamDirection: 0,
   setPlanCamDirection: (v) => set({ planCamDirection: v }),
 
-  planCamFov: 51,
+  planCamFov: 41,
   setPlanCamFov: (v) => set({ planCamFov: v }),
 
   planCamFar: 10000,
