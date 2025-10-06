@@ -155,10 +155,16 @@ export default function PlanetCamera() {
           });
         }
       }
+
+      if (!showGround) {
+        // Hide planet
+        targetObjRef.current.material.opacity = 0;
+        targetObjRef.current.material.needsUpdate = true;
+      }
     }
 
     planetCamRef.current.updateProjectionMatrix();
-  }, [planCamHeight, planetCamera, planetRadiusKm]);
+  }, [planCamHeight, planetCamera, planetRadiusKm, showGround]);
 
   useEffect(() => {
     if (!latAxisRef.current) return;

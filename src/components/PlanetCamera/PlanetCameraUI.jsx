@@ -135,7 +135,7 @@ const PlanetCameraUI = () => {
         options: ["Earth", "Moon", "Mars", "Sun", "Mercury", "Venus"],
         onChange: setPlanetCameraTarget,
       },
-      Ground: { value: showGround, onChange: setShowGround },
+      "Ground/Planet": { value: showGround, onChange: setShowGround },
       Location: {
         value: "-",
         options: Object.keys(cities),
@@ -182,7 +182,7 @@ const PlanetCameraUI = () => {
       "Height (km)": {
         value: surfaceHeight,
         hint: "Height above planet surface in km",
-        max: 10000,
+        max: 30000,
         min: 0,
         step: 1,
         onChange: (value) => setPlanCamHeight(value + planetRadiusKm),

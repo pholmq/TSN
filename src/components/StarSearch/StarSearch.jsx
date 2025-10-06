@@ -191,15 +191,6 @@ export default function StarSearch() {
               />
               <strong>{hrHipString}</strong>
             </div>
-            {/* <div>
-              <strong>RA:</strong> {selectedStar.RA || "N/A"}
-            </div>
-            <div>
-              <strong>Dec:</strong> {selectedStar.Dec || "N/A"}
-            </div> */}
-            {/* <div>
-              <strong>Mag:</strong> {selectedStar.Mag || "N/A"}
-            </div> */}
           </div>
         )}
       </div>
