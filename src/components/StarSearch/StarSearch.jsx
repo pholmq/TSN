@@ -29,6 +29,7 @@ export default function StarSearch() {
   const indexedStars = starsData.map((star) => ({
     ...star,
     HR_display: star.HR ? `HR ${star.HR}` : null,
+    HIP_display: star.HIP ? `HIP ${star.HIP}` : null,
   }));
 
   const handleChange = (e) => {
@@ -44,29 +45,47 @@ export default function StarSearch() {
     const lower = value.toLowerCase();
     let filtered = [];
 
+    // Check for explicit HR number search (starts with "hr ")
     if (lower.startsWith("hr ")) {
       const hrQuery = value.slice(3).trim();
       filtered = indexedStars.filter((star) => star.HR && star.HR === hrQuery);
-    } else {
+    }
+    // Check for explicit HIP number search (starts with "hip ")
+    else if (lower.startsWith("hip ")) {
+      const hipQuery = value.slice(4).trim();
+      filtered = indexedStars.filter(
+        (star) => star.HIP && star.HIP === hipQuery
+      );
+    }
+    // General search across name, HR, and HIP
+    else {
       const nameMatches = indexedStars.filter((star) =>
         star.N ? star.N.toLowerCase().includes(lower) : false
       );
 
-      const hrDigits = value.replace(/\D/g, "");
+      const digits = value.replace(/\D/g, "");
 
       let hrMatches = [];
+      let hipMatches = [];
 
       if (lower === "hr") {
         hrMatches = indexedStars.filter(
           (star) => star.HR || (star.N && star.N.toLowerCase().includes("hr"))
         );
-      } else if (hrDigits) {
+      } else if (lower === "hip") {
+        hipMatches = indexedStars.filter(
+          (star) => star.HIP || (star.N && star.N.toLowerCase().includes("hip"))
+        );
+      } else if (digits) {
         hrMatches = indexedStars.filter(
-          (star) => star.HR && star.HR.includes(hrDigits)
+          (star) => star.HR && star.HR.includes(digits)
+        );
+        hipMatches = indexedStars.filter(
+          (star) => star.HIP && star.HIP.includes(digits)
         );
       }
 
-      const all = [...nameMatches, ...hrMatches];
+      const all = [...nameMatches, ...hrMatches, ...hipMatches];
       const unique = Array.from(new Set(all));
       filtered = unique;
     }
@@ -76,7 +95,17 @@ export default function StarSearch() {
 
   const handleSelect = (star) => {
     setSelectedStarHR(star.HR);
-    setQuery(star.N || star.HR_display);
+    let displayText;
+    if (star.N && star.HIP) {
+      displayText = `${star.N} / HIP ${star.HIP}`;
+    } else if (star.HIP) {
+      displayText = `HIP ${star.HIP}`;
+    } else if (star.HR) {
+      displayText = `HR ${star.HR}`;
+    } else {
+      displayText = "Unknown";
+    }
+    setQuery(displayText);
     setResults([]);
   };
 
@@ -89,9 +118,14 @@ export default function StarSearch() {
 
   const hrHipString = useMemo(() => {
     if (!selectedStar) return "N/A";
-    const hr = selectedStar.HR ? `HR ${selectedStar.HR}` : null;
-    const hip = selectedStar.HIP ? `HIP ${selectedStar.HIP}` : null;
-    return hr && hip ? `${hr} / ${hip}` : hr || hip || "N/A";
+    if (selectedStar.N && selectedStar.HIP) {
+      return `${selectedStar.N} / HIP ${selectedStar.HIP}`;
+    } else if (selectedStar.HIP) {
+      return `HIP ${selectedStar.HIP}`;
+    } else if (selectedStar.HR) {
+      return `HR ${selectedStar.HR}`;
+    }
+    return "Unknown";
   }, [selectedStar]);
 
   // Create crosshair texture once
@@ -108,14 +142,13 @@ export default function StarSearch() {
           zIndex: 1000,
           width: "310px",
           opacity: 0.8,
-          // hidden: { !runIntro },
         }}
       >
         <input
           type="text"
           value={query}
           onChange={handleChange}
-          placeholder="Search stars by name or HR number"
+          placeholder="Search stars by name/number"
           style={{
             fontSize: "18px",
             color: "#ffffff",
@@ -128,7 +161,6 @@ export default function StarSearch() {
             width: "100%",
             boxSizing: "border-box",
           }}
-          // For placeholder styling, you would need to use CSS for ::placeholder
           className="starSearch-input"
         />
 
@@ -146,23 +178,30 @@ export default function StarSearch() {
               padding: 0,
             }}
           >
-            {results.map((star, index) => (
-              <li
-                key={index}
-                onClick={() => handleSelect(star)}
-                style={{
-                  padding: "10px",
-                  color: "#fff",
-                  fontSize: "18px", // << bigger text
-                  cursor: "pointer",
-                  borderBottom: "1px solid #444",
-                }}
-              >
-                {star.N
-                  ? `${star.N} / ${star.HR_display || ""}`
-                  : star.HR_display}
-              </li>
-            ))}
+            {results.map((star, index) => {
+              const parts = [];
+              if (star.N) parts.push(star.N);
+              if (star.HIP_display) parts.push(star.HIP_display);
+              if (star.HR_display) parts.push(star.HR_display);
+              const displayText =
+                parts.length > 0 ? parts.join(" / ") : "Unknown";
+
+              return (
+                <li
+                  key={index}
+                  onClick={() => handleSelect(star)}
+                  style={{
+                    padding: "10px",
+                    color: "#fff",
+                    fontSize: "18px",
+                    cursor: "pointer",
+                    borderBottom: "1px solid #444",
+                  }}
+                >
+                  {displayText}
+                </li>
+              );
+            })}
           </ul>
         )}
         {/* Selected star info */}
@@ -191,15 +230,6 @@ export default function StarSearch() {
               />
               <strong>{hrHipString}</strong>
             </div>
-            {/* <div>
-              <strong>RA:</strong> {selectedStar.RA || "N/A"}
-            </div>
-            <div>
-              <strong>Dec:</strong> {selectedStar.Dec || "N/A"}
-            </div> */}
-            {/* <div>
-              <strong>Mag:</strong> {selectedStar.Mag || "N/A"}
-            </div> */}
           </div>
         )}
       </div>

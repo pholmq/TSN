@@ -67,7 +67,7 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const tilt = s.tilt || 0;
   const tiltb = s.tiltb || 0;
 
-  // Hide label if this planet is the active planet camera target
+  // Hide label and hoverObj if this planet is the active planet camera target
   const showLabel = visible && !(planetCamera && s.name === planetCameraTarget);
 
   return (
@@ -80,7 +80,7 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
         <PolarLine visible={visible} />
       )}
       {showLabel && <NameLabel s={s} />}
-      {visible && <HoverObj s={s} />}
+      {showLabel && <HoverObj s={s} />}
       <group ref={planetRef} scale={planetScale}>
         <mesh name={name} visible={visible} ref={planetRef}>
           <sphereGeometry args={[size, 256, 256]} />
