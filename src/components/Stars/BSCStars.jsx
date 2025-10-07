@@ -90,7 +90,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       // Create a Vector3 and transform to world space
       const pos = new THREE.Vector3(x, y, z);
       pickingPointsRef.current.localToWorld(pos);
-      console.log("Selected star position:", pos);
+      // console.log("Selected star position:", pos);
 
       setSelectedStarPosition(pos);
     } else {

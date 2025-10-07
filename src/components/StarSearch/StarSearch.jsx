@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import starsData from "../../settings/BSC.json";
 import { useStore } from "../../store";
 import createCrosshairTexture from "../../utils/createCrosshairTexture";
+import * as THREE from "three";
 
 export default function StarSearch() {
   const [query, setQuery] = useState("");
@@ -11,6 +12,8 @@ export default function StarSearch() {
   const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const runIntro = useStore((s) => s.runIntro);
+
+  const cameraControlsRef = useStore((s) => s.cameraControlsRef);
 
   //setSelectedStarHR(null) on component mount
   useEffect(() => {
@@ -107,6 +110,32 @@ export default function StarSearch() {
     }
     setQuery(displayText);
     setResults([]);
+
+    // Rotate camera around target to view star
+    setTimeout(() => {
+      const starPos = useStore.getState().selectedStarPosition;
+      if (!starPos || !cameraControlsRef?.current) return;
+
+      const controls = cameraControlsRef.current;
+      const target = new THREE.Vector3();
+      controls.getTarget(target);
+
+      const currentDist = controls.camera.position.distanceTo(target);
+
+      // Direction from target to star
+      const toStar = starPos.clone().sub(target).normalize();
+
+      // Offset downward so star appears in upper part of screen
+      const up = new THREE.Vector3(0, 1, 0);
+      const offset = up.multiplyScalar(currentDist * 0.09); // Adjust 0.3 for more/less offset
+
+      const newPos = target
+        .clone()
+        .add(toStar.multiplyScalar(currentDist))
+        .sub(offset);
+
+      controls.setPosition(newPos.x, newPos.y, newPos.z, true);
+    }, 100);
   };
 
   // Derive star info from selectedStarHR

@@ -149,6 +149,9 @@ export const useStore = create((set) => ({
       newMap.set(hr, { position, name });
       return { labeledStarPositions: newMap };
     }),
+
+  cameraControlsRef: null,
+  setCameraControlsRef: (ref) => set({ cameraControlsRef: ref }),
 }));
 
 export const usePosStore = create((set) => ({
