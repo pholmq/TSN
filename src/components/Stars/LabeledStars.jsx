@@ -5,6 +5,7 @@ import { useStore } from "../../store";
 export const LABELED_STARS = [
   "Polaris",
   "Sirius",
+  "Procyon",
   "Deneb Algedi",
   "Betelgeuse",
   "Rigel",
@@ -16,7 +17,9 @@ export const LABELED_STARS = [
   "Aldebaran",
   "Antares",
   "Arcturus",
+  "Achernar",
   "Polaris Australis",
+  "Hadar",
 ];
 
 export default function LabeledStars() {

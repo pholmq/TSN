@@ -433,7 +433,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
       const pos = new THREE.Vector3(x, y, z);
       pickingPointsRef.current.localToWorld(pos);
-      console.log("Labeled star:", bscStar.N, "position:", pos);
 
       let displayName =
         bscStar.N || (bscStar.HIP ? `HIP ${bscStar.HIP}` : `HR ${bscStar.HR}`);
