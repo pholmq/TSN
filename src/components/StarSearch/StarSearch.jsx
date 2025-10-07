@@ -127,8 +127,8 @@ export default function StarSearch() {
 
       // Offset downward so star appears in upper part of screen
       const up = new THREE.Vector3(0, 1, 0);
-      const offset = up.multiplyScalar(currentDist * 0.09); // Adjust 0.3 for more/less offset
-
+      // const offset = up.multiplyScalar(currentDist * 0.001); // Adjust 0.3 for more/less offset
+      const offset = up.multiplyScalar(currentDist * 0); // Adjust 0.3 for more/less offset
       const newPos = target
         .clone()
         .add(toStar.multiplyScalar(currentDist))
