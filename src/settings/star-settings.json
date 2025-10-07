@@ -1,27 +1,5 @@
 [
   {
-    "name": "Polaris",
-    "type": "star",
-    "colorTemp": 6450,
-    "visible": true,
-    "magnitude": 2.09,
-    "ra": "02h 31m 48.7s",
-    "dec": "+89° 15′ 51″",
-    "distLy": 432.57,
-    "HR": "424"
-  },
-  {
-    "name": "Sirius",
-    "type": "star",
-    "colorTemp": 9750,
-    "visible": true,
-    "magnitude": -1.09,
-    "ra": "06h 45m 08.9s",
-    "dec": "-16° 42′ 58″",
-    "distLy": 8.6,
-    "HR": "2491"
-  },
-  {
     "name": "Proxima Centauri",
     "type": "star",
     "colorTemp": 5800,
@@ -31,72 +9,7 @@
     "dec": "-62°40'46.1",
     "distLy": 4.24
   },
-  {
-    "name": "Deneb Algedi",
-    "type": "star",
-    "colorTemp": 8750,
-    "visible": true,
-    "magnitude": 2.94,
-    "ra": "21h 47m 02.4s",
-    "dec": "-16° 07′ 38″",
-    "distLy": 38.7,
-    "HR": "8322"
-  },
-  {
-    "name": "Vega",
-    "type": "star",
-    "colorTemp": 7001,
-    "visible": true,
-    "magnitude": 0.09,
-    "ra": "18h 36m 56.3s",
-    "dec": "+38° 47′ 01″",
-    "distLy": 25.04,
-    "HR": "7001"
-  },
-  {
-    "name": "Thuban",
-    "type": "star",
-    "colorTemp": 7001,
-    "visible": true,
-    "magnitude": 3.65,
-    "ra": "14h 04m 23.3s",
-    "dec": "+64° 22'33",
-    "distLy": 303,
-    "HR": "5337"
-  },
-  {
-    "name": "Capella",
-    "type": "star",
-    "colorTemp": 5500,
-    "visible": true,
-    "magnitude": 0.24,
-    "ra": "05h 16m42.1s",
-    "dec": " +45°59'50.2",
-    "distLy": 42.8,
-    "HR": "1708"
-  },
-  {
-    "name": "Altair",
-    "type": "star",
-    "colorTemp": 7600,
-    "visible": true,
-    "magnitude": 0.76,
-    "ra": "19h 50m 46.9s",
-    "dec": "+08° 52' 05.9″",
-    "distLy": 16.73,
-    "HR": "7557"
-  },
-  {
-    "name": "Arcturus",
-    "type": "star",
-    "colorTemp": 4286,
-    "visible": true,
-    "magnitude": -0.05,
-    "ra": "14h 15m 39.7s",
-    "dec": "+19° 10' 56.0″",
-    "distLy": 36.7,
-    "HR": "5459"
-  },
+
   {
     "name": "Barnard's star",
     "type": "star",
@@ -118,16 +31,5 @@
     "dec": "+57° 42' 03.2″",
     "distLy": 13.07,
     "HR": "8555"
-  },
-  {
-    "name": "Polaris Australis",
-    "type": "star",
-    "colorTemp": 7500,
-    "visible": true,
-    "magnitude": 5.47,
-    "ra": "21h 08m 46.2s",
-    "dec": "-88° 57' 23″",
-    "distLy": 294,
-    "HR": "7228"
   }
 ]

@@ -20,6 +20,14 @@ export default function OrbitCamera() {
   const targetObjRef = useRef(null);
   const target = new Vector3();
 
+  const setCameraControlsRef = useStore((s) => s.setCameraControlsRef);
+
+  useEffect(() => {
+    if (controlsRef.current) {
+      setCameraControlsRef(controlsRef);
+    }
+  }, [controlsRef.current, setCameraControlsRef]);
+
   useEffect(() => {
     // Event handler function for mousedown
     const handleMouseDown = (event) => {
@@ -51,7 +59,6 @@ export default function OrbitCamera() {
       controlsRef.current.setPosition(0, 2200, 0);
     }
   }, [resetClicked, runIntro]);
-
 
   useFrame(() => {
     if (cameraFollow) {

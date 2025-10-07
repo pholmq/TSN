@@ -14,6 +14,7 @@ import StarsHelpersMenu from "./components/Menus/StarsHelpersMenu";
 import PosController from "./components/PosController";
 import Positions from "./components/Menus/Positions";
 import Stars from "./components/Stars/Stars";
+import LabeledStars from "./components/Stars/LabeledStars";
 // import BSCStars from "./components/Stars/BSCStars";
 import BSCStarsH from "./components/Stars/BSCStarsHandler";
 import Zodiac from "./components/Helpers/Zodiac";
@@ -125,6 +126,7 @@ const TSNext = () => {
           <SolarSystem />
           <PlotSolarSystem />
           <Stars />
+          <LabeledStars />
           {BSCStarsOn && <BSCStarsH />}
           {BSCStarsOn && !isTouchDev && <HighlightSelectedStar />}
           <Zodiac />
