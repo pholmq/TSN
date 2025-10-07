@@ -3,11 +3,14 @@ import { Html } from "@react-three/drei";
 import { useRef, useMemo } from "react";
 import starsData from "../../settings/BSC.json";
 
+import { LABELED_STARS } from "../Stars/LabeledStars";
+
 const CROSSHAIR_SIZE = 40; // px
 
 export default function HighlightSelectedStar() {
   const position = useStore((s) => s.selectedStarPosition);
   const selectedStarHR = useStore((s) => s.selectedStarHR);
+  const showLabels = useStore((s) => s.showLabels);
   const portalRef = useRef(document.body);
 
   // Get the selected star data and compute the display name
@@ -26,6 +29,19 @@ export default function HighlightSelectedStar() {
       return `HR ${star.HR}`;
     }
     return "Unknown";
+  }, [selectedStarHR]);
+
+  const isLabeledStar = useMemo(() => {
+    if (!selectedStarHR) return false;
+    const star = starsData.find((s) => s.HR?.toString() === selectedStarHR);
+    if (!star) return false;
+
+    return LABELED_STARS.some(
+      (query) =>
+        (star.N && star.N.toLowerCase() === query.toLowerCase()) ||
+        star.HIP === query ||
+        star.HR === query
+    );
   }, [selectedStarHR]);
 
   if (!position) return null;
@@ -48,12 +64,12 @@ export default function HighlightSelectedStar() {
         }}
       >
         {/* Star name label above the crosshair */}
-        {starName && (
+        {starName && !(showLabels && isLabeledStar) && (
           <div
             className="name-label"
             style={{
               position: "absolute",
-              top: "-25px",
+              top: "-5px",
               left: "50%",
               transform: "translateX(-50%)",
             }}
@@ -62,18 +78,6 @@ export default function HighlightSelectedStar() {
           </div>
         )}
 
-        {/* Top arm */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: "50%",
-            width: "4px", // thicker
-            height: "30%", // shorter arm
-            background: "yellow",
-            transform: "translateX(-50%)",
-          }}
-        />
         {/* Bottom arm */}
         <div
           style={{

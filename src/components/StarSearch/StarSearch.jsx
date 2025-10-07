@@ -148,6 +148,7 @@ export default function StarSearch() {
           type="text"
           value={query}
           onChange={handleChange}
+          onClick={(e) => e.target.select()}
           placeholder="Search stars by name/number"
           style={{
             fontSize: "18px",

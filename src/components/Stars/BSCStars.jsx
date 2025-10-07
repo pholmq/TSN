@@ -15,6 +15,8 @@ import colorTemperature2rgb from "../../utils/colorTempToRGB";
 
 import { pointShaderMaterial, pickingShaderMaterial } from "./starShaders";
 
+import { LABELED_STARS } from "./LabeledStars";
+
 function moveModel(plotObjects, plotPos) {
   plotObjects.forEach((pObj) => {
     pObj.orbitRef.current.rotation.y =
@@ -62,9 +64,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
   const planetCamera = useStore((s) => s.planetCamera);
 
+  const setLabeledStarPosition = useStore((s) => s.setLabeledStarPosition);
+
   useEffect(() => {
     //Used by StarSearch
-    // if (!starData || !starData.length) return;
     if (selectedStarHR && starData.length > 0 && pointsRef.current) {
       const star = starData.find(
         (s) => parseInt(s.HR) === parseInt(selectedStarHR)
@@ -87,6 +90,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       // Create a Vector3 and transform to world space
       const pos = new THREE.Vector3(x, y, z);
       pickingPointsRef.current.localToWorld(pos);
+      console.log("Selected star position:", pos);
 
       setSelectedStarPosition(pos);
     } else {
@@ -397,6 +401,46 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       };
     }
   }, [pickingPointsRef.current, pickingScene.current]);
+
+  useEffect(() => {
+    if (starData.length === 0 || !pickingPointsRef.current) return;
+
+    LABELED_STARS.forEach((query) => {
+      const bscIndex = bscSettings.findIndex(
+        (s) =>
+          (s.N && s.N.toLowerCase() === query.toLowerCase()) ||
+          s.HIP === query ||
+          s.HR === query
+      );
+
+      if (bscIndex === -1) return;
+
+      const bscStar = bscSettings[bscIndex];
+
+      // Now find it the SAME way StarSearch does
+      const star = starData.find(
+        (s) => parseInt(s.HR) === parseInt(bscStar.HR)
+      );
+      if (!star) return;
+
+      const starIndex = star.index;
+
+      const positions =
+        pickingPointsRef.current.geometry.attributes.position.array;
+      const x = positions[starIndex * 3];
+      const y = positions[starIndex * 3 + 1];
+      const z = positions[starIndex * 3 + 2];
+
+      const pos = new THREE.Vector3(x, y, z);
+      pickingPointsRef.current.localToWorld(pos);
+      console.log("Labeled star:", bscStar.N, "position:", pos);
+
+      let displayName =
+        bscStar.N || (bscStar.HIP ? `HIP ${bscStar.HIP}` : `HR ${bscStar.HR}`);
+
+      setLabeledStarPosition(bscStar.HR, pos, displayName);
+    });
+  }, [starData, setLabeledStarPosition, plotObjects]);
 
   return (
     <>

@@ -141,6 +141,14 @@ export const useStore = create((set) => ({
 
   showHelp: false,
   setShowHelp: (v) => set({ showHelp: v }),
+
+  labeledStarPositions: new Map(),
+  setLabeledStarPosition: (hr, position, name) =>
+    set((state) => {
+      const newMap = new Map(state.labeledStarPositions);
+      newMap.set(hr, { position, name });
+      return { labeledStarPositions: newMap };
+    }),
 }));
 
 export const usePosStore = create((set) => ({
