@@ -101,6 +101,8 @@ export default function StarSearch() {
     let displayText;
     if (star.N && star.HIP) {
       displayText = `${star.N} / HIP ${star.HIP}`;
+    } else if (star.N && star.HR) {
+      displayText = `${star.N} / HR ${star.HR}`;
     } else if (star.HIP) {
       displayText = `HIP ${star.HIP}`;
     } else if (star.HR) {
@@ -151,6 +153,8 @@ export default function StarSearch() {
     if (!selectedStar) return "N/A";
     if (selectedStar.N && selectedStar.HIP) {
       return `${selectedStar.N} / HIP ${selectedStar.HIP}`;
+    } else if (selectedStar.N && selectedStar.HR) {
+      return `${selectedStar.N} / HR ${selectedStar.HR}`;
     } else if (selectedStar.HIP) {
       return `HIP ${selectedStar.HIP}`;
     } else if (selectedStar.HR) {

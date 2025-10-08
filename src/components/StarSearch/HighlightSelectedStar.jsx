@@ -23,6 +23,8 @@ export default function HighlightSelectedStar() {
     // Apply the same naming logic: Name + HIP, or just HIP, or just HR
     if (star.N && star.HIP) {
       return `${star.N} / HIP ${star.HIP}`;
+    } else if (star.N && star.HR) {
+      return `${star.N} / HR ${star.HR}`;
     } else if (star.HIP) {
       return `HIP ${star.HIP}`;
     } else if (star.HR) {
