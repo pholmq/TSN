@@ -101,6 +101,8 @@ export default function StarSearch() {
     let displayText;
     if (star.N && star.HIP) {
       displayText = `${star.N} / HIP ${star.HIP}`;
+    } else if (star.N && star.HR) {
+      displayText = `${star.N} / HR ${star.HR}`;
     } else if (star.HIP) {
       displayText = `HIP ${star.HIP}`;
     } else if (star.HR) {
@@ -122,17 +124,19 @@ export default function StarSearch() {
 
       const currentDist = controls.camera.position.distanceTo(target);
 
-      // Direction from target to star
-      const toStar = starPos.clone().sub(target).normalize();
+      // Direction from star to target
+      const starToTarget = target.clone().sub(starPos).normalize();
 
-      // Offset downward so star appears in upper part of screen
-      const up = new THREE.Vector3(0, 1, 0);
-      // const offset = up.multiplyScalar(currentDist * 0.001); // Adjust 0.3 for more/less offset
-      const offset = up.multiplyScalar(currentDist * 0); // Adjust 0.3 for more/less offset
-      const newPos = target
+      // Base position on line
+      const basePos = target
         .clone()
-        .add(toStar.multiplyScalar(currentDist))
-        .sub(offset);
+        .add(starToTarget.multiplyScalar(currentDist));
+
+      // Offset downward so star appears higher
+      const up = new THREE.Vector3(0, 1, 0);
+      const offset = up.multiplyScalar(currentDist * -0.07); // Adjust 0.2 for vertical position
+
+      const newPos = basePos.sub(offset);
 
       controls.setPosition(newPos.x, newPos.y, newPos.z, true);
     }, 100);
@@ -149,6 +153,8 @@ export default function StarSearch() {
     if (!selectedStar) return "N/A";
     if (selectedStar.N && selectedStar.HIP) {
       return `${selectedStar.N} / HIP ${selectedStar.HIP}`;
+    } else if (selectedStar.N && selectedStar.HR) {
+      return `${selectedStar.N} / HR ${selectedStar.HR}`;
     } else if (selectedStar.HIP) {
       return `HIP ${selectedStar.HIP}`;
     } else if (selectedStar.HR) {
