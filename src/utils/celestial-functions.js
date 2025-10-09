@@ -1,5 +1,59 @@
 import { Vector3, Spherical, Scene } from "three";
 
+// Convert RA/Dec to Altitude/Azimuth for observer at given lat/lon/time
+export function raDecToAltAz(ra, dec, lat, lon, time) {
+  const toRadians = (deg) => deg * (Math.PI / 180);
+  const toDegrees = (rad) => rad * (180 / Math.PI);
+
+  // Convert inputs to radians
+  const raRad = toRadians(ra * 15); // RA is in hours, convert to degrees first
+  const decRad = toRadians(dec);
+  const latRad = toRadians(lat);
+  const lonRad = toRadians(lon);
+
+  // Calculate Julian Date
+  const date = new Date(time);
+  const jd = date.getTime() / 86400000 + 2440587.5;
+
+  // Calculate GMST (Greenwich Mean Sidereal Time)
+  const t = (jd - 2451545.0) / 36525;
+  let gmst =
+    280.46061837 +
+    360.98564736629 * (jd - 2451545.0) +
+    0.000387933 * t * t -
+    (t * t * t) / 38710000;
+  gmst = gmst % 360;
+
+  // Calculate LST (Local Sidereal Time)
+  let lst = (gmst + toDegrees(lonRad)) % 360;
+  const lstRad = toRadians(lst);
+
+  // Calculate Hour Angle
+  const ha = lstRad - raRad;
+
+  // Calculate Altitude
+  const sinAlt =
+    Math.sin(decRad) * Math.sin(latRad) +
+    Math.cos(decRad) * Math.cos(latRad) * Math.cos(ha);
+  const alt = Math.asin(sinAlt);
+
+  // Calculate Azimuth
+  const cosAz =
+    (Math.sin(decRad) - Math.sin(alt) * Math.sin(latRad)) /
+    (Math.cos(alt) * Math.cos(latRad));
+  let az = Math.acos(cosAz);
+
+  // Adjust azimuth for quadrant
+  if (Math.sin(ha) > 0) {
+    az = 2 * Math.PI - az;
+  }
+
+  return {
+    altitude: toDegrees(alt),
+    azimuth: toDegrees(az),
+  };
+}
+
 export function azEl2RaDec(Az, El, lat, lon, time) {
   const date = new Date(time);
 

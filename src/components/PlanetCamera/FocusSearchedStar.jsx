@@ -1,94 +1,73 @@
-// src/components/PlanetCamera/FocusSearchedStar.jsx
-
 import { useEffect } from "react";
-import { useThree } from "@react-three/fiber";
 import { useStore } from "../../store";
 import { usePlanetCameraStore } from "./planetCameraStore";
-import * as THREE from "three";
+import starsData from "../../settings/BSC.json";
+import { raDecToAltAz } from "../../utils/celestial-functions";
+import {
+  posToDate,
+  posToTime,
+  dateTimeToPos,
+} from "../../utils/time-date-functions";
 
 export default function FocusSearchedStar() {
-  const { scene } = useThree();
-  const selectedStarPosition = useStore((s) => s.selectedStarPosition);
-  const planetCamera = useStore((s) => s.planetCamera);
   const selectedStarHR = useStore((s) => s.selectedStarHR);
+  const planetCamera = useStore((s) => s.planetCamera);
+  const posRef = useStore((s) => s.posRef);
 
   useEffect(() => {
-    if (!selectedStarPosition || !selectedStarHR) return;
+    if (!selectedStarHR || !planetCamera) return;
 
+    // Get star's RA/Dec from BSC.json
+    const star = starsData.find((s) => s.HR === selectedStarHR);
+    if (!star || !star.RA || !star.Dec) return;
+
+    // Parse RA (hours) and Dec (degrees)
+    const raMatch = star.RA.match(/(\d+)h\s*(\d+)m\s*([\d.]+)s/);
+    const decMatch = star.Dec.match(/([+-]?\d+)°\s*(\d+)′\s*([\d.]+)″/);
+
+    if (!raMatch || !decMatch) return;
+
+    const raHours =
+      parseInt(raMatch[1]) +
+      parseInt(raMatch[2]) / 60 +
+      parseFloat(raMatch[3]) / 3600;
+
+    const decSign = star.Dec.startsWith("-") ? -1 : 1;
+    const decDegrees =
+      decSign *
+      (Math.abs(parseInt(decMatch[1])) +
+        parseInt(decMatch[2]) / 60 +
+        parseFloat(decMatch[3]) / 3600);
+
+    // Get observer position
+    const planCamLat = usePlanetCameraStore.getState().planCamLat;
+    const planCamLong = usePlanetCameraStore.getState().planCamLong;
+
+    // Get current simulation time
+    const currentDate = posToDate(posRef.current);
+    const currentTime = posToTime(posRef.current);
+    const dateTime = `${currentDate}T${currentTime}Z`;
+
+    // Convert RA/Dec to Alt/Az
+    const { altitude, azimuth } = raDecToAltAz(
+      raHours,
+      decDegrees,
+      planCamLat,
+      planCamLong,
+      dateTime
+    );
+
+    console.log("Star:", star.N || star.HR, "Alt:", altitude, "Az:", azimuth);
+
+    // Set camera angles
     const setPlanCamAngle = usePlanetCameraStore.getState().setPlanCamAngle;
     const setPlanCamDirection =
       usePlanetCameraStore.getState().setPlanCamDirection;
 
-    const planetCamRef = scene.getObjectByName("PlanetCamera");
-    if (!planetCamRef) return;
-
-    // Get camera world position
-    const camWorldPos = new THREE.Vector3();
-    planetCamRef.getWorldPosition(camWorldPos);
-
-    // Get planet position
-    let planetRef = planetCamRef;
-    while (planetRef.parent && planetRef.parent.type !== "Scene") {
-      planetRef = planetRef.parent;
-    }
-    const planetPos = new THREE.Vector3();
-    planetRef.getWorldPosition(planetPos);
-
-    // Get lat and long axis groups (level 2 and 3 from camera)
-    const latAxisRef = planetCamRef.parent?.parent;
-    const longAxisRef = latAxisRef?.parent;
-
-    if (!latAxisRef || !longAxisRef) {
-      console.error("Could not find lat/long axes");
-      return;
-    }
-
-    // Direction to star from camera
-    const toStar = selectedStarPosition.clone().sub(camWorldPos).normalize();
-
-    // Local up (radial from planet center)
-    const localUp = camWorldPos.clone().sub(planetPos).normalize();
-
-    // Calculate altitude (angle above horizon)
-    const altitudeRad = Math.asin(toStar.dot(localUp));
-    const altitudeDeg = THREE.MathUtils.radToDeg(altitudeRad);
-
-    // For azimuth, use longitude axis Z direction as north reference
-    const northRef = new THREE.Vector3(0, 0, 1);
-    longAxisRef.localToWorld(northRef);
-    northRef.sub(longAxisRef.getWorldPosition(new THREE.Vector3())).normalize();
-
-    // Project star direction onto horizontal plane
-    const toStarHorizontal = toStar
-      .clone()
-      .sub(localUp.clone().multiplyScalar(toStar.dot(localUp)))
-      .normalize();
-
-    // Project north onto horizontal plane
-    const northHorizontal = northRef
-      .clone()
-      .sub(localUp.clone().multiplyScalar(northRef.dot(localUp)))
-      .normalize();
-
-    // East is perpendicular to north
-    const eastHorizontal = new THREE.Vector3()
-      .crossVectors(localUp, northHorizontal)
-      .normalize();
-
-    // Calculate azimuth angle from north
-    const azimuthRad = Math.atan2(
-      toStarHorizontal.dot(eastHorizontal),
-      toStarHorizontal.dot(northHorizontal)
-    );
-    const azimuthDeg = THREE.MathUtils.radToDeg(azimuthRad);
-
-    console.log("Altitude:", altitudeDeg, "Azimuth:", azimuthDeg);
-
-    setPlanCamAngle(altitudeDeg);
-    setPlanCamDirection(azimuthDeg);
-  }, [selectedStarPosition, selectedStarHR, scene]);
+    setPlanCamAngle(altitude);
+    setPlanCamDirection(azimuth);
+  }, [selectedStarHR, planetCamera, posRef]);
 
   if (!planetCamera) return null;
-
   return null;
 }
