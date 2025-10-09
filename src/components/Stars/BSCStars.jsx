@@ -247,18 +247,18 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     canvas.addEventListener("mousemove", handleHover);
 
     // Debug toggle
-    const toggleDebug = (event) => {
-      if (event.key === "p") {
-        debugPicking.current = !debugPicking.current;
-        console.log("Debug picking scene:", debugPicking.current);
-      }
-    };
-    window.addEventListener("keydown", toggleDebug);
+    // const toggleDebug = (event) => {
+    //   if (event.key === "p") {
+    //     debugPicking.current = !debugPicking.current;
+    //     console.log("Debug picking scene:", debugPicking.current);
+    //   }
+    // };
+    // window.addEventListener("keydown", toggleDebug);
 
     return () => {
       window.removeEventListener("resize", updateRenderTarget);
       canvas.removeEventListener("mousemove", handleHover);
-      window.removeEventListener("keydown", toggleDebug);
+      // window.removeEventListener("keydown", toggleDebug);
       if (pickingRenderTarget.current) {
         pickingRenderTarget.current.dispose();
       }
