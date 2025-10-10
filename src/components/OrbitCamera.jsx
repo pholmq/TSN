@@ -22,6 +22,8 @@ export default function OrbitCamera() {
 
   const setCameraControlsRef = useStore((s) => s.setCameraControlsRef);
 
+  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+
   useEffect(() => {
     if (controlsRef.current) {
       setCameraControlsRef(controlsRef);
@@ -70,7 +72,7 @@ export default function OrbitCamera() {
   return (
     <>
       <PerspectiveCamera
-        makeDefault={!planetCamera}
+        makeDefault={runIntro || (!planetCamera && !cameraTransitioning)}
         name="OrbitCamera"
         ref={cameraRef}
         position={[-30000000, 10000000, 0]}

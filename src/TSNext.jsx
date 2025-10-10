@@ -29,6 +29,7 @@ import StarSearch from "./components/StarSearch/StarSearch";
 import HighlightSelectedStar from "./components/StarSearch/HighlightSelectedStar";
 import Help from "./components/Help/Help";
 import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
+import TransitionCamera from "./components/PlanetCamera/TransitionCamera";
 
 const isTouchDevice = () => {
   return (
@@ -117,6 +118,8 @@ const TSNext = () => {
           <SuspenseCompleteSignal onComplete={handleSuspenseComplete} />
           <OrbitCamera />
           <PlanetCamera />
+          <TransitionCamera />
+
           <FocusSearchedStar />
           <IntroText />
           <AnimationController />

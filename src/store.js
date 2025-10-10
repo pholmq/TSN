@@ -152,6 +152,10 @@ export const useStore = create((set) => ({
 
   cameraControlsRef: null,
   setCameraControlsRef: (ref) => set({ cameraControlsRef: ref }),
+
+  cameraTransitioning: false,
+  setCameraTransitioning: (transitioning) =>
+    set({ cameraTransitioning: transitioning }),
 }));
 
 export const usePosStore = create((set) => ({

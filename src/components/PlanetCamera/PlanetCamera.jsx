@@ -30,6 +30,9 @@ export default function PlanetCamera() {
   const { scene } = useThree();
   const planetCamera = useStore((s) => s.planetCamera);
   const planetCameraHelper = useStore((s) => s.planetCameraHelper);
+
+  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+
   const planetCameraTarget = usePlanetCameraStore((s) => s.planetCameraTarget);
 
   const planCamLat = usePlanetCameraStore((s) => s.planCamLat);
@@ -91,7 +94,7 @@ export default function PlanetCamera() {
   }, [showGround]);
 
   useEffect(() => {
-    if (!latAxisRef.current) return;
+    if (!latAxisRef.current || cameraTransitioning) return; // Skip opacity changes during transition
 
     if (targetObjRef.current && targetObjRef.current.material) {
       // Dynamic transition based on planet radius - relative scaling
@@ -212,7 +215,7 @@ export default function PlanetCamera() {
                   name="PlanetCamera"
                   rotation={[0, Math.PI, 0]}
                   near={0.00007}
-                  makeDefault={planetCamera}
+                  makeDefault={planetCamera && !cameraTransitioning}
                   ref={planetCamRef}
                   rotation-order={"YXZ"}
                 />
