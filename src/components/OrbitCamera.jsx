@@ -2,7 +2,7 @@ import { useRef, useLayoutEffect, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import { PerspectiveCamera, CameraControls } from "@react-three/drei";
-import { useStore } from "../store";
+import { useStore, useSettingsStore } from "../store";
 import CameraAnimation from "./Intro/CameraAnimation";
 
 export default function OrbitCamera() {
@@ -61,6 +61,22 @@ export default function OrbitCamera() {
       controlsRef.current.setPosition(0, 2200, 0);
     }
   }, [resetClicked, runIntro]);
+
+  useEffect(() => {
+    if (!planetCamera) {
+      // Ensure all planets are visible when returning to orbit view
+      const { settings } = useSettingsStore.getState();
+      settings.forEach((setting) => {
+        if (setting.planetCamera === true) {
+          const planetObj = scene.getObjectByName(setting.name);
+          if (planetObj && planetObj.material) {
+            planetObj.material.opacity = 1;
+            planetObj.material.needsUpdate = true;
+          }
+        }
+      });
+    }
+  }, [planetCamera]);
 
   useFrame(() => {
     if (cameraFollow) {

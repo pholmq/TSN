@@ -62,6 +62,8 @@ const TSNext = () => {
   const toggleShowLevaMenu = useStore((s) => s.toggleShowLevaMenu);
   const BSCStarsOn = useStore((s) => s.BSCStars);
   const searchStars = useStore((s) => s.searchStars);
+  const planetCamera = useStore((s) => s.planetCamera);
+  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
 
   const isTouchDev = isTouchDevice();
 
@@ -117,7 +119,7 @@ const TSNext = () => {
         <Suspense fallback={null}>
           <SuspenseCompleteSignal onComplete={handleSuspenseComplete} />
           <OrbitCamera />
-          <PlanetCamera />
+          {planetCamera && !cameraTransitioning && <PlanetCamera />}
           <TransitionCamera />
 
           <FocusSearchedStar />

@@ -24,6 +24,8 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     (state) => state.planetCameraTarget
   );
 
+  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+
   const { texture, isLoading } = s.texture
     ? useTextureLoader(s.texture)
     : { texture: null, isLoading: false };
@@ -68,7 +70,9 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const tiltb = s.tiltb || 0;
 
   // Hide label and hoverObj if this planet is the active planet camera target
-  const showLabel = visible && !(planetCamera && s.name === planetCameraTarget);
+  const showLabel =
+    visible &&
+    !(planetCamera && !cameraTransitioning && name === planetCameraTarget);
 
   return (
     <group

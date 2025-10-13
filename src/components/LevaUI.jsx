@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useControls, useCreateStore, Leva, folder, levaStore } from "leva";
 import { useStore, useTraceStore, useSettingsStore } from "../store";
 import { speedFactOpts } from "../utils/time-date-functions";
@@ -66,6 +66,7 @@ const LevaUI = () => {
     sethScale,
     searchStars,
     setSearchStars,
+    cameraTransitioning,
   } = useStore();
 
   const {
@@ -279,6 +280,35 @@ const LevaUI = () => {
       Orbits: orbits,
     });
   }, [actualPlanetSizes, orbits, set2]);
+
+  const prevTransitioningRef = useRef(false);
+  useEffect(() => {
+    // Change actual planet sizes immediately when planet camera is checked
+    if (planetCamera) {
+      setActualPlanetSizes(true);
+    } else {
+      setActualPlanetSizes(false);
+    }
+  }, [planetCamera]);
+
+  useEffect(() => {
+    // Detect when transition completes (was true, now false)
+    if (
+      prevTransitioningRef.current === true &&
+      cameraTransitioning === false &&
+      planetCamera
+    ) {
+      setOrbits(false);
+    }
+
+    // Restore orbits when exiting planet camera
+    if (!planetCamera) {
+      setOrbits(true);
+    }
+
+    // Update ref for next render
+    prevTransitioningRef.current = cameraTransitioning;
+  }, [planetCamera, cameraTransitioning]);
 
   return (
     <>
