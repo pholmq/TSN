@@ -74,26 +74,26 @@ export default function TransitionCamera() {
       startFov.current = orbitCam.fov;
 
       // DEBUG: Show planet camera actual orientation
-      const debugGroup1 = new THREE.Group();
-      debugGroup1.name = "debugPlanetCam";
-      debugGroup1.position.copy(endPos);
-      debugGroup1.quaternion.copy(endQuat.current);
+      // const debugGroup1 = new THREE.Group();
+      // debugGroup1.name = "debugPlanetCam";
+      // debugGroup1.position.copy(endPos);
+      // debugGroup1.quaternion.copy(endQuat.current);
 
-      const forwardArrow1 = new THREE.ArrowHelper(
-        new THREE.Vector3(0, 0, -1),
-        new THREE.Vector3(0, 0, 0),
-        10,
-        0x0000ff // Blue = forward
-      );
-      const upArrow1 = new THREE.ArrowHelper(
-        new THREE.Vector3(0, 1, 0),
-        new THREE.Vector3(0, 0, 0),
-        10,
-        0x00ff00 // Green = up
-      );
-      debugGroup1.add(forwardArrow1);
-      debugGroup1.add(upArrow1);
-      scene.add(debugGroup1);
+      // const forwardArrow1 = new THREE.ArrowHelper(
+      //   new THREE.Vector3(0, 0, -1),
+      //   new THREE.Vector3(0, 0, 0),
+      //   10,
+      //   0x0000ff // Blue = forward
+      // );
+      // const upArrow1 = new THREE.ArrowHelper(
+      //   new THREE.Vector3(0, 1, 0),
+      //   new THREE.Vector3(0, 0, 0),
+      //   10,
+      //   0x00ff00 // Green = up
+      // );
+      // debugGroup1.add(forwardArrow1);
+      // debugGroup1.add(upArrow1);
+      // scene.add(debugGroup1);
 
       // Calculate approach (your existing code)
       const planetCamWorldDirection = new Vector3();
@@ -116,18 +116,18 @@ export default function TransitionCamera() {
       const midPoint = new Vector3().lerpVectors(startPos, approachPoint, 0.5);
 
       // DEBUG: Show calculated end position and approach direction
-      const debugGroup2 = new THREE.Group();
-      debugGroup2.name = "debugCalculated";
-      debugGroup2.position.copy(endPos);
+      // const debugGroup2 = new THREE.Group();
+      // debugGroup2.name = "debugCalculated";
+      // debugGroup2.position.copy(endPos);
 
-      const approachArrow = new THREE.ArrowHelper(
-        approachDirection.normalize(),
-        new THREE.Vector3(0, 0, 0),
-        10,
-        0xff0000 // Red = approach direction
-      );
-      debugGroup2.add(approachArrow);
-      scene.add(debugGroup2);
+      // const approachArrow = new THREE.ArrowHelper(
+      //   approachDirection.normalize(),
+      //   new THREE.Vector3(0, 0, 0),
+      //   10,
+      //   0xff0000 // Red = approach direction
+      // );
+      // debugGroup2.add(approachArrow);
+      // scene.add(debugGroup2);
 
       curveRef.current = new CubicBezierCurve3(
         startPos,
@@ -163,6 +163,12 @@ export default function TransitionCamera() {
     if (cameraTransitioning && curveRef.current && transitionCamRef.current) {
       progress.current += delta / duration;
 
+      //WIP Since the animation doesent work yet we end premature
+      if (progress.current >= 0.5) {
+        progress.current = 1;
+        setCameraTransitioning(false);
+      }
+      //
       if (progress.current >= 1) {
         progress.current = 1;
         setCameraTransitioning(false);
