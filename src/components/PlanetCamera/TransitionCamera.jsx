@@ -4,6 +4,7 @@ import { PerspectiveCamera } from "@react-three/drei";
 import { Vector3, Quaternion, CubicBezierCurve3 } from "three";
 import { useStore } from "../../store";
 import { usePlanetCameraStore } from "./planetCameraStore";
+import * as THREE from "three";
 
 export default function TransitionCamera() {
   const transitionCamRef = useRef(null);
@@ -19,8 +20,8 @@ export default function TransitionCamera() {
   const planetCameraTarget = usePlanetCameraStore((s) => s.planetCameraTarget);
 
   const startQuat = useRef(new Quaternion());
+  const endQuat = useRef(new Quaternion());
   const startFov = useRef(15);
-  const duration = 8; // seconds
 
   useEffect(() => {
     if (planetCamera) {
@@ -50,7 +51,7 @@ export default function TransitionCamera() {
 
       if (!orbitCam || !planetCam || !planetObj) return;
 
-      // FORCE planet visible - reset any previous opacity changes
+      // FORCE planet visible
       if (planetObj.material) {
         planetObj.material.transparent = true;
         planetObj.material.opacity = 1;
@@ -67,41 +68,71 @@ export default function TransitionCamera() {
       const planetCenter = new Vector3();
       planetObj.getWorldPosition(planetCenter);
 
-      // Save orientation and FOV
+      // Save orientations
       orbitCam.getWorldQuaternion(startQuat.current);
+      planetCam.getWorldQuaternion(endQuat.current);
       startFov.current = orbitCam.fov;
 
-      // Calculate bezier curve that arcs around the planet
-      // Control points are positioned to create an arc around planet center
-      const toStart = new Vector3().subVectors(startPos, planetCenter);
-      const toEnd = new Vector3().subVectors(endPos, planetCenter);
+      // DEBUG: Show planet camera actual orientation
+      const debugGroup1 = new THREE.Group();
+      debugGroup1.name = "debugPlanetCam";
+      debugGroup1.position.copy(endPos);
+      debugGroup1.quaternion.copy(endQuat.current);
 
-      // Create control points that maintain altitude above planet
-      const startDist = toStart.length();
-      const endDist = toEnd.length();
-      const avgDist = (startDist + endDist) / 2;
+      const forwardArrow1 = new THREE.ArrowHelper(
+        new THREE.Vector3(0, 0, -1),
+        new THREE.Vector3(0, 0, 0),
+        10,
+        0x0000ff // Blue = forward
+      );
+      const upArrow1 = new THREE.ArrowHelper(
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, 0, 0),
+        10,
+        0x00ff00 // Green = up
+      );
+      debugGroup1.add(forwardArrow1);
+      debugGroup1.add(upArrow1);
+      scene.add(debugGroup1);
 
-      // First control point: 1/3 of the way, maintaining altitude
-      const control1Dir = new Vector3()
-        .lerpVectors(toStart, toEnd, 0.33)
+      // Calculate approach (your existing code)
+      const planetCamWorldDirection = new Vector3();
+      planetCam.getWorldDirection(planetCamWorldDirection);
+
+      const approachDirection = planetCamWorldDirection.clone().negate();
+      const endDist = new Vector3().subVectors(endPos, planetCenter).length();
+      const approachAltitude = endDist * 2;
+      const approachDistance = endDist * 4;
+
+      const approachPoint = endPos
+        .clone()
+        .add(approachDirection.multiplyScalar(approachDistance));
+      const heightOffset = approachAltitude - endDist;
+      const planetUp = new Vector3()
+        .subVectors(endPos, planetCenter)
         .normalize();
-      const control1 = control1Dir
-        .multiplyScalar(Math.max(startDist, avgDist * 1.2))
-        .add(planetCenter);
+      approachPoint.add(planetUp.multiplyScalar(heightOffset));
 
-      // Second control point: 2/3 of the way, maintaining altitude
-      const control2Dir = new Vector3()
-        .lerpVectors(toStart, toEnd, 0.67)
-        .normalize();
-      const control2 = control2Dir
-        .multiplyScalar(Math.max(endDist, avgDist * 1.2))
-        .add(planetCenter);
+      const midPoint = new Vector3().lerpVectors(startPos, approachPoint, 0.5);
 
-      // Create bezier curve
+      // DEBUG: Show calculated end position and approach direction
+      const debugGroup2 = new THREE.Group();
+      debugGroup2.name = "debugCalculated";
+      debugGroup2.position.copy(endPos);
+
+      const approachArrow = new THREE.ArrowHelper(
+        approachDirection.normalize(),
+        new THREE.Vector3(0, 0, 0),
+        10,
+        0xff0000 // Red = approach direction
+      );
+      debugGroup2.add(approachArrow);
+      scene.add(debugGroup2);
+
       curveRef.current = new CubicBezierCurve3(
         startPos,
-        control1,
-        control2,
+        midPoint,
+        approachPoint,
         endPos
       );
 
@@ -113,8 +144,20 @@ export default function TransitionCamera() {
 
       lookAtTargetRef.current.copy(planetCenter);
       progress.current = 0;
+
+      // Cleanup
+      return () => {
+        const debug1 = scene.getObjectByName("debugPlanetCam");
+        const debug2 = scene.getObjectByName("debugCalculated");
+        if (debug1) scene.remove(debug1);
+        if (debug2) scene.remove(debug2);
+      };
     }
   }, [cameraTransitioning]);
+
+  const duration = 10; // seconds
+
+  const blendStartQuat = useRef(new Quaternion());
 
   useFrame((state, delta) => {
     if (cameraTransitioning && curveRef.current && transitionCamRef.current) {
@@ -125,18 +168,46 @@ export default function TransitionCamera() {
         setCameraTransitioning(false);
       }
 
-      // Easing function (cubic out)
-      const eased = 1 - Math.pow(1 - progress.current, 3);
+      const eased = 1 - Math.pow(1 - progress.current, 8);
 
       // Get point on curve
       const point = curveRef.current.getPoint(eased);
       transitionCamRef.current.position.copy(point);
 
-      // Keep looking at planet center during approach
-      transitionCamRef.current.lookAt(lookAtTargetRef.current);
+      if (progress.current < 0.95) {
+        // First 95%: look at planet with gradually rotating UP
+        const defaultUp = new Vector3(0, 1, 0);
+        const planetCamUp = new Vector3(0, 1, 0).applyQuaternion(
+          endQuat.current
+        );
+
+        const blendedUp = new Vector3().lerpVectors(
+          defaultUp,
+          planetCamUp,
+          eased
+        );
+
+        transitionCamRef.current.up.copy(blendedUp);
+        transitionCamRef.current.lookAt(lookAtTargetRef.current);
+
+        // Save quaternion at 95% for smooth blend
+        if (progress.current >= 0.94) {
+          blendStartQuat.current.copy(transitionCamRef.current.quaternion);
+        }
+      } else {
+        // Last 5%: gentle blend to final orientation
+        const blendProgress = (progress.current - 0.95) / 0.05;
+        const currentQuat = new Quaternion();
+
+        currentQuat.slerpQuaternions(
+          blendStartQuat.current,
+          endQuat.current,
+          blendProgress
+        );
+        transitionCamRef.current.quaternion.copy(currentQuat);
+      }
     }
   });
-
   if (!cameraTransitioning) return null;
 
   return (
