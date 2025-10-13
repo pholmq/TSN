@@ -2,7 +2,7 @@ import { useRef, useLayoutEffect, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import { PerspectiveCamera, CameraControls } from "@react-three/drei";
-import { useStore } from "../store";
+import { useStore, useSettingsStore } from "../store";
 import CameraAnimation from "./Intro/CameraAnimation";
 
 export default function OrbitCamera() {
@@ -21,6 +21,8 @@ export default function OrbitCamera() {
   const target = new Vector3();
 
   const setCameraControlsRef = useStore((s) => s.setCameraControlsRef);
+
+  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -60,6 +62,22 @@ export default function OrbitCamera() {
     }
   }, [resetClicked, runIntro]);
 
+  useEffect(() => {
+    if (!planetCamera) {
+      // Ensure all planets are visible when returning to orbit view
+      const { settings } = useSettingsStore.getState();
+      settings.forEach((setting) => {
+        if (setting.planetCamera === true) {
+          const planetObj = scene.getObjectByName(setting.name);
+          if (planetObj && planetObj.material) {
+            planetObj.material.opacity = 1;
+            planetObj.material.needsUpdate = true;
+          }
+        }
+      });
+    }
+  }, [planetCamera]);
+
   useFrame(() => {
     if (cameraFollow) {
       targetObjRef.current.getWorldPosition(target);
@@ -70,7 +88,7 @@ export default function OrbitCamera() {
   return (
     <>
       <PerspectiveCamera
-        makeDefault={!planetCamera}
+        makeDefault={runIntro || (!planetCamera && !cameraTransitioning)}
         name="OrbitCamera"
         ref={cameraRef}
         position={[-30000000, 10000000, 0]}
