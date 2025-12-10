@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState, useEffect } from "react";
-import { useThree, useFrame } from "@react-three/fiber";
+import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Vector3, Quaternion } from "three";
 import { usePlotStore } from "../../store";
@@ -44,10 +44,13 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const starGroupRef = useRef();
   const pickingPointsRef = useRef();
   const pickingRenderTarget = useRef();
-  const pickingScene = useRef();
+  
+  // FIX: Use useState to create a stable scene instance that persists across renders
+  const [pickingScene] = useState(() => new THREE.Scene());
+
   const colorMap = useRef(new Map());
   const [hoveredPoint, setHoveredPoint] = useState(null);
-  const { scene, raycaster, camera, pointer, gl } = useThree();
+  const { scene, camera, gl } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
   const lastHoverTime = useRef(0);
   const currentHoverIndex = useRef(null);
@@ -203,10 +206,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         });
       });
 
-      // console.log(
-      //   `Generated ${colorMap.current.size} unique colors for ${bscSettings.length} stars`
-      // );
-
       return {
         positions: new Float32Array(positions),
         colors: new Float32Array(colors),
@@ -231,9 +230,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     pickingRenderTarget.current = new THREE.WebGLRenderTarget(1, 1);
     pickingRenderTarget.current.samples = 0; // Disable anti-aliasing
 
-    // Create picking scene
-    pickingScene.current = new THREE.Scene();
-
     // Update render target size
     const updateRenderTarget = () => {
       const { width, height } = gl.domElement;
@@ -246,19 +242,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     const canvas = gl.domElement;
     canvas.addEventListener("mousemove", handleHover);
 
-    // Debug toggle
-    // const toggleDebug = (event) => {
-    //   if (event.key === "p") {
-    //     debugPicking.current = !debugPicking.current;
-    //     console.log("Debug picking scene:", debugPicking.current);
-    //   }
-    // };
-    // window.addEventListener("keydown", toggleDebug);
-
     return () => {
       window.removeEventListener("resize", updateRenderTarget);
       canvas.removeEventListener("mousemove", handleHover);
-      // window.removeEventListener("keydown", toggleDebug);
       if (pickingRenderTarget.current) {
         pickingRenderTarget.current.dispose();
       }
@@ -282,11 +268,12 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
     gl.setRenderTarget(pickingRenderTarget.current);
     gl.clear();
-    gl.render(pickingScene.current, camera);
+    // FIX: Use pickingScene directly (not .current)
+    gl.render(pickingScene, camera);
     gl.setRenderTarget(null);
 
     if (debugPicking.current) {
-      gl.render(pickingScene.current, camera);
+      gl.render(pickingScene, camera);
     }
 
     const pixelBuffer = new Uint8Array(4);
@@ -312,7 +299,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         // Get the position attribute
         const positions =
           pickingPointsRef.current.geometry.attributes.position.array;
-        // console.log(positions);
+        
         // Get the specific point's local position
         const x = positions[starIndex * 3];
         const y = positions[starIndex * 3 + 1];
@@ -383,24 +370,26 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       starGroupRef.current.quaternion.copy(worldQuaternion);
 
       // Update picking scene transformation
-      if (pickingPointsRef.current && pickingScene.current) {
+      // FIX: Use pickingScene directly (not .current)
+      if (pickingPointsRef.current && pickingScene) {
         pickingPointsRef.current.position.copy(worldPosition);
         pickingPointsRef.current.quaternion.copy(worldQuaternion);
       }
     }
-  }, [plotObjects]);
+  }, [plotObjects, pickingScene]);
 
   // Add picking points to picking scene
   useEffect(() => {
-    if (pickingPointsRef.current && pickingScene.current) {
-      pickingScene.current.add(pickingPointsRef.current);
+    // FIX: Use pickingScene directly (not .current) and check for existence
+    if (pickingPointsRef.current && pickingScene) {
+      pickingScene.add(pickingPointsRef.current);
       return () => {
-        if (pickingScene.current && pickingPointsRef.current) {
-          pickingScene.current.remove(pickingPointsRef.current);
+        if (pickingScene && pickingPointsRef.current) {
+          pickingScene.remove(pickingPointsRef.current);
         }
       };
     }
-  }, [pickingPointsRef.current, pickingScene.current]);
+  }, [pickingPointsRef.current, pickingScene]);
 
   useEffect(() => {
     if (starData.length === 0 || !pickingPointsRef.current) return;
@@ -417,7 +406,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
       const bscStar = bscSettings[bscIndex];
 
-      // Now find it the SAME way StarSearch does
       const star = starData.find(
         (s) => parseInt(s.HR) === parseInt(bscStar.HR)
       );
