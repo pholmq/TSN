@@ -1,6 +1,7 @@
 {
   "name": "the_tychosium",
   "version": "1.0.0",
+  "author": "Patrik Holmqvist",
   "description": "The Tychosium www.tychos.space",
   "homepage": "./",
   "main": "main.js",
