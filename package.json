@@ -2,10 +2,8 @@
   "name": "the_tychosium",
   "version": "1.0.0",
   "description": "The Tychosium www.tychos.space",
-  "keywords": [
-    "react"
-  ],
-  "main": "src/index.jsx",
+  "homepage": "./",
+  "main": "main.js",
   "dependencies": {
     "@react-three/drei": "9.102.6",
     "@react-three/fiber": "8.15.19",
@@ -26,14 +24,20 @@
   "devDependencies": {
     "@types/react": "18.2.38",
     "@types/react-dom": "18.2.15",
+    "concurrently": "^9.2.1",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
     "eslint": "^8.57.1",
-    "prettier": "^2.8.8"
+    "prettier": "^2.8.8",
+    "wait-on": "^9.0.3"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "electron:dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "dist": "npm run build && electron-builder"
   },
   "browserslist": [
     ">0.2%",
