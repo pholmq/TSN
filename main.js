@@ -11,6 +11,9 @@ function createWindow() {
     },
   });
 
+  //Remove menu
+  win.setMenu(null);
+
   // FIX: Use loadURL for dev server, but loadFile for production build.
   // This avoids path errors on Windows.
   if (process.env.ELECTRON_START_URL) {

@@ -61,7 +61,7 @@
       "buildResources": "assets"
     },
     "win": {
-      "target": "nsis"
+      "target": "portable"
     }
   }
 }
