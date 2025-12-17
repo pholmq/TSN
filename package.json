@@ -45,5 +45,23 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "build": {
+    "appId": "com.tychosium.app",
+    "extends": null,
+    "extraMetadata": {
+      "main": "main.js"
+    },
+    "files": [
+      "build/**/*",
+      "main.js",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  }
 }
