@@ -24,7 +24,7 @@ function createWindow() {
   }
 
   //open console (for debugging only)
-  win.webContents.openDevTools();
+ // win.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);

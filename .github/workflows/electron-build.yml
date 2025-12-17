@@ -4,6 +4,9 @@ on:
   push:
     branches: [ electron ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
