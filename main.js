@@ -11,11 +11,14 @@ function createWindow() {
     },
   });
 
-  // In production, load the built React app. 
-  // In development, you can load localhost (optional logic).
-  const startUrl = process.env.ELECTRON_START_URL || `file://${path.join(__dirname, './build/index.html')}`;
-  
-  win.loadURL(startUrl);
+  // FIX: Use loadURL for dev server, but loadFile for production build.
+  // This avoids path errors on Windows.
+  if (process.env.ELECTRON_START_URL) {
+    win.loadURL(process.env.ELECTRON_START_URL);
+  } else {
+    // path.join correctly handles slashes for Windows/Mac/Linux automatically
+    win.loadFile(path.join(__dirname, 'build', 'index.html'));
+  }
 }
 
 app.whenReady().then(createWindow);
