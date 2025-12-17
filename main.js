@@ -19,6 +19,9 @@ function createWindow() {
     // path.join correctly handles slashes for Windows/Mac/Linux automatically
     win.loadFile(path.join(__dirname, 'build', 'index.html'));
   }
+
+  //open console (for debugging only)
+  win.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
