@@ -12,7 +12,12 @@ export default function PlanetRings({
 }) {
   const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
 
-  const [ringTexture] = useTexture([texture]);
+  // Create the correct path. In production Electron, this needs to be relative.
+  const texturePath = process.env.PUBLIC_URL 
+    ? process.env.PUBLIC_URL + '/' + texture 
+    : texture;
+
+  const [ringTexture] = useTexture([texturePath]);
 
   // Configure texture
   ringTexture.wrapS = ringTexture.wrapT = THREE.RepeatWrapping;

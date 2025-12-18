@@ -38,6 +38,9 @@ const IntroQuote = ({ duration = 10000, fade = 2000 }) => {
     {
       text: "“The path to enlightenment is paved with celestial wonders. We must follow it relentlessly.” — Tycho Brahe",
     },
+    {
+      text: "“He who goes slowly goes safely — and goes far” — old Italian adage",
+    },
   ];
 
   useEffect(() => {
