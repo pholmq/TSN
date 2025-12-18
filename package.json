@@ -4,7 +4,7 @@
     "type": "git",
     "url": "git+https://github.com/pholmq/TSN.git"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Patrik Holmqvist",
   "description": "The Tychosium www.tychos.space",
   "homepage": "./",
