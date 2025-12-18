@@ -55,7 +55,7 @@ export default function IntroText() {
     <>
       {/* Main Title Text: "The TYCHOSIUM" */}
       <Text3D
-        font="/fonts/Cambria_Regular.json"
+        font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
         position={titlePosition}
         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
         size={20}
@@ -81,7 +81,7 @@ export default function IntroText() {
       {/* Conditional Warning Text for Touch Devices, positioned below the title */}
       {isTouchDevice && (
         <Text3D
-          font="/fonts/Cambria_Regular.json"
+        font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
           // Shifted position to be visually 'under' the main title (adjusting X coordinate)
           position={warningPos}
           rotation={[-Math.PI / 2, 0, -Math.PI / 2]}

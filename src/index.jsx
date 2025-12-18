@@ -1,6 +1,7 @@
-
 import { createRoot } from "react-dom/client";
-import TSNext from "./TSNext"
+import TSNext from "./TSNext";
 
-createRoot(window.root).render(<TSNext />);
+const container = document.getElementById("root");
+const root = createRoot(container);
 
+root.render(<TSNext />);
