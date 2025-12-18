@@ -111,11 +111,6 @@ const LevaUI = () => {
   const [, set2] = useControls(() => ({
     Controls: folder(
       {
-        Trace: {
-          label: "Trace On/Off",
-          value: trace,
-          onChange: setTrace,
-        },
         "Actual planet sizes": {
           value: actualPlanetSizes,
           onChange: setActualPlanetSizes,
@@ -152,8 +147,13 @@ const LevaUI = () => {
       { collapsed: false }
     ),
 
-    "Trace settings": folder(
+    "Trace": folder(
       {
+        TraceOnOff: {
+          label: "Trace On/Off",
+          value: trace,
+          onChange: setTrace,
+        },
         "Line width": {
           value: lineWidth,
           min: 0.5,

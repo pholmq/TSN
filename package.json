@@ -7,6 +7,7 @@
   "version": "1.0.1",
   "author": "Patrik Holmqvist",
   "description": "The Tychosium www.tychos.space",
+  "license": "GPL-2.0-or-only",
   "homepage": "./",
   "main": "main.js",
   "dependencies": {

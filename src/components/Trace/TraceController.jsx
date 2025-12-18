@@ -19,7 +19,7 @@ const TraceController = () => {
   //Mars should be on by default
   checkboxes.Mars = true;
 
-  const tracedPlanets = useControls("Trace settings", {
+  const tracedPlanets = useControls("Trace", {
     "Planets:": { value: "", editable: false },
     ...checkboxes,
   });
