@@ -40,7 +40,7 @@ Built with modern web technologies to ensure performance and accuracy, this proj
 
 ### 🎛️ Advanced Interaction
 * **Time Travel:** Jump to specific historical or future dates instantly.
-* **Perpetual calendar:** Julian/Gregorian dates and Supports Julian day.
+* **Perpetual calendar:** Gregorian dates and support for Astronomical Julian day.
 * **Variable Speed:** Control simulation speed from real-time up to millennial steps.
 * **Smart Search:** Search implementation to quickly locate stars by name/HR number.
 
@@ -51,7 +51,7 @@ Built with modern web technologies to ensure performance and accuracy, this proj
 This simulation is distinct from standard heliocentric visualizers. It implements the TYCHOS model, which proposes:
 * **Earth as Reference:** Earth remains relatively stationary at the center of the system.
 * **Binary System:** The Sun and Mars are binary companions.
-* **PVP Orbit:** The entire solar system rotates together with Earth in a specific pattern (Polaris-Vega-Polaris).
+* **PVP Orbit:** The entire solar system rotates together with Earth in the PVP-orbit (Polaris-Vega-Polaris).
 
 > 📖 **Learn more:** [tychos.space](https://www.tychos.space)
 
@@ -70,8 +70,6 @@ This project leverages the latest ecosystem for 3D web development.
 | **Effects** | [Postprocessing](https://github.com/pmndrs/postprocessing) | Bloom, glow, and visual effects |
 | **State** | [Zustand](https://github.com/pmndrs/zustand) | Global state management |
 | **GUI** | [Leva](https://github.com/pmndrs/leva) | Tweakable control panels |
-| **Search** | [Fuse.js](https://fusejs.io/) | Fuzzy search for star catalogs |
-| **Icons** | [React Icons](https://react-icons.github.io/react-icons/) | UI Iconography |
 
 ---
 
@@ -107,39 +105,7 @@ npm run build
 
 ```
 
-## 🎮 Usage & Controls
 
-### Navigation
-
-| Action | Control | Description |
-| :--- | :--- | :--- |
-| **Rotate** | `Left Mouse Drag` | Rotate view around the focus point |
-| **Zoom** | `Mouse Wheel` | Zoom in and out |
-| **Pan** | `Right Mouse Drag` | Pan the camera (if enabled) |
-| **Focus** | `Double Click` | Center camera on a clicked object |
-| **Context** | `Right Click` | Open menu for specific object |
-
-### Interface Tools
-
-* **Top Left (Search):** Type a star name (e.g., "Sirius") or HR number to locate it.
-* **Top Right (Controls):** Access the **Leva** panel to toggle visibility of orbits, labels, and helpers.
-* **Bottom Center (Time):**
-    * `Play/Pause`: Toggle time progression.
-    * `Slider`: Adjust simulation speed.
-    * `Date Picker`: Jump to a specific Gregorian date.
-
-### Special Modes
-
-#### 🌍 Planet Camera
-View the sky from the surface of any planet.
-1.  Open **Controls** -> **Camera**.
-2.  Switch to `Planet Camera`.
-3.  Adjust `Latitude`, `Longitude`, and `Height` to position your observer.
-
-#### 💫 Orbital Tracing
-1.  Open **Controls** -> **Trace**.
-2.  Enable tracing and select a target planet.
-3.  Hit **Play** to see the geometric path drawn in space.
 
 ---
 
@@ -163,7 +129,7 @@ src/
 │   └── star-settings.json      # Visual configuration for stars
 ├── utils/
 │   ├── celestial-functions.js  # Tychos model math & logic
-│   └── time-date-functions.js  # Julian Date conversions
+│   └── time-date-functions.js  # Julian Date conversions etc
 └── store.js             # Zustand store for global app state
 ```
 
@@ -175,13 +141,13 @@ You can customize the simulation logic by editing files in the `src/settings/` d
 
 * **`celestial-settings.json`**: Modify orbital speeds, distances, sizes, and starting positions for planets.
 * **`star-settings.json`**: Adjust the rendering scale, brightness, and colors of stars.
-* **`BSC.json`**: The raw data for the stars. *Note: This is a large file.*
+* **`BSC.json`**: The raw data for the stars.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! If you'd like to improve the physics engine, add new visual features, or optimize performance:
+Contributions are welcome! 
 
 1.  Fork the Project
 2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -200,5 +166,12 @@ This project is licensed under the **GNU General Public License v2.0** - see the
 ## 🙏 Acknowledgments
 
 * **Simon Shack** for the creation of the TYCHOS model.
+* **Astronomers and scientists throughout the ages** for trying to figure out the mysteries of our world. In particular Tycho Brahe.
 * **Yale University Observatory** for the Bright Star Catalog.
-* The open-source community behind **React Three Fiber**.
+* **The open-source community** behind **React Three Fiber** and so many other useful things.
+
+---
+
+## 🎁 Donations
+
+You can donate to this work by visiting [tychos.space](http://www.tychos.space) and selecting "Donate". Your gift is much appreciated since Simon Shack has devoted a decade on the Tychos research and since we currently receive no funds of any kind for this work.
