@@ -2,7 +2,9 @@ name: Build Electron App
 
 on:
   push:
-    branches: [ electron ]
+    branches: [ electron ]     # Only build when code lands on 'electron'
+  pull_request:
+    branches: [ electron ]     # Only build PRs targeting 'electron'
 
 permissions:
   contents: write

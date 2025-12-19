@@ -4,9 +4,10 @@
     "type": "git",
     "url": "git+https://github.com/pholmq/TSN.git"
   },
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Patrik Holmqvist",
   "description": "The Tychosium www.tychos.space",
+  "license": "GPL-2.0-or-only",
   "homepage": "./",
   "main": "main.js",
   "dependencies": {
