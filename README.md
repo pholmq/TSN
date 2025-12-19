@@ -40,7 +40,7 @@ Built with modern web technologies to ensure performance and accuracy, this proj
 
 ### 🎛️ Advanced Interaction
 * **Time Travel:** Jump to specific historical or future dates instantly.
-* **Perpetual calendar:** Julian/Gregorian dates and Supports Julian day.
+* **Perpetual calendar:** Gregorian dates and support for Astronomical Julian day.
 * **Variable Speed:** Control simulation speed from real-time up to millennial steps.
 * **Smart Search:** Search implementation to quickly locate stars by name/HR number.
 
@@ -51,7 +51,7 @@ Built with modern web technologies to ensure performance and accuracy, this proj
 This simulation is distinct from standard heliocentric visualizers. It implements the TYCHOS model, which proposes:
 * **Earth as Reference:** Earth remains relatively stationary at the center of the system.
 * **Binary System:** The Sun and Mars are binary companions.
-* **PVP Orbit:** The entire solar system rotates together with Earth in a specific pattern (Polaris-Vega-Polaris).
+* **PVP Orbit:** The entire solar system rotates together with Earth in the PVP-orbit (Polaris-Vega-Polaris).
 
 > 📖 **Learn more:** [tychos.space](https://www.tychos.space)
 
@@ -70,8 +70,6 @@ This project leverages the latest ecosystem for 3D web development.
 | **Effects** | [Postprocessing](https://github.com/pmndrs/postprocessing) | Bloom, glow, and visual effects |
 | **State** | [Zustand](https://github.com/pmndrs/zustand) | Global state management |
 | **GUI** | [Leva](https://github.com/pmndrs/leva) | Tweakable control panels |
-| **Search** | [Fuse.js](https://fusejs.io/) | Fuzzy search for star catalogs |
-| **Icons** | [React Icons](https://react-icons.github.io/react-icons/) | UI Iconography |
 
 ---
 
@@ -104,3 +102,76 @@ This project leverages the latest ecosystem for 3D web development.
 To create an optimized build for deployment:
 ```bash
 npm run build
+
+```
+
+
+
+---
+
+## 📂 Project Structure
+
+```
+src/
+├── components/
+│   ├── Intro/           # Intro animation and text
+│   ├── Helpers/         # Celestial sphere, grids, zodiac
+│   ├── HoverObj/        # Interaction logic for object selection
+│   ├── Menus/           # UI Menus for settings and effects
+│   ├── PlanetCamera/    # First-person surface view logic
+│   ├── Stars/           # Star rendering (InstancedMesh) & Data
+│   ├── Trace/           # Orbital path tracing logic
+│   ├── SolarSystem.jsx  # Main scene composition
+│   └── UserInterface.jsx# HUD and overlays
+├── settings/
+│   ├── BSC.json         # Bright Star Catalog Data
+│   ├── celestial-settings.json # Planet orbits and constants
+│   └── star-settings.json      # Visual configuration for stars
+├── utils/
+│   ├── celestial-functions.js  # Tychos model math & logic
+│   └── time-date-functions.js  # Julian Date conversions etc
+└── store.js             # Zustand store for global app state
+```
+
+---
+
+## 🔧 Configuration
+
+You can customize the simulation logic by editing files in the `src/settings/` directory:
+
+* **`celestial-settings.json`**: Modify orbital speeds, distances, sizes, and starting positions for planets.
+* **`star-settings.json`**: Adjust the rendering scale, brightness, and colors of stars.
+* **`BSC.json`**: The raw data for the stars.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! 
+
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the **GNU General Public License v2.0** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+* **Simon Shack** for the creation of the TYCHOS model.
+* **Astronomers and scientists throughout the ages** for trying to figure out the mysteries of our world. In particular Tycho Brahe.
+* **Yale University Observatory** for the Bright Star Catalog.
+* **The open-source community** behind **React Three Fiber** and so many other useful things.
+
+---
+
+## 🎁 Donations
+
+You can donate to this work by visiting [tychos.space](http://www.tychos.space) and selecting "Donate". Your gift is much appreciated since Simon Shack has devoted a decade on the Tychos research and since we currently receive no funds of any kind for this work.
