@@ -4,7 +4,7 @@ Increase the version number in package.json
 
 On GitHub Create a pull request with base: electron and compare: main
 
-When the pull request is created, the build will start in GitHub actions 
-and take about 15 minutes to complete. When finished and the request is merged
- there will be an unpublished release at https://github.com/pholmq/TSN/releases 
- that can be edited and published
+When the pull request is merged, the build will start in GitHub actions 
+and take about 15 minutes to complete. When finished there will be an
+unpublished release at https://github.com/pholmq/TSN/releases that can
+be edited and published
