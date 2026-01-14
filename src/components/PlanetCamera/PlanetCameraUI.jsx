@@ -180,10 +180,10 @@ const PlanetCameraUI = () => {
         },
       },
       "Height (km)": {
-        value: surfaceHeight,
+        value: 0,
         hint: "Height above planet surface in km",
         max: 30000,
-        min: 0,
+        min: -6000,
         step: 1,
         onChange: (value) => setPlanCamHeight(value + planetRadiusKm),
       },
