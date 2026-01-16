@@ -7,6 +7,7 @@ import {
 } from "../../utils/saveAndLoadSettings";
 
 const Ephimerides = () => {
+  const ephimerides = useStore((s) => s.ephimerides);
   const editSettings = useStore((s) => s.editSettings);
   const positions = usePosStore((s) => s.positions);
   const { settings, updateSetting, resetSettings } = useSettingsStore();
@@ -262,7 +263,7 @@ const Ephimerides = () => {
 
   return (
     <>
-      {editSettings && (
+      {ephimerides && (
         <div className="settings-div">
           <Leva
             store={levaSettingsStore}

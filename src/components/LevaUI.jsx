@@ -135,13 +135,16 @@ const LevaUI = () => {
         },
         "Search stars": {
           value: searchStars,
-          hint: "Keep unchecked for best performance",
           onChange: setSearchStars,
         },
         Positions: {
           value: showPositions,
           hint: "Keep unchecked for best performance",
           onChange: setShowPositions,
+        },
+        Ephimerides: {
+          value: ephimerides,
+          onChange: setEphimerides,
         },
       },
       { collapsed: false }
