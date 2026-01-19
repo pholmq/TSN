@@ -59,7 +59,7 @@ const LevaUI = () => {
     geoSphere,
     setGeoSphere,
     ephimerides,
-    setEphimerides,
+    setEphemerides,
     BSCStars,
     setBSCStars,
     hScale,
@@ -135,13 +135,16 @@ const LevaUI = () => {
         },
         "Search stars": {
           value: searchStars,
-          hint: "Keep unchecked for best performance",
           onChange: setSearchStars,
         },
         Positions: {
           value: showPositions,
           hint: "Keep unchecked for best performance",
           onChange: setShowPositions,
+        },
+        Ephemerides: {
+          value: ephimerides,
+          onChange: setEphemerides,
         },
       },
       { collapsed: false }
