@@ -22,6 +22,7 @@ const Ephemerides = () => {
     "Start Date": posToDate(posRef.current),
     "End Date": posToDate(posRef.current),
     "Step size": 1,
+    "\u{000D}": sDay, // Initialize with default step factor (Day)
   });
 
   const checkboxes = {};
@@ -42,11 +43,18 @@ const Ephemerides = () => {
     }
   });
 
-  const logEphemeridesData = (startDate, endDate, stepSize, checkedPlanets) => {
+  const logEphemeridesData = (
+    startDate,
+    endDate,
+    stepSize,
+    stepFactor,
+    checkedPlanets
+  ) => {
     console.log("--- Create Ephemerides Triggered ---");
     console.log("Start Date:", startDate);
     console.log("End Date:", endDate);
     console.log("Step Size:", stepSize);
+    console.log("Step Factor:", stepFactor);
     console.log("Checked Planets:", checkedPlanets);
   };
 
@@ -76,6 +84,7 @@ const Ephemerides = () => {
           formValues["Start Date"],
           formValues["End Date"],
           formValues["Step size"],
+          formValues["\u{000D}"], // Pass the step factor
           checkedPlanets
         );
 
@@ -119,6 +128,9 @@ const Ephemerides = () => {
       "\u{000D}": {
         value: sDay,
         options: speedFactOpts,
+        onChange: (v) => {
+          valuesRef.current["\u{000D}"] = v;
+        }, // Sync ref for the dropdown
       },
       ...checkboxes,
     },
