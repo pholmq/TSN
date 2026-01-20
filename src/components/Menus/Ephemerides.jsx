@@ -6,7 +6,7 @@ import {
   loadSettingsFromFile,
 } from "../../utils/saveAndLoadSettings";
 
-const Ephimerides = () => {
+const Ephemerides = () => {
   const ephimerides = useStore((s) => s.ephimerides);
   const editSettings = useStore((s) => s.editSettings);
   const positions = usePosStore((s) => s.positions);
@@ -294,4 +294,4 @@ const Ephimerides = () => {
   );
 };
 
-export default Ephimerides;
+export default Ephemerides;
