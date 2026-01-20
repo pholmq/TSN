@@ -100,7 +100,7 @@ const TSNext = () => {
       <div>
         <UserInterface />
         <Positions />
-        <Ephemerides/>
+        <Ephemerides />
         <EditSettings />
         <PlanetCameraUI />
         <StarDataPanel />
