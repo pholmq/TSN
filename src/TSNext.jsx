@@ -14,6 +14,7 @@ import StarsHelpersMenu from "./components/Menus/StarsHelpersMenu";
 import PosController from "./components/PosController";
 import Positions from "./components/Menus/Positions";
 import Ephemerides from "./components/Menus/Ephemerides";
+import EphController from "./components/EphController";
 import Stars from "./components/Stars/Stars";
 import LabeledStars from "./components/Stars/LabeledStars";
 // import BSCStars from "./components/Stars/BSCStars";
@@ -129,6 +130,7 @@ const TSNext = () => {
           <AnimationController />
           <PosController />
           <TraceController />
+          <EphController />
           <PlanetsPositionsMenu />
           <StarsHelpersMenu />
           <LightEffectsMenu />
