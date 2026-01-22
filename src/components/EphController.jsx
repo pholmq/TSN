@@ -10,13 +10,7 @@ import {
   sDay,
 } from "../utils/time-date-functions";
 import { getRaDecDistance } from "../utils/celestial-functions";
-
-function moveModel(plotObjects, plotPos) {
-  plotObjects.forEach((pObj) => {
-    pObj.orbitRef.current.rotation.y =
-      pObj.speed * plotPos - pObj.startPos * (Math.PI / 180);
-  });
-}
+import { movePlotModel } from "../utils/plotModelFunctions";
 
 const EphController = () => {
   const { scene } = useThree(); // Direct access to the scene
@@ -58,7 +52,7 @@ const EphController = () => {
     // Loop through time
     while (currentPos <= endPos && steps < MAX_STEPS) {
       // A. Move the simulation
-      moveModel(plotObjects, currentPos);
+      movePlotModel(plotObjects, currentPos);
 
       const currentDate = posToDate(currentPos);
       const currentTime = posToTime(currentPos);
