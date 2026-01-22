@@ -1,4 +1,4 @@
-import { Vector3, Spherical, Scene } from "three";
+import { Vector3, Spherical } from "three";
 
 // Convert RA/Dec to Altitude/Azimuth for observer at given lat/lon/time
 export function raDecToAltAz(ra, dec, lat, lon, time) {
@@ -186,6 +186,10 @@ export function getRaDecDistance(name, scene) {
     targetObject = scene.getObjectByName("Actual Moon");
   } else {
     targetObject = scene.getObjectByName(name);
+  }
+
+  if (!targetObject) {
+    throw new Error("getRaDecDistance: Unable to find object " + name);
   }
 
   targetObject.getWorldPosition(objectPos);
