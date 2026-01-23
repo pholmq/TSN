@@ -67,7 +67,7 @@ const Ephemerides = () => {
 
   useControls(
     {
-      Create: button(handleCreate),
+      Generate: button(handleCreate),
       "Start Date": {
         value: posToDate(posRef.current),
         onChange: (v) => {
