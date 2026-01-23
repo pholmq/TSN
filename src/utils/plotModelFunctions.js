@@ -7,22 +7,26 @@ export function movePlotModel(plotObjects, plotPos) {
   });
 }
 
-export function getRaDecDistancePlotModel(name, scene) {
+export function getPlotModelRaDecDistance(name, plotObjects, scene) {
   const objectPos = new Vector3();
   let targetObject;
 
   if (name === "Moon") {
-    targetObject = scene.getObjectByName("Actual Moon");
+    targetObject = plotObjects.find((p) => p.name === "Actual Moon");
   } else {
-    targetObject = scene.getObjectByName(name);
+    targetObject = plotObjects.find((p) => p.name === name);
+  }
+
+  if (!targetObject) {
+    throw new Error("Required objects not found in the scene.");
   }
 
   targetObject.getWorldPosition(objectPos);
 
-  return getRaDecDistanceFromPosition(objectPos, scene);
+  return getPlotRaDecDistanceFromPosition(objectPos, plotObjects, scene);
 }
 
-export function getRaDecDistanceFromPosition(position, scene) {
+export function getPlotRaDecDistanceFromPosition(position, plotObjects, scene) {
   // Reuse vectors and objects to avoid allocations
   const csPos = new Vector3();
   const sunPos = new Vector3();
@@ -33,8 +37,9 @@ export function getRaDecDistanceFromPosition(position, scene) {
   scene.updateMatrixWorld();
 
   // Get world positions for celestial sphere and sun
-  const celestialSphere = scene.getObjectByName("CelestialSphere");
-  const sun = scene.getObjectByName("Sun");
+  const earth = plotObjects.find((p) => p.name === "Earth");
+  const celestialSphere = earth.pivotRef.current;
+  const sun = plotObjects.find((p) => p.name === "Sun");
   const csLookAtObj = scene.getObjectByName("CSLookAtObj");
 
   if (!celestialSphere || !sun || !csLookAtObj) {

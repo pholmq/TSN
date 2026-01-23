@@ -19,6 +19,7 @@ const EphController = () => {
   const { trigger, params, resetTrigger } = useEphemeridesStore();
 
   const [done, setDone] = useState(true);
+  const objectPos = new Vector3();
 
   useEffect(() => {
     if (trigger && params) {
@@ -51,17 +52,18 @@ const EphController = () => {
 
     // Loop through time
     while (currentPos <= endPos && steps < MAX_STEPS) {
-      // A. Move the simulation
-      movePlotModel(plotObjects, currentPos);
-
       const currentDate = posToDate(currentPos);
       const currentTime = posToTime(currentPos);
+      // Move the plot model
+      movePlotModel(plotObjects, currentPos);
 
       // Calculate positions for each planet
       checkedPlanets.forEach((name) => {
-        // Now usage of scene.getObjectByName inside this function will work correctly
-        // because we are in the same context and have forced matrix updates.
-        const data = getRaDecDistance(name, scene);
+        // const plotObj = plotObjects.find((p) => p.name === name);
+
+        // plotObj.pivotRef.current.getWorldPosition(objectPos);
+
+        const data = getPlotModelRaDecDistance(name, plotObjects, scene);
 
         ephemeridesData[name].push({
           date: currentDate,
