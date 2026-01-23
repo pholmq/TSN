@@ -423,6 +423,24 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
       setLabeledStarPosition(bscStar.HR, pos, displayName);
     });
+
+    return () => {
+      LABELED_STARS.forEach((query) => {
+        const bscIndex = bscSettings.findIndex(
+          (s) =>
+            (s.N && s.N.toLowerCase() === query.toLowerCase()) ||
+            s.HIP === query ||
+            s.HR === query
+        );
+
+        if (bscIndex !== -1) {
+          const bscStar = bscSettings[bscIndex];
+          // Passing null removes the label from the store
+          setLabeledStarPosition(bscStar.HR, null); 
+        }
+      });
+    };
+
   }, [starData, setLabeledStarPosition, plotObjects]);
 
   return (
