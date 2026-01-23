@@ -1,95 +1,116 @@
-import { Vector3, Spherical } from "three";
+import { Vector3, Spherical, Object3D } from "three";
+// Make sure these are imported correctly from your utils
+import { radToRa, radToDec } from "../utils/celestial-functions";
 
 export function movePlotModel(plotObjects, plotPos) {
   plotObjects.forEach((pObj) => {
-    pObj.orbitRef.current.rotation.y =
-      pObj.speed * plotPos - pObj.startPos * (Math.PI / 180);
+    // Check if ref exists before accessing
+    if (pObj.orbitRef && pObj.orbitRef.current) {
+      pObj.orbitRef.current.rotation.y =
+        pObj.speed * plotPos - pObj.startPos * (Math.PI / 180);
+    }
   });
 }
 
-export function getPlotModelRaDecDistance(name, plotObjects, scene) {
-  const objectPos = new Vector3();
-  let targetObject;
-
+export function getPlotModelRaDecDistance(name, plotObjects) {
+  // 1. Handle Name Aliasing (Moon -> Actual Moon)
+  // We just determine the correct NAME here, then pass it on.
+  let targetName = name;
   if (name === "Moon") {
-    targetObject = plotObjects.find((p) => p.name === "Actual Moon");
-  } else {
-    targetObject = plotObjects.find((p) => p.name === name);
+    // Check if "Actual Moon" exists in the plotObjects, otherwise fallback to "Moon"
+    const hasActualMoon = plotObjects.some((p) => p.name === "Actual Moon");
+    if (hasActualMoon) {
+      targetName = "Actual Moon";
+    }
   }
 
-  if (!targetObject) {
-    throw new Error("Required objects not found in the scene.");
-  }
-
-  targetObject.getWorldPosition(objectPos);
-
-  return getPlotRaDecDistanceFromPosition(objectPos, plotObjects, scene);
+  // 2. Call the calculator with the Name
+  return getPlotRaDecDistanceFromPosition(targetName, plotObjects);
 }
 
-export function getPlotRaDecDistanceFromPosition(position, plotObjects, scene) {
-  // Reuse vectors and objects to avoid allocations
-  const csPos = new Vector3();
-  const sunPos = new Vector3();
-  const sphericalPos = new Spherical();
-  const lookAtDir = new Vector3(0, 0, 1);
+export function getPlotRaDecDistanceFromPosition(targetName, plotObjects) {
+  // 1. Find Earth and Sun
+  const earthObj = plotObjects.find((p) => p.name === "Earth");
+  const sunObj = plotObjects.find((p) => p.name === "Sun");
 
-  // Update the scene's matrix world once
-  scene.updateMatrixWorld();
+  // 2. Find Target
+  const targetObj = plotObjects.find((p) => p.name === targetName);
 
-  // Get world positions for celestial sphere and sun
-  const earth = plotObjects.find((p) => p.name === "Earth");
-  const celestialSphere = earth.pivotRef.current;
-  const sun = plotObjects.find((p) => p.name === "Sun");
-  const csLookAtObj = scene.getObjectByName("CSLookAtObj");
-
-  if (!celestialSphere || !sun || !csLookAtObj) {
-    throw new Error("Required objects not found in the scene.");
+  if (!earthObj || !sunObj || !targetObj) {
+    // console.warn(`Plot objects missing. Earth: ${!!earthObj}, Sun: ${!!sunObj}, Target (${targetName}): ${!!targetObj}`);
+    return null;
   }
 
-  celestialSphere.getWorldPosition(csPos);
-  sun.getWorldPosition(sunPos);
+  // 3. Get World Positions using the REFS
+  const earthPos = new Vector3();
+  const sunPos = new Vector3();
+  const targetPos = new Vector3();
 
-  // Calculate RA and Dec
-  csLookAtObj.lookAt(position);
-  lookAtDir.applyQuaternion(csLookAtObj.quaternion);
-  lookAtDir.setLength(csPos.distanceTo(position));
+  // Validate refs before accessing .current.getWorldPosition
+  if (earthObj.pivotRef?.current)
+    earthObj.pivotRef.current.getWorldPosition(earthPos);
+  if (sunObj.pivotRef?.current)
+    sunObj.pivotRef.current.getWorldPosition(sunPos);
+  if (targetObj.pivotRef?.current)
+    targetObj.pivotRef.current.getWorldPosition(targetPos);
+
+  // 4. Create "Virtual" LookAt Object (Replaces CSLookAtObj)
+  // We create a temporary 3D object in memory to handle the quaternion math
+  const virtualLookAt = new Object3D();
+  virtualLookAt.position.copy(earthPos); // Place observer at Earth
+  virtualLookAt.lookAt(targetPos); // Look at Target
+
+  // 5. Perform the Math
+  const lookAtDir = new Vector3(0, 0, 1);
+  const sphericalPos = new Spherical();
+
+  // Apply rotation
+  lookAtDir.applyQuaternion(virtualLookAt.quaternion);
+
+  // Set length to distance between Earth and Target
+  const distToTarget = earthPos.distanceTo(targetPos);
+  lookAtDir.setLength(distToTarget);
+
+  // Convert to Spherical
   sphericalPos.setFromVector3(lookAtDir);
 
   const ra = radToRa(sphericalPos.theta);
   const dec = radToDec(sphericalPos.phi);
 
-  // Calculate distance
+  // 6. Calculate Distances & Elongation
+  // (Scale: 100 units = 1 AU)
   const radius = sphericalPos.radius / 100;
   const distAU = radius.toFixed(2);
 
-  // Calculate elongation
-  const earthSunDistance = csPos.distanceTo(sunPos);
-  const earthTargetPositionDistance = csPos.distanceTo(position);
-  const sunTargetPositionDistance = sunPos.distanceTo(position);
+  const earthSunDistance = earthPos.distanceTo(sunPos);
+  const sunTargetPositionDistance = sunPos.distanceTo(targetPos);
 
+  // Cosine Rule for Elongation
   const numerator =
     earthSunDistance * earthSunDistance +
-    earthTargetPositionDistance * earthTargetPositionDistance -
+    distToTarget * distToTarget -
     sunTargetPositionDistance * sunTargetPositionDistance;
-  const denominator = 2.0 * earthSunDistance * earthTargetPositionDistance;
+  const denominator = 2.0 * earthSunDistance * distToTarget;
 
-  const elongationRadians = Math.acos(numerator / denominator);
+  // Protect against floating point errors going outside [-1, 1] for acos
+  const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+  const elongationRadians = Math.acos(clamp(numerator / denominator, -1, 1));
+
   let elongation = ((180.0 * elongationRadians) / Math.PI).toFixed(3);
-  elongation =
-    isNaN(elongation) || Number(elongation) === 0 ? "-" : `${elongation}\u00B0`;
+  elongation = isNaN(elongation) ? "-" : `${elongation}\u00B0`;
 
-  let distance = `${distAU} AU`;
-  if (distAU > 10000) {
-    distance = `${(distAU * 0.0000158125).toFixed(3)} ly`;
-  }
-  if (distAU < 0.01) {
-    distance = `${(radius * 149597871).toFixed(0)} km`;
+  // Formatting Distance
+  let distanceDisplay = `${distAU} AU`;
+  if (radius < 0.01) {
+    distanceDisplay = `${(radius * 149597871).toFixed(0)} km`;
+  } else if (radius > 10000) {
+    distanceDisplay = `${(radius * 0.0000158125).toFixed(3)} ly`;
   }
 
   return {
     ra,
     dec,
     elongation,
-    dist: distance,
+    dist: distanceDisplay,
   };
 }

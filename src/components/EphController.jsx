@@ -10,7 +10,10 @@ import {
   sDay,
 } from "../utils/time-date-functions";
 import { getRaDecDistance } from "../utils/celestial-functions";
-import { movePlotModel } from "../utils/plotModelFunctions";
+import {
+  movePlotModel,
+  getPlotModelRaDecDistance,
+} from "../utils/plotModelFunctions";
 
 const EphController = () => {
   const { scene } = useThree(); // Direct access to the scene
@@ -19,7 +22,6 @@ const EphController = () => {
   const { trigger, params, resetTrigger } = useEphemeridesStore();
 
   const [done, setDone] = useState(true);
-  const objectPos = new Vector3();
 
   useEffect(() => {
     if (trigger && params) {
@@ -71,6 +73,7 @@ const EphController = () => {
           ra: data.ra,
           dec: data.dec,
           dist: data.dist,
+          elong: data.elongation,
         });
       });
 
