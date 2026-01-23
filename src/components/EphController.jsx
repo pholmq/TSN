@@ -95,7 +95,7 @@ const EphController = () => {
     let steps = 0;
     const MAX_STEPS = 50000;
 
-    console.log("--- Starting Ephemerides Generation ---");
+    // console.log("--- Starting Ephemerides Generation ---");
 
     while (currentPos <= endPos && steps < MAX_STEPS) {
       const currentDate = posToDate(currentPos);
@@ -123,7 +123,7 @@ const EphController = () => {
     }
     setDone(true);
 
-    console.log(`Generation Complete. Steps: ${steps}`);
+    // console.log(`Generation Complete. Steps: ${steps}`);
     
     // Trigger the save file dialog with the new naming convention
     saveEphemeridesAsText(ephemeridesData, params);
