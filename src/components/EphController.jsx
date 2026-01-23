@@ -25,7 +25,9 @@ const EphController = () => {
 
   useEffect(() => {
     if (trigger && params) {
-      if (params.checkedPlanets) {
+      const startPos = dateTimeToPos(params.startDate, "12:00:00");
+      const endPos = dateTimeToPos(params.endDate, "12:00:00");
+        if ((params.checkedPlanets.length > 0) && (startPos <= endPos)) {
         setDone(false);
       }
       resetTrigger();
