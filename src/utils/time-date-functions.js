@@ -52,14 +52,18 @@ export function posToDate(pos) {
 export function posToJulianDay(pos) {
   return daysToJulianDays(posToDays(pos));
 }
-
 export function posToTime(pos) {
-  pos += sHour * 12; //Set the clock to tweleve for pos 0
+  pos += sHour * 12; //Set the clock to twelve for pos 0
+
+  // Get the fractional part of the day (0.0 to 1.0)
   let days = pos / sDay - Math.floor(pos / sDay);
+
+  // Convert fraction to hours, minutes, seconds
   let hours = Math.floor(days * 24);
   let minutes = Math.floor((days * 24 - hours) * 60);
   let seconds = Math.round(((days * 24 - hours) * 60 - minutes) * 60);
 
+  // Handle rounding rollovers
   if (seconds === 60) {
     seconds = 0;
     minutes += 1;
@@ -70,13 +74,18 @@ export function posToTime(pos) {
     hours += 1;
   }
 
+  // --- FIX: Handle 24:00:00 case ---
+  if (hours === 24) {
+    hours = 0;
+  }
+  // ---------------------------------
+
   let hh = ("0" + hours).slice(-2);
   let mm = ("0" + minutes).slice(-2);
   let ss = ("0" + seconds).slice(-2);
 
   return hh + ":" + mm + ":" + ss;
 }
-
 export function timeToPos(value) {
   let aTime = value.split(":");
   let pos = aTime[0] * sHour + aTime[1] * sMinute + aTime[2] * sSecond;
@@ -297,7 +306,6 @@ function julianDateToDays(sDate) {
 
   return jd - 2451717;
 }
-
 
 function julianCalDayToDate(g) {
   let jDay = g + 2451717; //+ 10;
