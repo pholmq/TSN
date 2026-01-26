@@ -32,6 +32,7 @@ import HighlightSelectedStar from "./components/StarSearch/HighlightSelectedStar
 import Help from "./components/Help/Help";
 import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
 import TransitionCamera from "./components/PlanetCamera/TransitionCamera";
+import Constellations from"./components/Stars/Constellations";
 
 const isTouchDevice = () => {
   return (
@@ -141,6 +142,7 @@ const TSNext = () => {
           {BSCStarsOn && <BSCStarsH />}
           {BSCStarsOn && !isTouchDev && <HighlightSelectedStar />}
           <Zodiac />
+          <Constellations />
         </Suspense>
       </Canvas>
     </>
