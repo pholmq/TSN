@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VOTABLE version="1.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.ivoa.net/xml/VOTable/v1.2" >
+ <DESCRIPTION>
+   VizieR Astronomical Server vizier.cds.unistra.fr
+    Date: 2026-01-26T11:53:36 [V7.5.4]
+   In case of problem, please report to:	cds-question@unistra.fr
+ </DESCRIPTION>
+<!-- VOTable description at http://www.ivoa.net/Documents/latest/VOT.html -->
+<INFO name="service_protocol" value="ASU">  IVOID of the protocol through which the data was retrieved</INFO>
+<INFO name="request_date" value="2026-01-26T11:53:36">  Query execution date</INFO>
+<INFO name="request" value="https://vizier.cds.unistra.fr/viz-bin/votable/-tsv?-oc.form=dec&amp;-out.max=unlimited&amp;-c.eq=J2000&amp;-c.r=  2&amp;-c.u=arcmin&amp;-c.geom=r&amp;-source=I/239/hip_main&amp;-order=I&amp;-out=HIP&amp;HIP=5339,8718,8832,9487,12808,12925,13847,13914,22245,22947,23395,26035,26207,26464,26727,28447,29239,30867,36850,37032,37229,40167,41037,41304,50583,55203,59087,60718,61145,61251,64241,64468,65378,70320,71683,71795,72105,73807,75323,76276,77523,80963,82959,84345,84405,85112,85664,88267,91926,93277,93825,94486,95774,95947,98610,99785,104463,110378,110764,113658,113958,115288,115808&amp;-out=Vmag&amp;-out=RAICRS&amp;-out=DEICRS&amp;-out=Plx&amp;-out=B-V&amp;HIPep=HIPep&amp;Erratum=Erratum&amp;">  Full request URL (POST)</INFO>
+<INFO name="contact" value="cds-question@unistra.fr">  Email or URL to contact publisher</INFO>
+<INFO name="server_software" value="VizieR/7.5.4">  Software version</INFO>
+<INFO name="publisher" value="CDS">  Data centre that produced the VOTable</INFO>
+
+<!--
+Execution Reports
+ -->
+
+<RESOURCE ID="yCat_1239" name="I/239" type="results">
+  <DESCRIPTION>The Hipparcos and Tycho Catalogues (ESA 1997)</DESCRIPTION>  <INFO name="ivoid" value="ivo://cds.vizier/i/239">    IVOID of underlying data collection  </INFO>
+  <INFO name="data_ivoid" value="ivo://cds.vizier/i/239">    IVOID of underlying data collection  </INFO>
+  <INFO name="creator" value="ESA 1997">    First author or institution  </INFO>
+  <INFO name="cites" value="1997HIP...C......0E">    Article or Data origin sources  </INFO>
+  <INFO name="reference_url" value="https://cdsarc.cds.unistra.fr/viz-bin/cat/I/239">    Dataset landing page  </INFO>
+  <INFO name="publication_date" value="2021-11-18">    Date of first publication in the data centre  </INFO>
+  <INFO name="rights_uri" value="https://cds.unistra.fr/vizier-org/licences_vizier.html">    Licence URI  </INFO>
+
+  <COOSYS ID="H_1991.250" system="ICRS" epoch="1991.250"/>
+  <TABLE ID="I_239_hip_main" name="I/239/hip_main">
+    <DESCRIPTION>The Hipparcos Main Catalogue</DESCRIPTION>
+<!-- The Hipparcos Main Catalogue\vizContent{timeSerie} -->
+
+    <!-- RowName: ${HIP} -->
+    <!-- Definitions of GROUPs and FIELDs -->
+    <FIELD name="HIP" ucd="meta.id;meta.main" datatype="int" width="6"><!-- ucd="ID_MAIN" -->
+      <DESCRIPTION>Identifier (HIP number) (H1)</DESCRIPTION>
+      <LINK href="http://vizier.cds.unistra.fr/viz-bin/VizieR-5?-info=XML&amp;-out.add=.&amp;-source=I/239/hip_main&amp;recno=${recno}"/>
+    </FIELD>
+    <FIELD name="Vmag" ucd="phot.mag;em.opt.V" datatype="float" width="5" precision="2" unit="mag"><!-- ucd="PHOT_JHN_V" -->
+      <DESCRIPTION>? Magnitude in Johnson V (H5)</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="RAICRS" ucd="pos.eq.ra;meta.main" ref="H_1991.250" datatype="double" width="12" precision="8" unit="deg"><!-- ucd="POS_EQ_RA_MAIN" -->
+      <DESCRIPTION>? alpha, degrees (ICRS, Epoch=J1991.25) (H8)</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="DEICRS" ucd="pos.eq.dec;meta.main" ref="H_1991.250" datatype="double" width="12" precision="8" unit="deg"><!-- ucd="POS_EQ_DEC_MAIN" -->
+      <DESCRIPTION>? delta, degrees (ICRS, Epoch=J1991.25) (H9)</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="Plx" ucd="pos.parallax.trig" datatype="float" width="7" precision="2" unit="mas"><!-- ucd="POS_PARLX_TRIG" -->
+      <DESCRIPTION>? Trigonometric parallax (H11)</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="B-V" ucd="phot.color;em.opt.B;em.opt.V" datatype="float" width="6" precision="3" unit="mag"><!-- ucd="PHOT_JHN_B-V" -->
+      <DESCRIPTION>? Johnson B-V colour (H37)</DESCRIPTION>
+      <VALUES null="NaN" />
+    </FIELD>
+    <FIELD name="recno" ucd="meta.record" datatype="int" width="8" type="hidden"><!-- ucd="RECORD" -->
+      <DESCRIPTION>Record number assigned by the VizieR team. Should Not be used for identification.</DESCRIPTION>
+      <LINK href="http://vizier.cds.unistra.fr/viz-bin/VizieR-5?-info=XML&amp;-out.add=.&amp;-source=I/239/hip_main&amp;recno=${recno}"/>
+    </FIELD>
+<DATA><CSV headlines="3" colsep=";"><![CDATA[
+HIP;Vmag;RAICRS;DEICRS;Plx;B-V;recno
+ ;mag;deg;deg;mas;mag;
+------;-----;------------;------------;-------;------;--------
+  5339; 6.86;017.06403620;+28.86815555;  12.13; 0.371;    5335
+  8718; 6.74;028.04316907;+24.11731175;   8.67; 1.136;    8712
+  8832; 3.88;028.38235506;+19.29409264;  15.96;-0.047;    8826
+  9487; 3.82;030.51166929;+02.76376048;  23.45; 0.024;    9481
+ 12808; 7.14;041.15339728;+29.46031092;  11.99; 0.367;   12797
+ 12925; 7.88;041.56068842;+05.59269943;  15.85; 0.551;   12913
+ 13847; 2.88;044.56548180;-40.30473491;  20.22; 0.128;   13835
+ 13914; 4.63;044.80305773;+21.34044477;  11.15; 0.048;   13902
+ 22245; 6.77;071.82464509;+05.78826410;   5.08; 0.018;   22227
+ 22947; 7.35;074.05908151;+21.57240743;   7.69; 0.284;   22930
+ 23395; 6.79;075.43448908;+26.67106213;  25.27; 0.506;   23379
+ 26035; 6.87;083.31749681;-34.30399437;   5.89; 0.316;   26017
+ 26207; 3.39;083.78449043;+09.93416294;   3.09;-0.160;   26189
+ 26464; 7.61;084.44121195;-00.77825317;   3.07;-0.125;   26446
+ 26727; 1.74;085.18968672;-01.94257841;   3.99;-0.199;   26709
+ 28447; 6.54;090.10116593;+16.29897876;   2.98; 1.540;   28427
+ 29239; 7.36;092.47313670;+14.85276002;   2.40;-0.050;   29218
+ 30867; 3.76;097.20447548;-07.03305042;   4.72;-0.113;   30846
+ 36850; 1.58;113.65001898;+31.88863645;  63.27; 0.034;   36820
+ 37032; 7.98;114.14936525;-67.61317673;  13.92; 0.664;   37003
+ 37229; 3.80;114.70783872;-26.80389240;   7.18;-0.159;   37200
+ 40167; 4.67;123.05295353;+17.64813756;  39.11; 0.531;   40136
+ 41037; 1.86;125.62860299;-59.50953829;   5.16; 1.196;   41004
+ 41304; 7.74;126.41306358;-71.05072593;   3.88; 1.278;   41271
+ 50583; 2.01;154.99234054;+19.84186032;  25.96; 1.128;   50545
+ 55203; 3.79;            ;            ;       ; 0.606;   55161
+ 59087; 6.93;181.75586744;-23.76634820;  12.78; 0.513;   59040
+ 60718; 0.77;186.64975585;-63.09905586;  10.17;-0.243;   60666
+ 61145; 7.52;187.95463542;-15.71550390;   7.66; 0.400;   61092
+ 61251; 8.84;188.27993291;-22.69689997;   2.57; 1.110;   61198
+ 64241; 4.32;197.49812263;+17.52911621;  69.81; 0.455;   64185
+ 64468; 7.23;198.20334380;+51.89983123;   5.17; 0.937;   64412
+ 65378; 2.23;200.98091604;+54.92541525;  41.73; 0.057;   65322
+ 70320; 6.41;215.81399394;-47.41695068;   1.01; 1.257;   70257
+ 71683;-0.01;219.92041034;-60.83514707; 742.12; 0.710;   71619
+ 71795; 3.78;220.28716819;+13.72833113;  18.07; 0.044;   71732
+ 72105; 2.35;221.24687869;+27.07417383;  15.55; 0.966;   72042
+ 73807; 3.91;226.27960699;-47.05119386;   6.56;-0.144;   73745
+ 75323; 4.48;230.84440733;-59.32069839;   6.40; 0.169;   75260
+ 76276; 3.80;233.70079260;+10.53885916;  15.54; 0.268;   76213
+ 77523; 7.47;237.42963963;-32.80822983;   5.00; 0.010;   77459
+ 80963; 7.77;247.98373239;+44.26418187;  13.88; 0.478;   80898
+ 82959; 8.13;254.29456228;+35.28654269;   0.84; 1.428;   82890
+ 84345; 2.78;258.66192687;+14.39025314;   8.53; 1.164;   84273
+ 84405; 4.33;258.83869698;-26.60004896; 167.08; 0.855;   84334
+ 85112; 4.15;260.92072033;+37.14592396;   8.12;-0.011;   85041
+ 85664; 7.09;262.59257407;+10.76857304;   3.95; 1.011;   85592
+ 88267; 4.26;270.37667886;+21.59568814;   6.93; 0.406;   88189
+ 91926; 4.59;281.09489936;+39.61259557;  20.34; 0.180;   91842
+ 93277; 7.90;285.00091149;-28.05074855;  11.16; 0.210;   93192
+ 93825; 4.23;286.60433158;-37.06275714;  55.89; 0.523;   93740
+ 94486; 7.06;288.47327540;+09.03324952;   2.62; 1.228;   94402
+ 95774; 7.46;292.19528124;-36.00025931;   5.38; 0.131;   95689
+ 95947; 3.05;292.68035529;+27.95969480;   8.46; 1.088;   95862
+ 98610; 6.95;300.43848268;+44.11907982;   2.93; 1.620;   98521
+ 99785; 7.28;303.68985553;+47.44059020;   3.38;-0.089;   99695
+104463; 7.82;317.41208140;+42.43321436;   2.48; 0.022;  104369
+110378; 7.49;335.34951545;-06.24310519;   6.64; 0.205;  110283
+110764; 8.54;336.60291179;+01.96959608;   1.86; 0.415;  110669
+113658; 7.86;345.28280967;-09.55369721;   9.20; 0.918;  113558
+113958; 7.38;346.16644357;+08.85331855;   6.54; 1.240;  113858
+115288; 6.67;350.23988003;+17.25258039;  15.11; 0.329;  115187
+115808; 7.43;351.92343573;+44.78532805;   4.12; 1.015;  115706
+]]></CSV></DATA>
+</TABLE>
+<INFO name="matches" value="63">matching records</INFO>
+
+<INFO name="Warning" value="No center provided++++"/>
+</RESOURCE>
+</VOTABLE>

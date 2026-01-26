@@ -31,6 +31,7 @@ const Constellations = () => {
   const geometry = useMemo(() => {
     const points = [];
     const constellations = constellationsData.constellations || [];
+    const missingHips = new Set(); // To prevent duplicate logs for the same star
 
     // Filter out invalid constellations or those without lines
     const validConstellations = constellations.filter(
@@ -46,6 +47,16 @@ const Constellations = () => {
 
           const idx1 = hipToIndexMap.get(hip1);
           const idx2 = hipToIndexMap.get(hip2);
+
+          // LOGGING LOGIC: Check for missing stars
+          if (idx1 === undefined && !missingHips.has(hip1)) {
+            console.warn(`Constellation "${constellation.common_name?.english || constellation.id}": HIP ${hip1} not found in BSC data.`);
+            missingHips.add(hip1);
+          }
+          if (idx2 === undefined && !missingHips.has(hip2)) {
+            console.warn(`Constellation "${constellation.common_name?.english || constellation.id}": HIP ${hip2} not found in BSC data.`);
+            missingHips.add(hip2);
+          }
 
           // Only draw line if both stars exist in our dataset
           if (idx1 !== undefined && idx2 !== undefined) {
