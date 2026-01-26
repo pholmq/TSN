@@ -81,6 +81,10 @@ export const useStore = create((set) => ({
 
   officialStarDistances: true,
   setOfficialStarDistances: (v) => set({ officialStarDistances: v }),
+  
+  // Added Constellations State
+  constellations: false,
+  setConstellations: (v) => set({ constellations: v }),
 
   // starDistanceModifier: 10,
   starDistanceModifier: 42633,
