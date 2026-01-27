@@ -3,7 +3,7 @@ import * as THREE from "three";
 import constellationsData from "../../settings/constellations.json"; // Adjust path if necessary
 import bscSettings from "../../settings/BSC.json"; // Need this to map HIP to positions
 import { useBSCStarData } from "./useBSCStarData";
-import { usePlotStore } from "../../store";
+import { useStore, usePlotStore } from "../../store";
 import { dateTimeToPos } from "../../utils/time-date-functions";
 import { movePlotModel } from "../../utils/plotModelFunctions";
 
@@ -11,6 +11,7 @@ const Constellations = () => {
   // 1. Get current star positions from the hook (reactive to store settings)
   const { positions } = useBSCStarData();
   const plotObjects = usePlotStore((s) => s.plotObjects);
+  const showConstellations = useStore((s) => s.showConstellations);
   const groupRef = useRef();
 
   // 2. Create a lookup map: HIP Number -> Index in the positions array
@@ -106,7 +107,7 @@ const Constellations = () => {
   }, [plotObjects]);
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} visible={showConstellations}>
       <lineSegments geometry={geometry}>
         <lineBasicMaterial
           color={0xffffff}
