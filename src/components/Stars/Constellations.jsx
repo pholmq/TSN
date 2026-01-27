@@ -9,7 +9,6 @@ import { movePlotModel } from "../../utils/plotModelFunctions";
 
 const Constellations = () => {
   // 1. Get current star positions from the hook (reactive to store settings)
-  // const { positions } = useBSCStarData();
   // Pass true to force positions to be calculated on the sphere
   const { positions } = useBSCStarData(true);
   const plotObjects = usePlotStore((s) => s.plotObjects);
@@ -112,8 +111,8 @@ const Constellations = () => {
     <group ref={groupRef} visible={showConstellations}>
       <lineSegments geometry={geometry}>
         <lineBasicMaterial
-          color={0xffffff}
-          opacity={0.3}
+          color={0x0044ff} // Deep Blue
+          opacity={0.8}
           transparent={true}
           depthWrite={false} // Prevents lines from obscuring distant stars or creating Z-fighting
         />
