@@ -98,8 +98,11 @@ export default function PlanetCamera() {
 
     if (targetObjRef.current && targetObjRef.current.material) {
       // Dynamic transition based on planet radius - relative scaling
-      const lowHeight = planetRadiusKm * 1.03; // Start fade at 3% above surface
-      const highHeight = planetRadiusKm * 1.04; // End fade at 4% above surface
+      // const lowHeight = planetRadiusKm * 1.03; // Start fade at 3% above surface
+      // const highHeight = planetRadiusKm * 1.04; // End fade at 4% above surface
+      // Reduce to 0.5% start and 1.0% end
+  const lowHeight = planetRadiusKm * 1.0005; 
+  const highHeight = planetRadiusKm * 1.001;
 
       let planetOpacity, groundOpacity;
 
