@@ -67,6 +67,9 @@ const LevaUI = () => {
     searchStars,
     setSearchStars,
     cameraTransitioning,
+    // Add Constellations
+    showConstellations,
+    setShowConstellations,
   } = useStore();
 
   const {
@@ -246,6 +249,11 @@ const LevaUI = () => {
           min: 1,
           step: 100,
           onChange: setEquidistantStars,
+        },
+        // Added Constellations here
+        "Constellations": {
+          value: showConstellations,
+          onChange: setShowConstellations,
         },
         "Celestial sphere": {
           value: celestialSphere,
