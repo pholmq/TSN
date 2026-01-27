@@ -89,7 +89,7 @@ export default function Zodiac() {
     <>
       {zodiac && (
         <group
-          position={[37.8453, -3, 0]}
+          position={[37.8453, -0.1, 0]}
           rotation={[0, -Math.PI / 3, 0]}
           scale={size}
         >
