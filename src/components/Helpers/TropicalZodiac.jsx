@@ -1,33 +1,29 @@
-import { useMemo } from "react"; // Added useMemo
-import * as THREE from "three"; // Import THREE for Vector3 and BufferGeometry
+import { useMemo } from "react";
+import * as THREE from "three";
 import { CanvasTexture, DoubleSide } from "three";
 import getCircularText from "../../utils/getCircularText";
 import { useStore } from "../../store";
 
-// New component to replace PolarGridHelper
 function ZodiacGrid() {
   const geometry = useMemo(() => {
     const points = [];
-    const radius = 260; // Matches original args[0]
-    const radials = 12; // Changed from 24 to 12 (Only visible spokes)
-    const divisions = 64; // Matches original args[3] (Circle smoothness)
+    const radius = 260;
+    const radials = 12;
+    const divisions = 64;
 
-    // 1. Generate the 12 visible spokes
+    // 12 Visible Spokes
     for (let i = 0; i < radials; i++) {
       const angle = (i / radials) * Math.PI * 2;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-
-      // Line from center (0,0,0) to outer edge
       points.push(new THREE.Vector3(0, 0, 0));
       points.push(new THREE.Vector3(x, 0, z));
     }
 
-    // 2. Generate the outer circle
+    // Outer Circle
     for (let i = 0; i < divisions; i++) {
       const t1 = (i / divisions) * Math.PI * 2;
       const t2 = ((i + 1) / divisions) * Math.PI * 2;
-
       points.push(
         new THREE.Vector3(Math.cos(t1) * radius, 0, Math.sin(t1) * radius)
       );
@@ -41,7 +37,7 @@ function ZodiacGrid() {
 
   return (
     <lineSegments geometry={geometry}>
-      <lineBasicMaterial color={0x555555} /> {/* Only the visible grey color */}
+      <lineBasicMaterial color={0xffaa00} opacity={0.6} transparent />
     </lineSegments>
   );
 }
@@ -86,7 +82,6 @@ function ZodiacLabels() {
     "                     ♍" +
     "                      ♌" +
     "                      ♋";
-
   const text2 = getCircularText(
     symbols,
     800,
@@ -107,8 +102,9 @@ function ZodiacLabels() {
         <meshBasicMaterial
           map={texture1}
           side={DoubleSide}
-          transparent={true}
+          transparent
           opacity={1}
+          color={0xffaa00}
         />
       </mesh>
       <mesh>
@@ -116,25 +112,35 @@ function ZodiacLabels() {
         <meshBasicMaterial
           map={texture2}
           side={DoubleSide}
-          color={0xffffff}
-          transparent={true}
+          transparent
           opacity={1}
+          color={0xffaa00}
         />
       </mesh>
     </group>
   );
 }
 
-export default function Zodiac() {
-  const zodiac = useStore((s) => s.zodiac);
-  const zodiacSize = useStore((s) => s.zodiacSize);
+export default function TropicalZodiac() {
+  const tropicalZodiac = useStore((s) => s.tropicalZodiac);
+  const zodiacSize = 100;
   const hScale = useStore((s) => s.hScale);
   const size = (zodiacSize * hScale) / 100;
+
+  // CALIBRATION: Adjust this if Aries doesn't align with the Vernal Equinox vector
+  // -1.57 is -90 degrees (standard 3 o'clock start offset)
+  const ROTATION_OFFSET = -Math.PI / 2;
+
   return (
     <>
-      {zodiac && (
-        <group position={[0, -1, 0]} rotation={[0, -1.15, 0]} scale={size}>
-          {/* Replaced polarGridHelper with custom ZodiacGrid */}
+      {tropicalZodiac && (
+        <group
+          // Position is 0,0,0 relative to parent (Earth)
+          // We apply a small Y offset (-3) to match the Sidereal vertical level
+          position={[0, -0.01, 0]}
+          rotation={[0, ROTATION_OFFSET, 0]}
+          scale={size}
+        >
           <ZodiacGrid />
           <ZodiacLabels />
         </group>

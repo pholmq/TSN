@@ -32,6 +32,8 @@ const LevaUI = () => {
     setZodiac,
     zodiacSize,
     setZodiacSize,
+    tropicalZodiac,
+    setTropicalZodiac,
     polarLine,
     setPolarLine,
     polarLineSize,
@@ -266,6 +268,10 @@ const LevaUI = () => {
         "Sidereal Zodiac": {
           value: zodiac,
           onChange: setZodiac,
+        },
+        "Tropical Zodiac": {
+          value: tropicalZodiac,
+          onChange: setTropicalZodiac,
         },
         "Sphere/Grid/Zodiac size": {
           value: hScale,
