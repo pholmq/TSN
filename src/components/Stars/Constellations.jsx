@@ -9,7 +9,9 @@ import { movePlotModel } from "../../utils/plotModelFunctions";
 
 const Constellations = () => {
   // 1. Get current star positions from the hook (reactive to store settings)
-  const { positions } = useBSCStarData();
+  // const { positions } = useBSCStarData();
+  // Pass true to force positions to be calculated on the sphere
+  const { positions } = useBSCStarData(true);
   const plotObjects = usePlotStore((s) => s.plotObjects);
   const showConstellations = useStore((s) => s.showConstellations);
   const groupRef = useRef();

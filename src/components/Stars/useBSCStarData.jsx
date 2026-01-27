@@ -1,18 +1,22 @@
-// useBSCStarData.js (Final Corrected Code)
 import { useMemo } from "react";
-// Removed: import * as THREE from "three"; // No longer needed
-import { useStore } from "../../store"; // Fixed path
-import bscSettings from "../../settings/BSC.json"; // Fixed path
+import { useStore } from "../../store";
+import bscSettings from "../../settings/BSC.json";
 import {
   declinationToRadians,
   rightAscensionToRadians,
   sphericalToCartesian,
-} from "../../utils/celestial-functions"; // Fixed path
-import colorTemperature2rgb from "../../utils/colorTempToRGB"; // Fixed path
+} from "../../utils/celestial-functions";
+import colorTemperature2rgb from "../../utils/colorTempToRGB";
 
-export const useBSCStarData = () => {
-  // Select all state variables that trigger the costly calculation
-  const officialStarDistances = useStore((s) => s.officialStarDistances);
+// 1. Accept an optional argument (default is false so other components work as normal)
+export const useBSCStarData = (forceProjected = false) => {
+  // 2. Get the real setting from the store
+  const officialStarDistancesSetting = useStore((s) => s.officialStarDistances);
+  
+  // 3. Determine the effective value to use for calculation
+  // If forceProjected is true, we treat officialStarDistances as false (Sphere view)
+  const officialStarDistances = forceProjected ? false : officialStarDistancesSetting;
+
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const hScale = useStore((s) => s.hScale);
   const starScale = useStore((s) => s.starScale);
@@ -28,9 +32,7 @@ export const useBSCStarData = () => {
       const starData = [];
       const colorMap = new Map();
 
-      // Original data generation logic from lines 80-205 of BSCStars.jsx
       bscSettings.forEach((s, index) => {
-        // ... (All the original star data calculation logic) ...
         const magnitude = parseFloat(s.V);
         const colorTemp = parseFloat(s.K) || 5778;
 
@@ -39,6 +41,8 @@ export const useBSCStarData = () => {
 
         const distLy = parseFloat(s.P) * 3.26156378;
         let dist;
+        
+        // 4. This logic now uses our local 'officialStarDistances' variable
         if (!officialStarDistances) {
           dist = (20000 * hScale) / 100;
         } else {
@@ -69,13 +73,13 @@ export const useBSCStarData = () => {
 
         let starsize;
         if (magnitude < 1) {
-          starsize = 1.2;
+            starsize = 1.2;
         } else if (magnitude > 1 && magnitude < 3) {
-          starsize = 0.6;
+            starsize = 0.6;
         } else if (magnitude > 3 && magnitude < 5) {
-          starsize = 0.4;
+            starsize = 0.4;
         } else {
-          starsize = 0.2;
+            starsize = 0.2;
         }
 
         const visualSize = starsize * starScale * 10;
@@ -113,15 +117,15 @@ export const useBSCStarData = () => {
 
       return {
         positions: new Float32Array(positions),
-        colors: new Float32Array(colors), 
-        pickingColors: new Float32Array(pickingColors), 
-        sizes: new Float32Array(sizes), 
-        pickingSizes: new Float32Array(pickingSizes), 
+        colors: new Float32Array(colors),
+        pickingColors: new Float32Array(pickingColors),
+        sizes: new Float32Array(sizes),
+        pickingSizes: new Float32Array(pickingSizes),
         starData,
         colorMap,
       };
     }, [
-      officialStarDistances,
+      officialStarDistances, // This dependency now tracks our local overridden variable
       hScale,
       starDistanceModifier,
       starScale,
