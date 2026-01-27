@@ -188,7 +188,7 @@ body {
 /* Override Leva’s inline styles for its root element */
 .settings-div > div {
   position: fixed;
-  top: 10px !important;
+  top: 60px !important;
   left: 10px !important;
   right: auto !important;
   height: auto;

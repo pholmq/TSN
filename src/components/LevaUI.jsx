@@ -59,7 +59,7 @@ const LevaUI = () => {
     geoSphere,
     setGeoSphere,
     ephimerides,
-    setEphimerides,
+    setEphemerides,
     BSCStars,
     setBSCStars,
     hScale,
@@ -67,6 +67,9 @@ const LevaUI = () => {
     searchStars,
     setSearchStars,
     cameraTransitioning,
+    // Add Constellations
+    showConstellations,
+    setShowConstellations,
   } = useStore();
 
   const {
@@ -135,13 +138,16 @@ const LevaUI = () => {
         },
         "Search stars": {
           value: searchStars,
-          hint: "Keep unchecked for best performance",
           onChange: setSearchStars,
         },
         Positions: {
           value: showPositions,
           hint: "Keep unchecked for best performance",
           onChange: setShowPositions,
+        },
+        Ephemerides: {
+          value: ephimerides,
+          onChange: setEphemerides,
         },
       },
       { collapsed: false }
@@ -243,6 +249,11 @@ const LevaUI = () => {
           min: 1,
           step: 100,
           onChange: setEquidistantStars,
+        },
+        // Added Constellations here
+        "Constellations": {
+          value: showConstellations,
+          onChange: setShowConstellations,
         },
         "Celestial sphere": {
           value: celestialSphere,

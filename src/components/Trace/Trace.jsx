@@ -8,13 +8,8 @@ import {
 } from "../../store";
 import { Vector3 } from "three";
 import { getSpeedFact } from "../../utils/time-date-functions.js";
+import { movePlotModel } from "../../utils/plotModelFunctions";
 import TraceLine from "./TraceLine";
-function moveModel(plotObjects, plotPos) {
-  plotObjects.forEach((pObj) => {
-    pObj.orbitRef.current.rotation.y =
-      pObj.speed * plotPos - pObj.startPos * (Math.PI / 180);
-  });
-}
 
 const Trace = ({ name }) => {
   const plotObjects = usePlotStore((s) => s.plotObjects);
@@ -69,7 +64,7 @@ const Trace = ({ name }) => {
 
     while (plotPosRef.current < posRef.current - traceStep) {
       plotPosRef.current = plotPosRef.current + traceStep;
-      moveModel(plotObjects, plotPosRef.current);
+      movePlotModel(plotObjects, plotPosRef.current);
       tracedObj.pivotRef.current.getWorldPosition(objectPos);
       if (pointsArrRef.current.length + 3 > traceLength * 3) {
         pointsArrRef.current.splice(0, 3);

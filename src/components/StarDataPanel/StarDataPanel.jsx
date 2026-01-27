@@ -68,6 +68,8 @@ const StarDataPanel = () => {
         opacity: visible ? 0.8 : 0,
         transition: "opacity 0.3s ease",
         display: hoveredStar ? "block" : "none",
+        transform: "scale(0.8)",      // Scale to 80%
+        transformOrigin: "top left",  // Anchor scaling
       }}
     >
       <h3

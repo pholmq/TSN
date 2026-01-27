@@ -13,6 +13,8 @@ import PlanetsPositionsMenu from "./components/Menus/PlanetsPositionsMenu";
 import StarsHelpersMenu from "./components/Menus/StarsHelpersMenu";
 import PosController from "./components/PosController";
 import Positions from "./components/Menus/Positions";
+import Ephemerides from "./components/Menus/Ephemerides";
+import EphController from "./components/EphController";
 import Stars from "./components/Stars/Stars";
 import LabeledStars from "./components/Stars/LabeledStars";
 // import BSCStars from "./components/Stars/BSCStars";
@@ -30,6 +32,7 @@ import HighlightSelectedStar from "./components/StarSearch/HighlightSelectedStar
 import Help from "./components/Help/Help";
 import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
 import TransitionCamera from "./components/PlanetCamera/TransitionCamera";
+import Constellations from"./components/Stars/Constellations";
 
 const isTouchDevice = () => {
   return (
@@ -99,6 +102,7 @@ const TSNext = () => {
       <div>
         <UserInterface />
         <Positions />
+        <Ephemerides />
         <EditSettings />
         <PlanetCameraUI />
         <StarDataPanel />
@@ -127,6 +131,7 @@ const TSNext = () => {
           <AnimationController />
           <PosController />
           <TraceController />
+          <EphController />
           <PlanetsPositionsMenu />
           <StarsHelpersMenu />
           <LightEffectsMenu />
@@ -137,6 +142,7 @@ const TSNext = () => {
           {BSCStarsOn && <BSCStarsH />}
           {BSCStarsOn && !isTouchDev && <HighlightSelectedStar />}
           <Zodiac />
+          <Constellations />
         </Suspense>
       </Canvas>
     </>

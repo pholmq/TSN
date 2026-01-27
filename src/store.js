@@ -81,6 +81,10 @@ export const useStore = create((set) => ({
 
   officialStarDistances: true,
   setOfficialStarDistances: (v) => set({ officialStarDistances: v }),
+  
+  // Added Constellations State
+  showConstellations: false,
+  setShowConstellations: (v) => set({ showConstellations: v }),
 
   // starDistanceModifier: 10,
   starDistanceModifier: 42633,
@@ -130,7 +134,7 @@ export const useStore = create((set) => ({
   setGeoSphere: (v) => set({ geoSphere: v }),
 
   ephimerides: false,
-  setEphimerides: (v) => set({ ephimerides: v }),
+  setEphemerides: (v) => set({ ephimerides: v }),
 
   selectedStarHR: null,
   setSelectedStarHR: (starHR) => set({ selectedStarHR: starHR }),

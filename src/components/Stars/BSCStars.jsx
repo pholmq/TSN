@@ -11,18 +11,14 @@ import {
   rightAscensionToRadians,
   sphericalToCartesian,
 } from "../../utils/celestial-functions";
+
+import { movePlotModel } from "../../utils/plotModelFunctions";
+
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
 
 import { pointShaderMaterial, pickingShaderMaterial } from "./starShaders";
 
 import { LABELED_STARS } from "./LabeledStars";
-
-function moveModel(plotObjects, plotPos) {
-  plotObjects.forEach((pObj) => {
-    pObj.orbitRef.current.rotation.y =
-      pObj.speed * plotPos - pObj.startPos * (Math.PI / 180);
-  });
-}
 
 function createCircleTexture() {
   const size = 256;
@@ -44,7 +40,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const starGroupRef = useRef();
   const pickingPointsRef = useRef();
   const pickingRenderTarget = useRef();
-  
+
   // FIX: Use useState to create a stable scene instance that persists across renders
   const [pickingScene] = useState(() => new THREE.Scene());
 
@@ -299,7 +295,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         // Get the position attribute
         const positions =
           pickingPointsRef.current.geometry.attributes.position.array;
-        
+
         // Get the specific point's local position
         const x = positions[starIndex * 3];
         const y = positions[starIndex * 3 + 1];
@@ -361,7 +357,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       const worldPosition = new Vector3();
       const worldQuaternion = new Quaternion();
 
-      moveModel(plotObjects, epochJ2000Pos);
+      movePlotModel(plotObjects, epochJ2000Pos);
       const earthObj = plotObjects.find((p) => p.name === "Earth");
       earthObj.cSphereRef.current.getWorldPosition(worldPosition);
       earthObj.cSphereRef.current.getWorldQuaternion(worldQuaternion);
@@ -427,6 +423,24 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
       setLabeledStarPosition(bscStar.HR, pos, displayName);
     });
+
+    return () => {
+      LABELED_STARS.forEach((query) => {
+        const bscIndex = bscSettings.findIndex(
+          (s) =>
+            (s.N && s.N.toLowerCase() === query.toLowerCase()) ||
+            s.HIP === query ||
+            s.HR === query
+        );
+
+        if (bscIndex !== -1) {
+          const bscStar = bscSettings[bscIndex];
+          // Passing null removes the label from the store
+          setLabeledStarPosition(bscStar.HR, null); 
+        }
+      });
+    };
+
   }, [starData, setLabeledStarPosition, plotObjects]);
 
   return (
