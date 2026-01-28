@@ -133,7 +133,11 @@ export default function Zodiac() {
   return (
     <>
       {zodiac && (
-        <group position={[0, -1, 0]} rotation={[0, -1.15, 0]} scale={size}>
+        <group
+          position={[37.8453, -1, 0]}
+          rotation={[0, -1.155, 0]}
+          scale={size}
+        >
           {/* Replaced polarGridHelper with custom ZodiacGrid */}
           <ZodiacGrid />
           <ZodiacLabels />
