@@ -155,7 +155,7 @@ const LevaUI = () => {
       { collapsed: false }
     ),
 
-    "Trace": folder(
+    Trace: folder(
       {
         TraceOnOff: {
           label: "Trace On/Off",
@@ -246,18 +246,19 @@ const LevaUI = () => {
           step: 100,
           onChange: setStarDistanceModifier,
         },
-        "Equidistant stars": {
+        //Renamed equdistant stars to Celestial sphere in the meny. Easier to understand.
+        "Celestial sphere": {
           value: false,
           min: 1,
           step: 100,
           onChange: setEquidistantStars,
         },
         // Added Constellations here
-        "Constellations": {
+        Constellations: {
           value: showConstellations,
           onChange: setShowConstellations,
         },
-        "Celestial sphere": {
+        "Celestial grid": {
           value: celestialSphere,
           onChange: setCelestialSphere,
         },
