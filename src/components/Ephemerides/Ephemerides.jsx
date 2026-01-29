@@ -13,7 +13,10 @@ import { useEphemeridesStore } from "./ephemeridesStore";
 const Ephemerides = () => {
   const { ephimerides, posRef } = useStore();
   const { settings } = useSettingsStore();
+
+  // Get both the setter and the generating status
   const setGenerationParams = useEphemeridesStore((s) => s.setGenerationParams);
+  const isGenerating = useEphemeridesStore((s) => s.isGenerating);
 
   const levaEphStore = useCreateStore();
 
@@ -40,6 +43,9 @@ const Ephemerides = () => {
   });
 
   const handleCreate = () => {
+    // Prevent execution if already generating
+    if (isGenerating) return;
+
     const formValues = valuesRef.current;
 
     const checkedPlanets = settings
@@ -84,7 +90,7 @@ const Ephemerides = () => {
 
   useControls(
     {
-      Generate: button(handleCreate),
+      Generate: button(handleCreate, { disabled: isGenerating }), // Disable button based on state
       "Start Date": {
         value: posToDate(posRef.current),
         onChange: (v) => {
@@ -125,7 +131,7 @@ const Ephemerides = () => {
       ...checkboxes,
     },
     { store: levaEphStore },
-    [settings]
+    [settings, isGenerating] // Add isGenerating to dependency array so the button updates
   );
 
   return (
