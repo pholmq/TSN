@@ -62,6 +62,8 @@ const LevaUI = () => {
     setGeoSphere,
     ephimerides,
     setEphemerides,
+    plot,
+    setPlot,
     BSCStars,
     setBSCStars,
     hScale,
@@ -151,6 +153,12 @@ const LevaUI = () => {
           value: ephimerides,
           onChange: setEphemerides,
         },
+        // Plot: {
+        //   value: plot,
+        //   onChange: (v) => {
+        //     setPlot(v);
+        //   },
+        // },
       },
       { collapsed: false }
     ),

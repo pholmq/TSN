@@ -16,6 +16,8 @@ import Positions from "./components/Menus/Positions";
 import Ephemerides from "./components/Ephemerides/Ephemerides";
 import EphController from "./components/Ephemerides/EphController";
 import EphemeridesResult from "./components/Ephemerides/EphemeridesResult";
+import Plot from "./components/Plot/Plot";
+// import PlotController from "./components/Plot/PlotController";
 import Stars from "./components/Stars/Stars";
 import LabeledStars from "./components/Stars/LabeledStars";
 // import BSCStars from "./components/Stars/BSCStars";
@@ -105,6 +107,7 @@ const TSNext = () => {
         <Positions />
         <Ephemerides />
         <EphemeridesResult />
+        <Plot />
         <EditSettings />
         <PlanetCameraUI />
         <StarDataPanel />
@@ -134,6 +137,7 @@ const TSNext = () => {
           <PosController />
           <TraceController />
           <EphController />
+          {/* <PlotController /> */}
           <PlanetsPositionsMenu />
           <StarsHelpersMenu />
           <LightEffectsMenu />

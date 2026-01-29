@@ -140,6 +140,9 @@ export const useStore = create((set) => ({
   ephimerides: false,
   setEphemerides: (v) => set({ ephimerides: v }),
 
+  plot: false,
+  setPlot: (v) => set({ plot: v }),
+
   selectedStarHR: null,
   setSelectedStarHR: (starHR) => set({ selectedStarHR: starHR }),
   selectedStarPosition: null,
