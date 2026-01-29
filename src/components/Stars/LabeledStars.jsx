@@ -20,6 +20,16 @@ export const LABELED_STARS = [
   "Achernar",
   "Polaris Australis",
   "Hadar",
+  "Spica",
+  "Rigil Kentaurus",
+  "Acrux",
+  "Antares",
+  "Pollux",
+  "Formalhaut",
+  "Mimosa",
+  "Regulus",
+  "Adhara",
+  "Castor",
 ];
 
 export default function LabeledStars() {
