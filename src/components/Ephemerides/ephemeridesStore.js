@@ -4,12 +4,14 @@ export const useEphemeridesStore = create((set) => ({
   trigger: false,
   params: null,
 
-  // --- New Result State ---
+  // --- New State for UI Feedback ---
+  isGenerating: false,
+  // -------------------------------
+
   showResult: false,
   generatedData: null,
   generationError: null,
 
-  // Actions
   setGenerationParams: (params) =>
     set({
       trigger: true,
@@ -17,24 +19,29 @@ export const useEphemeridesStore = create((set) => ({
       showResult: false,
       generatedData: null,
       generationError: null,
+      // We can optimistically set this to true here so the button greys out instantly
+      isGenerating: true,
     }),
 
   resetTrigger: () => set({ trigger: false }),
 
-  // Called by EphController when done
+  // Action to toggle the loading state (called by Controller)
+  setIsGenerating: (isGenerating) => set({ isGenerating }),
+
   setGeneratedData: (data) =>
     set({
       generatedData: data,
       showResult: true,
       generationError: null,
+      isGenerating: false, // Stop generating when data is ready
     }),
 
-  // Called by EphController if limit exceeded
   setGenerationError: (error) =>
     set({
       generationError: error,
       showResult: true,
       generatedData: null,
+      isGenerating: false, // Stop generating on error
     }),
 
   closeResult: () =>

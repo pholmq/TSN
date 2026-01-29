@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom"; // Import createPortal
 import { useEphemeridesStore } from "./ephemeridesStore";
 import { FaSave, FaExclamationTriangle } from "react-icons/fa";
 
@@ -104,28 +105,26 @@ const EphemeridesResult = () => {
 
   if (!showResult) return null;
 
-  return (
+  return createPortal(
     <div
       style={{
         position: "fixed",
         top: "50%",
         left: `${30 + position.x}px`,
         transform: `translateY(calc(-50% + ${position.y}px))`,
-        backgroundColor: "#111827",
+        backgroundColor: "rgba(17, 24, 39, 0.95)",
         color: "white",
         borderRadius: "12px",
         boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
-        zIndex: 1000,
-        // --- UPDATED DIMENSIONS ---
-        width: "900px",
+        zIndex: 2147483647,
+        width: "720px",
         maxWidth: "95vw",
         maxHeight: "85vh",
-        // --------------------------
         display: "flex",
         flexDirection: "column",
         border: "1px solid #374151",
         userSelect: isDragging ? "none" : "auto",
-        opacity: 0.95,
+        backdropFilter: "blur(4px)",
       }}
     >
       {/* Header */}
@@ -139,7 +138,7 @@ const EphemeridesResult = () => {
           padding: "15px 20px",
           cursor: isDragging ? "grabbing" : "grab",
           borderBottom: "1px solid #374151",
-          backgroundColor: "#1f2937",
+          backgroundColor: "rgba(31, 41, 55, 0.95)",
           borderTopLeftRadius: "12px",
           borderTopRightRadius: "12px",
         }}
@@ -205,7 +204,7 @@ const EphemeridesResult = () => {
               style={{
                 width: "100%",
                 flexGrow: 1,
-                minHeight: "400px", // Increased min-height
+                minHeight: "400px",
                 backgroundColor: "#000",
                 color: "#10b981",
                 fontFamily: "monospace",
@@ -222,53 +221,73 @@ const EphemeridesResult = () => {
         )}
       </div>
 
-      {/* Footer Actions */}
-      {!generationError && (
-        <div
-          style={{
-            padding: "15px 20px",
-            borderTop: "1px solid #374151",
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "10px",
-            backgroundColor: "#1f2937",
-            borderBottomLeftRadius: "12px",
-            borderBottomRightRadius: "12px",
-          }}
-        >
+      {/* Footer Actions - UPDATED WITH OK BUTTON */}
+      <div
+        style={{
+          padding: "15px 20px",
+          borderTop: "1px solid #374151",
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "10px",
+          backgroundColor: "rgba(31, 41, 55, 0.95)",
+          borderBottomLeftRadius: "12px",
+          borderBottomRightRadius: "12px",
+        }}
+      >
+        {generationError ? (
+          // Just an OK button for the error state
           <button
             onClick={closeResult}
             style={{
-              padding: "8px 16px",
+              padding: "8px 24px",
               borderRadius: "6px",
               border: "1px solid #374151",
-              background: "transparent",
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            Close
-          </button>
-          <button
-            onClick={handleSave}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              border: "none",
               background: "#2563eb",
               color: "white",
               cursor: "pointer",
               fontWeight: "bold",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
             }}
           >
-            <FaSave /> Save to File
+            OK
           </button>
-        </div>
-      )}
-    </div>
+        ) : (
+          // Close and Save buttons for the success state
+          <>
+            <button
+              onClick={closeResult}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "6px",
+                border: "1px solid #374151",
+                background: "transparent",
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              Close
+            </button>
+            <button
+              onClick={handleSave}
+              style={{
+                padding: "8px 16px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#2563eb",
+                color: "white",
+                cursor: "pointer",
+                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <FaSave /> Save to File
+            </button>
+          </>
+        )}
+      </div>
+    </div>,
+    document.body
   );
 };
 
