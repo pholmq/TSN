@@ -69,15 +69,15 @@ const Ephemerides = () => {
   useEffect(() => {
     if (ephimerides) {
       const currentDate = posToDate(posRef.current);
-      
+
       // Update valuesRef so generation uses the new date
       valuesRef.current["Start Date"] = currentDate;
       valuesRef.current["End Date"] = currentDate;
 
       // Update Leva UI to show the new date
-      levaEphStore.set({ 
-        "Start Date": currentDate, 
-        "End Date": currentDate 
+      levaEphStore.set({
+        "Start Date": currentDate,
+        "End Date": currentDate,
       });
     }
   }, [ephimerides, posRef, levaEphStore]);
