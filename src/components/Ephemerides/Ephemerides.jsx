@@ -1,191 +1,151 @@
-import React, { useState } from "react";
-import { useEphemeridesStore } from "./ephemeridesStore";
+import { useEffect, useRef } from "react";
+import { useControls, useCreateStore, Leva, button } from "leva";
+import { useStore, useSettingsStore } from "../../store";
 import {
-  sDay,
-  sYear,
-  dateToDays,
   isValidDate,
   posToDate,
+  speedFactOpts,
+  sDay,
 } from "../../utils/time-date-functions";
+// Import the new store
+import { useEphemeridesStore } from "./ephemeridesStore";
 
 const Ephemerides = () => {
-  const { setGenerationParams, isGenerating } = useEphemeridesStore();
+  const { ephimerides, posRef } = useStore();
+  const { settings } = useSettingsStore();
+  const setGenerationParams = useEphemeridesStore((s) => s.setGenerationParams);
 
-  const [startDate, setStartDate] = useState(() => {
-    // Default to today
-    return new Intl.DateTimeFormat("sv-SE").format(Date.now());
+  const levaEphStore = useCreateStore();
+
+  const valuesRef = useRef({
+    "Start Date": posToDate(posRef.current),
+    "End Date": posToDate(posRef.current),
+    "Step size": 1,
+    "\u{000D}": sDay,
   });
 
-  const [endDate, setEndDate] = useState(() => {
-    // Default to one year from now
-    const d = new Date();
-    d.setFullYear(d.getFullYear() + 1);
-    return new Intl.DateTimeFormat("sv-SE").format(d);
+  const checkboxes = {};
+  settings.forEach((s) => {
+    if (s.type === "planet" && s.name !== "Earth") {
+      if (valuesRef.current[s.name] === undefined) {
+        valuesRef.current[s.name] = false;
+      }
+      checkboxes[s.name] = {
+        value: false,
+        onChange: (v) => {
+          valuesRef.current[s.name] = v;
+        },
+      };
+    }
   });
 
-  const [stepSize, setStepSize] = useState(10);
-  const [stepFactor, setStepFactor] = useState(1); // 1 = Days, 365.25 = Years (approx)
+  const handleCreate = () => {
+    const formValues = valuesRef.current;
 
-  const [checkedPlanets, setCheckedPlanets] = useState(["Sun", "Mars"]); // Defaults
+    const checkedPlanets = settings
+      .filter((s) => s.type === "planet" && s.name !== "Earth")
+      .filter((s) => formValues[s.name] === true)
+      .map((s) => s.name);
 
-  const availablePlanets = [
-    "Sun",
-    "Mercury",
-    "Venus",
-    "Moon",
-    "Mars",
-    "Jupiter",
-    "Saturn",
-    "Uranus",
-    "Neptune",
-  ];
-
-  const handleCheckboxChange = (planet) => {
-    if (checkedPlanets.includes(planet)) {
-      setCheckedPlanets(checkedPlanets.filter((p) => p !== planet));
-    } else {
-      setCheckedPlanets([...checkedPlanets, planet]);
-    }
-  };
-
-  const handleGenerate = () => {
-    if (!isValidDate(startDate) || !isValidDate(endDate)) {
-      alert("Invalid Date Format. Please use YYYY-MM-DD");
-      return;
-    }
-
+    // Send command to the Controller inside the Canvas
     setGenerationParams({
-      startDate,
-      endDate,
-      stepSize: Number(stepSize),
-      stepFactor: Number(stepFactor),
+      startDate: formValues["Start Date"],
+      endDate: formValues["End Date"],
+      stepSize: formValues["Step size"],
+      stepFactor: formValues["\u{000D}"],
       checkedPlanets,
     });
   };
 
+  const handleInvalidInput = (field, fallbackValue) => {
+    levaEphStore.set({ [field]: fallbackValue });
+    valuesRef.current[field] = fallbackValue;
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  };
+
+  // Effect to update Start/End Date to current position when menu is opened
+  useEffect(() => {
+    if (ephimerides) {
+      const currentDate = posToDate(posRef.current);
+
+      // Update valuesRef so generation uses the new date
+      valuesRef.current["Start Date"] = currentDate;
+      valuesRef.current["End Date"] = currentDate;
+
+      // Update Leva UI to show the new date
+      levaEphStore.set({
+        "Start Date": currentDate,
+        "End Date": currentDate,
+      });
+    }
+  }, [ephimerides, posRef, levaEphStore]);
+
+  useControls(
+    {
+      Generate: button(handleCreate),
+      "Start Date": {
+        value: posToDate(posRef.current),
+        onChange: (v) => {
+          valuesRef.current["Start Date"] = v;
+        },
+        onEditEnd: (value) => {
+          if (!isValidDate(value))
+            handleInvalidInput("Start Date", posToDate(posRef.current));
+        },
+      },
+      "End Date": {
+        value: posToDate(posRef.current),
+        onChange: (v) => {
+          valuesRef.current["End Date"] = v;
+        },
+        onEditEnd: (value) => {
+          if (!isValidDate(value))
+            handleInvalidInput("End Date", posToDate(posRef.current));
+        },
+      },
+      "Step size": {
+        value: 1,
+        onChange: (v) => {
+          valuesRef.current["Step size"] = v;
+        },
+        onEditEnd: (value) => {
+          const num = parseFloat(value);
+          if (isNaN(num) || num <= 0) handleInvalidInput("Step size", 1);
+        },
+      },
+      "\u{000D}": {
+        value: sDay,
+        options: speedFactOpts,
+        onChange: (v) => {
+          valuesRef.current["\u{000D}"] = v;
+        },
+      },
+      ...checkboxes,
+    },
+    { store: levaEphStore },
+    [settings]
+  );
+
   return (
-    <div
-      className="ephemerides-menu"
-      style={{ color: "white", padding: "10px" }}
-    >
-      <h3>Ephemerides Generator</h3>
-
-      <div style={{ marginBottom: "10px" }}>
-        <label>Start Date:</label>
-        <br />
-        <input
-          type="text"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          style={{
-            width: "100%",
-            background: "#333",
-            color: "white",
-            border: "1px solid #555",
-          }}
-        />
-      </div>
-
-      <div style={{ marginBottom: "10px" }}>
-        <label>End Date:</label>
-        <br />
-        <input
-          type="text"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          style={{
-            width: "100%",
-            background: "#333",
-            color: "white",
-            border: "1px solid #555",
-          }}
-        />
-      </div>
-
-      <div style={{ marginBottom: "10px", display: "flex", gap: "10px" }}>
-        <div style={{ flex: 1 }}>
-          <label>Step:</label>
-          <br />
-          <input
-            type="number"
-            value={stepSize}
-            onChange={(e) => setStepSize(e.target.value)}
-            style={{
-              width: "100%",
-              background: "#333",
-              color: "white",
-              border: "1px solid #555",
+    <>
+      {ephimerides && (
+        <div className="settings-div">
+          <Leva
+            store={levaEphStore}
+            titleBar={{ drag: true, title: "Ephemerides", filter: false }}
+            fill={false}
+            hideCopyButton
+            theme={{
+              fontSizes: { root: "16px" },
+              fonts: { mono: "" },
+              colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
             }}
           />
         </div>
-        <div style={{ flex: 1 }}>
-          <label>Unit:</label>
-          <br />
-          <select
-            value={stepFactor}
-            onChange={(e) => setStepFactor(Number(e.target.value))}
-            style={{
-              width: "100%",
-              background: "#333",
-              color: "white",
-              border: "1px solid #555",
-            }}
-          >
-            <option value={1}>Days</option>
-            <option value={sYear}>Years</option>
-          </select>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: "15px" }}>
-        <label>Planets:</label>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "5px",
-            marginTop: "5px",
-          }}
-        >
-          {availablePlanets.map((p) => (
-            <label
-              key={p}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                fontSize: "0.9em",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={checkedPlanets.includes(p)}
-                onChange={() => handleCheckboxChange(p)}
-                style={{ marginRight: "5px" }}
-              />
-              {p}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <button
-        onClick={handleGenerate}
-        disabled={isGenerating} // Disable when generating
-        style={{
-          width: "100%",
-          padding: "10px",
-          backgroundColor: isGenerating ? "#555" : "#2563eb", // Grey out if generating
-          color: isGenerating ? "#ccc" : "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: isGenerating ? "wait" : "pointer", // Change cursor
-          fontWeight: "bold",
-          transition: "background-color 0.2s",
-        }}
-      >
-        {isGenerating ? "Generating..." : "Generate Ephemerides"}
-      </button>
-    </div>
+      )}
+    </>
   );
 };
 
