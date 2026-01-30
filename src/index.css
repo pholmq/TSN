@@ -180,12 +180,19 @@ body {
 /* Override Leva’s inline styles for its root element */
 .positions-div > div {
   position: fixed;
-  top: 60px !important;
+  top: 110px !important;
   left: 10px !important;
   right: auto !important;
   opacity: 0.8;
 }
-/* Override Leva’s inline styles for its root element */
+.ephemerides-div > div {
+  position: fixed;
+  top: 170px !important;
+  left: 10px !important;
+  right: auto !important;
+  opacity: 0.8;
+}
+
 .settings-div > div {
   position: fixed;
   top: 60px !important;
@@ -195,8 +202,7 @@ body {
   width: 350px;
   opacity: 0.8;
 }
-
-.plancam-div > div {
+*/ .plancam-div > div {
   position: fixed;
   bottom: 10px !important;
   top: auto !important; /* Override any top positioning */

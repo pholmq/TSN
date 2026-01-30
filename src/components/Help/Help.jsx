@@ -151,7 +151,7 @@ const Help = () => {
           overflowY: "auto",
           overflowX: "hidden",
           lineHeight: "1.6",
-          fontSize: "12px",
+          fontSize: "16px",
           boxSizing: "border-box",
         }}
       >

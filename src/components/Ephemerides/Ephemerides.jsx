@@ -139,7 +139,7 @@ const Ephemerides = () => {
 
   return createPortal(
     <div
-      className="settings-div"
+      className="ephemerides-div"
       style={{
         position: "fixed",
         top: "80px",
