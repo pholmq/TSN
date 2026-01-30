@@ -302,7 +302,7 @@ const EditSettings = () => {
           },
 
           fontSizes: {
-            root: "16px",
+            root: "12px",
           },
           fonts: {
             mono: "",

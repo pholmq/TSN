@@ -68,15 +68,15 @@ const StarDataPanel = () => {
         opacity: visible ? 0.8 : 0,
         transition: "opacity 0.3s ease",
         display: hoveredStar ? "block" : "none",
-        transform: "scale(0.8)",      // Scale to 80%
-        transformOrigin: "top left",  // Anchor scaling
+        transform: "scale(0.8)", // Scale to 80%
+        transformOrigin: "top left", // Anchor scaling
       }}
     >
       <h3
         style={{
           fontSize: "20px",
           fontWeight: "bold",
-          marginBottom: "16px",
+          marginBottom: "12px",
           textAlign: "center",
         }}
       >

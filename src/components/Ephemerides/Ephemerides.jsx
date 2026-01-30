@@ -153,7 +153,7 @@ const Ephemerides = () => {
         fill={false}
         hideCopyButton
         theme={{
-          fontSizes: { root: "16px" },
+          fontSizes: { root: "12px" },
           fonts: { mono: "" },
           colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
         }}

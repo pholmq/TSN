@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useControls, useCreateStore, Leva, folder } from "leva";
+import { useControls, useCreateStore, Leva, folder, button } from "leva";
 import { useStore, useSettingsStore, usePosStore } from "../../store";
 
 const Positions = () => {
   const showPositions = useStore((s) => s.showPositions);
+  const setShowPositions = useStore((s) => s.setShowPositions);
   const positions = usePosStore((s) => s.positions);
   const { settings } = useSettingsStore();
 
@@ -16,7 +17,6 @@ const Positions = () => {
       if (s.traceable) {
         folders[s.name] = folder(
           {
-            // Use unique keys for each control
             [`${s.name}ra`]: { label: "RA:", value: "", editable: false },
             [`${s.name}dec`]: { label: "Dec:", value: "", editable: false },
             [`${s.name}dist`]: {
@@ -42,12 +42,20 @@ const Positions = () => {
     };
 
     return folders;
-  }, [settings]); // Only recreate if `settings` changes
+  }, [settings]);
 
   // Create a custom Leva store
   const levaStore = useCreateStore();
 
-  // Set up Leva controls (only runs once)
+  // Add Close button inside the panel
+  useControls(
+    {
+      "Close Menu": button(() => setShowPositions(false)),
+    },
+    { store: levaStore }
+  );
+
+  // Set up Leva controls
   const [, set] = useControls(() => planetFolders, { store: levaStore });
 
   // Update Leva controls when `positions` change
@@ -60,7 +68,7 @@ const Positions = () => {
         [`${pos}elongation`]: positions[pos].elongation,
       });
     }
-  }, [JSON.stringify(positions), set]); // Serialize to detect deep changes
+  }, [JSON.stringify(positions), set]);
 
   if (!showPositions) return null;
 
@@ -69,9 +77,10 @@ const Positions = () => {
       className="positions-div"
       style={{
         position: "fixed",
-        top: "80px", // Placed below the main menu button
+        top: "80px",
         right: "10px",
-        zIndex: 2147483647, // Max safe integer to sit above planet labels
+        zIndex: 2147483647,
+        width: "280px", // Reduced width (was implicit or larger)
       }}
     >
       <Leva
@@ -81,7 +90,7 @@ const Positions = () => {
         hideCopyButton
         theme={{
           fontSizes: {
-            root: "16px",
+            root: "11px", // Reduced font size (was 16px)
           },
           fonts: {
             mono: "",
