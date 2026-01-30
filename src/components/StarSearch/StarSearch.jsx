@@ -252,26 +252,6 @@ export default function StarSearch() {
           <FaSearch style={{ fontSize: "10px" }} />
           Star Search
         </div>
-
-        {/* <button
-          onClick={() => setSearchStars(false)}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "#b0b0b0",
-            cursor: "pointer",
-            fontSize: "12px",
-            padding: "2px",
-            display: "flex",
-            alignItems: "center",
-            marginRight: "-2px",
-          }}
-          onMouseEnter={(e) => (e.target.style.color = "white")}
-          onMouseLeave={(e) => (e.target.style.color = "#b0b0b0")}
-          title="Close"
-        >
-          <FaTimes />
-        </button> */}
       </div>
 
       {/* Body */}
