@@ -202,7 +202,7 @@ body {
   width: 350px;
   opacity: 0.8;
 }
-*/ .plancam-div > div {
+.plancam-div > div {
   position: fixed;
   bottom: 10px !important;
   top: auto !important; /* Override any top positioning */
