@@ -208,21 +208,19 @@ export default function StarSearch() {
         top: `${80 + position.y}px`,
         left: `${20 + position.x}px`,
         width: "320px",
-        // EXACT match for standard menu style (color + opacity)
         backgroundColor: "#111827",
         opacity: 0.8,
         color: "white",
-        borderRadius: "6px",
+        borderRadius: "6px", // Matched rounded corners
         zIndex: 2147483647,
         display: "flex",
         flexDirection: "column",
         userSelect: isDragging ? "none" : "auto",
-        // No explicit border needed if we match the menu style usually,
-        // but we can add a very subtle one if desired.
-        // Removing border here to match "transparent" menu look better.
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif",
       }}
     >
-      {/* Header - Slim & Darker */}
+      {/* Header - Matches Leva / Positions Style */}
       <div
         className="popup-header"
         onMouseDown={handleMouseDown}
@@ -230,25 +228,29 @@ export default function StarSearch() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "6px 12px", // Small padding
-          cursor: isDragging ? "grabbing" : "grab",
-          backgroundColor: "#1f2937", // Slightly lighter/distinct from body
+          height: "28px", // Slim height
+          padding: "0 8px",
+          cursor: isDragging ? "grab" : "default",
+          backgroundColor: "#181c20", // Darker header (Leva style)
+          borderBottom: "1px solid #181c20",
           borderTopLeftRadius: "6px",
           borderTopRightRadius: "6px",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <FaSearch style={{ color: "#60a5fa", fontSize: "12px" }} />
-          <h2
-            style={{
-              margin: 0,
-              fontSize: "14px",
-              fontWeight: "bold",
-              color: "white",
-            }}
-          >
-            Star Search
-          </h2>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "15px",
+            fontWeight: "600",
+            // textTransform: "uppercase",
+            color: "white", // Light gray text
+            pointerEvents: "none",
+          }}
+        >
+          <FaSearch style={{ fontSize: "10px" }} />
+          Star Search
         </div>
 
         {/* <button
@@ -256,13 +258,16 @@ export default function StarSearch() {
           style={{
             background: "transparent",
             border: "none",
-            color: "#9ca3af",
+            color: "#b0b0b0",
             cursor: "pointer",
-            fontSize: "14px",
+            fontSize: "12px",
             padding: "2px",
             display: "flex",
             alignItems: "center",
+            marginRight: "-2px",
           }}
+          onMouseEnter={(e) => (e.target.style.color = "white")}
+          onMouseLeave={(e) => (e.target.style.color = "#b0b0b0")}
           title="Close"
         >
           <FaTimes />
@@ -280,7 +285,7 @@ export default function StarSearch() {
           style={{
             fontSize: "14px",
             color: "#ffffff",
-            backgroundColor: "#374151", // Standard menu input bg
+            backgroundColor: "#374151",
             borderRadius: "4px",
             padding: "6px 10px",
             border: "none",
