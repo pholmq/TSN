@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useControls, useCreateStore, Leva, folder } from "leva";
 import { useStore, useSettingsStore, usePosStore } from "../../store";
 
@@ -61,31 +62,38 @@ const Positions = () => {
     }
   }, [JSON.stringify(positions), set]); // Serialize to detect deep changes
 
-  return (
-    <>
-      {showPositions && (
-        <div className="positions-div">
-          <Leva
-            store={levaStore}
-            titleBar={{ drag: true, title: "Positions", filter: false }}
-            fill={false}
-            hideCopyButton
-            theme={{
-              fontSizes: {
-                root: "16px",
-              },
-              fonts: {
-                mono: "",
-              },
-              colors: {
-                highlight1: "#FFFFFF",
-                highlight2: "#FFFFFF",
-              },
-            }}
-          />
-        </div>
-      )}
-    </>
+  if (!showPositions) return null;
+
+  return createPortal(
+    <div
+      className="positions-div"
+      style={{
+        position: "fixed",
+        top: "80px", // Placed below the main menu button
+        right: "10px",
+        zIndex: 2147483647, // Max safe integer to sit above planet labels
+      }}
+    >
+      <Leva
+        store={levaStore}
+        titleBar={{ drag: true, title: "Positions", filter: false }}
+        fill={false}
+        hideCopyButton
+        theme={{
+          fontSizes: {
+            root: "16px",
+          },
+          fonts: {
+            mono: "",
+          },
+          colors: {
+            highlight1: "#FFFFFF",
+            highlight2: "#FFFFFF",
+          },
+        }}
+      />
+    </div>,
+    document.body
   );
 };
 

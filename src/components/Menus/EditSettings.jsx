@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useControls, useCreateStore, Leva, folder, button } from "leva";
 import { useStore, useSettingsStore, usePosStore } from "../../store";
 import {
@@ -277,36 +278,43 @@ const EditSettings = () => {
     set(updatedValues);
   }, [settings, set]);
 
-  return (
-    <>
-      {editSettings && (
-        <div className="settings-div">
-          <Leva
-            store={levaSettingsStore}
-            titleBar={{ drag: true, title: "Settings", filter: false }}
-            fill={false}
-            hideCopyButton
-            theme={{
-              sizes: {
-                // controlWidth: "50%", // Applies to ALL controls (text/number/color etc.)
-                // labelWidth: "40%", // Adjust label width to balance space
-              },
+  if (!editSettings) return null;
 
-              fontSizes: {
-                root: "16px",
-              },
-              fonts: {
-                mono: "",
-              },
-              colors: {
-                highlight1: "#FFFFFF",
-                highlight2: "#FFFFFF",
-              },
-            }}
-          />
-        </div>
-      )}
-    </>
+  return createPortal(
+    <div
+      className="settings-div"
+      style={{
+        position: "fixed",
+        top: "80px",
+        right: "10px",
+        zIndex: 2147483647,
+      }}
+    >
+      <Leva
+        store={levaSettingsStore}
+        titleBar={{ drag: true, title: "Settings", filter: false }}
+        fill={false}
+        hideCopyButton
+        theme={{
+          sizes: {
+            // controlWidth: "50%", // Applies to ALL controls (text/number/color etc.)
+            // labelWidth: "40%", // Adjust label width to balance space
+          },
+
+          fontSizes: {
+            root: "16px",
+          },
+          fonts: {
+            mono: "",
+          },
+          colors: {
+            highlight1: "#FFFFFF",
+            highlight2: "#FFFFFF",
+          },
+        }}
+      />
+    </div>,
+    document.body
   );
 };
 

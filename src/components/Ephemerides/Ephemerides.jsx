@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useControls, useCreateStore, Leva, button } from "leva";
 import { useStore, useSettingsStore } from "../../store";
 import {
@@ -134,24 +135,31 @@ const Ephemerides = () => {
     [settings, isGenerating] // Add isGenerating to dependency array so the button updates
   );
 
-  return (
-    <>
-      {ephimerides && (
-        <div className="settings-div">
-          <Leva
-            store={levaEphStore}
-            titleBar={{ drag: true, title: "Ephemerides", filter: false }}
-            fill={false}
-            hideCopyButton
-            theme={{
-              fontSizes: { root: "16px" },
-              fonts: { mono: "" },
-              colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
-            }}
-          />
-        </div>
-      )}
-    </>
+  if (!ephimerides) return null;
+
+  return createPortal(
+    <div
+      className="settings-div"
+      style={{
+        position: "fixed",
+        top: "80px",
+        right: "10px",
+        zIndex: 2147483647,
+      }}
+    >
+      <Leva
+        store={levaEphStore}
+        titleBar={{ drag: true, title: "Ephemerides", filter: false }}
+        fill={false}
+        hideCopyButton
+        theme={{
+          fontSizes: { root: "16px" },
+          fonts: { mono: "" },
+          colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
+        }}
+      />
+    </div>,
+    document.body
   );
 };
 

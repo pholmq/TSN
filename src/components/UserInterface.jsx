@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   FaPlay,
   FaPause,
@@ -186,7 +187,7 @@ const UserInterface = () => {
     toggleShowMenu();
   };
 
-  return (
+  return createPortal(
     <>
       <button
         hidden={showMenu}
@@ -196,7 +197,7 @@ const UserInterface = () => {
           position: "fixed",
           top: "14px",
           right: "12px",
-          zIndex: 20,
+          zIndex: 2147483647,
           background: "#374151",
           border: "none",
           borderRadius: "6px",
@@ -205,7 +206,11 @@ const UserInterface = () => {
           cursor: "pointer",
         }}
       ></button>
-      <div className="menu" hidden={runIntro || !showMenu}>
+      <div
+        className="menu"
+        hidden={runIntro || !showMenu}
+        style={{ zIndex: 2147483647 }}
+      >
         <div className="menu-item">
           <span className="menu-header"> The TYCHOSIUM</span>
           <button
@@ -362,7 +367,8 @@ const UserInterface = () => {
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
 
