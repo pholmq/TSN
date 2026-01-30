@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom"; // Import createPortal
 import { useEphemeridesStore } from "./ephemeridesStore";
 import { FaSave, FaExclamationTriangle } from "react-icons/fa";
+import { speedFactOpts } from "../../utils/time-date-functions";
 
 const EphemeridesResult = () => {
   const { showResult, generatedData, generationError, params, closeResult } =
@@ -15,14 +16,18 @@ const EphemeridesResult = () => {
   // --- Formatting Logic ---
   const formatDataToText = (data, parameters) => {
     if (!data || !parameters) return "";
+    console.log(parameters);
+
+    // Look up the label (key) corresponding to the stepFactor value
+    const displayUnit = Object.keys(speedFactOpts).find(
+      (key) => speedFactOpts[key] === parameters.stepFactor
+    );
 
     let output = "--- EPHEMERIDES REPORT ---\n";
     output += `Generated on: ${new Date().toLocaleString()}\n`;
     output += `Start Date: ${parameters.startDate}\n`;
     output += `End Date: ${parameters.endDate}\n`;
-    output += `Step Size: ${parameters.stepSize} ${
-      parameters.stepFactor === 1 ? "Days" : "Years"
-    }\n`;
+    output += `Step Size: ${parameters.stepSize} ${displayUnit}\n`;
     output += "--------------------------------------\n\n";
 
     Object.keys(data).forEach((planetName) => {
