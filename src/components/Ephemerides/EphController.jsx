@@ -13,7 +13,7 @@ import {
 } from "../../utils/plotModelFunctions";
 
 const EphController = () => {
-  const { scene } = useThree();
+  const { scene, invalidate } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
 
   const {
@@ -22,7 +22,8 @@ const EphController = () => {
     resetTrigger,
     setGeneratedData,
     setGenerationError,
-    setIsGenerating, // Import the new setter
+    setIsGenerating,
+    setProgress,
   } = useEphemeridesStore();
 
   const [generating, setGenerating] = useState(false);
@@ -35,35 +36,20 @@ const EphController = () => {
     data: {},
     totalSteps: 0,
     currentStepCount: 0,
+    lastProgress: 0,
   });
 
   // 1. Initialize Job
   useEffect(() => {
     if (trigger && params) {
-      // Ensure global loading state is true
       setIsGenerating(true);
+      setProgress(0);
 
       const startPos = dateTimeToPos(params.startDate, "00:00:00");
       const endPos = dateTimeToPos(params.endDate, "00:00:00");
       const increment = params.stepSize * params.stepFactor;
 
-      // --- Pre-calculation Validation ---
       const calculatedSteps = Math.floor((endPos - startPos) / increment) + 1;
-      const totalOperations = calculatedSteps * params.checkedPlanets.length;
-
-      // Check limit
-      if (totalOperations > 100000) {
-        const errorMsg =
-          `Total Steps: ${calculatedSteps}\n` +
-          `Selected Planets: ${params.checkedPlanets.length}\n` +
-          `Total Operations: ${totalOperations}\n\n` +
-          `The limit is 100,000 operations. Please reduce the Date Range, increase the Step Size, or select fewer planets.`;
-
-        setGenerationError(errorMsg);
-        setIsGenerating(false); // Stop loading on error
-        resetTrigger();
-        return;
-      }
 
       // Initialize Data Structure
       const initialData = {};
@@ -80,16 +66,33 @@ const EphController = () => {
         data: initialData,
         totalSteps: calculatedSteps,
         currentStepCount: 0,
+        lastProgress: 0,
       };
 
       setGenerating(true);
       resetTrigger();
     }
-  }, [trigger, params, resetTrigger, setGenerationError, setIsGenerating]);
+  }, [
+    trigger,
+    params,
+    resetTrigger,
+    setGenerationError,
+    setIsGenerating,
+    setProgress,
+  ]);
 
   // 2. Process Job in Chunks
   useFrame(() => {
+    // Check for Cancellation
+    if (generating && !useEphemeridesStore.getState().isGenerating) {
+      console.log("Generation Cancelled by User");
+      setGenerating(false);
+      return;
+    }
+
     if (!generating) return;
+
+    invalidate();
 
     const job = jobRef.current;
     const BATCH_SIZE = 50;
@@ -121,11 +124,21 @@ const EphController = () => {
       batchCount++;
     }
 
-    // Check if finished
+    const progress = Math.min(
+      100,
+      Math.floor((job.currentStepCount / job.totalSteps) * 100)
+    );
+
+    if (progress > job.lastProgress) {
+      setProgress(progress);
+      job.lastProgress = progress;
+    }
+
     if (job.currentPos > job.endPos) {
       console.log(`Generation Complete. Steps: ${job.currentStepCount}`);
-      setGeneratedData(job.data); // This also sets isGenerating to false in the store
+      setGeneratedData(job.data);
       setGenerating(false);
+      setProgress(100);
     }
   });
 

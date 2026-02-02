@@ -8,15 +8,15 @@ import {
   speedFactOpts,
   sDay,
 } from "../../utils/time-date-functions";
-// Import the new store
 import { useEphemeridesStore } from "./ephemeridesStore";
 
 const Ephemerides = () => {
   const { ephimerides, posRef } = useStore();
   const { settings } = useSettingsStore();
 
-  // Get both the setter and the generating status
+  // Get setters and state from the store
   const setGenerationParams = useEphemeridesStore((s) => s.setGenerationParams);
+  const setGenerationError = useEphemeridesStore((s) => s.setGenerationError); // <--- Added this
   const isGenerating = useEphemeridesStore((s) => s.isGenerating);
 
   const levaEphStore = useCreateStore();
@@ -54,6 +54,29 @@ const Ephemerides = () => {
       .filter((s) => formValues[s.name] === true)
       .map((s) => s.name);
 
+    // --- VALIDATION CHECKS ---
+
+    // 1. Check if at least one planet is selected
+    if (checkedPlanets.length === 0) {
+      setGenerationError(
+        "No planets selected.\nPlease select at least one planet to generate data."
+      );
+      return;
+    }
+
+    // 2. Check if Start Date is after End Date
+    // We create Date objects to compare them accurately
+    const startDate = new Date(formValues["Start Date"]);
+    const endDate = new Date(formValues["End Date"]);
+
+    if (startDate > endDate) {
+      setGenerationError(
+        "Invalid Date Range.\nThe Start Date cannot be after the End Date."
+      );
+      return;
+    }
+    // -------------------------
+
     // Send command to the Controller inside the Canvas
     setGenerationParams({
       startDate: formValues["Start Date"],
@@ -77,11 +100,9 @@ const Ephemerides = () => {
     if (ephimerides) {
       const currentDate = posToDate(posRef.current);
 
-      // Update valuesRef so generation uses the new date
       valuesRef.current["Start Date"] = currentDate;
       valuesRef.current["End Date"] = currentDate;
 
-      // Update Leva UI to show the new date
       levaEphStore.set({
         "Start Date": currentDate,
         "End Date": currentDate,
@@ -91,7 +112,7 @@ const Ephemerides = () => {
 
   useControls(
     {
-      Generate: button(handleCreate, { disabled: isGenerating }), // Disable button based on state
+      Generate: button(handleCreate, { disabled: isGenerating }),
       "Start Date": {
         value: posToDate(posRef.current),
         onChange: (v) => {
@@ -132,7 +153,7 @@ const Ephemerides = () => {
       ...checkboxes,
     },
     { store: levaEphStore },
-    [settings, isGenerating] // Add isGenerating to dependency array so the button updates
+    [settings, isGenerating]
   );
 
   if (!ephimerides) return null;

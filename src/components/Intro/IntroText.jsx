@@ -85,7 +85,7 @@ export default function IntroText() {
           // Shifted position to be visually 'under' the main title (adjusting X coordinate)
           position={warningPos}
           rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-          size={10}
+          size={20}
           height={2}
           curveSegments={12}
           bevelEnabled
@@ -97,7 +97,7 @@ export default function IntroText() {
           Optimized for Mouse & Keyboard
           <meshStandardMaterial
             ref={warningMaterialRef}
-            color="#FFD700" // Yellow/Gold color for a warning hint
+            color="#FFFFFF"
             metalness={0.2}
             roughness={0.5}
             transparent={true}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { createPortal } from "react-dom"; // Import createPortal
+import { createPortal } from "react-dom";
 import { useEphemeridesStore } from "./ephemeridesStore";
 import { FaSave, FaExclamationTriangle } from "react-icons/fa";
 import { speedFactOpts } from "../../utils/time-date-functions";
@@ -16,9 +16,7 @@ const EphemeridesResult = () => {
   // --- Formatting Logic ---
   const formatDataToText = (data, parameters) => {
     if (!data || !parameters) return "";
-    console.log(parameters);
 
-    // Look up the label (key) corresponding to the stepFactor value
     const displayUnit = Object.keys(speedFactOpts).find(
       (key) => speedFactOpts[key] === parameters.stepFactor
     );
@@ -52,7 +50,6 @@ const EphemeridesResult = () => {
     return output;
   };
 
-  // Update preview when data arrives
   useEffect(() => {
     if (generatedData && params) {
       setPreviewText(formatDataToText(generatedData, params));
@@ -89,16 +86,13 @@ const EphemeridesResult = () => {
     }
   };
 
-  // --- Save to File ---
   const handleSave = () => {
     if (!previewText || !params) return;
-
     const blob = new Blob([previewText], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const safeStart = params.startDate.replace(/[:/]/g, "-");
     const safeEnd = params.endDate.replace(/[:/]/g, "-");
     const filename = `Ephemerides_${safeStart}_to_${safeEnd}.txt`;
-
     const link = document.createElement("a");
     link.href = url;
     link.download = filename;
@@ -157,7 +151,7 @@ const EphemeridesResult = () => {
             <FaSave style={{ color: "#60a5fa", fontSize: "20px" }} />
           )}
           <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "bold" }}>
-            {generationError ? "Limit Exceeded" : "Ephemerides result"}
+            {generationError ? "Error" : "Ephemerides result"}
           </h2>
         </div>
         <button
@@ -184,11 +178,14 @@ const EphemeridesResult = () => {
                 color: "#f87171",
                 fontWeight: "bold",
                 marginBottom: "15px",
+                fontSize: "18px",
               }}
             >
               Calculation Stopped
             </p>
-            <p style={{ whiteSpace: "pre-wrap" }}>{generationError}</p>
+            <p style={{ whiteSpace: "pre-wrap", fontSize: "16px" }}>
+              {generationError}
+            </p>
           </div>
         ) : (
           <div
@@ -226,7 +223,7 @@ const EphemeridesResult = () => {
         )}
       </div>
 
-      {/* Footer Actions - UPDATED WITH OK BUTTON */}
+      {/* Footer Actions */}
       <div
         style={{
           padding: "15px 20px",
@@ -240,7 +237,6 @@ const EphemeridesResult = () => {
         }}
       >
         {generationError ? (
-          // Just an OK button for the error state
           <button
             onClick={closeResult}
             style={{
@@ -256,7 +252,6 @@ const EphemeridesResult = () => {
             OK
           </button>
         ) : (
-          // Close and Save buttons for the success state
           <>
             <button
               onClick={closeResult}

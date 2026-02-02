@@ -16,6 +16,7 @@ import Positions from "./components/Menus/Positions";
 import Ephemerides from "./components/Ephemerides/Ephemerides";
 import EphController from "./components/Ephemerides/EphController";
 import EphemeridesResult from "./components/Ephemerides/EphemeridesResult";
+import EphemeridesProgress from "./components/Ephemerides/EphemeridesProgress";
 import Plot from "./components/Plot/Plot";
 // import PlotController from "./components/Plot/PlotController";
 import Stars from "./components/Stars/Stars";
@@ -107,6 +108,7 @@ const TSNext = () => {
         <Positions />
         <Ephemerides />
         <EphemeridesResult />
+        <EphemeridesProgress />
         <Plot />
         <EditSettings />
         <PlanetCameraUI />
