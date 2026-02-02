@@ -59,6 +59,7 @@
     "size": 1,
     "actualSize": 0.00116,
     "startPos": 261.2,
+    "rotationStart": 3.14159,
     "speed": 83.28521,
     "tilt": 0,
     "orbitRadius": 0.25505129081458283,

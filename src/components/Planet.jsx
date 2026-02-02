@@ -60,10 +60,13 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
       );
     }
 
-    if (rotationSpeed && planetRef.current) {
-      // Rotate the group containing the planet
+    if (planetRef.current) {
+      // Convert rotationStart from degrees to radians
+      const startRadians = (rotationStart * Math.PI) / 180;
+
+      // Apply rotation (Start Angle + Speed * Time)
       planetRef.current.rotation.y =
-        rotationStart + rotationSpeed * posRef.current;
+        startRadians + rotationSpeed * posRef.current;
     }
   });
 
