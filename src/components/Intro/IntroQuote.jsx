@@ -72,7 +72,7 @@ const IntroQuote = ({ duration = 10000, fade = 2000 }) => {
           opacity: isVisible ? 1 : 0,
           transition: `opacity ${fade}ms ease-in-out`,
           fontFamily: "'Times New Roman', serif",
-          fontSize: "clamp(1.5rem, 2.5vw, 2rem)",
+          fontSize: "clamp(2.5rem, 3.5vw, 3rem)",
           fontWeight: "400",
           textAlign: "center",
           color: "grey",

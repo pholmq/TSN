@@ -48,6 +48,9 @@ export default function HighlightSelectedStar() {
 
   if (!position) return null;
 
+  // console.log(position);
+  // console.log(selectedStarHR);
+
   return (
     <Html
       position={position}

@@ -140,7 +140,7 @@ const LevaUI = () => {
           value: orbits,
           onChange: setOrbits,
         },
-        "Search stars": {
+        "Star Search": {
           value: searchStars,
           onChange: setSearchStars,
         },
@@ -345,7 +345,7 @@ const LevaUI = () => {
         hideCopyButton
         theme={{
           fontSizes: {
-            root: "16px",
+            root: "14px",
           },
           fonts: {
             mono: "",
@@ -365,7 +365,7 @@ const LevaUI = () => {
           hideCopyButton
           theme={{
             fontSizes: {
-              root: "16px",
+              root: "12px",
             },
             fonts: {
               mono: "",

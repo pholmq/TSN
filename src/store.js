@@ -16,7 +16,7 @@ export const useStore = create((set) => ({
   setSpeedMultiplier: (v) => set({ speedMultiplier: v }),
   showPositions: false,
   setShowPositions: (v) => set({ showPositions: v }),
-  searchStars: true,
+  searchStars: false,
   setSearchStars: (v) => set({ searchStars: v }),
   activeCamera: "orbit",
   cameraTarget: "Earth",
@@ -109,7 +109,7 @@ export const useStore = create((set) => ({
   updAC: false, //When this value changes AnimationController rerenders
   updateAC: () => set((state) => ({ updAC: !state.updAC })),
 
-  zoomLevel: 80, // Initial zoom level
+  zoomLevel: 60, // Initial zoom level
   setZoom: (level) => set({ zoomLevel: level }),
   zoomIn: () =>
     set((state) => ({

@@ -15,7 +15,7 @@ const sSecond = sMinute / 60;
 
 export const speedFactOpts = {
   seconds: sSecond,
-  minute: sMinute,
+  minutes: sMinute,
   hours: sHour,
   days: sDay,
   weeks: sWeek,

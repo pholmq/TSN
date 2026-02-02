@@ -135,7 +135,7 @@ const Help = () => {
             padding: "8px 12px",
             color: "white",
             cursor: "pointer",
-            fontSize: "16px",
+            fontSize: "12px",
           }}
         >
           ✕

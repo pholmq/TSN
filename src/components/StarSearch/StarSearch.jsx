@@ -1,39 +1,54 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import starsData from "../../settings/BSC.json";
 import { useStore } from "../../store";
 import createCrosshairTexture from "../../utils/createCrosshairTexture";
 import * as THREE from "three";
+import { FaSearch, FaTimes } from "react-icons/fa";
 
 export default function StarSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
 
+  // --- Store State ---
+  const searchStars = useStore((s) => s.searchStars);
+  const setSearchStars = useStore((s) => s.setSearchStars);
+
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const runIntro = useStore((s) => s.runIntro);
-
   const cameraControlsRef = useStore((s) => s.cameraControlsRef);
 
-  //setSelectedStarHR(null) on component mount
-  useEffect(() => {
-    setQuery("");
-    setResults([]);
-    setSelectedStarHR(null);
-  }, []);
+  // --- Dragging State ---
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // If officialStarDistances changes (toggles), clear the search field and results
+  // --- Initialization & Cleanup ---
+  useEffect(() => {
+    if (!searchStars) {
+      setQuery("");
+      setResults([]);
+    }
+  }, [searchStars]);
+
   useEffect(() => {
     setQuery("");
     setResults([]);
     setSelectedStarHR(null);
   }, [officialStarDistances]);
 
-  const indexedStars = starsData.map((star) => ({
-    ...star,
-    HR_display: star.HR ? `HR ${star.HR}` : null,
-    HIP_display: star.HIP ? `HIP ${star.HIP}` : null,
-  }));
+  // --- Search Logic ---
+  const indexedStars = useMemo(
+    () =>
+      starsData.map((star) => ({
+        ...star,
+        HR_display: star.HR ? `HR ${star.HR}` : null,
+        HIP_display: star.HIP ? `HIP ${star.HIP}` : null,
+      })),
+    []
+  );
 
   const handleChange = (e) => {
     const value = e.target.value.trim();
@@ -48,26 +63,20 @@ export default function StarSearch() {
     const lower = value.toLowerCase();
     let filtered = [];
 
-    // Check for explicit HR number search (starts with "hr ")
     if (lower.startsWith("hr ")) {
       const hrQuery = value.slice(3).trim();
       filtered = indexedStars.filter((star) => star.HR && star.HR === hrQuery);
-    }
-    // Check for explicit HIP number search (starts with "hip ")
-    else if (lower.startsWith("hip ")) {
+    } else if (lower.startsWith("hip ")) {
       const hipQuery = value.slice(4).trim();
       filtered = indexedStars.filter(
         (star) => star.HIP && star.HIP === hipQuery
       );
-    }
-    // General search across name, HR, and HIP
-    else {
+    } else {
       const nameMatches = indexedStars.filter((star) =>
         star.N ? star.N.toLowerCase().includes(lower) : false
       );
 
       const digits = value.replace(/\D/g, "");
-
       let hrMatches = [];
       let hipMatches = [];
 
@@ -89,11 +98,10 @@ export default function StarSearch() {
       }
 
       const all = [...nameMatches, ...hrMatches, ...hipMatches];
-      const unique = Array.from(new Set(all));
-      filtered = unique;
+      filtered = Array.from(new Set(all));
     }
 
-    setResults(filtered);
+    setResults(filtered.slice(0, 50));
   };
 
   const handleSelect = (star) => {
@@ -113,7 +121,6 @@ export default function StarSearch() {
     setQuery(displayText);
     setResults([]);
 
-    // Rotate camera around target to view star
     setTimeout(() => {
       const starPos = useStore.getState().selectedStarPosition;
       if (!starPos || !cameraControlsRef?.current) return;
@@ -123,26 +130,20 @@ export default function StarSearch() {
       controls.getTarget(target);
 
       const currentDist = controls.camera.position.distanceTo(target);
-
-      // Direction from star to target
       const starToTarget = target.clone().sub(starPos).normalize();
-
-      // Base position on line
       const basePos = target
         .clone()
         .add(starToTarget.multiplyScalar(currentDist));
 
-      // Offset downward so star appears higher
       const up = new THREE.Vector3(0, 1, 0);
-      const offset = up.multiplyScalar(currentDist * -0.07); // Adjust 0.2 for vertical position
-
+      const offset = up.multiplyScalar(currentDist * -0.07);
       const newPos = basePos.sub(offset);
 
       controls.setPosition(newPos.x, newPos.y, newPos.z, true);
     }, 100);
   };
 
-  // Derive star info from selectedStarHR
+  // --- Display Helpers ---
   const selectedStar = useMemo(() => {
     return selectedStarHR
       ? starsData.find((star) => star.HR?.toString() === selectedStarHR)
@@ -163,55 +164,131 @@ export default function StarSearch() {
     return "Unknown";
   }, [selectedStar]);
 
-  // Create crosshair texture once
-  const crosshairTexture = useMemo(() => createCrosshairTexture(), []);
-  const crosshairImageSrc = crosshairTexture.image.toDataURL(); // Convert to base64 src
+  const crosshairImageSrc = useMemo(
+    () => createCrosshairTexture().image.toDataURL(),
+    []
+  );
 
-  return (
-    !runIntro && (
+  // --- Dragging Logic ---
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      setPosition({
+        x: position.x + (e.clientX - dragStart.x),
+        y: position.y + (e.clientY - dragStart.y),
+      });
+      setDragStart({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseUp = () => setIsDragging(false);
+
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, dragStart, position]);
+
+  const handleMouseDown = (e) => {
+    if (e.target.closest(".popup-header")) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  if (runIntro || !searchStars) return null;
+
+  return createPortal(
+    <div
+      style={{
+        position: "fixed",
+        top: `${30 + position.y}px`,
+        left: `${250 + position.x}px`,
+        width: "220px",
+        backgroundColor: "#111827",
+        opacity: 0.8,
+        color: "white",
+        borderRadius: "6px", // Matched rounded corners
+        zIndex: 2147483647,
+        display: "flex",
+        flexDirection: "column",
+        userSelect: isDragging ? "none" : "auto",
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif",
+      }}
+    >
+      {/* Header - Matches Leva / Positions Style */}
       <div
+        className="popup-header"
+        onMouseDown={handleMouseDown}
         style={{
-          position: "fixed",
-          top: "20px",
-          left: "20px",
-          zIndex: 1000,
-          width: "310px",
-          opacity: 0.8,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          height: "28px", // Slim height
+          padding: "0 8px",
+          cursor: isDragging ? "grab" : "default",
+          backgroundColor: "#181c20", // Darker header (Leva style)
+          borderBottom: "1px solid #181c20",
+          borderTopLeftRadius: "6px",
+          borderTopRightRadius: "6px",
         }}
       >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "12px",
+            fontWeight: "600",
+            // textTransform: "uppercase",
+            color: "white", // Light gray text
+            pointerEvents: "none",
+          }}
+        >
+          <FaSearch style={{ fontSize: "10px" }} />
+          Star Search
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: "12px" }}>
         <input
           type="text"
           value={query}
           onChange={handleChange}
           onClick={(e) => e.target.select()}
-          placeholder="Search stars by name/number"
+          placeholder="Search name/number..."
           style={{
-            fontSize: "18px",
+            fontSize: "12px",
             color: "#ffffff",
             backgroundColor: "#374151",
-            borderRadius: "0.25rem",
-            padding: "0.5rem",
+            borderRadius: "4px",
+            padding: "6px 10px",
             border: "none",
             outline: "none",
-            flexGrow: 1,
             width: "100%",
             boxSizing: "border-box",
+            marginBottom: results.length > 0 || selectedStarHR ? "8px" : "0",
           }}
           className="starSearch-input"
         />
 
+        {/* Results List */}
         {results.length > 0 && (
           <ul
             style={{
               width: "100%",
               backgroundColor: "#1f2937",
-              borderRadius: "0 0 8px 8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              maxHeight: "200px",
+              borderRadius: "4px",
+              maxHeight: "180px",
               overflowY: "auto",
-              marginTop: "4px",
               listStyle: "none",
               padding: 0,
+              margin: 0,
             }}
           >
             {results.map((star, index) => {
@@ -227,12 +304,19 @@ export default function StarSearch() {
                   key={index}
                   onClick={() => handleSelect(star)}
                   style={{
-                    padding: "10px",
-                    color: "#fff",
-                    fontSize: "18px",
+                    padding: "6px 10px",
+                    color: "#d1d5db",
+                    fontSize: "12px",
                     cursor: "pointer",
-                    borderBottom: "1px solid #444",
+                    borderBottom:
+                      index < results.length - 1 ? "1px solid #374151" : "none",
                   }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#374151")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
                 >
                   {displayText}
                 </li>
@@ -240,16 +324,17 @@ export default function StarSearch() {
             })}
           </ul>
         )}
-        {/* Selected star info */}
+
+        {/* Selected Star Info */}
         {selectedStarHR && (
           <div
             style={{
-              marginTop: "10px",
+              marginTop: "8px",
               backgroundColor: "#1f2937",
               color: "white",
               padding: "10px",
-              borderRadius: "8px",
-              fontSize: "14px",
+              borderRadius: "4px",
+              fontSize: "13px",
               lineHeight: "1.5",
             }}
           >
@@ -258,17 +343,29 @@ export default function StarSearch() {
                 src={crosshairImageSrc}
                 alt="Crosshair"
                 style={{
-                  width: "40px",
-                  height: "40px",
-                  filter: "brightness(2.5) drop-shadow(0 0 6px yellow)",
+                  width: "28px",
+                  height: "28px",
+                  filter: "brightness(2.5) drop-shadow(0 0 4px yellow)",
                   flexShrink: 0,
                 }}
               />
-              <strong>{hrHipString}</strong>
+              <div>
+                <span
+                  style={{
+                    color: "#9ca3af",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  SELECTED
+                </span>
+                <div style={{ fontWeight: "normal" }}>{hrHipString}</div>
+              </div>
             </div>
           </div>
         )}
       </div>
-    )
+    </div>,
+    document.body
   );
 }

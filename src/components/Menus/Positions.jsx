@@ -1,9 +1,11 @@
 import { useEffect, useMemo } from "react";
-import { useControls, useCreateStore, Leva, folder } from "leva";
+import { createPortal } from "react-dom";
+import { useControls, useCreateStore, Leva, folder, button } from "leva";
 import { useStore, useSettingsStore, usePosStore } from "../../store";
 
 const Positions = () => {
   const showPositions = useStore((s) => s.showPositions);
+  const setShowPositions = useStore((s) => s.setShowPositions);
   const positions = usePosStore((s) => s.positions);
   const { settings } = useSettingsStore();
 
@@ -15,7 +17,6 @@ const Positions = () => {
       if (s.traceable) {
         folders[s.name] = folder(
           {
-            // Use unique keys for each control
             [`${s.name}ra`]: { label: "RA:", value: "", editable: false },
             [`${s.name}dec`]: { label: "Dec:", value: "", editable: false },
             [`${s.name}dist`]: {
@@ -41,12 +42,15 @@ const Positions = () => {
     };
 
     return folders;
-  }, [settings]); // Only recreate if `settings` changes
+  }, [settings]);
 
   // Create a custom Leva store
   const levaStore = useCreateStore();
 
-  // Set up Leva controls (only runs once)
+  // Add Close button inside the panel
+  useControls({ store: levaStore });
+
+  // Set up Leva controls
   const [, set] = useControls(() => planetFolders, { store: levaStore });
 
   // Update Leva controls when `positions` change
@@ -59,33 +63,39 @@ const Positions = () => {
         [`${pos}elongation`]: positions[pos].elongation,
       });
     }
-  }, [JSON.stringify(positions), set]); // Serialize to detect deep changes
+  }, [JSON.stringify(positions), set]);
 
-  return (
-    <>
-      {showPositions && (
-        <div className="positions-div">
-          <Leva
-            store={levaStore}
-            titleBar={{ drag: true, title: "Positions", filter: false }}
-            fill={false}
-            hideCopyButton
-            theme={{
-              fontSizes: {
-                root: "16px",
-              },
-              fonts: {
-                mono: "",
-              },
-              colors: {
-                highlight1: "#FFFFFF",
-                highlight2: "#FFFFFF",
-              },
-            }}
-          />
-        </div>
-      )}
-    </>
+  if (!showPositions) return null;
+
+  return createPortal(
+    <div
+      className="positions-div"
+      style={{
+        position: "fixed",
+
+        zIndex: 2147483647,
+      }}
+    >
+      <Leva
+        store={levaStore}
+        titleBar={{ drag: true, title: "Positions", filter: false }}
+        fill={false}
+        hideCopyButton
+        theme={{
+          fontSizes: {
+            root: "12px",
+          },
+          fonts: {
+            mono: "",
+          },
+          colors: {
+            highlight1: "#FFFFFF",
+            highlight2: "#FFFFFF",
+          },
+        }}
+      />
+    </div>,
+    document.body
   );
 };
 

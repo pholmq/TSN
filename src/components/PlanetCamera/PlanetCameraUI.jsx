@@ -302,7 +302,7 @@ const PlanetCameraUI = () => {
                 numberInputMinWidth: "60px",
               },
               fontSizes: {
-                root: "16px",
+                root: "12px",
               },
               fonts: {
                 mono: "",

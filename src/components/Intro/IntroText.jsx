@@ -17,8 +17,8 @@ export default function IntroText() {
     // Use modern CSS media query for "coarse" pointer (standard for touchscreens)
     const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
     // Check for 'ontouchstart' event for broader compatibility
-    const hasTouchEvents = 'ontouchstart' in window;
-    
+    const hasTouchEvents = "ontouchstart" in window;
+
     if (isCoarsePointer || hasTouchEvents) {
       setIsTouchDevice(true);
     }
@@ -48,8 +48,8 @@ export default function IntroText() {
   if (!runIntro) return null;
 
   // Title position and size constants for easy reference and alignment
-  const titlePosition = [-140, 0, -100];
-  const warningPos = [-180, 0, -100]; 
+  const titlePosition = [-140, 0, -180];
+  const warningPos = [-180, 0, -100];
 
   return (
     <>
@@ -58,7 +58,7 @@ export default function IntroText() {
         font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
         position={titlePosition}
         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-        size={20}
+        size={30}
         height={8}
         curveSegments={12}
         bevelEnabled
@@ -77,15 +77,15 @@ export default function IntroText() {
           opacity={1}
         />
       </Text3D>
-      
+
       {/* Conditional Warning Text for Touch Devices, positioned below the title */}
       {isTouchDevice && (
         <Text3D
-        font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
+          font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
           // Shifted position to be visually 'under' the main title (adjusting X coordinate)
           position={warningPos}
           rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-          size={10}
+          size={20}
           height={2}
           curveSegments={12}
           bevelEnabled
@@ -97,7 +97,7 @@ export default function IntroText() {
           Optimized for Mouse & Keyboard
           <meshStandardMaterial
             ref={warningMaterialRef}
-            color="#FFD700" // Yellow/Gold color for a warning hint
+            color="#FFFFFF"
             metalness={0.2}
             roughness={0.5}
             transparent={true}
