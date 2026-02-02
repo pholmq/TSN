@@ -206,7 +206,7 @@ export default function StarSearch() {
       style={{
         position: "fixed",
         top: `${30 + position.y}px`,
-        left: `${20 + position.x}px`,
+        left: `${250 + position.x}px`,
         width: "220px",
         backgroundColor: "#111827",
         opacity: 0.8,
