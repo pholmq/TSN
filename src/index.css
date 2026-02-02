@@ -180,9 +180,10 @@ body {
 /* Override Leva’s inline styles for its root element */
 .positions-div > div {
   position: fixed;
-  top: 110px !important;
-  left: 10px !important;
-  right: auto !important;
+  top: 110px;
+  left: 10px;
+  right: auto;
+  width: 260px;
   opacity: 0.8;
 }
 .ephemerides-div > div {

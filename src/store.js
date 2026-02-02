@@ -109,7 +109,7 @@ export const useStore = create((set) => ({
   updAC: false, //When this value changes AnimationController rerenders
   updateAC: () => set((state) => ({ updAC: !state.updAC })),
 
-  zoomLevel: 70, // Initial zoom level
+  zoomLevel: 60, // Initial zoom level
   setZoom: (level) => set({ zoomLevel: level }),
   zoomIn: () =>
     set((state) => ({

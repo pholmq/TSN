@@ -345,7 +345,7 @@ const LevaUI = () => {
         hideCopyButton
         theme={{
           fontSizes: {
-            root: "12px",
+            root: "14px",
           },
           fonts: {
             mono: "",

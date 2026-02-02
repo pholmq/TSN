@@ -58,9 +58,9 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
         >
           <div
             className="info-panel"
-            style={{ 
-              transform: "translateX(-60%) scale(0.8)", 
-              transformOrigin: "top left" 
+            style={{
+              transform: "translateX(-60%) ",
+              transformOrigin: "top left",
             }}
             onContextMenu={(e) => {
               if (pinned) {

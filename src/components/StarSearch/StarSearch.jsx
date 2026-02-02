@@ -242,7 +242,7 @@ export default function StarSearch() {
             display: "flex",
             alignItems: "center",
             gap: "8px",
-            fontSize: "15px",
+            fontSize: "12px",
             fontWeight: "600",
             // textTransform: "uppercase",
             color: "white", // Light gray text
@@ -263,7 +263,7 @@ export default function StarSearch() {
           onClick={(e) => e.target.select()}
           placeholder="Search name/number..."
           style={{
-            fontSize: "14px",
+            fontSize: "12px",
             color: "#ffffff",
             backgroundColor: "#374151",
             borderRadius: "4px",
@@ -306,7 +306,7 @@ export default function StarSearch() {
                   style={{
                     padding: "6px 10px",
                     color: "#d1d5db",
-                    fontSize: "13px",
+                    fontSize: "12px",
                     cursor: "pointer",
                     borderBottom:
                       index < results.length - 1 ? "1px solid #374151" : "none",

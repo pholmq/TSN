@@ -48,12 +48,7 @@ const Positions = () => {
   const levaStore = useCreateStore();
 
   // Add Close button inside the panel
-  useControls(
-    {
-      "Close Menu": button(() => setShowPositions(false)),
-    },
-    { store: levaStore }
-  );
+  useControls({ store: levaStore });
 
   // Set up Leva controls
   const [, set] = useControls(() => planetFolders, { store: levaStore });
@@ -77,10 +72,8 @@ const Positions = () => {
       className="positions-div"
       style={{
         position: "fixed",
-        top: "80px",
-        right: "10px",
+
         zIndex: 2147483647,
-        width: "280px", // Reduced width (was implicit or larger)
       }}
     >
       <Leva
@@ -90,7 +83,7 @@ const Positions = () => {
         hideCopyButton
         theme={{
           fontSizes: {
-            root: "11px", // Reduced font size (was 16px)
+            root: "12px",
           },
           fonts: {
             mono: "",
