@@ -198,7 +198,7 @@ const EphemeridesResult = () => {
                 fontSize: "14px",
               }}
             >
-              Preview. Click 'Save' to download a text file.
+              Click 'Save' to download as a text file.
             </p>
             <textarea
               readOnly
