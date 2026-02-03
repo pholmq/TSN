@@ -41,8 +41,8 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     }
   }, [texture, s.light]);
 
-  const rotationSpeed = s.rotationSpeed || 0;
-  const rotationStart = s.rotationStart || 0;
+  const rotationSpeed = Number(s.rotationSpeed || 0);
+  const rotationStart = Number(s.rotationStart || 0);
 
   let size = actualPlanetSizes ? s.actualSize : s.size;
   let visible = s.visible;
@@ -60,15 +60,16 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
       );
     }
 
-    if (rotationSpeed && planetRef.current) {
-      // Rotate the group containing the planet
+    if (planetRef.current) {
+      // Apply rotation (Start Angle + Speed * Time)
+      // console.log(s.name, rotationStart, rotationSpeed);
       planetRef.current.rotation.y =
         rotationStart + rotationSpeed * posRef.current;
     }
   });
 
-  const tilt = s.tilt || 0;
-  const tiltb = s.tiltb || 0;
+  const tilt = Number(s.tilt || 0);
+  const tiltb = Number(s.tiltb || 0);
 
   // Hide label and hoverObj if this planet is the active planet camera target
   const showLabel =

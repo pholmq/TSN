@@ -40,7 +40,6 @@
     "name": "Moon",
     "color": "#8b8b8b",
     "type": "planet",
-    "rotationStart": 3,
     "visible": true,
     "texture": "/textures/planets/2k_moon.jpg",
     "unicodeSymbol": "&#x263D;",
