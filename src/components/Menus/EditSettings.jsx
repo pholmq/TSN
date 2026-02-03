@@ -97,6 +97,7 @@ const EditSettings = () => {
                   onChange: (value) => {
                     const cleanValue = value.replace(/\u200B/g, "");
                     s.rotationStart = cleanValue;
+                    console.log(s.rotationStart);
                     updateSetting({
                       ...s,
                       rotationStart: cleanValue,
