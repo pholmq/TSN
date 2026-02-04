@@ -97,6 +97,7 @@ body {
   cursor: pointer;
   color: white;
   transition: background-color 0.2s ease; /* Add hover effect */
+  border: none;
 }
 
 .menu-button:hover {
@@ -211,7 +212,7 @@ body {
   right: auto !important;
   opacity: 0.8;
   width: 300px; /* Consistent width */
-  max-height: calc(100vh - 100px) !important; /* Don't exceed viewport */
+  max-height: calc(100vh - 100px) !important;
   overflow-y: auto !important;
   z-index: 2147483647 !important;
 }
