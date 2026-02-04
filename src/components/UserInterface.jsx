@@ -60,6 +60,10 @@ const UserInterface = () => {
   const julianRef = useRef();
   const intervalRef = useRef();
 
+  // Refs for stepping logic
+  const steppingInterval = useRef(null);
+  const steppingTimeout = useRef(null);
+
   useEffect(() => {
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
@@ -81,6 +85,66 @@ const UserInterface = () => {
       clearInterval(intervalRef.current);
     }
   }, [run]);
+
+  // Cleanup stepping timers on unmount
+  useEffect(() => {
+    return () => stopStepping();
+  }, []);
+
+  const performStep = (direction) => {
+    // direction: 1 for forward, -1 for backward
+    if (speedFact === sYear) {
+      posRef.current =
+        dateToDays(
+          addYears(dateRef.current.value, speedMultiplier * direction)
+        ) *
+          sDay +
+        timeToPos(timeRef.current.value);
+    } else if (speedFact === sMonth) {
+      posRef.current =
+        dateToDays(
+          addMonths(dateRef.current.value, speedMultiplier * direction)
+        ) *
+          sDay +
+        timeToPos(timeRef.current.value);
+    } else {
+      posRef.current += speedFact * speedMultiplier * direction;
+    }
+
+    dateRef.current.value = posToDate(posRef.current);
+    timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
+    updateAC();
+  };
+
+  const startStepping = (direction) => {
+    // 1. Perform immediate step for responsiveness
+    performStep(direction);
+
+    // 2. Clear any existing timers to be safe
+    if (steppingTimeout.current) clearTimeout(steppingTimeout.current);
+    if (steppingInterval.current) clearInterval(steppingInterval.current);
+
+    // 3. Set a timeout: wait 500ms before starting the continuous loop
+    steppingTimeout.current = setTimeout(() => {
+      steppingInterval.current = setInterval(() => {
+        performStep(direction);
+      }, 100); // Speed of continuous stepping
+    }, 500); // Delay before continuous stepping starts
+  };
+
+  const stopStepping = () => {
+    // Clear the timeout (if user released button before 500ms)
+    if (steppingTimeout.current) {
+      clearTimeout(steppingTimeout.current);
+      steppingTimeout.current = null;
+    }
+    // Clear the interval (if continuous stepping was running)
+    if (steppingInterval.current) {
+      clearInterval(steppingInterval.current);
+      steppingInterval.current = null;
+    }
+  };
 
   function dateKeyDown(e) {
     // Prevent planet camera from moving
@@ -259,65 +323,27 @@ const UserInterface = () => {
           >
             Today
           </button>
+
+          {/* BACKWARD BUTTON */}
           <button
             className="menu-button"
-            onClick={() => {
-              if (speedFact === sYear) {
-                posRef.current =
-                  dateToDays(
-                    addYears(dateRef.current.value, -speedMultiplier)
-                  ) *
-                    sDay +
-                  timeToPos(timeRef.current.value);
-              } else {
-                if (speedFact === sMonth) {
-                  posRef.current =
-                    dateToDays(
-                      addMonths(dateRef.current.value, -speedMultiplier)
-                    ) *
-                      sDay +
-                    timeToPos(timeRef.current.value);
-                } else {
-                  posRef.current -= speedFact * speedMultiplier;
-                }
-              }
-
-              dateRef.current.value = posToDate(posRef.current);
-              timeRef.current.value = posToTime(posRef.current);
-              julianRef.current.value = posToJulianDay(posRef.current);
-              updateAC();
-            }}
+            onMouseDown={() => startStepping(-1)}
+            onMouseUp={stopStepping}
+            onMouseLeave={stopStepping}
           >
             <FaStepBackward />
           </button>
+
           <button className="menu-button" onClick={toggleRun}>
             {run ? <FaPause /> : <FaPlay />}
           </button>
+
+          {/* FORWARD BUTTON */}
           <button
             className="menu-button"
-            onClick={() => {
-              if (speedFact === sYear) {
-                posRef.current =
-                  dateToDays(addYears(dateRef.current.value, speedMultiplier)) *
-                    sDay +
-                  timeToPos(timeRef.current.value);
-              } else {
-                if (speedFact === sMonth) {
-                  posRef.current =
-                    dateToDays(
-                      addMonths(dateRef.current.value, speedMultiplier)
-                    ) *
-                      sDay +
-                    timeToPos(timeRef.current.value);
-                } else {
-                  posRef.current += speedFact * speedMultiplier;
-                }
-              }
-              dateRef.current.value = posToDate(posRef.current);
-              timeRef.current.value = posToTime(posRef.current);
-              julianRef.current.value = posToJulianDay(posRef.current);
-              updateAC();
-            }}
+            onMouseDown={() => startStepping(1)}
+            onMouseUp={stopStepping}
+            onMouseLeave={stopStepping}
           >
             <FaStepForward />
           </button>

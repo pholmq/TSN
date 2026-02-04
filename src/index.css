@@ -48,6 +48,8 @@ body {
   max-height: 100%;
   overflow-y: auto;
   padding: 0.5rem;
+  max-width: 320px;
+  min-width: 280px;
 }
 
 .menu[hidden] {
