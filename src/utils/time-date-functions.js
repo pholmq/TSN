@@ -42,7 +42,10 @@ export function getSpeedFact(fact) {
 
 export function posToDays(pos) {
   pos += sHour * 12; //Set the clock to tweleve for pos 0
-  return Math.floor(pos / sDay);
+  // FIX: Added epsilon (0.00001) ONLY here.
+  // This handles the floating point drift (x.99999 -> x+1) ensuring the day index is correct.
+  // Because we floor here, the result 'g' passed to other functions remains a clean integer.
+  return Math.floor(pos / sDay + 0.00001);
 }
 
 export function posToDate(pos) {
@@ -93,6 +96,7 @@ export function timeToPos(value) {
 }
 
 export function daysToDate(g) {
+  // REVERTED: No epsilon here. 'g' must remain an integer.
   if (g < -152556) return julianCalDayToDate(g); //Julian dates earlier than 1582-10-15
   g += 730597;
   let y = Math.floor((10000 * g + 14780) / 3652425);
@@ -309,6 +313,7 @@ function julianDateToDays(sDate) {
 
 function julianCalDayToDate(g) {
   let jDay = g + 2451717; //+ 10;
+  // REVERTED: No epsilon here.
   let z = Math.floor(jDay - 1721116.5);
   let r = jDay - 1721116.5 - z;
   let year = Math.floor((z - 0.25) / 365.25);
