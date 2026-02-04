@@ -73,28 +73,6 @@ export default function TransitionCamera() {
       planetCam.getWorldQuaternion(endQuat.current);
       startFov.current = orbitCam.fov;
 
-      // DEBUG: Show planet camera actual orientation
-      // const debugGroup1 = new THREE.Group();
-      // debugGroup1.name = "debugPlanetCam";
-      // debugGroup1.position.copy(endPos);
-      // debugGroup1.quaternion.copy(endQuat.current);
-
-      // const forwardArrow1 = new THREE.ArrowHelper(
-      //   new THREE.Vector3(0, 0, -1),
-      //   new THREE.Vector3(0, 0, 0),
-      //   10,
-      //   0x0000ff // Blue = forward
-      // );
-      // const upArrow1 = new THREE.ArrowHelper(
-      //   new THREE.Vector3(0, 1, 0),
-      //   new THREE.Vector3(0, 0, 0),
-      //   10,
-      //   0x00ff00 // Green = up
-      // );
-      // debugGroup1.add(forwardArrow1);
-      // debugGroup1.add(upArrow1);
-      // scene.add(debugGroup1);
-
       // Calculate approach (your existing code)
       const planetCamWorldDirection = new Vector3();
       planetCam.getWorldDirection(planetCamWorldDirection);

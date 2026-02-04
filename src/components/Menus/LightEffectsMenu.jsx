@@ -97,6 +97,10 @@ const LightEffectsMenu = () => {
             step: 0.1,
             onChange: (v) => usePlanetCameraStore.setState({ groundHeight: v }),
           },
+            "Show planet camera position": {
+          value: useStore.getState().planetCameraHelper,
+          onChange: (v)=> useStore.setState({planetCameraHelper:v}),
+        },
         },
         { collapsed: true }
       ),

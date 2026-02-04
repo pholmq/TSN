@@ -74,10 +74,10 @@ export default function PlanetCamera() {
     prevTargetRef.current = targetObjRef.current;
   }, [planetCameraTarget, scene]);
 
-  useHelper(
-    planetCameraHelper && !planetCamera ? planetCamRef : false,
-    CameraHelper
-  );
+  // useHelper(
+  //   planetCameraHelper && !planetCamera ? planetCamRef : false,
+  //   CameraHelper
+  // );
 
   useEffect(() => {
     if (groundMountRef.current) {
@@ -101,8 +101,8 @@ export default function PlanetCamera() {
       // const lowHeight = planetRadiusKm * 1.03; // Start fade at 3% above surface
       // const highHeight = planetRadiusKm * 1.04; // End fade at 4% above surface
       // Reduce to 0.5% start and 1.0% end
-  const lowHeight = planetRadiusKm * 1.0005; 
-  const highHeight = planetRadiusKm * 1.001;
+      const lowHeight = planetRadiusKm * 1.0005;
+      const highHeight = planetRadiusKm * 1.001;
 
       let planetOpacity, groundOpacity;
 
