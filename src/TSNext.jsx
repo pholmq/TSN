@@ -26,6 +26,7 @@ import BSCStarsH from "./components/Stars/BSCStarsHandler";
 import Zodiac from "./components/Helpers/Zodiac";
 import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
+import PlanetCameraMarker from "./components/PlanetCamera/PlanetCameraMarker";
 import FocusSearchedStar from "./components/PlanetCamera/FocusSearchedStar";
 import IntroText from "./components/Intro/IntroText";
 import IntroQuote from "./components/Intro/IntroQuote";
@@ -131,6 +132,7 @@ const TSNext = () => {
           <SuspenseCompleteSignal onComplete={handleSuspenseComplete} />
           <OrbitCamera />
           {planetCamera && !cameraTransitioning && <PlanetCamera />}
+          {/* <PlanetCameraMarker /> */}
           <TransitionCamera />
 
           <FocusSearchedStar />

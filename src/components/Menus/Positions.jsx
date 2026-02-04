@@ -47,10 +47,19 @@ const Positions = () => {
   // Create a custom Leva store
   const levaStore = useCreateStore();
 
+  // --- FIX START ---
   // Add Close button inside the panel
-  useControls({ store: levaStore });
+  // 1. Schema (First Arg): Defines the 'Close' button
+  // 2. Options (Second Arg): Connects it to your custom 'levaStore'
+  useControls(
+    {
+      Close: button(() => setShowPositions(false)),
+    },
+    { store: levaStore }
+  );
+  // --- FIX END ---
 
-  // Set up Leva controls
+  // Set up Leva controls for planets
   const [, set] = useControls(() => planetFolders, { store: levaStore });
 
   // Update Leva controls when `positions` change
@@ -72,7 +81,6 @@ const Positions = () => {
       className="positions-div"
       style={{
         position: "fixed",
-
         zIndex: 2147483647,
       }}
     >
