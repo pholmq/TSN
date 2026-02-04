@@ -85,7 +85,7 @@ const EphController = () => {
   useFrame(() => {
     // Check for Cancellation
     if (generating && !useEphemeridesStore.getState().isGenerating) {
-      console.log("Generation Cancelled by User");
+      // console.log("Generation Cancelled by User");
       setGenerating(false);
       return;
     }
@@ -135,7 +135,7 @@ const EphController = () => {
     }
 
     if (job.currentPos > job.endPos) {
-      console.log(`Generation Complete. Steps: ${job.currentStepCount}`);
+      // console.log(`Generation Complete. Steps: ${job.currentStepCount}`);
       setGeneratedData(job.data);
       setGenerating(false);
       setProgress(100);

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom"; // <--- Import createPortal
 import { useControls, Leva, useCreateStore } from "leva";
 import { useGesture } from "@use-gesture/react";
 import { useStore, useSettingsStore } from "../../store";
@@ -51,19 +52,19 @@ const PlanetCameraUI = () => {
   const locationsByPlanet = {
     Earth: {
       "-": { lat: null, long: null },
-  
+
       // --- Europe ---
       "Athens, Greece": { lat: 37.98, long: 23.73 },
       "Berlin, Germany": { lat: 52.52, long: 13.41 },
       "Istanbul, Turkey": { lat: 41.01, long: 28.98 },
       "London, UK": { lat: 51.51, long: -0.13 },
-      "Madrid, Spain": { lat: 40.41, long: -3.70 },
+      "Madrid, Spain": { lat: 40.41, long: -3.7 },
       "Moscow, Russia": { lat: 55.76, long: 37.62 },
       "Paris, France": { lat: 48.86, long: 2.35 },
       "Reykjavik, Iceland": { lat: 64.15, long: -21.94 },
       "Rome, Italy": { lat: 41.9, long: 12.5 },
       "Stockholm, Sweden": { lat: 59.33, long: 18.07 },
-  
+
       // --- North America ---
       "Anchorage, USA": { lat: 61.22, long: -149.9 },
       "Los Angeles, USA": { lat: 34.05, long: -118.24 },
@@ -72,7 +73,7 @@ const PlanetCameraUI = () => {
       "Clear Creek Abbey, USA": { lat: 36.03, long: -95.19 },
       "Toronto, Canada": { lat: 43.65, long: -79.38 },
       "Vancouver, Canada": { lat: 49.28, long: -123.12 },
-  
+
       // --- South America ---
       "Bogota, Colombia": { lat: 4.71, long: -74.07 },
       "Buenos Aires, Arg.": { lat: -34.6, long: -58.38 },
@@ -80,7 +81,7 @@ const PlanetCameraUI = () => {
       "Rio de Jan., Brazil": { lat: -22.91, long: -43.17 },
       "Santiago, Chile": { lat: -33.45, long: -70.67 },
       "Sao Paulo, Brazil": { lat: -23.55, long: -46.63 },
-  
+
       // --- Asia ---
       "Bangkok, Thailand": { lat: 13.76, long: 100.5 },
       "Beijing, China": { lat: 39.9, long: 116.41 },
@@ -91,21 +92,21 @@ const PlanetCameraUI = () => {
       "Shanghai, China": { lat: 31.23, long: 121.47 },
       "Singapore, Singap.": { lat: 1.35, long: 103.82 },
       "Tokyo, Japan": { lat: 35.68, long: 139.69 },
-  
+
       // --- Africa ---
       "Cairo, Egypt": { lat: 30.04, long: 31.24 },
       "Cape Town, S.A.": { lat: -33.92, long: 18.42 },
       "Lagos, Nigeria": { lat: 6.52, long: 3.38 },
       "Nairobi, Kenya": { lat: -1.29, long: 36.82 },
-  
+
       // --- Australia / Oceania ---
       "Melbourne, Aus.": { lat: -37.81, long: 144.96 },
       "Sydney, Aus.": { lat: -33.87, long: 151.21 },
       "Wellington, N.Z.": { lat: -41.29, long: 174.78 },
-  
+
       // --- Poles ---
-      "North Pole": { lat: 90.00, long: 0.00 },
-      "South Pole": { lat: -90.00, long: 0.00 },
+      "North Pole": { lat: 90.0, long: 0.0 },
+      "South Pole": { lat: -90.0, long: 0.0 },
     },
 
     Moon: {
@@ -288,7 +289,8 @@ const PlanetCameraUI = () => {
     }
   );
 
-  return (
+  // --- FIX: Portal to document.body to escape the #root scaling context ---
+  return createPortal(
     <>
       {planetCamera && (
         <div className="plancam-div">
@@ -315,7 +317,8 @@ const PlanetCameraUI = () => {
           />
         </div>
       )}
-    </>
+    </>,
+    document.body
   );
 };
 

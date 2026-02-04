@@ -210,8 +210,10 @@ body {
   left: 10px !important;
   right: auto !important;
   opacity: 0.8;
+  width: 300px; /* Consistent width */
   max-height: calc(100vh - 100px) !important; /* Don't exceed viewport */
   overflow-y: auto !important;
+  z-index: 2147483647 !important;
 }
 
 .name-label {
