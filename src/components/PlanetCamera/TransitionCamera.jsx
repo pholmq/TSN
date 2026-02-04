@@ -73,27 +73,30 @@ export default function TransitionCamera() {
       planetCam.getWorldQuaternion(endQuat.current);
       startFov.current = orbitCam.fov;
 
-      // DEBUG: Show planet camera actual orientation
-      // const debugGroup1 = new THREE.Group();
-      // debugGroup1.name = "debugPlanetCam";
-      // debugGroup1.position.copy(endPos);
-      // debugGroup1.quaternion.copy(endQuat.current);
+      // --- DEBUG MARKER START ---
+      // Create a visible marker at the calculated end position & rotation
+      const markerGroup = new THREE.Group();
+      markerGroup.name = "debugFinalPos";
+      markerGroup.position.copy(endPos);
+      markerGroup.quaternion.copy(endQuat.current);
 
-      // const forwardArrow1 = new THREE.ArrowHelper(
-      //   new THREE.Vector3(0, 0, -1),
-      //   new THREE.Vector3(0, 0, 0),
-      //   10,
-      //   0x0000ff // Blue = forward
-      // );
-      // const upArrow1 = new THREE.ArrowHelper(
-      //   new THREE.Vector3(0, 1, 0),
-      //   new THREE.Vector3(0, 0, 0),
-      //   10,
-      //   0x00ff00 // Green = up
-      // );
-      // debugGroup1.add(forwardArrow1);
-      // debugGroup1.add(upArrow1);
-      // scene.add(debugGroup1);
+      // 1. Visual Box (Camera Body)
+      // const boxGeom = new THREE.BoxGeometry(0.1, 0.1, 0.2);
+      // const boxMat = new THREE.MeshBasicMaterial({
+      //   color: 0x00ffff, // Cyan
+      //   wireframe: true,
+      //   depthTest: false, // Always visible on top
+      //   transparent: true,
+      // });
+      // const boxMesh = new THREE.Mesh(boxGeom, boxMat);
+      // markerGroup.add(boxMesh);
+
+      // 2. Axes Helper (Shows Orientation: R=X, G=Y, B=Z)
+      // const axesHelper = new THREE.AxesHelper(10); // Long axes to see clearly
+      // markerGroup.add(axesHelper);
+
+      // scene.add(markerGroup);
+      // --- DEBUG MARKER END ---
 
       // Calculate approach (your existing code)
       const planetCamWorldDirection = new Vector3();
@@ -115,20 +118,6 @@ export default function TransitionCamera() {
 
       const midPoint = new Vector3().lerpVectors(startPos, approachPoint, 0.5);
 
-      // DEBUG: Show calculated end position and approach direction
-      // const debugGroup2 = new THREE.Group();
-      // debugGroup2.name = "debugCalculated";
-      // debugGroup2.position.copy(endPos);
-
-      // const approachArrow = new THREE.ArrowHelper(
-      //   approachDirection.normalize(),
-      //   new THREE.Vector3(0, 0, 0),
-      //   10,
-      //   0xff0000 // Red = approach direction
-      // );
-      // debugGroup2.add(approachArrow);
-      // scene.add(debugGroup2);
-
       curveRef.current = new CubicBezierCurve3(
         startPos,
         midPoint,
@@ -147,10 +136,8 @@ export default function TransitionCamera() {
 
       // Cleanup
       return () => {
-        const debug1 = scene.getObjectByName("debugPlanetCam");
-        const debug2 = scene.getObjectByName("debugCalculated");
-        if (debug1) scene.remove(debug1);
-        if (debug2) scene.remove(debug2);
+        const debugMarker = scene.getObjectByName("debugFinalPos");
+        if (debugMarker) scene.remove(debugMarker);
       };
     }
   }, [cameraTransitioning]);

@@ -77,7 +77,7 @@ const IntroQuote = ({ duration = 10000, fade = 2000 }) => {
           textAlign: "center",
           color: "grey",
           textShadow: "2px 2px 6px rgba(0,0,0,0.7)",
-          width: `min(800px, 90vw)`,
+          width: `min(900px, 90vw)`,
           padding: "0 20px",
           whiteSpace: "normal",
           wordWrap: "break-word",
