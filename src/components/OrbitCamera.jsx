@@ -98,7 +98,11 @@ export default function OrbitCamera() {
         near={0.0001}
         far={10000000000000}
       />
-      <CameraControls ref={controlsRef} camera={cameraRef.current} />
+      <CameraControls
+        ref={controlsRef}
+        camera={cameraRef.current}
+        enabled={!planetCamera}
+      />
       {runIntro && <CameraAnimation controlsRef={controlsRef} />}
     </>
   );
