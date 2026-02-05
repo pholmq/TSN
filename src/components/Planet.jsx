@@ -95,7 +95,9 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
             <sphereGeometry args={[size, 256, 256]} />
             <meshStandardMaterial
               ref={materialRef}
-              color={isLoading || !texture ? s.color : "#ffffff"}
+              color={
+                isLoading || !texture ? s.color : s.textureTint || "#ffffff"
+              }
               emissive={s.light && s.color}
               emissiveIntensity={s.light && sunLight}
               roughness={0.7}

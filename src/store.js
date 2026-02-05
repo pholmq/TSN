@@ -52,7 +52,7 @@ export const useStore = create((set) => ({
   showMenu: true,
   toggleShowMenu: () => set((state) => ({ showMenu: !state.showMenu })),
 
-  sunLight: 2,
+  sunLight: 1,
 
   zodiac: false,
   setZodiac: (v) => set({ zodiac: v }),

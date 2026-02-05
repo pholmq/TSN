@@ -89,6 +89,7 @@
     "visible": true,
     "arrows": true,
     "texture": "/textures/planets/2k_mercury.jpg",
+    "textureTint": "#555555",
     "unicodeSymbol": "&#x263F;",
     "planetCamera": true,
     "traceable": true,
