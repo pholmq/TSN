@@ -388,7 +388,7 @@
   },
   {
     "name": "Halleys",
-    "size": 2,
+    "size": 0.1,
     "actualSize": 0.00000368,
     "startPos": 76.33,
     "speed": -0.0830100973,
@@ -430,7 +430,7 @@
   },
   {
     "name": "Eros",
-    "size": 2,
+    "size": 0.1,
     "actualSize": 0.00000563,
     "startPos": 171.8,
     "speed": 4.57668492,
