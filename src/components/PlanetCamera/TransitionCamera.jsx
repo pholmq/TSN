@@ -12,6 +12,12 @@ export default function TransitionCamera() {
   const lookAtTargetRef = useRef(new Vector3());
   const progress = useRef(0);
 
+  // New Refs for the Orbit Phase
+  const orbitStartPos = useRef(new Vector3());
+  const orbitEndPos = useRef(new Vector3()); // The "Waypoint"
+  const orbitCenter = useRef(new Vector3()); // Planet Center
+  const orbitRadius = useRef(0);
+
   const { scene } = useThree();
   const planetCamera = useStore((s) => s.planetCamera);
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
@@ -58,47 +64,54 @@ export default function TransitionCamera() {
         planetObj.material.needsUpdate = true;
       }
 
-      // Get positions
+      // --- 1. CAPTURE POSITIONS ---
       const startPos = new Vector3();
       orbitCam.getWorldPosition(startPos);
+      orbitStartPos.current.copy(startPos);
 
       const endPos = new Vector3();
       planetCam.getWorldPosition(endPos);
 
       const planetCenter = new Vector3();
       planetObj.getWorldPosition(planetCenter);
+      orbitCenter.current.copy(planetCenter);
 
-      // Save orientations
+      // Save orientations & FOV
       orbitCam.getWorldQuaternion(startQuat.current);
       planetCam.getWorldQuaternion(endQuat.current);
       startFov.current = orbitCam.fov;
 
-      // --- DEBUG MARKER START ---
-      // Create a visible marker at the calculated end position & rotation
-      const markerGroup = new THREE.Group();
-      markerGroup.name = "debugFinalPos";
-      markerGroup.position.copy(endPos);
-      markerGroup.quaternion.copy(endQuat.current);
+      // --- 2. CALCULATE ORBIT WAYPOINT (Phase 1 Target) ---
+      const startDist = new Vector3()
+        .subVectors(startPos, planetCenter)
+        .length();
+      orbitRadius.current = startDist;
 
-      // 1. Visual Box (Camera Body)
-      // const boxGeom = new THREE.BoxGeometry(0.1, 0.1, 0.2);
-      // const boxMat = new THREE.MeshBasicMaterial({
-      //   color: 0x00ffff, // Cyan
-      //   wireframe: true,
-      //   depthTest: false, // Always visible on top
-      //   transparent: true,
-      // });
-      // const boxMesh = new THREE.Mesh(boxGeom, boxMat);
-      // markerGroup.add(boxMesh);
+      // Calculate direction "Above and Behind" the target
+      const landQuat = new Quaternion();
+      planetCam.getWorldQuaternion(landQuat);
 
-      // 2. Axes Helper (Shows Orientation: R=X, G=Y, B=Z)
-      // const axesHelper = new THREE.AxesHelper(10); // Long axes to see clearly
-      // markerGroup.add(axesHelper);
+      const forward = new Vector3(0, 0, -1).applyQuaternion(landQuat);
+      const surfaceNormal = new Vector3()
+        .subVectors(endPos, planetCenter)
+        .normalize();
 
-      // scene.add(markerGroup);
-      // --- DEBUG MARKER END ---
+      // Mix Up (0.8) and Back (-0.5) to get the angle
+      const orbitDirection = new Vector3()
+        .copy(surfaceNormal)
+        .multiplyScalar(0.8) // High up
+        .add(forward.clone().multiplyScalar(-0.5)) // Slightly behind
+        .normalize();
 
-      // Calculate approach (your existing code)
+      // The Waypoint is at the same distance as we started (Orbital altitude)
+      const waypointPos = planetCenter
+        .clone()
+        .add(orbitDirection.multiplyScalar(startDist));
+      orbitEndPos.current.copy(waypointPos);
+
+      // --- 3. CALCULATE BEZIER CURVE (Phase 2: Waypoint -> Surface) ---
+      // We essentially reuse your existing logic, but start from `waypointPos` instead of `startPos`
+
       const planetCamWorldDirection = new Vector3();
       planetCam.getWorldDirection(planetCamWorldDirection);
 
@@ -110,22 +123,28 @@ export default function TransitionCamera() {
       const approachPoint = endPos
         .clone()
         .add(approachDirection.multiplyScalar(approachDistance));
+
       const heightOffset = approachAltitude - endDist;
       const planetUp = new Vector3()
         .subVectors(endPos, planetCenter)
         .normalize();
       approachPoint.add(planetUp.multiplyScalar(heightOffset));
 
-      const midPoint = new Vector3().lerpVectors(startPos, approachPoint, 0.5);
+      // The midpoint is now between the Waypoint and Approach
+      const midPoint = new Vector3().lerpVectors(
+        waypointPos,
+        approachPoint,
+        0.5
+      );
 
       curveRef.current = new CubicBezierCurve3(
-        startPos,
+        waypointPos, // Start the dive from the waypoint
         midPoint,
         approachPoint,
         endPos
       );
 
-      // Set initial camera state
+      // --- 4. INITIALIZE CAMERA STATE ---
       transitionCamRef.current.position.copy(startPos);
       transitionCamRef.current.quaternion.copy(startQuat.current);
       transitionCamRef.current.fov = startFov.current;
@@ -133,16 +152,11 @@ export default function TransitionCamera() {
 
       lookAtTargetRef.current.copy(planetCenter);
       progress.current = 0;
-
-      // Cleanup
-      return () => {
-        const debugMarker = scene.getObjectByName("debugFinalPos");
-        if (debugMarker) scene.remove(debugMarker);
-      };
     }
   }, [cameraTransitioning]);
 
-  const duration = 10; // seconds
+  const duration = 12; // Increased duration slightly to account for the extra travel
+  const orbitPhaseSplit = 0.35; // 35% of time spent orbiting, 65% diving
 
   const blendStartQuat = useRef(new Quaternion());
 
@@ -150,57 +164,87 @@ export default function TransitionCamera() {
     if (cameraTransitioning && curveRef.current && transitionCamRef.current) {
       progress.current += delta / duration;
 
-      //WIP Since the animation doesent work yet we end premature
-      if (progress.current >= 0.5) {
-        progress.current = 1;
-        setCameraTransitioning(false);
-      }
-      //
       if (progress.current >= 1) {
         progress.current = 1;
         setCameraTransitioning(false);
       }
 
-      const eased = 1 - Math.pow(1 - progress.current, 8);
+      // --- PHASE 1: ORBIT (0% to 35%) ---
+      if (progress.current < orbitPhaseSplit) {
+        // Normalize t from 0 to 1 within this phase
+        const phaseT = progress.current / orbitPhaseSplit;
+        // Smooth ease in/out
+        const eased =
+          phaseT < 0.5 ? 2 * phaseT * phaseT : -1 + (4 - 2 * phaseT) * phaseT;
 
-      // Get point on curve
-      const point = curveRef.current.getPoint(eased);
-      transitionCamRef.current.position.copy(point);
-
-      if (progress.current < 0.95) {
-        // First 95%: look at planet with gradually rotating UP
-        const defaultUp = new Vector3(0, 1, 0);
-        const planetCamUp = new Vector3(0, 1, 0).applyQuaternion(
-          endQuat.current
-        );
-
-        const blendedUp = new Vector3().lerpVectors(
-          defaultUp,
-          planetCamUp,
+        // Spherical Interpolation (Slerp-like) for Position
+        // We lerp the vectors, then re-normalize to radius to keep a perfect arc
+        const currentPos = new Vector3().lerpVectors(
+          orbitStartPos.current,
+          orbitEndPos.current,
           eased
         );
 
-        transitionCamRef.current.up.copy(blendedUp);
-        transitionCamRef.current.lookAt(lookAtTargetRef.current);
-
-        // Save quaternion at 95% for smooth blend
-        if (progress.current >= 0.94) {
-          blendStartQuat.current.copy(transitionCamRef.current.quaternion);
-        }
-      } else {
-        // Last 5%: gentle blend to final orientation
-        const blendProgress = (progress.current - 0.95) / 0.05;
-        const currentQuat = new Quaternion();
-
-        currentQuat.slerpQuaternions(
-          blendStartQuat.current,
-          endQuat.current,
-          blendProgress
+        // Project back to sphere surface (relative to planet center)
+        const relPos = new Vector3().subVectors(
+          currentPos,
+          orbitCenter.current
         );
-        transitionCamRef.current.quaternion.copy(currentQuat);
+        relPos.setLength(orbitRadius.current); // Maintain altitude
+        transitionCamRef.current.position.copy(orbitCenter.current).add(relPos);
+
+        // Keep looking at planet center
+        transitionCamRef.current.lookAt(lookAtTargetRef.current);
+      }
+
+      // --- PHASE 2: DIVE (35% to 100%) ---
+      else {
+        // Normalize t from 0 to 1 within this phase
+        const rawT =
+          (progress.current - orbitPhaseSplit) / (1 - orbitPhaseSplit);
+        const eased = 1 - Math.pow(1 - rawT, 4); // Quartic ease out for dive
+
+        // Get point on Bezier curve
+        const point = curveRef.current.getPoint(eased);
+        transitionCamRef.current.position.copy(point);
+
+        // Rotation Logic (Mostly identical to your original)
+        if (rawT < 0.95) {
+          // Look at planet center, but gradually blend UP vector to match landing orientation
+          const defaultUp = new Vector3(0, 1, 0);
+          const planetCamUp = new Vector3(0, 1, 0).applyQuaternion(
+            endQuat.current
+          );
+
+          const blendedUp = new Vector3().lerpVectors(
+            defaultUp,
+            planetCamUp,
+            eased
+          );
+
+          transitionCamRef.current.up.copy(blendedUp);
+          transitionCamRef.current.lookAt(lookAtTargetRef.current);
+
+          // Save quaternion near the end for the final blend
+          if (rawT >= 0.94) {
+            blendStartQuat.current.copy(transitionCamRef.current.quaternion);
+          }
+        } else {
+          // Final 5%: Smooth blend to exact target rotation
+          const blendProgress = (rawT - 0.95) / 0.05;
+          const currentQuat = new Quaternion();
+
+          currentQuat.slerpQuaternions(
+            blendStartQuat.current,
+            endQuat.current,
+            blendProgress
+          );
+          transitionCamRef.current.quaternion.copy(currentQuat);
+        }
       }
     }
   });
+
   if (!cameraTransitioning) return null;
 
   return (
