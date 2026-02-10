@@ -37,7 +37,6 @@ import Help from "./components/Help/Help";
 import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
 import TransitionCamera from "./components/PlanetCamera/TransitionCamera";
 import Constellations from "./components/Stars/Constellations";
-import { Perf } from "r3f-perf";
 
 const isTouchDevice = () => {
   return (
@@ -72,6 +71,7 @@ const TSNext = () => {
   const searchStars = useStore((s) => s.searchStars);
   const planetCamera = useStore((s) => s.planetCamera);
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+  const showPerf = useStore((s) => s.showPerf);
 
   const isTouchDev = isTouchDevice();
 
@@ -124,7 +124,6 @@ const TSNext = () => {
         gl={{ logarithmicDepthBuffer: true }}
         style={getCanvasStyle()}
       >
-        {/* <Perf position="top-left" /> */}
         {/* IntroQuote is always rendered and visible */}
         <IntroQuote />
 
