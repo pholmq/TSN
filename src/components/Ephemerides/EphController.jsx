@@ -13,7 +13,7 @@ import {
 } from "../../utils/plotModelFunctions";
 
 const EphController = () => {
-  const { scene, invalidate } = useThree();
+  const { scene, invalidate } = useThree(); // invalidate is grabbed here
   const plotObjects = usePlotStore((s) => s.plotObjects);
 
   const {
@@ -53,7 +53,6 @@ const EphController = () => {
         increment = -increment;
       }
 
-      // FIX 1: Calculate Total Steps using Math.round to snap 23.999 -> 24
       const totalSteps = Math.round((endPos - startPos) / increment);
 
       // Initialize Data Structure
@@ -65,7 +64,7 @@ const EphController = () => {
       // Setup Job
       jobRef.current = {
         startPos: startPos,
-        currentStep: 0, // We use an integer counter now
+        currentStep: 0,
         totalSteps: totalSteps,
         increment: increment,
         checkedPlanets: params.checkedPlanets,
@@ -75,6 +74,9 @@ const EphController = () => {
 
       setGenerating(true);
       resetTrigger();
+
+      //Manually kickstart the loop because frameloop="demand"
+      invalidate();
     }
   }, [
     trigger,
@@ -83,6 +85,7 @@ const EphController = () => {
     setGenerationError,
     setIsGenerating,
     setProgress,
+    invalidate, // Added to dependency array
   ]);
 
   // 2. Process Job in Chunks
@@ -95,18 +98,15 @@ const EphController = () => {
 
     if (!generating) return;
 
+    // Keep the loop alive while generating
     invalidate();
 
     const job = jobRef.current;
     const BATCH_SIZE = 50;
     let batchCount = 0;
 
-    // FIX 2: Loop based on integer 'currentStep' instead of float 'currentPos'
     while (job.currentStep <= job.totalSteps && batchCount < BATCH_SIZE) {
-      // FIX 3: Calculate position freshly from start to avoid accumulation error
-      // Formula: start + (stepNumber * stepSize)
       const currentPos = job.startPos + job.currentStep * job.increment;
-
       const currentDate = posToDate(currentPos);
       const currentTime = posToTime(currentPos);
 
@@ -140,7 +140,7 @@ const EphController = () => {
       job.lastProgress = progress;
     }
 
-    // Completion Check (Integer based)
+    // Completion Check
     if (job.currentStep > job.totalSteps) {
       setGeneratedData(job.data);
       setGenerating(false);
