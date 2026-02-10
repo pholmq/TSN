@@ -37,6 +37,7 @@ import Help from "./components/Help/Help";
 import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
 import TransitionCamera from "./components/PlanetCamera/TransitionCamera";
 import Constellations from "./components/Stars/Constellations";
+import { Perf } from "r3f-perf";
 
 const isTouchDevice = () => {
   return (
@@ -119,10 +120,11 @@ const TSNext = () => {
       </div>
       <Canvas
         id="canvas"
-        frameloop="demand"
+        frameloop="always"
         gl={{ logarithmicDepthBuffer: true }}
         style={getCanvasStyle()}
       >
+        {/* <Perf position="top-left" /> */}
         {/* IntroQuote is always rendered and visible */}
         <IntroQuote />
 
