@@ -14,7 +14,7 @@ const AnimationController = () => {
   const speedFact = useStore((s) => s.speedFact);
   const speedMultiplier = useStore((s) => s.speedMultiplier);
   invalidate();
-  clock.getDelta(); //Reset delta so that it's 0 when run becomes true
+  // clock.getDelta(); //Reset delta so that it's 0 when run becomes true
   useFrame((state, delta) => {
     if (run) {
       posRef.current = posRef.current + delta * (speedFact * speedMultiplier);

@@ -1,6 +1,8 @@
 // LightEffectsMenu.js
 import { useEffect } from "react";
 import { Stats } from "@react-three/drei";
+import { Perf } from "r3f-perf";
+
 import {
   EffectComposer,
   Bloom,
@@ -115,7 +117,18 @@ const LightEffectsMenu = () => {
         {antialiasing === "SMAA" && <SMAA />}
         {glow && <Bloom luminanceThreshold={0} intensity={glowIntensity / 2} />}
       </EffectComposer>
-      {stats && <Stats />}
+      {stats && (
+        <Perf
+          position="top-left"
+          style={{
+            transform: "scale(2)", // 1.5 = 150% size. Adjust as needed.
+            transformOrigin: "top left", // Ensures it scales from the corner, not the center
+            zIndex: 9999, // Optional: Ensures it stays on top of other UI
+            top: "10px", // Pushed down to avoid top menu
+            left: "10px", // Slightly offset from edge
+          }}
+        />
+      )}
     </>
   );
 };

@@ -71,6 +71,7 @@ const TSNext = () => {
   const searchStars = useStore((s) => s.searchStars);
   const planetCamera = useStore((s) => s.planetCamera);
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+  const showPerf = useStore((s) => s.showPerf);
 
   const isTouchDev = isTouchDevice();
 
@@ -119,9 +120,12 @@ const TSNext = () => {
       </div>
       <Canvas
         id="canvas"
-        frameloop="demand"
+        frameloop="always"
         gl={{ logarithmicDepthBuffer: true }}
         style={getCanvasStyle()}
+        raycaster={{
+          params: { Line: { threshold: 0.1 } },
+        }}
       >
         {/* IntroQuote is always rendered and visible */}
         <IntroQuote />

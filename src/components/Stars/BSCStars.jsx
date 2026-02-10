@@ -11,29 +11,10 @@ import {
   rightAscensionToRadians,
   sphericalToCartesian,
 } from "../../utils/celestial-functions";
-
 import { movePlotModel } from "../../utils/plotModelFunctions";
-
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
-
 import { pointShaderMaterial, pickingShaderMaterial } from "./starShaders";
-
 import { LABELED_STARS } from "./LabeledStars";
-
-function createCircleTexture() {
-  const size = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const context = canvas.getContext("2d");
-  context.beginPath();
-  context.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
-  context.fillStyle = "white";
-  context.fill();
-  const texture = new THREE.Texture(canvas);
-  texture.needsUpdate = true;
-  return texture;
-}
 
 const BSCStars = ({ onStarClick, onStarHover }) => {
   const pointsRef = useRef();
@@ -41,63 +22,58 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const pickingPointsRef = useRef();
   const pickingRenderTarget = useRef();
 
-  // FIX: Use useState to create a stable scene instance that persists across renders
-  const [pickingScene] = useState(() => new THREE.Scene());
+  // Reuse buffer
+  const pixelBufferRef = useRef(new Uint8Array(4));
+  // Store current hover data for the click handler
+  const currentHoverDataRef = useRef(null);
 
+  const [pickingScene] = useState(() => new THREE.Scene());
   const colorMap = useRef(new Map());
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const { scene, camera, gl } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
   const lastHoverTime = useRef(0);
   const currentHoverIndex = useRef(null);
-  const debugPicking = useRef(false);
 
+  // --- GET SETTINGS ---
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const hScale = useStore((s) => s.hScale);
   const starScale = useStore((s) => s.starScale);
   const starPickingSensitivity = useStore((s) => s.starPickingSensitivity);
-
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
-
   const planetCamera = useStore((s) => s.planetCamera);
-
   const setLabeledStarPosition = useStore((s) => s.setLabeledStarPosition);
 
+  // Note: We don't destruct runIntro here for logic to avoid stale closures.
+  // We will access useStore.getState().runIntro directly in handlers.
+
+  // --- 1. Selection Logic ---
   useEffect(() => {
-    //Used by StarSearch
     if (selectedStarHR && starData.length > 0 && pointsRef.current) {
       const star = starData.find(
         (s) => parseInt(s.HR) === parseInt(selectedStarHR)
       );
-      // console.log(starData);
       if (!star) {
-        console.warn(`Star with HR ${selectedStarHR} not found.`);
         setSelectedStarPosition(null);
         return;
       }
-
       const starIndex = star.index;
-
       const positions =
         pickingPointsRef.current.geometry.attributes.position.array;
       const x = positions[starIndex * 3];
       const y = positions[starIndex * 3 + 1];
       const z = positions[starIndex * 3 + 2];
-
-      // Create a Vector3 and transform to world space
       const pos = new THREE.Vector3(x, y, z);
       pickingPointsRef.current.localToWorld(pos);
-      // console.log("Selected star position:", pos);
-
       setSelectedStarPosition(pos);
     } else {
       setSelectedStarPosition(null);
     }
   }, [selectedStarHR]);
 
-  // Memoize star attributes with selective picking sensitivity
+  // --- 2. Data Calculation ---
   const { positions, colors, sizes, pickingSizes, starData, pickingColors } =
     useMemo(() => {
       const positions = [];
@@ -106,20 +82,14 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       const sizes = [];
       const pickingSizes = [];
       const starData = [];
-      const scale = 0.1;
 
-      // Clear previous color mapping
       colorMap.current.clear();
 
-      // Iterate over BSC.json
       bscSettings.forEach((s, index) => {
-        // Parse string fields to numbers
         const magnitude = parseFloat(s.V);
         const colorTemp = parseFloat(s.K) || 5778;
-
         const raRad = rightAscensionToRadians(s.RA);
         const decRad = declinationToRadians(s.Dec);
-
         const distLy = parseFloat(s.P) * 3.26156378;
         let dist;
         if (!officialStarDistances) {
@@ -129,76 +99,41 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           dist =
             worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1);
         }
-
         const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
         positions.push(x, y, z);
-
         const { red, green, blue } = colorTemperature2rgb(colorTemp, true);
         colors.push(red, green, blue);
-
-        // Generate unique picking color for this star
-        const colorIndex = index + 1; // Start from 1 to avoid black
+        const colorIndex = index + 1;
         const r = (colorIndex & 0xff) / 255;
         const g = ((colorIndex >> 8) & 0xff) / 255;
         const b = ((colorIndex >> 16) & 0xff) / 255;
-
         pickingColors.push(r, g, b);
-
-        // Create hex color for lookup
         const rInt = Math.round(r * 255);
         const gInt = Math.round(g * 255);
         const bInt = Math.round(b * 255);
         const hexColor = (rInt << 16) | (gInt << 8) | bInt;
-
         colorMap.current.set(hexColor, index);
-
-        // Size based on magnitude
-        let starsize;
-        if (magnitude < 1) {
-          starsize = 1.2;
-        } else if (magnitude > 1 && magnitude < 3) {
-          starsize = 0.6;
-        } else if (magnitude > 3 && magnitude < 5) {
-          starsize = 0.4;
-        } else {
-          starsize = 0.2;
-        }
-
+        let starsize =
+          magnitude < 1 ? 1.2 : magnitude < 3 ? 0.6 : magnitude < 5 ? 0.4 : 0.2;
         const visualSize = starsize * starScale * 10;
-
-        // Apply picking sensitivity only to dim stars (magnitude 3+)
-        let pickingSize;
-        if (magnitude >= 3) {
-          // Use sensitivity multiplier for dim stars
-          pickingSize = visualSize * starPickingSensitivity;
-        } else {
-          // Bright stars keep their visual size for picking
-          pickingSize = visualSize;
-        }
-
+        let pickingSize =
+          magnitude >= 3 ? visualSize * starPickingSensitivity : visualSize;
         sizes.push(visualSize);
         pickingSizes.push(pickingSize);
-
-        // Store metadata for mouseover
         starData.push({
-          // Show name and HIP, or just HIP, or just HR:
-          name: (() => {
-            if (s.N && s.HIP) {
-              return `${s.N} / HIP ${s.HIP}`;
-            } else if (s.HIP) {
-              return `HIP ${s.HIP}`;
-            } else if (s.HR) {
-              return `HR ${s.HR}`;
-            }
-            return "Unknown";
-          })(),
+          name:
+            s.N && s.HIP
+              ? `${s.N} / HIP ${s.HIP}`
+              : s.HIP
+              ? `HIP ${s.HIP}`
+              : `HR ${s.HR}`,
           HR: s.HR,
           magnitude: isNaN(magnitude) ? 5 : magnitude,
           colorTemp,
           ra: s.RA,
           dec: s.Dec,
           distLy,
-          index: index,
+          index,
         });
       });
 
@@ -218,15 +153,13 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       starPickingSensitivity,
     ]);
 
-  // Initialize picking setup
+  // --- 3. Render Target & Event Listeners ---
   useEffect(() => {
     if (!gl || !camera) return;
 
-    // Create picking render target
     pickingRenderTarget.current = new THREE.WebGLRenderTarget(1, 1);
-    pickingRenderTarget.current.samples = 0; // Disable anti-aliasing
+    pickingRenderTarget.current.samples = 0;
 
-    // Update render target size
     const updateRenderTarget = () => {
       const { width, height } = gl.domElement;
       pickingRenderTarget.current.setSize(width, height);
@@ -234,25 +167,41 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     window.addEventListener("resize", updateRenderTarget);
     updateRenderTarget();
 
-    // Add event listener
     const canvas = gl.domElement;
     canvas.addEventListener("mousemove", handleHover);
+    // FIX: Add click listener because we disabled raycasting
+    canvas.addEventListener("click", handleClick);
 
     return () => {
       window.removeEventListener("resize", updateRenderTarget);
       canvas.removeEventListener("mousemove", handleHover);
-      if (pickingRenderTarget.current) {
-        pickingRenderTarget.current.dispose();
-      }
+      canvas.removeEventListener("click", handleClick);
+      if (pickingRenderTarget.current) pickingRenderTarget.current.dispose();
     };
   }, [gl, camera, planetCamera]);
 
-  // Handle hover (throttled)
+  // --- 4. Manual Click Handler ---
+  const handleClick = (event) => {
+    // FIX: Check store directly to avoid stale closure
+    if (useStore.getState().runIntro) return;
+
+    // Use the data found by the hover handler
+    if (currentHoverDataRef.current && onStarClick) {
+      onStarClick(currentHoverDataRef.current, event);
+    }
+  };
+
+  // --- 5. Optimized Hover Handler ---
   const handleHover = (event) => {
+    // FIX: Check store directly.
+    // If we used the 'runIntro' variable from props/state, it would be stuck at 'true' (stale)
+    // because this listener is bound only once on mount.
+    if (useStore.getState().runIntro) return;
+
     if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
 
     const now = performance.now();
-    if (now - lastHoverTime.current < 300) return; // Throttle to 10Hz
+    if (now - lastHoverTime.current < 200) return;
     lastHoverTime.current = now;
 
     const { clientX, clientY } = event;
@@ -263,62 +212,76 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     const y = Math.round((clientY - rect.top) * (height / rect.height));
 
     gl.setRenderTarget(pickingRenderTarget.current);
+
+    // Scissor Test Optimization
+    gl.setScissorTest(true);
+    gl.setScissor(x, height - y, 1, 1);
     gl.clear();
-    // FIX: Use pickingScene directly (not .current)
     gl.render(pickingScene, camera);
+    gl.setScissorTest(false);
     gl.setRenderTarget(null);
 
-    if (debugPicking.current) {
-      gl.render(pickingScene, camera);
-    }
+    const pixelBuffer = pixelBufferRef.current;
 
-    const pixelBuffer = new Uint8Array(4);
-    gl.readRenderTargetPixels(
-      pickingRenderTarget.current,
-      x,
-      height - y,
-      1,
-      1,
-      pixelBuffer
-    );
+    const processPixel = () => {
+      const hexColor =
+        (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | pixelBuffer[2];
+      const starIndex = colorMap.current.get(hexColor);
 
-    const hexColor =
-      (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | pixelBuffer[2];
-    const starIndex = colorMap.current.get(hexColor);
+      if (starIndex !== undefined) {
+        if (currentHoverIndex.current !== starIndex) {
+          currentHoverIndex.current = starIndex;
+          setHoveredPoint(starIndex);
 
-    if (starIndex !== undefined) {
-      if (currentHoverIndex.current !== starIndex) {
-        currentHoverIndex.current = starIndex;
-        setHoveredPoint(starIndex);
+          const star = starData[starIndex];
+          const positions =
+            pickingPointsRef.current.geometry.attributes.position.array;
+          const px = positions[starIndex * 3];
+          const py = positions[starIndex * 3 + 1];
+          const pz = positions[starIndex * 3 + 2];
+          const worldPosition = new THREE.Vector3(px, py, pz);
+          pickingPointsRef.current.localToWorld(worldPosition);
 
-        const star = starData[starIndex];
-        // Get the position attribute
-        const positions =
-          pickingPointsRef.current.geometry.attributes.position.array;
-
-        // Get the specific point's local position
-        const x = positions[starIndex * 3];
-        const y = positions[starIndex * 3 + 1];
-        const z = positions[starIndex * 3 + 2];
-
-        // Create a Vector3 and transform to world space
-        const worldPosition = new THREE.Vector3(x, y, z);
-        pickingPointsRef.current.localToWorld(worldPosition);
-
-        onStarHover({ star, position: worldPosition, index: starIndex }, event);
-      }
-    } else {
-      if (currentHoverIndex.current !== null) {
-        currentHoverIndex.current = null;
-        setHoveredPoint(null);
-        if (onStarHover) {
-          onStarHover(null);
+          const hoverData = { star, position: worldPosition, index: starIndex };
+          currentHoverDataRef.current = hoverData; // Save for click handler
+          onStarHover(hoverData, event);
+        }
+      } else {
+        // Reset if we moved off a star
+        if (currentHoverIndex.current !== null) {
+          currentHoverIndex.current = null;
+          currentHoverDataRef.current = null;
+          setHoveredPoint(null);
+          if (onStarHover) onStarHover(null);
         }
       }
+    };
+
+    if (gl.readRenderTargetPixelsAsync) {
+      gl.readRenderTargetPixelsAsync(
+        pickingRenderTarget.current,
+        x,
+        height - y,
+        1,
+        1,
+        pixelBuffer
+      )
+        .then(processPixel)
+        .catch(() => {});
+    } else {
+      gl.readRenderTargetPixels(
+        pickingRenderTarget.current,
+        x,
+        height - y,
+        1,
+        1,
+        pixelBuffer
+      );
+      processPixel();
     }
   };
 
-  // Update buffer attributes when positions, sizes, or picking sensitivity change
+  // --- 6. Geometry Updates ---
   useEffect(() => {
     if (pointsRef.current) {
       const geometry = pointsRef.current.geometry;
@@ -332,7 +295,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       geometry.attributes.color.needsUpdate = true;
       geometry.attributes.size.needsUpdate = true;
     }
-
     if (pickingPointsRef.current) {
       const geometry = pickingPointsRef.current.geometry;
       geometry.setAttribute(
@@ -350,23 +312,18 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [positions, colors, pickingColors, sizes, pickingSizes]);
 
-  // Update picking scene when star group transforms
+  // --- 7. Position Updates ---
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
       const worldPosition = new Vector3();
       const worldQuaternion = new Quaternion();
-
       movePlotModel(plotObjects, epochJ2000Pos);
       const earthObj = plotObjects.find((p) => p.name === "Earth");
       earthObj.cSphereRef.current.getWorldPosition(worldPosition);
       earthObj.cSphereRef.current.getWorldQuaternion(worldQuaternion);
-
       starGroupRef.current.position.copy(worldPosition);
       starGroupRef.current.quaternion.copy(worldQuaternion);
-
-      // Update picking scene transformation
-      // FIX: Use pickingScene directly (not .current)
       if (pickingPointsRef.current && pickingScene) {
         pickingPointsRef.current.position.copy(worldPosition);
         pickingPointsRef.current.quaternion.copy(worldQuaternion);
@@ -374,9 +331,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [plotObjects, pickingScene]);
 
-  // Add picking points to picking scene
   useEffect(() => {
-    // FIX: Use pickingScene directly (not .current) and check for existence
     if (pickingPointsRef.current && pickingScene) {
       pickingScene.add(pickingPointsRef.current);
       return () => {
@@ -387,9 +342,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [pickingPointsRef.current, pickingScene]);
 
+  // --- 8. Label Updates ---
   useEffect(() => {
     if (starData.length === 0 || !pickingPointsRef.current) return;
-
     LABELED_STARS.forEach((query) => {
       const bscIndex = bscSettings.findIndex(
         (s) =>
@@ -397,33 +352,24 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           s.HIP === query ||
           s.HR === query
       );
-
       if (bscIndex === -1) return;
-
       const bscStar = bscSettings[bscIndex];
-
       const star = starData.find(
         (s) => parseInt(s.HR) === parseInt(bscStar.HR)
       );
       if (!star) return;
-
       const starIndex = star.index;
-
       const positions =
         pickingPointsRef.current.geometry.attributes.position.array;
       const x = positions[starIndex * 3];
       const y = positions[starIndex * 3 + 1];
       const z = positions[starIndex * 3 + 2];
-
       const pos = new THREE.Vector3(x, y, z);
       pickingPointsRef.current.localToWorld(pos);
-
       let displayName =
         bscStar.N || (bscStar.HIP ? `HIP ${bscStar.HIP}` : `HR ${bscStar.HR}`);
-
       setLabeledStarPosition(bscStar.HR, pos, displayName);
     });
-
     return () => {
       LABELED_STARS.forEach((query) => {
         const bscIndex = bscSettings.findIndex(
@@ -432,22 +378,22 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
             s.HIP === query ||
             s.HR === query
         );
-
         if (bscIndex !== -1) {
           const bscStar = bscSettings[bscIndex];
-          // Passing null removes the label from the store
-          setLabeledStarPosition(bscStar.HR, null); 
+          setLabeledStarPosition(bscStar.HR, null);
         }
       });
     };
-
   }, [starData, setLabeledStarPosition, plotObjects]);
 
+  // --- 9. JSX Return (With Raycast Disabled) ---
   return (
     <>
       <group ref={starGroupRef}>
-        {/* Visible stars */}
-        <points ref={pointsRef}>
+        <points
+          ref={pointsRef}
+          raycast={() => null} // Optimized: No R3F raycasting
+        >
           <bufferGeometry>
             <bufferAttribute
               attach="attributes-position"
@@ -472,8 +418,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         </points>
       </group>
 
-      {/* Picking stars with selective sensitivity for dim stars */}
-      <points ref={pickingPointsRef}>
+      <points
+        ref={pickingPointsRef}
+        raycast={() => null} // Optimized: No R3F raycasting
+      >
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
