@@ -22,8 +22,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const pickingPointsRef = useRef();
   const pickingRenderTarget = useRef();
 
-  // Buffer to store the single pixel color
+  // Reuse buffer
   const pixelBufferRef = useRef(new Uint8Array(4));
+  // Store current hover data for the click handler
+  const currentHoverDataRef = useRef(null);
 
   const [pickingScene] = useState(() => new THREE.Scene());
   const colorMap = useRef(new Map());
@@ -33,6 +35,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const lastHoverTime = useRef(0);
   const currentHoverIndex = useRef(null);
 
+  // --- GET SETTINGS ---
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const hScale = useStore((s) => s.hScale);
@@ -43,7 +46,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const planetCamera = useStore((s) => s.planetCamera);
   const setLabeledStarPosition = useStore((s) => s.setLabeledStarPosition);
 
-  // --- 1. Selection Logic (Keep existing) ---
+  // Note: We don't destruct runIntro here for logic to avoid stale closures.
+  // We will access useStore.getState().runIntro directly in handlers.
+
+  // --- 1. Selection Logic ---
   useEffect(() => {
     if (selectedStarHR && starData.length > 0 && pointsRef.current) {
       const star = starData.find(
@@ -67,12 +73,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [selectedStarHR]);
 
-  // --- 2. Data Calculation (Keep existing) ---
+  // --- 2. Data Calculation ---
   const { positions, colors, sizes, pickingSizes, starData, pickingColors } =
     useMemo(() => {
-      // [Existing massive calculation block - omitted for brevity, logic is unchanged]
-      // This is where you parse bscSettings.forEach(...)
-      // Ensure you keep your existing code here!
       const positions = [];
       const colors = [];
       const pickingColors = [];
@@ -150,13 +153,12 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       starPickingSensitivity,
     ]);
 
-  // --- 3. Render Target Setup ---
+  // --- 3. Render Target & Event Listeners ---
   useEffect(() => {
     if (!gl || !camera) return;
 
-    // Use a full-screen render target, but we will SCISSOR it later
     pickingRenderTarget.current = new THREE.WebGLRenderTarget(1, 1);
-    pickingRenderTarget.current.samples = 0; // No AA
+    pickingRenderTarget.current.samples = 0;
 
     const updateRenderTarget = () => {
       const { width, height } = gl.domElement;
@@ -167,20 +169,39 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
     const canvas = gl.domElement;
     canvas.addEventListener("mousemove", handleHover);
+    // FIX: Add click listener because we disabled raycasting
+    canvas.addEventListener("click", handleClick);
 
     return () => {
       window.removeEventListener("resize", updateRenderTarget);
       canvas.removeEventListener("mousemove", handleHover);
+      canvas.removeEventListener("click", handleClick);
       if (pickingRenderTarget.current) pickingRenderTarget.current.dispose();
     };
   }, [gl, camera, planetCamera]);
 
-  // --- 4. Optimized Hover Handler (Scissor Test) ---
+  // --- 4. Manual Click Handler ---
+  const handleClick = (event) => {
+    // FIX: Check store directly to avoid stale closure
+    if (useStore.getState().runIntro) return;
+
+    // Use the data found by the hover handler
+    if (currentHoverDataRef.current && onStarClick) {
+      onStarClick(currentHoverDataRef.current, event);
+    }
+  };
+
+  // --- 5. Optimized Hover Handler ---
   const handleHover = (event) => {
+    // FIX: Check store directly.
+    // If we used the 'runIntro' variable from props/state, it would be stuck at 'true' (stale)
+    // because this listener is bound only once on mount.
+    if (useStore.getState().runIntro) return;
+
     if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
 
     const now = performance.now();
-    if (now - lastHoverTime.current < 200) return; // Throttle 200ms
+    if (now - lastHoverTime.current < 200) return;
     lastHoverTime.current = now;
 
     const { clientX, clientY } = event;
@@ -192,16 +213,11 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
     gl.setRenderTarget(pickingRenderTarget.current);
 
-    // OPTIMIZATION: Scissor Test
-    // Only render the 1 pixel under the mouse.
-    // This is much safer than setViewOffset and prevents full-screen draw.
+    // Scissor Test Optimization
     gl.setScissorTest(true);
     gl.setScissor(x, height - y, 1, 1);
-
     gl.clear();
     gl.render(pickingScene, camera);
-
-    // Reset scissor so it doesn't affect main render
     gl.setScissorTest(false);
     gl.setRenderTarget(null);
 
@@ -216,6 +232,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         if (currentHoverIndex.current !== starIndex) {
           currentHoverIndex.current = starIndex;
           setHoveredPoint(starIndex);
+
           const star = starData[starIndex];
           const positions =
             pickingPointsRef.current.geometry.attributes.position.array;
@@ -224,14 +241,16 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           const pz = positions[starIndex * 3 + 2];
           const worldPosition = new THREE.Vector3(px, py, pz);
           pickingPointsRef.current.localToWorld(worldPosition);
-          onStarHover(
-            { star, position: worldPosition, index: starIndex },
-            event
-          );
+
+          const hoverData = { star, position: worldPosition, index: starIndex };
+          currentHoverDataRef.current = hoverData; // Save for click handler
+          onStarHover(hoverData, event);
         }
       } else {
+        // Reset if we moved off a star
         if (currentHoverIndex.current !== null) {
           currentHoverIndex.current = null;
+          currentHoverDataRef.current = null;
           setHoveredPoint(null);
           if (onStarHover) onStarHover(null);
         }
@@ -262,7 +281,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   };
 
-  // --- 5. Geometry Updates (Keep existing) ---
+  // --- 6. Geometry Updates ---
   useEffect(() => {
     if (pointsRef.current) {
       const geometry = pointsRef.current.geometry;
@@ -293,7 +312,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [positions, colors, pickingColors, sizes, pickingSizes]);
 
-  // --- 6. Position Updates (Keep existing) ---
+  // --- 7. Position Updates ---
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
@@ -323,7 +342,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [pickingPointsRef.current, pickingScene]);
 
-  // --- 7. Label Updates (Keep existing) ---
+  // --- 8. Label Updates ---
   useEffect(() => {
     if (starData.length === 0 || !pickingPointsRef.current) return;
     LABELED_STARS.forEach((query) => {
@@ -367,13 +386,13 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     };
   }, [starData, setLabeledStarPosition, plotObjects]);
 
-  // --- 8. JSX Return (With Raycast Disabled) ---
+  // --- 9. JSX Return (With Raycast Disabled) ---
   return (
     <>
       <group ref={starGroupRef}>
         <points
           ref={pointsRef}
-          raycast={() => null} // <--- FIX: Disable standard raycasting
+          raycast={() => null} // Optimized: No R3F raycasting
         >
           <bufferGeometry>
             <bufferAttribute
@@ -399,10 +418,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         </points>
       </group>
 
-      {/* Picking Points (also disabled raycasting) */}
       <points
         ref={pickingPointsRef}
-        raycast={() => null} // <--- FIX: Disable standard raycasting
+        raycast={() => null} // Optimized: No R3F raycasting
       >
         <bufferGeometry>
           <bufferAttribute
