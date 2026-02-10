@@ -57,7 +57,8 @@ const HoverObj = ({ s, starColor = false }) => {
       <spriteMaterial
         map={circleTexture}
         transparent={true}
-        opacity={hovered ? 0.09 : 0.05}
+        // Reduced opacity to make planets visible through the marker
+        opacity={hovered ? 0.04 : 0.015}
         sizeAttenuation={false}
       />
 
