@@ -22,34 +22,31 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const pickingPointsRef = useRef();
   const pickingRenderTarget = useRef();
 
-  // Reuse buffer
-  const pixelBufferRef = useRef(new Uint8Array(4));
-  // Store current hover data for the click handler
-  const currentHoverDataRef = useRef(null);
-
   const [pickingScene] = useState(() => new THREE.Scene());
+
   const colorMap = useRef(new Map());
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const { scene, camera, gl } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
   const lastHoverTime = useRef(0);
   const currentHoverIndex = useRef(null);
+  const debugPicking = useRef(false);
 
-  // --- GET SETTINGS ---
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const hScale = useStore((s) => s.hScale);
   const starScale = useStore((s) => s.starScale);
   const starPickingSensitivity = useStore((s) => s.starPickingSensitivity);
+
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
   const planetCamera = useStore((s) => s.planetCamera);
   const setLabeledStarPosition = useStore((s) => s.setLabeledStarPosition);
 
-  // Note: We don't destruct runIntro here for logic to avoid stale closures.
-  // We will access useStore.getState().runIntro directly in handlers.
+  // Reusable buffer
+  const pixelBufferRef = useRef(new Uint8Array(4));
+  const currentHoverDataRef = useRef(null);
 
-  // --- 1. Selection Logic ---
   useEffect(() => {
     if (selectedStarHR && starData.length > 0 && pointsRef.current) {
       const star = starData.find(
@@ -73,23 +70,25 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [selectedStarHR]);
 
-  // --- 2. Data Calculation ---
-  const { positions, colors, sizes, pickingSizes, starData, pickingColors } =
+  // OPTIMIZATION: Memoize Static Data (Heavy)
+  // 'starScale' is REMOVED from dependencies here to prevent heavy recalcs on zoom
+  const { positions, colors, pickingColors, starData, magnitudes } =
     useMemo(() => {
       const positions = [];
       const colors = [];
       const pickingColors = [];
-      const sizes = [];
-      const pickingSizes = [];
       const starData = [];
+      const magnitudes = []; // New array to store magnitudes for size calculation
 
       colorMap.current.clear();
 
       bscSettings.forEach((s, index) => {
         const magnitude = parseFloat(s.V);
         const colorTemp = parseFloat(s.K) || 5778;
+
         const raRad = rightAscensionToRadians(s.RA);
         const decRad = declinationToRadians(s.Dec);
+
         const distLy = parseFloat(s.P) * 3.26156378;
         let dist;
         if (!officialStarDistances) {
@@ -99,27 +98,31 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           dist =
             worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1);
         }
+
         const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
         positions.push(x, y, z);
+
         const { red, green, blue } = colorTemperature2rgb(colorTemp, true);
         colors.push(red, green, blue);
+
         const colorIndex = index + 1;
         const r = (colorIndex & 0xff) / 255;
         const g = ((colorIndex >> 8) & 0xff) / 255;
         const b = ((colorIndex >> 16) & 0xff) / 255;
+
         pickingColors.push(r, g, b);
+
         const rInt = Math.round(r * 255);
         const gInt = Math.round(g * 255);
         const bInt = Math.round(b * 255);
         const hexColor = (rInt << 16) | (gInt << 8) | bInt;
+
         colorMap.current.set(hexColor, index);
-        let starsize =
-          magnitude < 1 ? 1.2 : magnitude < 3 ? 0.6 : magnitude < 5 ? 0.4 : 0.2;
-        const visualSize = starsize * starScale * 10;
-        let pickingSize =
-          magnitude >= 3 ? visualSize * starPickingSensitivity : visualSize;
-        sizes.push(visualSize);
-        pickingSizes.push(pickingSize);
+
+        // Cache magnitude
+        const validMag = isNaN(magnitude) ? 5 : magnitude;
+        magnitudes.push(validMag);
+
         starData.push({
           name:
             s.N && s.HIP
@@ -128,12 +131,12 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
               ? `HIP ${s.HIP}`
               : `HR ${s.HR}`,
           HR: s.HR,
-          magnitude: isNaN(magnitude) ? 5 : magnitude,
+          magnitude: validMag,
           colorTemp,
           ra: s.RA,
           dec: s.Dec,
           distLy,
-          index,
+          index: index,
         });
       });
 
@@ -141,22 +144,45 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         positions: new Float32Array(positions),
         colors: new Float32Array(colors),
         pickingColors: new Float32Array(pickingColors),
-        sizes: new Float32Array(sizes),
-        pickingSizes: new Float32Array(pickingSizes),
         starData,
+        magnitudes,
       };
-    }, [
-      officialStarDistances,
-      hScale,
-      starDistanceModifier,
-      starScale,
-      starPickingSensitivity,
-    ]);
+    }, [officialStarDistances, hScale, starDistanceModifier]); // <-- No starScale here!
 
-  // --- 3. Render Target & Event Listeners ---
+  // OPTIMIZATION: Memoize Sizes (Light)
+  // This is the ONLY part that runs when you zoom in/out (changing starScale)
+  const { sizes, pickingSizes } = useMemo(() => {
+    const sizes = [];
+    const pickingSizes = [];
+
+    magnitudes.forEach((magnitude) => {
+      let starsize;
+      if (magnitude < 1) starsize = 1.2;
+      else if (magnitude > 1 && magnitude < 3) starsize = 0.6;
+      else if (magnitude > 3 && magnitude < 5) starsize = 0.4;
+      else starsize = 0.2;
+
+      const visualSize = starsize * starScale * 10;
+      let pickingSize;
+      if (magnitude >= 3) {
+        pickingSize = visualSize * starPickingSensitivity;
+      } else {
+        pickingSize = visualSize;
+      }
+
+      sizes.push(visualSize);
+      pickingSizes.push(pickingSize);
+    });
+
+    return {
+      sizes: new Float32Array(sizes),
+      pickingSizes: new Float32Array(pickingSizes),
+    };
+  }, [magnitudes, starScale, starPickingSensitivity]);
+
+  // Setup Picking
   useEffect(() => {
     if (!gl || !camera) return;
-
     pickingRenderTarget.current = new THREE.WebGLRenderTarget(1, 1);
     pickingRenderTarget.current.samples = 0;
 
@@ -169,7 +195,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
     const canvas = gl.domElement;
     canvas.addEventListener("mousemove", handleHover);
-    // FIX: Add click listener because we disabled raycasting
     canvas.addEventListener("click", handleClick);
 
     return () => {
@@ -180,24 +205,15 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     };
   }, [gl, camera, planetCamera]);
 
-  // --- 4. Manual Click Handler ---
   const handleClick = (event) => {
-    // FIX: Check store directly to avoid stale closure
     if (useStore.getState().runIntro) return;
-
-    // Use the data found by the hover handler
     if (currentHoverDataRef.current && onStarClick) {
       onStarClick(currentHoverDataRef.current, event);
     }
   };
 
-  // --- 5. Optimized Hover Handler ---
   const handleHover = (event) => {
-    // FIX: Check store directly.
-    // If we used the 'runIntro' variable from props/state, it would be stuck at 'true' (stale)
-    // because this listener is bound only once on mount.
     if (useStore.getState().runIntro) return;
-
     if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
 
     const now = performance.now();
@@ -212,8 +228,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     const y = Math.round((clientY - rect.top) * (height / rect.height));
 
     gl.setRenderTarget(pickingRenderTarget.current);
-
-    // Scissor Test Optimization
     gl.setScissorTest(true);
     gl.setScissor(x, height - y, 1, 1);
     gl.clear();
@@ -243,11 +257,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           pickingPointsRef.current.localToWorld(worldPosition);
 
           const hoverData = { star, position: worldPosition, index: starIndex };
-          currentHoverDataRef.current = hoverData; // Save for click handler
+          currentHoverDataRef.current = hoverData;
           onStarHover(hoverData, event);
         }
       } else {
-        // Reset if we moved off a star
         if (currentHoverIndex.current !== null) {
           currentHoverIndex.current = null;
           currentHoverDataRef.current = null;
@@ -281,7 +294,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   };
 
-  // --- 6. Geometry Updates ---
   useEffect(() => {
     if (pointsRef.current) {
       const geometry = pointsRef.current.geometry;
@@ -312,7 +324,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [positions, colors, pickingColors, sizes, pickingSizes]);
 
-  // --- 7. Position Updates ---
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
@@ -335,14 +346,12 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     if (pickingPointsRef.current && pickingScene) {
       pickingScene.add(pickingPointsRef.current);
       return () => {
-        if (pickingScene && pickingPointsRef.current) {
+        if (pickingScene && pickingPointsRef.current)
           pickingScene.remove(pickingPointsRef.current);
-        }
       };
     }
   }, [pickingPointsRef.current, pickingScene]);
 
-  // --- 8. Label Updates ---
   useEffect(() => {
     if (starData.length === 0 || !pickingPointsRef.current) return;
     LABELED_STARS.forEach((query) => {
@@ -386,14 +395,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     };
   }, [starData, setLabeledStarPosition, plotObjects]);
 
-  // --- 9. JSX Return (With Raycast Disabled) ---
   return (
     <>
       <group ref={starGroupRef}>
-        <points
-          ref={pointsRef}
-          raycast={() => null} // Optimized: No R3F raycasting
-        >
+        <points ref={pointsRef} raycast={() => null}>
           <bufferGeometry>
             <bufferAttribute
               attach="attributes-position"
@@ -417,11 +422,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           <shaderMaterial attach="material" args={[pointShaderMaterial]} />
         </points>
       </group>
-
-      <points
-        ref={pickingPointsRef}
-        raycast={() => null} // Optimized: No R3F raycasting
-      >
+      <points ref={pickingPointsRef} raycast={() => null}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"

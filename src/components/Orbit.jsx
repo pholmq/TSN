@@ -29,7 +29,6 @@ export default function Orbit({ radius, visible, s }) {
   const arrows = s?.arrows ? s.arrows : false;
   const reverse = s?.reverseArrows ? s.reverseArrows : false;
 
-
   const orbitRef = useRef();
 
   const showArrows = useStore((s) => s.arrows);
@@ -93,6 +92,7 @@ export default function Orbit({ radius, visible, s }) {
           color={color} // Default
           lineWidth={orbitsLineWidth} // In pixels (default)
           dashed={false}
+          raycast={() => null}
         />
       </group>
     </>

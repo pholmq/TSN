@@ -80,6 +80,7 @@ const Trace = ({ name }) => {
       dots={dotted}
       lineWidth={lineWidth}
       interval={interval}
+      raycast={() => null}
     />
   );
 };
