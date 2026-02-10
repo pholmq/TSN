@@ -78,13 +78,14 @@ export default function OrbitCamera() {
     }
   }, [planetCamera]);
 
+  // Change useFrame to run AFTER animations (priority > 0, e.g., 1 or 100) to avoid race condition
+  // Standard practice is: Logic/Physics (0) -> Camera (Priority > 0) -> Render (Automatic)
   useFrame(() => {
     if (cameraFollow) {
       targetObjRef.current.getWorldPosition(target);
       controlsRef.current.setTarget(target.x, target.y, target.z, false);
     }
-  });
-
+  }, 100); // <--- Added priority 100
   return (
     <>
       <PerspectiveCamera

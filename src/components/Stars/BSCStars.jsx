@@ -273,14 +273,38 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
 
     const pixelBuffer = new Uint8Array(4);
-    gl.readRenderTargetPixels(
-      pickingRenderTarget.current,
-      x,
-      height - y,
-      1,
-      1,
-      pixelBuffer
-    );
+    // gl.readRenderTargetPixels(
+    //   pickingRenderTarget.current,
+    //   x,
+    //   height - y,
+    //   1,
+    //   1,
+    //   pixelBuffer
+    // );
+
+    // Async attempt (if supported) or accept the stutter:
+    if (gl.readRenderTargetPixelsAsync) {
+      gl.readRenderTargetPixelsAsync(
+        pickingRenderTarget.current,
+        x,
+        height - y,
+        1,
+        1,
+        pixelBuffer
+      ).then(() => {
+        // ... process pixelBuffer logic here (hexColor calculation etc.)
+      });
+    } else {
+      // Fallback for older browsers
+      gl.readRenderTargetPixels(
+        pickingRenderTarget.current,
+        x,
+        height - y,
+        1,
+        1,
+        pixelBuffer
+      );
+    }
 
     const hexColor =
       (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | pixelBuffer[2];
@@ -436,11 +460,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         if (bscIndex !== -1) {
           const bscStar = bscSettings[bscIndex];
           // Passing null removes the label from the store
-          setLabeledStarPosition(bscStar.HR, null); 
+          setLabeledStarPosition(bscStar.HR, null);
         }
       });
     };
-
   }, [starData, setLabeledStarPosition, plotObjects]);
 
   return (

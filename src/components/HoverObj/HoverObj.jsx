@@ -1,26 +1,26 @@
-import { useRef, useState } from "react";
-import {SpriteMaterial} from "three";
-import { useStore } from "../../store"; 
-import HoverPanel from "./HoverPanel"; // Relative import
-import createCircleTexture from "../../utils/createCircleTexture"; // Adjust path if utils/ is elsewhere
+import { useRef, useState, useMemo } from "react";
+// Remove SpriteMaterial import, we will use the JSX element <spriteMaterial />
+import { useStore } from "../../store";
+import HoverPanel from "./HoverPanel";
+import createCircleTexture from "../../utils/createCircleTexture";
 
-const HoverObj = ({ s, starColor=false }) => {
+const HoverObj = ({ s, starColor = false }) => {
   const [hovered, setHover] = useState(false);
   const [contextMenu, setContextMenu] = useState(false);
+
+  // Selectors
   const hoveredObjectId = useStore((state) => state.hoveredObjectId);
   const setHoveredObjectId = useStore((state) => state.setHoveredObjectId);
   const setCameraTarget = useStore((state) => state.setCameraTarget);
-  const timeoutRef = useRef(null);
-  const color = !starColor ? s.color : starColor
-  const circleTexture = createCircleTexture(color);
 
-  const spriteMaterial = new SpriteMaterial({
-    map: circleTexture,
-    transparent: true,
-    opacity: hovered ? 0.09 : 0.05,
-    sizeAttenuation: false,
-    // depthTest: false,
-  });
+  const timeoutRef = useRef(null);
+
+  const color = !starColor ? s.color : starColor;
+
+  // FIX 1: Only create the texture ONCE when the color changes.
+  const circleTexture = useMemo(() => {
+    return createCircleTexture(color);
+  }, [color]);
 
   const handlePointerOver = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -43,7 +43,6 @@ const HoverObj = ({ s, starColor=false }) => {
 
   return (
     <sprite
-      material={spriteMaterial}
       scale={[size, size, size]}
       onPointerOver={handlePointerOver}
       onPointerLeave={handlePointerLeave}
@@ -53,6 +52,15 @@ const HoverObj = ({ s, starColor=false }) => {
       }}
       renderOrder={1}
     >
+      {/* FIX 2: Use declarative <spriteMaterial> instead of 'new SpriteMaterial()' */}
+      {/* This allows R3F to update the opacity without destroying/recreating the material */}
+      <spriteMaterial
+        map={circleTexture}
+        transparent={true}
+        opacity={hovered ? 0.09 : 0.05}
+        sizeAttenuation={false}
+      />
+
       <HoverPanel
         hovered={showPanel}
         contextMenu={contextMenu}
