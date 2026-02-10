@@ -16,7 +16,7 @@ const Ephemerides = () => {
 
   // Get setters and state from the store
   const setGenerationParams = useEphemeridesStore((s) => s.setGenerationParams);
-  const setGenerationError = useEphemeridesStore((s) => s.setGenerationError); // <--- Added this
+  const setGenerationError = useEphemeridesStore((s) => s.setGenerationError);
   const isGenerating = useEphemeridesStore((s) => s.isGenerating);
 
   const levaEphStore = useCreateStore();
@@ -64,18 +64,7 @@ const Ephemerides = () => {
       return;
     }
 
-    // 2. Check if Start Date is after End Date
-    // We create Date objects to compare them accurately
-    const startDate = new Date(formValues["Start Date"]);
-    const endDate = new Date(formValues["End Date"]);
-
-    if (startDate > endDate) {
-      setGenerationError(
-        "Invalid Date Range.\nThe Start Date cannot be after the End Date."
-      );
-      return;
-    }
-    // -------------------------
+    // 2. Date validation removed to allow reverse generation (End Date < Start Date)
 
     // Send command to the Controller inside the Canvas
     setGenerationParams({
