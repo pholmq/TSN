@@ -123,6 +123,9 @@ const TSNext = () => {
         frameloop="always"
         gl={{ logarithmicDepthBuffer: true }}
         style={getCanvasStyle()}
+        raycaster={{
+          params: { Line: { threshold: 0.1 } },
+        }}
       >
         {/* IntroQuote is always rendered and visible */}
         <IntroQuote />
