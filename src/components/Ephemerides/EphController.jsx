@@ -29,13 +29,12 @@ const EphController = () => {
   const [generating, setGenerating] = useState(false);
 
   const jobRef = useRef({
-    currentPos: 0,
-    endPos: 0,
+    startPos: 0,
+    currentStep: 0,
+    totalSteps: 0,
     increment: 0,
     checkedPlanets: [],
     data: {},
-    totalSteps: 0,
-    currentStepCount: 0,
     lastProgress: 0,
   });
 
@@ -47,9 +46,15 @@ const EphController = () => {
 
       const startPos = dateTimeToPos(params.startDate, "00:00:00");
       const endPos = dateTimeToPos(params.endDate, "00:00:00");
-      const increment = params.stepSize * params.stepFactor;
+      let increment = params.stepSize * params.stepFactor;
 
-      const calculatedSteps = Math.floor((endPos - startPos) / increment) + 1;
+      // Reverse direction if Start > End
+      if (startPos > endPos) {
+        increment = -increment;
+      }
+
+      // FIX 1: Calculate Total Steps using Math.round to snap 23.999 -> 24
+      const totalSteps = Math.round((endPos - startPos) / increment);
 
       // Initialize Data Structure
       const initialData = {};
@@ -59,13 +64,12 @@ const EphController = () => {
 
       // Setup Job
       jobRef.current = {
-        currentPos: startPos,
-        endPos: endPos,
+        startPos: startPos,
+        currentStep: 0, // We use an integer counter now
+        totalSteps: totalSteps,
         increment: increment,
         checkedPlanets: params.checkedPlanets,
         data: initialData,
-        totalSteps: calculatedSteps,
-        currentStepCount: 0,
         lastProgress: 0,
       };
 
@@ -85,7 +89,6 @@ const EphController = () => {
   useFrame(() => {
     // Check for Cancellation
     if (generating && !useEphemeridesStore.getState().isGenerating) {
-      // console.log("Generation Cancelled by User");
       setGenerating(false);
       return;
     }
@@ -96,14 +99,18 @@ const EphController = () => {
 
     const job = jobRef.current;
     const BATCH_SIZE = 50;
-
     let batchCount = 0;
 
-    while (job.currentPos <= job.endPos && batchCount < BATCH_SIZE) {
-      const currentDate = posToDate(job.currentPos);
-      const currentTime = posToTime(job.currentPos);
+    // FIX 2: Loop based on integer 'currentStep' instead of float 'currentPos'
+    while (job.currentStep <= job.totalSteps && batchCount < BATCH_SIZE) {
+      // FIX 3: Calculate position freshly from start to avoid accumulation error
+      // Formula: start + (stepNumber * stepSize)
+      const currentPos = job.startPos + job.currentStep * job.increment;
 
-      movePlotModel(plotObjects, job.currentPos);
+      const currentDate = posToDate(currentPos);
+      const currentTime = posToTime(currentPos);
+
+      movePlotModel(plotObjects, currentPos);
 
       job.checkedPlanets.forEach((name) => {
         const data = getPlotModelRaDecDistance(name, plotObjects, scene);
@@ -119,14 +126,13 @@ const EphController = () => {
         }
       });
 
-      job.currentPos += job.increment;
-      job.currentStepCount++;
+      job.currentStep++;
       batchCount++;
     }
 
     const progress = Math.min(
       100,
-      Math.floor((job.currentStepCount / job.totalSteps) * 100)
+      Math.floor((job.currentStep / (job.totalSteps + 1)) * 100)
     );
 
     if (progress > job.lastProgress) {
@@ -134,8 +140,8 @@ const EphController = () => {
       job.lastProgress = progress;
     }
 
-    if (job.currentPos > job.endPos) {
-      // console.log(`Generation Complete. Steps: ${job.currentStepCount}`);
+    // Completion Check (Integer based)
+    if (job.currentStep > job.totalSteps) {
       setGeneratedData(job.data);
       setGenerating(false);
       setProgress(100);
