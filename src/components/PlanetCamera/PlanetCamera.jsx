@@ -25,7 +25,7 @@ export default function PlanetCamera() {
   const camMountRef = useRef(null);
   const groundMountRef = useRef(null);
   const targetObjRef = useRef(null);
-  const prevTargetRef = useRef(null); // ADD THIS LINE
+  const prevTargetRef = useRef(null);
 
   const { scene } = useThree();
   const planetCamera = useStore((s) => s.planetCamera);
@@ -51,56 +51,68 @@ export default function PlanetCamera() {
   const planetRadiusInUnits = planetSettings?.actualSize || 0.00426;
   const planetRadiusKm = unitsToKm(planetRadiusInUnits);
 
+  // --- START NEW SCALING LOGIC ---
+  const setStarScale = useStore((s) => s.setStarScale);
+  const initialStarScaleRef = useRef(useStore.getState().starScale);
+
+  useEffect(() => {
+    // Calculate zoom ratio (Base FOV 45)
+    const rawRatio = 45 / planCamFov;
+
+    // Dampen the ratio using a power curve (Square Root).
+    // If you zoom in 100x:
+    // - Linear: Stars get 100x bigger
+    // - Sqrt: Stars get 10x bigger (Much smoother/slight increase)
+    const dampenedRatio = Math.pow(rawRatio, 0.5);
+
+    const dynamicScale = initialStarScaleRef.current * dampenedRatio;
+
+    setStarScale(dynamicScale);
+  }, [planCamFov, setStarScale]);
+
+  // Reset scale on unmount
+  useEffect(() => {
+    return () => {
+      setStarScale(initialStarScaleRef.current);
+    };
+  }, [setStarScale]);
+  // --- END NEW SCALING LOGIC ---
+
   useLayoutEffect(() => {
-    // Reset previous target's opacity if it exists
     if (prevTargetRef.current && prevTargetRef.current.material) {
       prevTargetRef.current.material.opacity = 1;
       prevTargetRef.current.material.needsUpdate = true;
     }
 
-    // Remove camera system from previous parent
     if (planetCamSystemRef.current.parent) {
       planetCamSystemRef.current.parent.remove(planetCamSystemRef.current);
     }
 
-    // Add to new planet
     targetObjRef.current = scene.getObjectByName(planetCameraTarget);
     if (targetObjRef.current) {
       targetObjRef.current.add(planetCamSystemRef.current);
       planetCamRef.current.updateProjectionMatrix();
     }
 
-    // Store current target for next switch
     prevTargetRef.current = targetObjRef.current;
   }, [planetCameraTarget, scene]);
-
-  // useHelper(
-  //   planetCameraHelper && !planetCamera ? planetCamRef : false,
-  //   CameraHelper
-  // );
 
   useEffect(() => {
     if (groundMountRef.current) {
       groundMountRef.current.traverse((child) => {
         if (child.isMesh && child.geometry) {
           if (child.geometry.type === "SphereGeometry") {
-            // Only control the sphere visibility, leave torus alone
             child.visible = showGround;
           }
-          // TorusGeometry is left unchanged - always visible
         }
       });
     }
   }, [showGround]);
 
   useEffect(() => {
-    if (!latAxisRef.current || cameraTransitioning) return; // Skip opacity changes during transition
+    if (!latAxisRef.current || cameraTransitioning) return;
 
     if (targetObjRef.current && targetObjRef.current.material) {
-      // Dynamic transition based on planet radius - relative scaling
-      // const lowHeight = planetRadiusKm * 1.03; // Start fade at 3% above surface
-      // const highHeight = planetRadiusKm * 1.04; // End fade at 4% above surface
-      // Reduce to 0.5% start and 1.0% end
       const lowHeight = planetRadiusKm * 1.0005;
       const highHeight = planetRadiusKm * 1.001;
 
@@ -120,11 +132,9 @@ export default function PlanetCamera() {
         groundOpacity = 1 - aggressiveFade;
       }
 
-      // Apply opacity to planet
       targetObjRef.current.material.opacity = planetOpacity;
       targetObjRef.current.material.needsUpdate = true;
 
-      // Apply opacity to ground
       if (groundMountRef.current) {
         groundMountRef.current.traverse((child) => {
           if (child.isMesh && child.material) {
@@ -132,15 +142,10 @@ export default function PlanetCamera() {
             child.material.needsUpdate = true;
           }
         });
-
-        // Control visibility for performance
         groundMountRef.current.visible = groundOpacity > 0;
       }
       if (!planetCamera) {
-        // Get all settings for celestial objects
         const { settings } = useSettingsStore.getState();
-
-        // Reset only planets that have planetCamera enabled
         settings.forEach((setting) => {
           if (setting.planetCamera === true) {
             const planetObj = scene.getObjectByName(setting.name);
@@ -151,7 +156,6 @@ export default function PlanetCamera() {
           }
         });
 
-        // Hide ground
         if (groundMountRef.current) {
           groundMountRef.current.traverse((child) => {
             if (child.isMesh && child.material) {
@@ -163,7 +167,6 @@ export default function PlanetCamera() {
       }
 
       if (!showGround) {
-        // Hide planet
         targetObjRef.current.material.opacity = 0;
         targetObjRef.current.material.needsUpdate = true;
       }
@@ -195,7 +198,6 @@ export default function PlanetCamera() {
   ]);
 
   useEffect(() => {
-    // Reset camera to surface when switching planets
     const setPlanCamHeight = usePlanetCameraStore.getState().setPlanCamHeight;
     setPlanCamHeight(planetRadiusKm);
   }, [planetCameraTarget, planetRadiusKm]);
@@ -212,7 +214,6 @@ export default function PlanetCamera() {
               <Ground />
             </group>
             <group ref={camMountRef} position={[0, 0, 0]}>
-              {/* Camera */}
               <group>
                 <PerspectiveCamera
                   name="PlanetCamera"
