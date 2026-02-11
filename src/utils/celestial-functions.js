@@ -204,8 +204,8 @@ export function getRaDecDistanceFromPosition(position, scene) {
   const sphericalPos = new Spherical();
   const lookAtDir = new Vector3(0, 0, 1);
 
-  // Update the scene's matrix world once
-  scene.updateMatrixWorld();
+  // REMOVED: scene.updateMatrixWorld();
+  // Optimization: This caused lag spikes. The caller (PosController) must handle matrix updates once per frame.
 
   // Get world positions for celestial sphere and sun
   const celestialSphere = scene.getObjectByName("CelestialSphere");

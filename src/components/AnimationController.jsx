@@ -13,14 +13,17 @@ const AnimationController = () => {
   const run = useStore((s) => s.run);
   const speedFact = useStore((s) => s.speedFact);
   const speedMultiplier = useStore((s) => s.speedMultiplier);
+
+  // Triggers a frame render on component mount/update
   invalidate();
-  // clock.getDelta(); //Reset delta so that it's 0 when run becomes true
+
+  // Priority -1 ensures this runs BEFORE components (like planets) read the position
   useFrame((state, delta) => {
     if (run) {
       posRef.current = posRef.current + delta * (speedFact * speedMultiplier);
       invalidate(); //Ivalidate frame so we get a render since we have frameloop=demand
     }
-  });
+  }, -1);
   return null;
 };
 
