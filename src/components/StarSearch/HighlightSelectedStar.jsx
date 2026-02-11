@@ -2,6 +2,7 @@ import { useStore } from "../../store";
 import { Html } from "@react-three/drei";
 import { useRef, useMemo } from "react";
 import starsData from "../../settings/BSC.json";
+import specialStarsData from "../../settings/star-settings.json";
 
 import { LABELED_STARS } from "../Stars/LabeledStars";
 
@@ -11,16 +12,32 @@ export default function HighlightSelectedStar() {
   const position = useStore((s) => s.selectedStarPosition);
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const showLabels = useStore((s) => s.showLabels);
-  const portalRef = useRef(document.body);
 
   // Get the selected star data and compute the display name
   const starName = useMemo(() => {
     if (!selectedStarHR) return null;
 
-    const star = starsData.find((s) => s.HR?.toString() === selectedStarHR);
+    // Handle Planets
+    if (selectedStarHR.startsWith("Planet:")) {
+      return selectedStarHR.replace("Planet:", "");
+    }
+    // Handle Special Stars without HR
+    if (selectedStarHR.startsWith("Special:")) {
+      return selectedStarHR.replace("Special:", "");
+    }
+
+    // Handle Stars (BSC or Special with HR)
+    // Force toString() comparison for safety
+    let star = starsData.find((s) => s.HR && String(s.HR) === selectedStarHR);
+    if (!star) {
+      // Try special stars if not in BSC
+      star = specialStarsData.find(
+        (s) => s.HR && String(s.HR) === selectedStarHR
+      );
+    }
+
     if (!star) return null;
 
-    // Apply the same naming logic: Name + HIP, or just HIP, or just HR
     if (star.N && star.HIP) {
       return `${star.N} / HIP ${star.HIP}`;
     } else if (star.N && star.HR) {
@@ -29,13 +46,20 @@ export default function HighlightSelectedStar() {
       return `HIP ${star.HIP}`;
     } else if (star.HR) {
       return `HR ${star.HR}`;
+    } else if (star.name) {
+      return star.name;
     }
     return "Unknown";
   }, [selectedStarHR]);
 
   const isLabeledStar = useMemo(() => {
     if (!selectedStarHR) return false;
-    const star = starsData.find((s) => s.HR?.toString() === selectedStarHR);
+
+    // Always show crosshair for Planets
+    if (selectedStarHR.startsWith("Planet:")) return true;
+
+    // Find star data to check labeled list
+    const star = starsData.find((s) => s.HR && String(s.HR) === selectedStarHR);
     if (!star) return false;
 
     return LABELED_STARS.some(
@@ -47,9 +71,6 @@ export default function HighlightSelectedStar() {
   }, [selectedStarHR]);
 
   if (!position) return null;
-
-  // console.log(position);
-  // console.log(selectedStarHR);
 
   return (
     <Html

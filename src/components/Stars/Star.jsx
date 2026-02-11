@@ -7,7 +7,6 @@ import {
   declinationToRadians,
   rightAscensionToRadians,
   sphericalToCartesian,
-  convertMagnitude,
 } from "../../utils/celestial-functions";
 import HoverObj from "../HoverObj/HoverObj";
 import createCircleTexture from "../../utils/createCircleTexture";
@@ -15,17 +14,16 @@ import colorTemperature2rgb from "../../utils/colorTempToRGB";
 import NameLabel from "../Labels/NameLabel";
 
 export default function Star({ sData }) {
-  const { camera, invalidate } = useThree();
+  const { invalidate } = useThree();
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const hScale = useStore((s) => s.hScale);
   const starScale = useStore((s) => s.starScale);
 
-  // const s = settings.find((obj) => obj.name === name);
+  const selectedStarHR = useStore((s) => s.selectedStarHR);
+  const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
 
   const s = sData;
-
-  // console.log(s)
 
   const color = colorTemperature2rgb(s.colorTemp);
 
@@ -33,48 +31,37 @@ export default function Star({ sData }) {
   const groupRef = useRef();
   const minScreenSize = 0.1;
 
-  const prevCameraPos = useRef(new Vector3());
-  const prevFov = useRef(null);
-
-  const updateScale = (camera) => {
-    if (!meshRef.current) return;
-    const distance = camera.position.distanceTo(meshRef.current.position);
-    const fov = MathUtils.degToRad(camera.fov);
-    const apparentSize = (2 * Math.tan(fov / 2) * 1) / distance;
-
-    if (distance > 0.1) {
-      if (apparentSize < minScreenSize) {
-        const scale = (minScreenSize / apparentSize) * 1;
-        meshRef.current.scale.set(scale, scale, scale);
-      } else {
-        meshRef.current.scale.set(1, 1, 1);
-      }
-    }
-  };
-
   useEffect(() => {
     if (meshRef.current) {
-      const raRad = rightAscensionToRadians(s.ra); // Convert RA to radians
-      const decRad = declinationToRadians(s.dec); // Convert Dec to radians
+      const raRad = rightAscensionToRadians(s.ra);
+      const decRad = declinationToRadians(s.dec);
       let dist;
       if (!officialStarDistances) {
         dist = (20000 * hScale) / 100;
       } else {
-        //Convert light year distance to world units (1Ly = 63241 AU, 1 AU = 100 world units)
         const worldDist = s.distLy * 63241 * 100;
         dist =
-          worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1); // Distance
+          worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1);
       }
 
-      // Convert spherical coordinates (RA, Dec, Dist) to Cartesian coordinates (x, y, z)
       const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
 
-      // Set the position of the star
       groupRef.current.position.set(x, y, z);
-      // updateScale(camera);
       invalidate();
     }
   }, [s, starDistanceModifier, officialStarDistances, hScale]);
+
+  // --- NEW: Report position if selected ---
+  useFrame(() => {
+    // Ensure ID format matches StarSearch logic
+    const myID = s.HR ? String(s.HR) : `Special:${s.name}`;
+
+    if (selectedStarHR === myID && groupRef.current) {
+      const vec = new Vector3();
+      groupRef.current.getWorldPosition(vec);
+      setSelectedStarPosition(vec);
+    }
+  });
 
   const circleTexture = createCircleTexture(color);
   const spriteMaterial = new SpriteMaterial({
@@ -83,8 +70,8 @@ export default function Star({ sData }) {
     opacity: 1,
     alphaTest: 0.5,
     sizeAttenuation: false,
-    // depthTest: false,
   });
+
   let starsize;
   if (s.magnitude < 1) {
     starsize = 1.2;

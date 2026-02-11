@@ -1,5 +1,6 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef, useEffect, memo } from "react";
+import * as THREE from "three";
 import { useStore } from "../store";
 import { usePlanetCameraStore } from "./PlanetCamera/planetCameraStore";
 import useTextureLoader from "../utils/useTextureLoader";
@@ -12,7 +13,7 @@ import NameLabel from "./Labels/NameLabel";
 import GeoSphere from "./Helpers/GeoSphere";
 
 const Planet = memo(function Planet({ s, actualMoon, name }) {
-  const planetRef = useRef(); // Group for rotation and scaling
+  const planetRef = useRef();
   const pivotRef = useRef();
   const materialRef = useRef();
   const posRef = useStore((state) => state.posRef);
@@ -24,6 +25,9 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const planetCameraTarget = usePlanetCameraStore(
     (state) => state.planetCameraTarget
   );
+
+  const selectedStarHR = useStore((s) => s.selectedStarHR);
+  const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
 
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
 
@@ -53,7 +57,6 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
 
   useFrame(() => {
     if (s.fixedTilt && pivotRef.current) {
-      //Adjust the tilt so that it's fixed in respect to the orbit
       pivotRef.current.rotation.y = -(
         s.speed * posRef.current -
         s.startPos * (Math.PI / 180)
@@ -61,17 +64,22 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     }
 
     if (planetRef.current) {
-      // Apply rotation (Start Angle + Speed * Time)
-      // console.log(s.name, rotationStart, rotationSpeed);
       planetRef.current.rotation.y =
         rotationStart + rotationSpeed * posRef.current;
+
+      // --- NEW: Update selected position if this planet is selected ---
+      const myID = `Planet:${name}`;
+      if (selectedStarHR === myID) {
+        const vec = new THREE.Vector3();
+        planetRef.current.getWorldPosition(vec);
+        setSelectedStarPosition(vec);
+      }
     }
   });
 
   const tilt = Number(s.tilt || 0);
   const tiltb = Number(s.tiltb || 0);
 
-  // Hide label and hoverObj if this planet is the active planet camera target
   const showLabel =
     visible &&
     !(planetCamera && !cameraTransitioning && name === planetCameraTarget);
