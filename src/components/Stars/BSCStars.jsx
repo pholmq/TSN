@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { Vector3, Quaternion } from "three";
 import { usePlotStore } from "../../store";
 import bscSettings from "../../settings/BSC.json";
+import specialStarsData from "../../settings/star-settings.json"; // <--- Import Special Stars
 import { dateTimeToPos } from "../../utils/time-date-functions";
 import { useStore } from "../../store";
 import {
@@ -28,8 +29,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const { scene, camera, gl } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
-  const lastHoverTime = useRef(0);
   const currentHoverIndex = useRef(null);
+  const hoverTimeoutRef = useRef(null);
   const debugPicking = useRef(false);
 
   const officialStarDistances = useStore((s) => s.officialStarDistances);
@@ -47,13 +48,40 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const pixelBufferRef = useRef(new Uint8Array(4));
   const currentHoverDataRef = useRef(null);
 
+  // --- 1. Create a "Blacklist" of Special Stars ---
+  // We want to block BSCStars from rendering anything that appears in star-settings.json
+  const ignoreSet = useMemo(() => {
+    const set = new Set();
+    specialStarsData.forEach((s) => {
+      if (s.HR) set.add(`HR:${String(s.HR)}`);
+      if (s.HIP) set.add(`HIP:${String(s.HIP)}`);
+      // Also add Proxima/Barnard's specifically if they don't have HR numbers in your file yet
+      // (HIP numbers are safer for these dim stars)
+      if (s.name === "Barnard's star") set.add("HIP:87937");
+      if (s.name === "Proxima Centauri") set.add("HIP:70890");
+    });
+    return set;
+  }, []);
+
   useEffect(() => {
+    // If selected star is special, ignore it here (let HighlightSelectedStar handle it)
+    if (selectedStarHR) {
+      const isSpecial = specialStarsData.some(
+        (s) =>
+          (s.HR && String(s.HR) === selectedStarHR) ||
+          selectedStarHR.startsWith("Special:")
+      );
+      if (isSpecial) return;
+    }
+
     if (selectedStarHR && starData.length > 0 && pointsRef.current) {
       const star = starData.find(
         (s) => parseInt(s.HR) === parseInt(selectedStarHR)
       );
       if (!star) {
-        setSelectedStarPosition(null);
+        if (!selectedStarHR.includes(":")) {
+          setSelectedStarPosition(null);
+        }
         return;
       }
       const starIndex = star.index;
@@ -66,23 +94,33 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       pickingPointsRef.current.localToWorld(pos);
       setSelectedStarPosition(pos);
     } else {
-      setSelectedStarPosition(null);
+      if (!selectedStarHR) {
+        setSelectedStarPosition(null);
+      }
     }
-  }, [selectedStarHR]);
+  }, [selectedStarHR, ignoreSet]);
 
-  // OPTIMIZATION: Memoize Static Data (Heavy)
-  // 'starScale' is REMOVED from dependencies here to prevent heavy recalcs on zoom
   const { positions, colors, pickingColors, starData, magnitudes } =
     useMemo(() => {
       const positions = [];
       const colors = [];
       const pickingColors = [];
       const starData = [];
-      const magnitudes = []; // New array to store magnitudes for size calculation
+      const magnitudes = [];
 
       colorMap.current.clear();
 
-      bscSettings.forEach((s, index) => {
+      let validIndex = 0; // Use a separate counter for valid stars
+
+      bscSettings.forEach((s) => {
+        // --- 2. FILTERING STEP ---
+        // Check if this star is in our "Special Stars" list. If so, SKIP IT.
+        const isIgnored =
+          (s.HR && ignoreSet.has(`HR:${s.HR}`)) ||
+          (s.HIP && ignoreSet.has(`HIP:${s.HIP}`));
+
+        if (isIgnored) return;
+
         const magnitude = parseFloat(s.V);
         const colorTemp = parseFloat(s.K) || 5778;
 
@@ -105,7 +143,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         const { red, green, blue } = colorTemperature2rgb(colorTemp, true);
         colors.push(red, green, blue);
 
-        const colorIndex = index + 1;
+        // Picking Colors
+        const colorIndex = validIndex + 1; // Use validIndex, not original loop index
         const r = (colorIndex & 0xff) / 255;
         const g = ((colorIndex >> 8) & 0xff) / 255;
         const b = ((colorIndex >> 16) & 0xff) / 255;
@@ -117,9 +156,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         const bInt = Math.round(b * 255);
         const hexColor = (rInt << 16) | (gInt << 8) | bInt;
 
-        colorMap.current.set(hexColor, index);
+        colorMap.current.set(hexColor, validIndex);
 
-        // Cache magnitude
         const validMag = isNaN(magnitude) ? 5 : magnitude;
         magnitudes.push(validMag);
 
@@ -136,8 +174,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           ra: s.RA,
           dec: s.Dec,
           distLy,
-          index: index,
+          index: validIndex,
         });
+
+        validIndex++;
       });
 
       return {
@@ -147,10 +187,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         starData,
         magnitudes,
       };
-    }, [officialStarDistances, hScale, starDistanceModifier]); // <-- No starScale here!
+    }, [officialStarDistances, hScale, starDistanceModifier, ignoreSet]);
 
-  // OPTIMIZATION: Memoize Sizes (Light)
-  // This is the ONLY part that runs when you zoom in/out (changing starScale)
   const { sizes, pickingSizes } = useMemo(() => {
     const sizes = [];
     const pickingSizes = [];
@@ -180,7 +218,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     };
   }, [magnitudes, starScale, starPickingSensitivity]);
 
-  // Setup Picking
   useEffect(() => {
     if (!gl || !camera) return;
     pickingRenderTarget.current = new THREE.WebGLRenderTarget(1, 1);
@@ -202,6 +239,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       canvas.removeEventListener("mousemove", handleHover);
       canvas.removeEventListener("click", handleClick);
       if (pickingRenderTarget.current) pickingRenderTarget.current.dispose();
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
   }, [gl, camera, planetCamera]);
 
@@ -216,11 +254,21 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     if (useStore.getState().runIntro) return;
     if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
 
-    const now = performance.now();
-    if (now - lastHoverTime.current < 200) return;
-    lastHoverTime.current = now;
-
     const { clientX, clientY } = event;
+
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    hoverTimeoutRef.current = setTimeout(() => {
+      performPickingCheck(clientX, clientY);
+    }, 150);
+  };
+
+  const performPickingCheck = (clientX, clientY) => {
+    if (!gl || !pickingPointsRef.current || !pickingRenderTarget.current)
+      return;
+
     const { width, height } = gl.domElement;
     const rect = gl.domElement.getBoundingClientRect();
 
@@ -258,7 +306,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
           const hoverData = { star, position: worldPosition, index: starIndex };
           currentHoverDataRef.current = hoverData;
-          onStarHover(hoverData, event);
+
+          if (onStarHover) onStarHover(hoverData, null);
         }
       } else {
         if (currentHoverIndex.current !== null) {
@@ -324,6 +373,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [positions, colors, pickingColors, sizes, pickingSizes]);
 
+  // Keep plot object sync logic
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
@@ -342,6 +392,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [plotObjects, pickingScene]);
 
+  // Scene management for picking points
   useEffect(() => {
     if (pickingPointsRef.current && pickingScene) {
       pickingScene.add(pickingPointsRef.current);
@@ -352,9 +403,16 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [pickingPointsRef.current, pickingScene]);
 
+  // Label handling - also filter labels if they are Special Stars
   useEffect(() => {
     if (starData.length === 0 || !pickingPointsRef.current) return;
     LABELED_STARS.forEach((query) => {
+      // 3. Ensure we don't try to label a star that was filtered out
+      const isSpecial = specialStarsData.some(
+        (s) => s.name.toLowerCase() === query.toLowerCase()
+      );
+      if (isSpecial) return;
+
       const bscIndex = bscSettings.findIndex(
         (s) =>
           (s.N && s.N.toLowerCase() === query.toLowerCase()) ||
@@ -362,11 +420,19 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           s.HR === query
       );
       if (bscIndex === -1) return;
+
       const bscStar = bscSettings[bscIndex];
+      // Check if this specific bsc star was filtered out in the loop above
+      const isIgnored =
+        (bscStar.HR && ignoreSet.has(`HR:${bscStar.HR}`)) ||
+        (bscStar.HIP && ignoreSet.has(`HIP:${bscStar.HIP}`));
+      if (isIgnored) return;
+
       const star = starData.find(
         (s) => parseInt(s.HR) === parseInt(bscStar.HR)
       );
       if (!star) return;
+
       const starIndex = star.index;
       const positions =
         pickingPointsRef.current.geometry.attributes.position.array;
@@ -393,7 +459,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         }
       });
     };
-  }, [starData, setLabeledStarPosition, plotObjects]);
+  }, [starData, setLabeledStarPosition, plotObjects, ignoreSet]);
 
   return (
     <>

@@ -140,7 +140,7 @@ const LevaUI = () => {
           value: orbits,
           onChange: setOrbits,
         },
-        "Star Search": {
+        Search: {
           value: searchStars,
           onChange: setSearchStars,
         },

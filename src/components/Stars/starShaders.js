@@ -20,7 +20,6 @@ function createStarTexture(soft = false) {
 
   if (soft) {
     // Create a radial gradient for the "fuzzy" look
-    // Center (white) -> Edge (transparent)
     const gradient = context.createRadialGradient(
       center,
       center,
@@ -29,10 +28,11 @@ function createStarTexture(soft = false) {
       center,
       radius
     );
+    // Adjusted color stops for higher brightness
     gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
-    gradient.addColorStop(0.2, "rgba(255, 255, 255, 1)"); // Solid core (20%)
-    gradient.addColorStop(0.5, "rgba(255, 255, 255, 0.4)"); // Soft falloff
-    gradient.addColorStop(1, "rgba(255, 255, 255, 0)"); // Fade to nothing
+    gradient.addColorStop(0.4, "rgba(255, 255, 255, 1)"); // Increased solid core from 20% to 40%
+    gradient.addColorStop(0.7, "rgba(255, 255, 255, 0.6)"); // Higher opacity at the mid-falloff
+    gradient.addColorStop(1, "rgba(255, 255, 255, 0)"); // Keep the soft fade at the very edge
     context.fillStyle = gradient;
   } else {
     // Solid white for picking (hit testing)

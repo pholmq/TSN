@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import starsData from "../../settings/BSC.json";
 import celestialData from "../../settings/celestial-settings.json";
 import specialStarsData from "../../settings/star-settings.json";
+import miscData from "../../settings/misc-settings.json"; // <--- NEW: Import visual settings
 import { useStore } from "../../store";
 import createCrosshairTexture from "../../utils/createCrosshairTexture";
 import * as THREE from "three";
@@ -17,6 +18,10 @@ export default function StarSearch() {
 
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
+
+  // Use the dynamic data calculated in HighlightSelectedStar
+  const selectedStarData = useStore((s) => s.selectedStarData);
+
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const runIntro = useStore((s) => s.runIntro);
   const cameraControlsRef = useStore((s) => s.cameraControlsRef);
@@ -55,7 +60,6 @@ export default function StarSearch() {
     // 2. Special Stars (from star-settings.json)
     const special = specialStarsData.map((star) => ({
       ...star,
-      // If it has an HR number, use that as ID so it matches BSC logic, otherwise use Special prefix
       id: star.HR ? String(star.HR) : `Special:${star.name}`,
       type: "special",
       displayName: star.name,
@@ -63,7 +67,7 @@ export default function StarSearch() {
       N: star.name,
     }));
 
-    // 3. Planets (from celestial-settings.json)
+    // 3. Planets (Merged with misc-settings for symbols)
     const planets = celestialData
       .filter(
         (p) =>
@@ -71,15 +75,19 @@ export default function StarSearch() {
           p.name !== "SystemCenter" &&
           !p.name.includes("def")
       )
-      .map((p) => ({
-        ...p,
-        id: `Planet:${p.name}`,
-        type: "planet",
-        displayName: p.name,
-        N: p.name,
-      }));
+      .map((p) => {
+        // Find matching misc setting to get unicodeSymbol
+        const misc = miscData.find((m) => m.name === p.name);
+        return {
+          ...p,
+          ...misc, // Merge visual properties like unicodeSymbol
+          id: `Planet:${p.name}`,
+          type: "planet",
+          displayName: p.name,
+          N: p.name,
+        };
+      });
 
-    // Merge all (Planets + Special + BSC)
     return [...planets, ...special, ...bsc];
   }, []);
 
@@ -112,7 +120,7 @@ export default function StarSearch() {
         obj.N ? obj.N.toLowerCase().includes(lower) : false
       );
 
-      // Search by Number (HR or HIP)
+      // Search by Number
       const digits = value.replace(/\D/g, "");
       let hrMatches = [];
       let hipMatches = [];
@@ -135,7 +143,6 @@ export default function StarSearch() {
       }
 
       const all = [...nameMatches, ...hrMatches, ...hipMatches];
-      // Deduplicate by ID
       filtered = Array.from(
         new Map(all.map((item) => [item.id, item])).values()
       );
@@ -146,9 +153,9 @@ export default function StarSearch() {
 
   const handleSelect = (obj) => {
     setSelectedStarHR(obj.id);
-
-    // Determine display text for input box
     let displayText = obj.displayName;
+
+    // Format display text for the search box
     if (obj.type === "star" || (obj.type === "special" && obj.HR)) {
       if (obj.N && obj.HIP) {
         displayText = `${obj.N} / HIP ${obj.HIP}`;
@@ -164,7 +171,7 @@ export default function StarSearch() {
     setQuery(displayText);
     setResults([]);
 
-    // Trigger camera move
+    // Move camera logic
     setTimeout(() => {
       const starPos = useStore.getState().selectedStarPosition;
       if (!starPos || !cameraControlsRef?.current) return;
@@ -187,7 +194,6 @@ export default function StarSearch() {
     }, 100);
   };
 
-  // --- Display Helpers ---
   const selectedObject = useMemo(() => {
     return selectedStarHR
       ? indexedObjects.find((obj) => obj.id === selectedStarHR)
@@ -197,11 +203,11 @@ export default function StarSearch() {
   const displayString = useMemo(() => {
     if (!selectedObject) return "N/A";
 
+    // UPDATED: Return the name for planets instead of generic "Planet"
     if (selectedObject.type === "planet") {
-      return "Planet";
+      return selectedObject.displayName;
     }
 
-    // Stars & Special
     if (selectedObject.N && selectedObject.HIP) {
       return `${selectedObject.N} / HIP ${selectedObject.HIP}`;
     } else if (selectedObject.N && selectedObject.HR) {
@@ -221,7 +227,7 @@ export default function StarSearch() {
     []
   );
 
-  // --- Dragging Logic ---
+  // Dragging Logic
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isDragging) return;
@@ -231,9 +237,7 @@ export default function StarSearch() {
       });
       setDragStart({ x: e.clientX, y: e.clientY });
     };
-
     const handleMouseUp = () => setIsDragging(false);
-
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
@@ -259,9 +263,9 @@ export default function StarSearch() {
         position: "fixed",
         top: `${30 + position.y}px`,
         left: `${250 + position.x}px`,
-        width: "220px",
+        width: "240px",
         backgroundColor: "#111827",
-        opacity: 0.8,
+        opacity: 0.85,
         color: "white",
         borderRadius: "6px",
         zIndex: 2147483647,
@@ -272,7 +276,6 @@ export default function StarSearch() {
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif",
       }}
     >
-      {/* Header */}
       <div
         className="popup-header"
         onMouseDown={handleMouseDown}
@@ -305,7 +308,6 @@ export default function StarSearch() {
         </div>
       </div>
 
-      {/* Body */}
       <div style={{ padding: "12px" }}>
         <input
           type="text"
@@ -328,7 +330,6 @@ export default function StarSearch() {
           className="starSearch-input"
         />
 
-        {/* Results List */}
         {results.length > 0 && (
           <ul
             style={{
@@ -351,7 +352,6 @@ export default function StarSearch() {
                 if (obj.HR_display) parts.push(obj.HR_display);
                 displayText = parts.length > 0 ? parts.join(" / ") : "Unknown";
               }
-
               return (
                 <li
                   key={index}
@@ -378,7 +378,6 @@ export default function StarSearch() {
           </ul>
         )}
 
-        {/* Selected Info */}
         {selectedStarHR && (
           <div
             style={{
@@ -412,9 +411,78 @@ export default function StarSearch() {
                 >
                   SELECTED
                 </span>
-                <div style={{ fontWeight: "normal" }}>{displayString}</div>
+                <div style={{ fontWeight: "normal" }}>
+                  {displayString}
+                  {/* Render the Unicode Symbol if it exists (for Planets) */}
+                  {selectedObject.type === "planet" &&
+                    selectedObject.unicodeSymbol && (
+                      <span
+                        style={{ marginLeft: "6px" }}
+                        dangerouslySetInnerHTML={{
+                          __html: selectedObject.unicodeSymbol,
+                        }}
+                      />
+                    )}
+                </div>
               </div>
             </div>
+
+            {/* Dynamic Data Panel (From HighlightSelectedStar) */}
+            {selectedStarData && (
+              <div
+                style={{
+                  marginTop: "12px",
+                  borderTop: "1px solid #374151",
+                  paddingTop: "10px",
+                  fontSize: "12px",
+                  color: "#d1d5db",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "4px",
+                }}
+              >
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <span style={{ color: "#9ca3af" }}>RA:</span>
+                  <span style={{ textAlign: "right", maxWidth: "65%" }}>
+                    {selectedStarData.ra}
+                  </span>
+                </div>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <span style={{ color: "#9ca3af" }}>Dec:</span>
+                  <span style={{ textAlign: "right", maxWidth: "65%" }}>
+                    {selectedStarData.dec}
+                  </span>
+                </div>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <span style={{ color: "#9ca3af" }}>Distance:</span>
+                  <span>{selectedStarData.dist}</span>
+                </div>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <span style={{ color: "#9ca3af" }}>Elongation:</span>
+                  <span>{selectedStarData.elongation}</span>
+                </div>
+                {selectedStarData.mag !== "N/A" &&
+                  selectedStarData.mag !== undefined && (
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ color: "#9ca3af" }}>Magnitude:</span>
+                      <span>{selectedStarData.mag}</span>
+                    </div>
+                  )}
+              </div>
+            )}
           </div>
         )}
       </div>

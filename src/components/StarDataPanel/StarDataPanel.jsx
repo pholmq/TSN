@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useStarDataStore } from "./starDataStore";
 import starSettings from "../../settings/star-settings.json";
+
 const starSettingsHRs = new Set(
   starSettings.map((s) => String(s.HR)).filter(Boolean)
 );
@@ -10,39 +11,43 @@ const StarDataPanel = () => {
   const [panelPosition, setPanelPosition] = useState({ x: 0, y: 0 });
   const [visible, setVisible] = useState(false);
 
+  // Continuously track the latest mouse coordinates
+  const mousePosRef = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
-    if (!hoveredStar) return;
-
-    // console.log(starSettingsHRs)
-
-    const handleInitialPosition = (event) => {
-      const root = document.getElementById("root");
-      let scale = 1;
-
-      if (root && root.style.transform) {
-        const transformMatch = root.style.transform.match(/scale\(([^)]+)\)/);
-        if (transformMatch) {
-          scale = parseFloat(transformMatch[1]);
-        }
-      }
-
-      const adjustedX = event.clientX / scale;
-      const adjustedY = event.clientY / scale;
-
-      setPanelPosition({ x: adjustedX - 70, y: adjustedY + 20 });
-
-      document.removeEventListener("mousemove", handleInitialPosition);
+    const trackMouse = (e) => {
+      mousePosRef.current = { x: e.clientX, y: e.clientY };
     };
+    window.addEventListener("mousemove", trackMouse);
+    return () => window.removeEventListener("mousemove", trackMouse);
+  }, []);
 
-    document.addEventListener("mousemove", handleInitialPosition);
-
-    // Delay fade-in until after position is set
-    setTimeout(() => setVisible(true), 0);
-
-    return () => {
-      document.removeEventListener("mousemove", handleInitialPosition);
+  useEffect(() => {
+    if (!hoveredStar) {
       setVisible(false);
-    };
+      return;
+    }
+
+    // Grab the latest mouse position from our ref
+    const root = document.getElementById("root");
+    let scale = 1;
+
+    if (root && root.style.transform) {
+      const transformMatch = root.style.transform.match(/scale\(([^)]+)\)/);
+      if (transformMatch) {
+        scale = parseFloat(transformMatch[1]);
+      }
+    }
+
+    const adjustedX = mousePosRef.current.x / scale;
+    const adjustedY = mousePosRef.current.y / scale;
+
+    setPanelPosition({ x: adjustedX - 70, y: adjustedY + 20 });
+
+    // Delay fade-in slightly to ensure position applies first
+    const timer = setTimeout(() => setVisible(true), 10);
+
+    return () => clearTimeout(timer);
   }, [hoveredStar]);
 
   // Check if the star should be ignored
@@ -50,7 +55,6 @@ const StarDataPanel = () => {
     return null;
   }
 
-  // ✅ Always render, fade with opacity
   return (
     <div
       style={{
@@ -68,8 +72,7 @@ const StarDataPanel = () => {
         opacity: visible ? 0.8 : 0,
         transition: "opacity 0.3s ease",
         display: hoveredStar ? "block" : "none",
-
-        transformOrigin: "top left", // Anchor scaling
+        transformOrigin: "top left",
       }}
     >
       <h3
