@@ -374,6 +374,35 @@
     "orbitTiltb": 1.15
   },
   {
+    "name": "Pluto deferent",
+    "size": 1,
+    "startPos": 0,
+    "speed": -6.283185307179586,
+    "tilt": 0,
+    "orbitRadius": 0,
+    "orbitCentera": 0,
+    "orbitCenterb": 0,
+    "orbitCenterc": 0,
+    "orbitTilta": 0,
+    "orbitTiltb": 0
+  },
+  {
+    "name": "Pluto",
+    "size": 0.9,
+    "actualSize": 0.00079,
+    "startPos": 0,
+    "speed": 0.02533,
+    "tilt": 122.5,
+    "rotationStart": 0,
+    "rotationSpeed": 1000,
+    "orbitRadius": 3948.2,
+    "orbitCentera": 980,
+    "orbitCenterb": -200,
+    "orbitCenterc": 0,
+    "orbitTilta": 15.0,
+    "orbitTiltb": 5.0
+  },
+  {
     "name": "Halleys deferent",
     "size": 1,
     "startPos": 179,
