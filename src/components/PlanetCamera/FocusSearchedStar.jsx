@@ -27,11 +27,27 @@ export default function FocusSearchedStar() {
 
     let raHours = null;
     let decDegrees = null;
+    let targetObjectName = null;
 
-    // --- 1. Handle Planets ---
+    // --- 1. Identify Scene Objects (Planets & Special Stars) ---
     if (selectedStarHR.startsWith("Planet:")) {
-      const planetName = selectedStarHR.replace("Planet:", "");
-      const targetObj = scene.getObjectByName(planetName);
+      targetObjectName = selectedStarHR.replace("Planet:", "");
+    } else if (selectedStarHR.startsWith("Special:")) {
+      targetObjectName = selectedStarHR.replace("Special:", "");
+    } else {
+      // Fallback: Check if the HR belongs to a special star (which is an object in the scene)
+      const specialStar = specialStarsData.find(
+        (s) => s.HR && String(s.HR) === selectedStarHR
+      );
+      if (specialStar) {
+        targetObjectName = specialStar.name;
+      }
+    }
+
+    // --- 2. Extract Coordinates ---
+    if (targetObjectName) {
+      // It's a 3D object (Planet or Special Star)
+      const targetObj = scene.getObjectByName(targetObjectName);
       const celestialSphere = scene.getObjectByName("CelestialSphere");
       const csLookAtObj = scene.getObjectByName("CSLookAtObj");
 
@@ -62,58 +78,40 @@ export default function FocusSearchedStar() {
         const phiDeg = (spherical.phi * 180) / Math.PI;
         decDegrees = 90 - phiDeg;
       }
-    }
+    } else {
+      // It's not a scene object, handle as a standard BSC Star
+      const star = starsData.find(
+        (s) => s.HR && String(s.HR) === selectedStarHR
+      );
 
-    // --- 2. Handle Stars (BSC & Special) ---
-    else {
-      // Try to find in BSC data first
-      // BSC uses uppercase keys: s.RA, s.Dec
-      let star = starsData.find((s) => s.HR && String(s.HR) === selectedStarHR);
+      if (star) {
+        const raRaw = star.RA;
+        const decRaw = star.Dec;
 
-      if (!star) {
-        // Check Special Stars
-        // Special stars use lowercase keys: s.ra, s.dec
-        if (selectedStarHR.startsWith("Special:")) {
-          const name = selectedStarHR.replace("Special:", "");
-          star = specialStarsData.find((s) => s.name === name);
-        } else {
-          // Fallback: Check if special star has this HR
-          star = specialStarsData.find(
-            (s) => s.HR && String(s.HR) === selectedStarHR
+        if (raRaw && decRaw) {
+          // Parse RA (Format: "14h 29m42.9s" or "14h 29m 42.9s")
+          const raMatch = raRaw.match(/(\d+)h\s*(\d+)m\s*([\d.]+)s/);
+
+          // Parse Dec (Format: "-62°40'46.1" or "+04° 41' 34.0″")
+          const decMatch = decRaw.match(
+            /([+-]?\d+)°\s*(\d+)['′]\s*([\d.]+)(?:["″])?/
           );
-        }
-      }
 
-      // Handle both capitalization cases (RA vs ra, Dec vs dec)
-      const raRaw = star ? star.RA || star.ra : null;
-      const decRaw = star ? star.Dec || star.dec : null;
+          if (raMatch && decMatch) {
+            raHours =
+              parseInt(raMatch[1]) +
+              parseInt(raMatch[2]) / 60 +
+              parseFloat(raMatch[3]) / 3600;
 
-      if (raRaw && decRaw) {
-        // Parse RA (Format: "14h 29m42.9s" or "14h 29m 42.9s")
-        const raMatch = raRaw.match(/(\d+)h\s*(\d+)m\s*([\d.]+)s/);
+            const decSign = decRaw.startsWith("-") ? -1 : 1;
+            const degVal = Math.abs(parseInt(decMatch[1]));
 
-        // Parse Dec (Format: "-62°40'46.1" or "+04° 41' 34.0″")
-        // Regex now handles:
-        // 1. Standard symbols: °  ′  ″ (from BSC.json)
-        // 2. Typewriter symbols: ' " (from star-settings.json)
-        const decMatch = decRaw.match(
-          /([+-]?\d+)°\s*(\d+)['′]\s*([\d.]+)(?:["″])?/
-        );
-
-        if (raMatch && decMatch) {
-          raHours =
-            parseInt(raMatch[1]) +
-            parseInt(raMatch[2]) / 60 +
-            parseFloat(raMatch[3]) / 3600;
-
-          const decSign = decRaw.startsWith("-") ? -1 : 1;
-          const degVal = Math.abs(parseInt(decMatch[1]));
-
-          decDegrees =
-            decSign *
-            (degVal +
-              parseInt(decMatch[2]) / 60 +
-              parseFloat(decMatch[3]) / 3600);
+            decDegrees =
+              decSign *
+              (degVal +
+                parseInt(decMatch[2]) / 60 +
+                parseFloat(decMatch[3]) / 3600);
+          }
         }
       }
     }
