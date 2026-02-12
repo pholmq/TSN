@@ -3,8 +3,8 @@ import { createPortal } from "react-dom";
 import starsData from "../../settings/BSC.json";
 import celestialData from "../../settings/celestial-settings.json";
 import specialStarsData from "../../settings/star-settings.json";
-import miscData from "../../settings/misc-settings.json"; // <--- NEW: Import visual settings
-import { useStore } from "../../store";
+import miscData from "../../settings/misc-settings.json";
+import { useStore, useSettingsStore, useStarStore } from "../../store";
 import createCrosshairTexture from "../../utils/createCrosshairTexture";
 import * as THREE from "three";
 import { FaSearch } from "react-icons/fa";
@@ -19,7 +19,6 @@ export default function StarSearch() {
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
 
-  // Use the dynamic data calculated in HighlightSelectedStar
   const selectedStarData = useStore((s) => s.selectedStarData);
 
   const officialStarDistances = useStore((s) => s.officialStarDistances);
@@ -33,31 +32,28 @@ export default function StarSearch() {
 
   // --- Initialization & Cleanup ---
   useEffect(() => {
+    // 1. If search is hidden (but component stays mounted), clear state
     if (!searchStars) {
       setQuery("");
       setResults([]);
+      setSelectedStarHR(null);
     }
-  }, [searchStars]);
+
+    // 2. If search is CLOSED (component unmounts), this cleanup runs guaranteed
+    return () => {
+      setSelectedStarHR(null);
+    };
+  }, [searchStars, setSelectedStarHR]); // Trigger on searchStars change or unmount
 
   useEffect(() => {
     setQuery("");
     setResults([]);
     setSelectedStarHR(null);
-  }, [officialStarDistances]);
+  }, [officialStarDistances, setSelectedStarHR]);
 
   // --- Search Logic ---
   const indexedObjects = useMemo(() => {
-    // 1. BSC Stars
-    const bsc = starsData.map((star) => ({
-      ...star,
-      id: star.HR ? String(star.HR) : `HIP-${star.HIP}`,
-      type: "star",
-      HR_display: star.HR ? `HR ${star.HR}` : null,
-      HIP_display: star.HIP ? `HIP ${star.HIP}` : null,
-      displayName: star.N || (star.HR ? `HR ${star.HR}` : `HIP ${star.HIP}`),
-    }));
-
-    // 2. Special Stars (from star-settings.json)
+    // 1. Prepare Special Stars First
     const special = specialStarsData.map((star) => ({
       ...star,
       id: star.HR ? String(star.HR) : `Special:${star.name}`,
@@ -67,7 +63,28 @@ export default function StarSearch() {
       N: star.name,
     }));
 
-    // 3. Planets (Merged with misc-settings for symbols)
+    const specialHRs = new Set(
+      special.filter((s) => s.HR).map((s) => String(s.HR))
+    );
+
+    // 2. BSC Stars
+    const bsc = starsData
+      .filter((star) => {
+        if (star.HR && specialHRs.has(String(star.HR))) {
+          return false;
+        }
+        return true;
+      })
+      .map((star) => ({
+        ...star,
+        id: star.HR ? String(star.HR) : `HIP-${star.HIP}`,
+        type: "star",
+        HR_display: star.HR ? `HR ${star.HR}` : null,
+        HIP_display: star.HIP ? `HIP ${star.HIP}` : null,
+        displayName: star.N || (star.HR ? `HR ${star.HR}` : `HIP ${star.HIP}`),
+      }));
+
+    // 3. Planets
     const planets = celestialData
       .filter(
         (p) =>
@@ -76,11 +93,10 @@ export default function StarSearch() {
           !p.name.includes("def")
       )
       .map((p) => {
-        // Find matching misc setting to get unicodeSymbol
         const misc = miscData.find((m) => m.name === p.name);
         return {
           ...p,
-          ...misc, // Merge visual properties like unicodeSymbol
+          ...misc,
           id: `Planet:${p.name}`,
           type: "planet",
           displayName: p.name,
@@ -115,12 +131,10 @@ export default function StarSearch() {
         (obj) => obj.HIP && String(obj.HIP) === hipQuery
       );
     } else {
-      // Search by Name
       const nameMatches = indexedObjects.filter((obj) =>
         obj.N ? obj.N.toLowerCase().includes(lower) : false
       );
 
-      // Search by Number
       const digits = value.replace(/\D/g, "");
       let hrMatches = [];
       let hipMatches = [];
@@ -152,10 +166,18 @@ export default function StarSearch() {
   };
 
   const handleSelect = (obj) => {
+    // Force visibility for Planets and Special Stars
+    if (obj.type === "planet") {
+      useSettingsStore
+        .getState()
+        .updateSetting({ name: obj.name, visible: true });
+    } else if (obj.type === "special") {
+      useStarStore.getState().updateSetting({ name: obj.name, visible: true });
+    }
+
     setSelectedStarHR(obj.id);
     let displayText = obj.displayName;
 
-    // Format display text for the search box
     if (obj.type === "star" || (obj.type === "special" && obj.HR)) {
       if (obj.N && obj.HIP) {
         displayText = `${obj.N} / HIP ${obj.HIP}`;
@@ -171,7 +193,6 @@ export default function StarSearch() {
     setQuery(displayText);
     setResults([]);
 
-    // Move camera logic
     setTimeout(() => {
       const starPos = useStore.getState().selectedStarPosition;
       if (!starPos || !cameraControlsRef?.current) return;
@@ -194,6 +215,7 @@ export default function StarSearch() {
     }, 100);
   };
 
+  // --- Display Helpers ---
   const selectedObject = useMemo(() => {
     return selectedStarHR
       ? indexedObjects.find((obj) => obj.id === selectedStarHR)
@@ -203,8 +225,11 @@ export default function StarSearch() {
   const displayString = useMemo(() => {
     if (!selectedObject) return "N/A";
 
-    // UPDATED: Return the name for planets instead of generic "Planet"
     if (selectedObject.type === "planet") {
+      return selectedObject.displayName;
+    }
+
+    if (selectedObject.type === "special" && selectedObject.displayName) {
       return selectedObject.displayName;
     }
 
@@ -216,9 +241,8 @@ export default function StarSearch() {
       return `HIP ${selectedObject.HIP}`;
     } else if (selectedObject.HR) {
       return `HR ${selectedObject.HR}`;
-    } else if (selectedObject.type === "special") {
-      return selectedObject.displayName;
     }
+
     return "Unknown";
   }, [selectedObject]);
 
@@ -227,7 +251,7 @@ export default function StarSearch() {
     []
   );
 
-  // Dragging Logic
+  // --- Dragging Logic ---
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isDragging) return;
@@ -237,7 +261,9 @@ export default function StarSearch() {
       });
       setDragStart({ x: e.clientX, y: e.clientY });
     };
+
     const handleMouseUp = () => setIsDragging(false);
+
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
@@ -262,7 +288,7 @@ export default function StarSearch() {
       style={{
         position: "fixed",
         top: `${30 + position.y}px`,
-        left: `${250 + position.x}px`,
+        left: `${30 + position.x}px`,
         width: "240px",
         backgroundColor: "#111827",
         opacity: 0.85,
@@ -413,7 +439,6 @@ export default function StarSearch() {
                 </span>
                 <div style={{ fontWeight: "normal" }}>
                   {displayString}
-                  {/* Render the Unicode Symbol if it exists (for Planets) */}
                   {selectedObject.type === "planet" &&
                     selectedObject.unicodeSymbol && (
                       <span
@@ -427,7 +452,6 @@ export default function StarSearch() {
               </div>
             </div>
 
-            {/* Dynamic Data Panel (From HighlightSelectedStar) */}
             {selectedStarData && (
               <div
                 style={{

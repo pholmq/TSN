@@ -1,4 +1,4 @@
-import { useStore } from "../../store";
+import { useStore, useSettingsStore, useStarStore } from "../../store"; // Import settings stores
 import { Html } from "@react-three/drei";
 import { useRef, useMemo, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
@@ -16,6 +16,10 @@ export default function HighlightSelectedStar() {
   const showLabels = useStore((s) => s.showLabels);
   const setSelectedStarData = useStore((s) => s.setSelectedStarData);
 
+  // Access dynamic settings to check visibility
+  const planetSettings = useSettingsStore((s) => s.settings);
+  const starSettings = useStarStore((s) => s.settings);
+
   const groupRef = useRef();
   const targetObjectRef = useRef(null);
   const lastUpdateRef = useRef(0);
@@ -24,7 +28,6 @@ export default function HighlightSelectedStar() {
   const specialStarDef = useMemo(() => {
     if (!selectedStarHR) return null;
 
-    // Check for "Special:" prefix (Correct format for non-BSC stars)
     if (selectedStarHR.startsWith("Special:")) {
       const name = selectedStarHR.replace("Special:", "");
       return specialStarsData.find((s) => s.name === name);
@@ -32,7 +35,6 @@ export default function HighlightSelectedStar() {
 
     if (selectedStarHR.startsWith("Planet:")) return null;
 
-    // Check by HR if applicable
     return specialStarsData.find(
       (s) => s.HR && String(s.HR) === String(selectedStarHR)
     );
@@ -131,18 +133,25 @@ export default function HighlightSelectedStar() {
     }
   });
 
-  // --- 6. FIX: Correctly Identify if Star is Already Labeled ---
+  // --- 6. Check Visibility to determine if Labeled ---
   const isLabeledStar = useMemo(() => {
     if (!selectedStarHR) return false;
 
-    // A. Planets are always treated as labeled
-    if (selectedStarHR.startsWith("Planet:")) return true;
+    // A. Planets: Check store visibility
+    if (selectedStarHR.startsWith("Planet:")) {
+      const pName = selectedStarHR.replace("Planet:", "");
+      const setting = planetSettings.find((s) => s.name === pName);
+      // If visible in store, it has a scene label, so we return true (suppress selection label)
+      return setting ? setting.visible : true;
+    }
 
-    // B. Special Stars: We assume Special Stars (defined in star-settings) ALWAYS have their own label
-    //    via Star.jsx, so we return TRUE to suppress the duplicate selection label.
-    if (specialStarDef) return true;
+    // B. Special Stars: Check store visibility
+    if (specialStarDef) {
+      const setting = starSettings.find((s) => s.name === specialStarDef.name);
+      return setting ? setting.visible : true;
+    }
 
-    // C. BSC Stars: Check against the LABELED_STARS list
+    // C. BSC Stars: Check LABELED_STARS list
     const star = starsData.find((s) => s.HR && String(s.HR) === selectedStarHR);
     if (!star) return false;
 
@@ -152,7 +161,7 @@ export default function HighlightSelectedStar() {
         star.HIP === query ||
         star.HR === query
     );
-  }, [selectedStarHR, specialStarDef]);
+  }, [selectedStarHR, specialStarDef, planetSettings, starSettings]); // Depend on settings stores!
 
   if (!selectedStarHR) return null;
 
@@ -174,8 +183,8 @@ export default function HighlightSelectedStar() {
             transform: "translate(-50%, -50%)",
           }}
         >
-          {/* Only show the Selection Label if the star is NOT already labeled in the scene */}
-          {starName && !(showLabels && isLabeledStar) && (
+          {/* Show label only if global labels are OFF OR if the star is not considered labeled in scene */}
+          {starName && (!showLabels || !isLabeledStar) && (
             <div
               className="name-label"
               style={{

@@ -261,7 +261,7 @@
     "visible": false,
     "planet": true,
     "texture": "",
-    "unicodeSymbol": "",
+    "unicodeSymbol": "&#x2604;",
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
   },
@@ -281,7 +281,7 @@
     "type": "planet",
     "visible": false,
     "texture": "",
-    "unicodeSymbol": "",
+    "unicodeSymbol": "&#x2642;",
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
   }
