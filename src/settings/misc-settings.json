@@ -250,6 +250,22 @@
     }
   },
   {
+    "name": "Pluto deferent",
+    "type": "deferent",
+    "visible": false
+  },
+  {
+    "name": "Pluto",
+    "color": "#e3d2b4",
+    "type": "planet",
+    "visible": false,
+    "texture": "/textures/planets/2k_pluto.jpg",
+    "unicodeSymbol": "&#x2647;",
+    "planetCamera": true,
+    "traceable": true,
+    "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
+  },
+  {
     "name": "Halleys deferent",
     "type": "deferent",
     "visible": false
