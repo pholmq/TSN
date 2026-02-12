@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { Vector3, Quaternion } from "three";
 import { usePlotStore } from "../../store";
 import bscSettings from "../../settings/BSC.json";
-import specialStarsData from "../../settings/star-settings.json"; // <--- Import Special Stars
+import specialStarsData from "../../settings/star-settings.json";
 import { dateTimeToPos } from "../../utils/time-date-functions";
 import { useStore } from "../../store";
 import {
@@ -31,7 +31,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const plotObjects = usePlotStore((s) => s.plotObjects);
   const currentHoverIndex = useRef(null);
   const hoverTimeoutRef = useRef(null);
-  const debugPicking = useRef(false);
+
+  // NEW: Ref to track if mouse is held down
+  const mouseDownRef = useRef(false);
 
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
@@ -48,15 +50,12 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const pixelBufferRef = useRef(new Uint8Array(4));
   const currentHoverDataRef = useRef(null);
 
-  // --- 1. Create a "Blacklist" of Special Stars ---
-  // We want to block BSCStars from rendering anything that appears in star-settings.json
+  // ... (ignoreSet and useEffect for selectedStarHR remain the same) ...
   const ignoreSet = useMemo(() => {
     const set = new Set();
     specialStarsData.forEach((s) => {
       if (s.HR) set.add(`HR:${String(s.HR)}`);
       if (s.HIP) set.add(`HIP:${String(s.HIP)}`);
-      // Also add Proxima/Barnard's specifically if they don't have HR numbers in your file yet
-      // (HIP numbers are safer for these dim stars)
       if (s.name === "Barnard's star") set.add("HIP:87937");
       if (s.name === "Proxima Centauri") set.add("HIP:70890");
     });
@@ -64,7 +63,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   }, []);
 
   useEffect(() => {
-    // If selected star is special, ignore it here (let HighlightSelectedStar handle it)
     if (selectedStarHR) {
       const isSpecial = specialStarsData.some(
         (s) =>
@@ -100,6 +98,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [selectedStarHR, ignoreSet]);
 
+  // ... (useMemo for geometry data remains the same) ...
   const { positions, colors, pickingColors, starData, magnitudes } =
     useMemo(() => {
       const positions = [];
@@ -109,12 +108,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       const magnitudes = [];
 
       colorMap.current.clear();
-
-      let validIndex = 0; // Use a separate counter for valid stars
+      let validIndex = 0;
 
       bscSettings.forEach((s) => {
-        // --- 2. FILTERING STEP ---
-        // Check if this star is in our "Special Stars" list. If so, SKIP IT.
         const isIgnored =
           (s.HR && ignoreSet.has(`HR:${s.HR}`)) ||
           (s.HIP && ignoreSet.has(`HIP:${s.HIP}`));
@@ -123,10 +119,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
         const magnitude = parseFloat(s.V);
         const colorTemp = parseFloat(s.K) || 5778;
-
         const raRad = rightAscensionToRadians(s.RA);
         const decRad = declinationToRadians(s.Dec);
-
         const distLy = parseFloat(s.P) * 3.26156378;
         let dist;
         if (!officialStarDistances) {
@@ -136,31 +130,22 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           dist =
             worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1);
         }
-
         const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
         positions.push(x, y, z);
-
         const { red, green, blue } = colorTemperature2rgb(colorTemp, true);
         colors.push(red, green, blue);
-
-        // Picking Colors
-        const colorIndex = validIndex + 1; // Use validIndex, not original loop index
+        const colorIndex = validIndex + 1;
         const r = (colorIndex & 0xff) / 255;
         const g = ((colorIndex >> 8) & 0xff) / 255;
         const b = ((colorIndex >> 16) & 0xff) / 255;
-
         pickingColors.push(r, g, b);
-
         const rInt = Math.round(r * 255);
         const gInt = Math.round(g * 255);
         const bInt = Math.round(b * 255);
         const hexColor = (rInt << 16) | (gInt << 8) | bInt;
-
         colorMap.current.set(hexColor, validIndex);
-
         const validMag = isNaN(magnitude) ? 5 : magnitude;
         magnitudes.push(validMag);
-
         starData.push({
           name:
             s.N && s.HIP
@@ -176,10 +161,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           distLy,
           index: validIndex,
         });
-
         validIndex++;
       });
-
       return {
         positions: new Float32Array(positions),
         colors: new Float32Array(colors),
@@ -192,14 +175,12 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const { sizes, pickingSizes } = useMemo(() => {
     const sizes = [];
     const pickingSizes = [];
-
     magnitudes.forEach((magnitude) => {
       let starsize;
       if (magnitude < 1) starsize = 1.2;
       else if (magnitude > 1 && magnitude < 3) starsize = 0.6;
       else if (magnitude > 3 && magnitude < 5) starsize = 0.4;
       else starsize = 0.2;
-
       const visualSize = starsize * starScale * 10;
       let pickingSize;
       if (magnitude >= 3) {
@@ -207,11 +188,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       } else {
         pickingSize = visualSize;
       }
-
       sizes.push(visualSize);
       pickingSizes.push(pickingSize);
     });
-
     return {
       sizes: new Float32Array(sizes),
       pickingSizes: new Float32Array(pickingSizes),
@@ -231,13 +210,27 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     updateRenderTarget();
 
     const canvas = gl.domElement;
+
+    // NEW: Listeners for mouse state
+    const onMouseDown = () => {
+      mouseDownRef.current = true;
+    };
+    const onMouseUp = () => {
+      mouseDownRef.current = false;
+    };
+
     canvas.addEventListener("mousemove", handleHover);
     canvas.addEventListener("click", handleClick);
+    canvas.addEventListener("mousedown", onMouseDown);
+    canvas.addEventListener("mouseup", onMouseUp);
 
     return () => {
       window.removeEventListener("resize", updateRenderTarget);
       canvas.removeEventListener("mousemove", handleHover);
       canvas.removeEventListener("click", handleClick);
+      canvas.removeEventListener("mousedown", onMouseDown);
+      canvas.removeEventListener("mouseup", onMouseUp);
+
       if (pickingRenderTarget.current) pickingRenderTarget.current.dispose();
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
@@ -251,7 +244,18 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   };
 
   const handleHover = (event) => {
-    if (useStore.getState().runIntro) return;
+    // NEW: If mouse is down, do not process hover
+    if (useStore.getState().runIntro || mouseDownRef.current) {
+      // Optional: Clear hover if user starts dragging while hovering
+      if (mouseDownRef.current && currentHoverIndex.current !== null) {
+        currentHoverIndex.current = null;
+        currentHoverDataRef.current = null;
+        setHoveredPoint(null);
+        if (onStarHover) onStarHover(null);
+      }
+      return;
+    }
+
     if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
 
     const { clientX, clientY } = event;
@@ -261,7 +265,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
 
     hoverTimeoutRef.current = setTimeout(() => {
-      performPickingCheck(clientX, clientY);
+      // Double check mouse state before performing expensive picking
+      if (!mouseDownRef.current) {
+        performPickingCheck(clientX, clientY);
+      }
     }, 150);
   };
 
@@ -343,8 +350,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   };
 
+  // ... (rest of the file: useEffects for points updates, plot object sync, label handling, and return JSX) ...
   useEffect(() => {
     if (pointsRef.current) {
+      // ... (attribute updates)
       const geometry = pointsRef.current.geometry;
       geometry.setAttribute(
         "position",
@@ -357,6 +366,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       geometry.attributes.size.needsUpdate = true;
     }
     if (pickingPointsRef.current) {
+      // ... (attribute updates)
       const geometry = pickingPointsRef.current.geometry;
       geometry.setAttribute(
         "position",
@@ -373,9 +383,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [positions, colors, pickingColors, sizes, pickingSizes]);
 
-  // Keep plot object sync logic
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
+      // ... (plot sync logic)
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
       const worldPosition = new Vector3();
       const worldQuaternion = new Quaternion();
@@ -392,7 +402,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [plotObjects, pickingScene]);
 
-  // Scene management for picking points
   useEffect(() => {
     if (pickingPointsRef.current && pickingScene) {
       pickingScene.add(pickingPointsRef.current);
@@ -403,16 +412,14 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [pickingPointsRef.current, pickingScene]);
 
-  // Label handling - also filter labels if they are Special Stars
   useEffect(() => {
     if (starData.length === 0 || !pickingPointsRef.current) return;
     LABELED_STARS.forEach((query) => {
-      // 3. Ensure we don't try to label a star that was filtered out
+      // ... (label logic)
       const isSpecial = specialStarsData.some(
         (s) => s.name.toLowerCase() === query.toLowerCase()
       );
       if (isSpecial) return;
-
       const bscIndex = bscSettings.findIndex(
         (s) =>
           (s.N && s.N.toLowerCase() === query.toLowerCase()) ||
@@ -420,19 +427,15 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
           s.HR === query
       );
       if (bscIndex === -1) return;
-
       const bscStar = bscSettings[bscIndex];
-      // Check if this specific bsc star was filtered out in the loop above
       const isIgnored =
         (bscStar.HR && ignoreSet.has(`HR:${bscStar.HR}`)) ||
         (bscStar.HIP && ignoreSet.has(`HIP:${bscStar.HIP}`));
       if (isIgnored) return;
-
       const star = starData.find(
         (s) => parseInt(s.HR) === parseInt(bscStar.HR)
       );
       if (!star) return;
-
       const starIndex = star.index;
       const positions =
         pickingPointsRef.current.geometry.attributes.position.array;
