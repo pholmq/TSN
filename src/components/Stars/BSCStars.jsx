@@ -28,8 +28,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const { scene, camera, gl } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
-  const lastHoverTime = useRef(0);
   const currentHoverIndex = useRef(null);
+  const hoverTimeoutRef = useRef(null); // Used for debouncing mouse hover
   const debugPicking = useRef(false);
 
   const officialStarDistances = useStore((s) => s.officialStarDistances);
@@ -147,7 +147,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         starData,
         magnitudes,
       };
-    }, [officialStarDistances, hScale, starDistanceModifier]); // <-- No starScale here!
+    }, [officialStarDistances, hScale, starDistanceModifier]);
 
   // OPTIMIZATION: Memoize Sizes (Light)
   // This is the ONLY part that runs when you zoom in/out (changing starScale)
@@ -202,6 +202,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       canvas.removeEventListener("mousemove", handleHover);
       canvas.removeEventListener("click", handleClick);
       if (pickingRenderTarget.current) pickingRenderTarget.current.dispose();
+
+      // Clean up the timeout if component unmounts
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
   }, [gl, camera, planetCamera]);
 
@@ -216,11 +219,25 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     if (useStore.getState().runIntro) return;
     if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
 
-    const now = performance.now();
-    if (now - lastHoverTime.current < 200) return;
-    lastHoverTime.current = now;
-
+    // Extract coordinates immediately from the React event
     const { clientX, clientY } = event;
+
+    // Clear the previous timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    // Wait 50ms after the mouse stops moving before calculating
+    hoverTimeoutRef.current = setTimeout(() => {
+      performPickingCheck(clientX, clientY);
+    }, 50);
+  };
+
+  const performPickingCheck = (clientX, clientY) => {
+    // Failsafe in case component unmounted or elements became unavailable during the timeout delay
+    if (!gl || !pickingPointsRef.current || !pickingRenderTarget.current)
+      return;
+
     const { width, height } = gl.domElement;
     const rect = gl.domElement.getBoundingClientRect();
 
@@ -258,7 +275,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
           const hoverData = { star, position: worldPosition, index: starIndex };
           currentHoverDataRef.current = hoverData;
-          onStarHover(hoverData, event);
+
+          if (onStarHover) onStarHover(hoverData, null);
         }
       } else {
         if (currentHoverIndex.current !== null) {
