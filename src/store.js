@@ -145,9 +145,13 @@ export const useStore = create((set) => ({
 
   selectedStarHR: null,
   setSelectedStarHR: (starHR) => set({ selectedStarHR: starHR }),
+
   selectedStarPosition: null,
   setSelectedStarPosition: (position) =>
     set({ selectedStarPosition: position }),
+
+  selectedStarData: null,
+  setSelectedStarData: (data) => set({ selectedStarData: data }),
 
   showHelp: false,
   setShowHelp: (v) => set({ showHelp: v }),
