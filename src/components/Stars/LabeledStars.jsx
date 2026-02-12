@@ -1,36 +1,9 @@
-import { useRef } from "react";
 import { Html } from "@react-three/drei";
 import { useStore } from "../../store";
+import labeledStarsData from "../../settings/labeled-stars.json"; //
 
-export const LABELED_STARS = [
-  "Polaris",
-  "Sirius",
-  "Procyon",
-  "Deneb Algedi",
-  "Betelgeuse",
-  "Rigel",
-  "Canopus",
-  "Vega",
-  "Thuban",
-  "Capella",
-  "Altair",
-  "Aldebaran",
-  "Antares",
-  "Arcturus",
-  "Achernar",
-  "Polaris Australis",
-  "Hadar",
-  "Spica",
-  "Rigil Kentaurus",
-  "Acrux",
-  "Antares",
-  "Pollux",
-  "Formalhaut",
-  "Mimosa",
-  "Regulus",
-  "Adhara",
-  "Castor",
-];
+// Export the data so BSCStars.jsx can still access the list for coordinate calculations
+export const LABELED_STARS = labeledStarsData; //
 
 export default function LabeledStars() {
   const showLabels = useStore((s) => s.showLabels);
