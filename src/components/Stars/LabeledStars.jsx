@@ -1,5 +1,5 @@
 import { Html } from "@react-three/drei";
-import { useStore } from "../../store";
+import { useStore, useStarStore } from "../../store";
 import labeledStarsData from "../../settings/labeled-stars.json"; //
 
 // Export the data so BSCStars.jsx can still access the list for coordinate calculations
@@ -9,8 +9,9 @@ export default function LabeledStars() {
   const showLabels = useStore((s) => s.showLabels);
   const runIntro = useStore((s) => s.runIntro);
   const labeledStarPositions = useStore((s) => s.labeledStarPositions);
+  const bscVisible = useStarStore((s) => s.BSCStars);
 
-  if (runIntro || !showLabels) return null;
+  if (runIntro || !showLabels || !bscVisible) return null;
 
   return (
     <>
