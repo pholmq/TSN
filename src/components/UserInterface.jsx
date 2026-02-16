@@ -276,7 +276,7 @@ const UserInterface = () => {
         style={{ zIndex: 2147483647 }}
       >
         <div className="menu-item">
-          <span className="menu-header"> The TYCHOSIUM</span>
+          <span className="menu-header"> The Tychosium</span>
           <button
             className="menu-button menu-header-button"
             title="Help"
