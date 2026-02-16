@@ -15,8 +15,18 @@ import { useStore } from "../../store";
 import { usePlanetCameraStore } from "../PlanetCamera/planetCameraStore";
 
 const LightEffectsMenu = () => {
+  const zoomLevel = useStore((state) => state.zoomLevel);
+  const setZoom = useStore((state) => state.setZoom);
+
   const { ambientLight, glow, glowIntensity, antialiasing, stats } =
-    useControls("Light & Effects", {
+    useControls("Settings", {
+      "UI & Labels size": {
+        value: zoomLevel,
+        min: 60,
+        max: 120,
+        step: 1,
+        onChange: (v) => setZoom(v),
+      },
       ambientLight: {
         label: "Ambient light",
         value: 1,
@@ -32,6 +42,7 @@ const LightEffectsMenu = () => {
         step: 0.1,
         onChange: (v) => useStore.setState({ sunLight: v }),
       },
+
       glow: {
         label: "Glow",
         value: true,
@@ -45,17 +56,18 @@ const LightEffectsMenu = () => {
         step: 0.1,
         hint: "Glow can affect performance",
       },
-      antialiasing: {
-        label: "Anti-Aliasing",
-        value: "SMAA",
-        options: ["FXAA", "SMAA", "None"],
-      },
-      stats: {
-        value: false,
-        label: "Show FPS",
-      },
-      Settings: folder(
+
+      "developer settings": folder(
         {
+          antialiasing: {
+            label: "Anti-Aliasing",
+            value: "SMAA",
+            options: ["FXAA", "SMAA", "None"],
+          },
+          stats: {
+            value: false,
+            label: "Show FPS",
+          },
           "Star sizes": {
             value: useStore.getState().starScale,
             min: 0.1,
@@ -121,11 +133,11 @@ const LightEffectsMenu = () => {
         <Perf
           position="top-left"
           style={{
-            transform: "scale(2)", // 1.5 = 150% size. Adjust as needed.
-            transformOrigin: "top left", // Ensures it scales from the corner, not the center
-            zIndex: 9999, // Optional: Ensures it stays on top of other UI
-            top: "10px", // Pushed down to avoid top menu
-            left: "10px", // Slightly offset from edge
+            transform: "scale(2)",
+            transformOrigin: "top left",
+            zIndex: 9999,
+            top: "10px",
+            left: "10px",
           }}
         />
       )}

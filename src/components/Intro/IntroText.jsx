@@ -48,12 +48,12 @@ export default function IntroText() {
   if (!runIntro) return null;
 
   // Title position and size constants for easy reference and alignment
-  const titlePosition = [-140, 0, -180];
+  const titlePosition = [-140, 0, -150];
   const warningPos = [-180, 0, -100];
 
   return (
     <>
-      {/* Main Title Text: "The TYCHOSIUM" */}
+      {/* Main Title Text: "The Tychosium" */}
       <Text3D
         font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
         position={titlePosition}
@@ -67,7 +67,7 @@ export default function IntroText() {
         bevelOffset={0}
         bevelSegments={8}
       >
-        The TYCHOSIUM
+        The Tychosium
         <meshStandardMaterial
           ref={materialRef}
           color="white"

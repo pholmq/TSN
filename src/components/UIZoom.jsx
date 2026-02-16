@@ -8,14 +8,13 @@ const UIZoom = () => {
   // // const {zoomLevel, zoomIn, zoomOut} = useStore();
   const { zoomLevel, zoomIn, zoomOut } = useStore();
 
-
   useEffect(() => {
     changeZoom(zoomLevel);
   }, [zoomLevel]);
 
   return (
     <>
-      <button
+      {/* <button
         className="menu-button menu-header-button"
         onClick={zoomOut}
         title={`Zoom: ${zoomLevel}%`}
@@ -28,7 +27,7 @@ const UIZoom = () => {
         title={`Zoom: ${zoomLevel}%`}
       >
         <FaPlus />
-      </button>{" "}
+      </button>{" "} */}
     </>
   );
 };
