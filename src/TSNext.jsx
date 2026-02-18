@@ -10,7 +10,6 @@ import PlotSolarSystem from "./components/PlotSolarSystem";
 import TraceController from "./components/Trace/TraceController";
 import LightEffectsMenu from "./components/Menus/LightEffectsMenu";
 import PlanetsPositionsMenu from "./components/Menus/PlanetsPositionsMenu";
-import StarsHelpersMenu from "./components/Menus/StarsHelpersMenu";
 import PosController from "./components/PosController";
 import Positions from "./components/Menus/Positions";
 import Ephemerides from "./components/Ephemerides/Ephemerides";
@@ -145,7 +144,6 @@ const TSNext = () => {
           <EphController />
           {/* <PlotController /> */}
           <PlanetsPositionsMenu />
-          <StarsHelpersMenu />
           <LightEffectsMenu />
           <SolarSystem />
           <PlotSolarSystem />

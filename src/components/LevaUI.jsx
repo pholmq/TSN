@@ -239,7 +239,8 @@ const LevaUI = () => {
     "Stars & Helpers": folder(
       {
         // Moved to the top of "Stars & Helpers"
-        "BSC Stars": {
+        Stars: {
+          // Changed from "BSC Stars"
           value: BSCStars,
           onChange: setBSCStars,
         },
@@ -344,6 +345,9 @@ const LevaUI = () => {
         titleBar={false}
         hideCopyButton
         theme={{
+          sizes: {
+            controlWidth: "40%",
+          },
           fontSizes: {
             root: "14px",
           },
@@ -364,6 +368,9 @@ const LevaUI = () => {
           titleBar={false}
           hideCopyButton
           theme={{
+            sizes: {
+              controlWidth: "40%",
+            },
             fontSizes: {
               root: "12px",
             },

@@ -388,7 +388,7 @@ const UserInterface = () => {
           />
         </div>
         <div className="menu-item">
-          <div>
+          <div className="leva-container">
             <LevaUI />
           </div>
         </div>
