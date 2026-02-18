@@ -48,8 +48,8 @@ body {
   max-height: 100%;
   overflow-y: auto;
   padding: 0.5rem;
-  width: 300px;
-  max-width: 400px;
+  width: 300px; /* Reduced from 350px */
+  max-width: 360px; /* Reduced from 450px */
   min-width: 280px;
 }
 
@@ -85,6 +85,11 @@ body {
   align-items: center;
   justify-content: space-between;
   margin: 0.25rem 0;
+  width: 100%;
+}
+
+/* Ensure the Leva wrapper takes full width */
+.leva-container {
   width: 100%;
 }
 
@@ -188,7 +193,7 @@ body {
   top: 110px;
   left: 10px;
   right: auto;
-  width: 260px;
+  width: 300px; /* Kept at 300px */
   opacity: 0.8;
 }
 .ephemerides-div > div {
@@ -205,7 +210,7 @@ body {
   left: 10px !important;
   right: auto !important;
   height: auto;
-  width: 350px;
+  width: 400px; /* Kept wider for settings readability */
   opacity: 0.8;
 }
 .plancam-div > div {
@@ -215,7 +220,7 @@ body {
   left: 10px !important;
   right: auto !important;
   opacity: 0.8;
-  width: 300px; /* Consistent width */
+  width: 350px;
   max-height: calc(100vh - 100px) !important;
   overflow-y: auto !important;
   z-index: 2147483647 !important;

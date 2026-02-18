@@ -9,7 +9,9 @@ export default function LabeledStars() {
   const showLabels = useStore((s) => s.showLabels);
   const runIntro = useStore((s) => s.runIntro);
   const labeledStarPositions = useStore((s) => s.labeledStarPositions);
-  const bscVisible = useStarStore((s) => s.BSCStars);
+
+  // FIX: BSCStars is located in useStore, not useStarStore
+  const bscVisible = useStore((s) => s.BSCStars);
 
   if (runIntro || !showLabels || !bscVisible) return null;
 
