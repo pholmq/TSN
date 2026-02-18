@@ -292,7 +292,7 @@ const LevaUI = () => {
       },
       { collapsed: true }
     ),
-    "Light & Effects": folder(
+    Settings: folder(
       {},
       //Populated in LightEffectsMenu
       { collapsed: true }
