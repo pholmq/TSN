@@ -11,10 +11,9 @@ import {
 import { useEphemeridesStore } from "./ephemeridesStore";
 
 const Ephemerides = () => {
-  const { ephimerides, posRef } = useStore();
+  const { ephimerides, setEphemerides, posRef } = useStore();
   const { settings } = useSettingsStore();
 
-  // Get setters and state from the store
   const setGenerationParams = useEphemeridesStore((s) => s.setGenerationParams);
   const setGenerationError = useEphemeridesStore((s) => s.setGenerationError);
   const isGenerating = useEphemeridesStore((s) => s.isGenerating);
@@ -44,7 +43,6 @@ const Ephemerides = () => {
   });
 
   const handleCreate = () => {
-    // Prevent execution if already generating
     if (isGenerating) return;
 
     const formValues = valuesRef.current;
@@ -54,9 +52,6 @@ const Ephemerides = () => {
       .filter((s) => formValues[s.name] === true)
       .map((s) => s.name);
 
-    // --- VALIDATION CHECKS ---
-
-    // 1. Check if at least one planet is selected
     if (checkedPlanets.length === 0) {
       setGenerationError(
         "No planets selected.\nPlease select at least one planet to generate data."
@@ -64,9 +59,6 @@ const Ephemerides = () => {
       return;
     }
 
-    // 2. Date validation removed to allow reverse generation (End Date < Start Date)
-
-    // Send command to the Controller inside the Canvas
     setGenerationParams({
       startDate: formValues["Start Date"],
       endDate: formValues["End Date"],
@@ -84,7 +76,6 @@ const Ephemerides = () => {
     }
   };
 
-  // Effect to update Start/End Date to current position when menu is opened
   useEffect(() => {
     if (ephimerides) {
       const currentDate = posToDate(posRef.current);
@@ -98,6 +89,65 @@ const Ephemerides = () => {
       });
     }
   }, [ephimerides, posRef, levaEphStore]);
+
+  // Highly targeted DOM injection for the X button
+  useEffect(() => {
+    if (!ephimerides) return;
+
+    const interval = setInterval(() => {
+      // Find the deepest div containing ONLY the exact title text
+      const textDiv = Array.from(document.querySelectorAll("div")).find(
+        (el) =>
+          el.textContent.trim() === "Ephemerides" && el.children.length === 0
+      );
+
+      if (textDiv) {
+        // Leva's title bar is the immediate flex container wrapping this text
+        const titleBar = textDiv.parentElement;
+
+        if (titleBar && !titleBar.querySelector(".leva-close-x")) {
+          // Allow the title bar to anchor our absolutely positioned button
+          titleBar.style.position = "relative";
+
+          const closeBtn = document.createElement("div");
+          closeBtn.className = "leva-close-x";
+          closeBtn.innerHTML = "✕";
+
+          // Style it seamlessly into the top right corner
+          Object.assign(closeBtn.style, {
+            position: "absolute",
+            right: "12px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer",
+            color: "#8C92A4",
+            fontSize: "14px",
+            fontWeight: "bold",
+            padding: "4px",
+            zIndex: "9999",
+          });
+
+          // Native hover colors
+          closeBtn.onmouseenter = () => (closeBtn.style.color = "#FFFFFF");
+          closeBtn.onmouseleave = () => (closeBtn.style.color = "#8C92A4");
+
+          // CRITICAL: Stop the click from passing through and triggering Leva's drag feature
+          closeBtn.onmousedown = (e) => e.stopPropagation();
+
+          // Close action
+          closeBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setEphemerides(false);
+          };
+
+          titleBar.appendChild(closeBtn);
+        }
+      }
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [ephimerides, setEphemerides]);
 
   useControls(
     {
@@ -160,7 +210,7 @@ const Ephemerides = () => {
       <Leva
         store={levaEphStore}
         titleBar={{ drag: true, title: "Ephemerides", filter: false }}
-        fill={false}
+        fill={false} // Restored to default so it behaves normally
         hideCopyButton
         theme={{
           fontSizes: { root: "12px" },
