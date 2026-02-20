@@ -267,11 +267,11 @@ const LevaUI = () => {
           value: showConstellations,
           onChange: setShowConstellations,
         },
-        "Celestial grid": {
-          value: celestialSphere,
-          onChange: setCelestialSphere,
-        },
-        "Ecliptic grid": {
+        // "Celestial grid": {
+        //   value: celestialSphere,
+        //   onChange: setCelestialSphere,
+        // },
+        "Equinoxes & Solistices": {
           value: eclipticGrid,
           onChange: setEclipticGrid,
         },
@@ -283,7 +283,7 @@ const LevaUI = () => {
           value: tropicalZodiac,
           onChange: setTropicalZodiac,
         },
-        "Sphere/Grid/Zodiac size": {
+        "Sphere & Zodiac size": {
           value: hScale,
           min: 0.5,
           max: 100,
