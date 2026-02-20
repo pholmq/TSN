@@ -305,8 +305,10 @@ const LevaUI = () => {
     set2({
       "Actual planet sizes": actualPlanetSizes,
       Orbits: orbits,
+      Ephemerides: ephimerides,
+      Positions: showPositions,
     });
-  }, [actualPlanetSizes, orbits, set2]);
+  }, [actualPlanetSizes, orbits, ephimerides, showPositions, set2]);
 
   const prevTransitioningRef = useRef(false);
   useEffect(() => {
