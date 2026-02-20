@@ -368,7 +368,7 @@ const LevaUI = () => {
             controlWidth: "40%",
           },
           fontSizes: {
-            root: "14px",
+            root: "12px",
           },
           fonts: {
             mono: "",
