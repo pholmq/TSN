@@ -2,21 +2,20 @@ import React, { useRef, useState, useEffect } from "react";
 import { Text3D } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useStore } from "../../store";
+import TychosLogo3D from "./TychosLogo3D";
 
 export default function IntroText() {
   const runIntro = useStore((s) => s.runIntro);
   const setRunIntro = useStore((s) => s.setRunIntro);
-  const materialRef = useRef();
-  const warningMaterialRef = useRef(); // New ref for the warning text material
 
-  // State to track if the device is touch-enabled
+  const materialRef = useRef();
+  const warningMaterialRef = useRef();
+  const logoMaterialRef = useRef(); // Ref for the 3D logo
+
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-  // Check for touch capabilities on mount
   useEffect(() => {
-    // Use modern CSS media query for "coarse" pointer (standard for touchscreens)
     const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
-    // Check for 'ontouchstart' event for broader compatibility
     const hasTouchEvents = "ontouchstart" in window;
 
     if (isCoarsePointer || hasTouchEvents) {
@@ -24,7 +23,6 @@ export default function IntroText() {
     }
   }, []);
 
-  // Animate opacity over time using the ref
   useFrame((state, delta) => {
     if (!runIntro) return;
     if (materialRef.current && materialRef.current.opacity > 0.01) {
@@ -34,26 +32,35 @@ export default function IntroText() {
       );
       materialRef.current.opacity = newOpacity;
 
-      // Apply the same fade to the warning text material if it exists
       if (warningMaterialRef.current) {
         warningMaterialRef.current.opacity = newOpacity;
       }
+
+      // Fade the 3D logo simultaneously
+      if (logoMaterialRef.current) {
+        logoMaterialRef.current.opacity = newOpacity;
+      }
     } else {
-      // End the introduction once the text is fully faded
       setRunIntro(false);
     }
   });
 
-  // Don't render if intro is not running
   if (!runIntro) return null;
 
-  // Title position and size constants for easy reference and alignment
   const titlePosition = [-140, 0, -150];
   const warningPos = [-180, 0, -100];
 
+  // Adjusted to sit much closer to the left of the title
+  const logoPosition = [-125, 0, -185];
+
   return (
     <>
-      {/* Main Title Text: "The Tychosium" */}
+      <TychosLogo3D
+        materialRef={logoMaterialRef}
+        position={logoPosition}
+        rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
+      />
+
       <Text3D
         font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
         position={titlePosition}
@@ -78,11 +85,9 @@ export default function IntroText() {
         />
       </Text3D>
 
-      {/* Conditional Warning Text for Touch Devices, positioned below the title */}
       {isTouchDevice && (
         <Text3D
           font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
-          // Shifted position to be visually 'under' the main title (adjusting X coordinate)
           position={warningPos}
           rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
           size={20}

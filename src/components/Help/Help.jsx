@@ -4,6 +4,9 @@ import { useStore } from "../../store";
 import { FaExternalLinkAlt, FaGithub } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 import helpContent from "./HelpContent.md";
+import TychosLogoIcon from "../../utils/TychosLogoIcon";
+
+// Clean geometric SVG of the TYCHOS model
 
 const Help = () => {
   const showHelp = useStore((s) => s.showHelp);
@@ -76,7 +79,7 @@ const Help = () => {
         padding: "0",
 
         borderRadius: "6px",
-        opacity: 0.85,
+        opacity: 0.9,
         boxShadow: "0 4px 14px rgba(0,0,0,0.5)",
         fontFamily:
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif",
@@ -106,7 +109,6 @@ const Help = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          // --- Exact match to Search menu header ---
           height: "28px",
           padding: "0 8px",
           backgroundColor: "#181c20",
@@ -118,17 +120,21 @@ const Help = () => {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <h2
+          {/* Replaced <h2> with standard matching wrapper and added binary star symbol */}
+          <div
             style={{
-              margin: 0,
-              fontSize: "12px", // Matched Leva/Search Title
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "12px",
               fontWeight: "600",
               color: "white",
               pointerEvents: "none",
             }}
           >
+            <TychosLogoIcon size={20} />
             The Tychosium
-          </h2>
+          </div>
 
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <div
@@ -173,7 +179,7 @@ const Help = () => {
           style={{
             cursor: "pointer",
             color: "#8C92A4",
-            fontSize: "14px", // Matched Leva native X button
+            fontSize: "14px",
             fontWeight: "bold",
             padding: "4px",
             marginRight: "-2px",
@@ -192,13 +198,13 @@ const Help = () => {
       <div
         className="markdown-content"
         style={{
-          padding: "16px 20px", // Scaled padding
+          padding: "16px 20px",
           paddingBottom: "30px",
           flexGrow: 1,
           overflowY: "auto",
           overflowX: "hidden",
           lineHeight: "1.5",
-          fontSize: "13px", // Menu-friendly reading size
+          fontSize: "13px",
           boxSizing: "border-box",
         }}
       >
@@ -209,7 +215,7 @@ const Help = () => {
                 style={{
                   color: "#60a5fa",
                   marginBottom: "8px",
-                  fontSize: "15px", // Scaled headers
+                  fontSize: "15px",
                   marginTop: "16px",
                 }}
               >

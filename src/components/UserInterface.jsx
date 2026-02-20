@@ -36,6 +36,8 @@ import {
 } from "../utils/time-date-functions";
 import UIZoom from "./UIZoom";
 
+import TychosLogoIcon from "../utils/TychosLogoIcon";
+
 const UserInterface = () => {
   const {
     run,
@@ -277,7 +279,17 @@ const UserInterface = () => {
         style={{ zIndex: 2147483647 }}
       >
         <div className="menu-item">
-          <span className="menu-header"> The Tychosium</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <TychosLogoIcon size={25} />{" "}
+            {/* Bumped size to match the 2rem font */}
+            <span className="menu-header">The Tychosium</span>
+          </div>
           <button
             className="menu-button menu-header-button"
             title="Help"

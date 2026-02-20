@@ -36,7 +36,7 @@ Directly below the time controls is the main menu, divided into expandable secti
 
 ### Controls
 
-Toggles for primary viewing modes and data panels.
+Toggles for primary viewing modes and control panels.
 
 - **Actual planet sizes:** Toggles between visually scaled-up planets and their true, realistic scale.
 - **Planet camera:** Activates the Planet camera.
