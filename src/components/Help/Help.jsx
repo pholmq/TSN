@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useStore } from "../../store";
 import { FaExternalLinkAlt, FaGithub } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
@@ -62,26 +63,40 @@ const Help = () => {
 
   if (!showHelp) return null;
 
-  return (
+  return createPortal(
     <div
       ref={helpRef}
       style={{
         position: "fixed",
         top: "50%",
-        left: `${30 + position.x}px`,
-        transform: `translateY(calc(-50% + ${position.y}px))`,
+        left: "50%",
+        transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
         backgroundColor: "#111827",
         color: "white",
         padding: "0",
-        borderRadius: "12px",
-        boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
-        zIndex: 1000,
-        maxWidth: "600px",
-        maxHeight: "80vh",
+
+        borderRadius: "6px",
+        opacity: 0.85,
+        boxShadow: "0 4px 14px rgba(0,0,0,0.5)",
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif",
+
+        zIndex: 2147483647,
+
+        // --- Scaled down defaults ---
+        width: "600px",
+        height: "60vh",
+        minWidth: "350px",
+        minHeight: "250px",
+        maxWidth: "90vw",
+        maxHeight: "95vh",
+        resize: "both",
         overflow: "hidden",
-        border: "1px solid #374151",
+
+        display: "flex",
+        flexDirection: "column",
+
         userSelect: isDragging ? "none" : "auto",
-        opacity: 0.8,
       }}
     >
       <div
@@ -91,80 +106,111 @@ const Help = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "20px 30px",
+          // --- Exact match to Search menu header ---
+          height: "28px",
+          padding: "0 8px",
+          backgroundColor: "#181c20",
+          borderBottom: "1px solid #181c20",
+          borderTopLeftRadius: "6px",
+          borderTopRightRadius: "6px",
           cursor: isDragging ? "grabbing" : "grab",
-          borderBottom: "1px solid #374151",
-          backgroundColor: "#111827",
+          flexShrink: 0,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "bold" }}>
-            The TYCHOSIUM
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "12px", // Matched Leva/Search Title
+              fontWeight: "600",
+              color: "white",
+              pointerEvents: "none",
+            }}
+          >
+            The Tychosium
           </h2>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              className="menu-button menu-header-button"
+
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <div
               title="Learn about the TYCHOS model at www.tychos.space"
               onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering drag
+                e.stopPropagation();
                 window.open("https://www.tychos.space", "_blank");
               }}
-              style={{ fontSize: "18px" }}
+              style={{
+                color: "#8C92A4",
+                cursor: "pointer",
+                fontSize: "12px",
+                display: "flex",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#FFFFFF")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#8C92A4")}
             >
               <FaExternalLinkAlt />
-            </button>
-            <button
-              className="menu-button menu-header-button"
+            </div>
+            <div
               title="GitHub Repository"
               onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering drag
+                e.stopPropagation();
                 window.open("https://github.com/pholmq/TSN", "_blank");
               }}
-              style={{ fontSize: "18px" }}
+              style={{
+                color: "#8C92A4",
+                cursor: "pointer",
+                fontSize: "13px",
+                display: "flex",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#FFFFFF")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#8C92A4")}
             >
               <FaGithub />
-            </button>
+            </div>
           </div>
         </div>
-        <button
+
+        <div
           onClick={() => setShowHelp(false)}
           style={{
-            background: "#374151",
-            border: "none",
-            borderRadius: "6px",
-            padding: "8px 12px",
-            color: "white",
             cursor: "pointer",
-            fontSize: "12px",
+            color: "#8C92A4",
+            fontSize: "14px", // Matched Leva native X button
+            fontWeight: "bold",
+            padding: "4px",
+            marginRight: "-2px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#FFFFFF")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#8C92A4")}
+          title="Close Help"
         >
           ✕
-        </button>
+        </div>
       </div>
 
       <div
         className="markdown-content"
         style={{
-          padding: "30px",
-          paddingBottom: "50px",
-          height: "calc(80vh - 80px)",
+          padding: "16px 20px", // Scaled padding
+          paddingBottom: "30px",
+          flexGrow: 1,
           overflowY: "auto",
           overflowX: "hidden",
-          lineHeight: "1.6",
-          fontSize: "16px",
+          lineHeight: "1.5",
+          fontSize: "13px", // Menu-friendly reading size
           boxSizing: "border-box",
         }}
       >
         <ReactMarkdown
           components={{
-            // Custom styling for markdown elements
             h1: ({ children }) => (
               <h3
                 style={{
                   color: "#60a5fa",
-                  marginBottom: "12px",
-                  fontSize: "18px",
-                  marginTop: "24px",
+                  marginBottom: "8px",
+                  fontSize: "15px", // Scaled headers
+                  marginTop: "16px",
                 }}
               >
                 {children}
@@ -174,9 +220,9 @@ const Help = () => {
               <h3
                 style={{
                   color: "#60a5fa",
-                  marginBottom: "12px",
-                  fontSize: "18px",
-                  marginTop: "24px",
+                  marginBottom: "8px",
+                  fontSize: "15px",
+                  marginTop: "16px",
                 }}
               >
                 {children}
@@ -186,21 +232,21 @@ const Help = () => {
               <h3
                 style={{
                   color: "#60a5fa",
-                  marginBottom: "12px",
-                  fontSize: "18px",
-                  marginTop: "24px",
+                  marginBottom: "8px",
+                  fontSize: "15px",
+                  marginTop: "16px",
                 }}
               >
                 {children}
               </h3>
             ),
             ul: ({ children }) => (
-              <ul style={{ paddingLeft: "20px", margin: "0 0 16px 0" }}>
+              <ul style={{ paddingLeft: "20px", margin: "0 0 12px 0" }}>
                 {children}
               </ul>
             ),
             li: ({ children }) => (
-              <li style={{ marginBottom: "8px" }}>{children}</li>
+              <li style={{ marginBottom: "6px" }}>{children}</li>
             ),
             p: ({ children }) => (
               <p style={{ margin: "0 0 12px 0" }}>{children}</p>
@@ -223,7 +269,8 @@ const Help = () => {
           {markdownContent}
         </ReactMarkdown>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

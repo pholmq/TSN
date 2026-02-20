@@ -7,6 +7,7 @@ import {
   FaStepForward,
   FaBars,
   FaTimes,
+  FaQuestionCircle,
   FaShareAlt,
   FaExternalLinkAlt,
   FaGithub,
@@ -283,7 +284,7 @@ const UserInterface = () => {
             onClick={() => setShowHelp(true)}
             style={{ marginRight: "0.25rem", marginLeft: "0.5rem" }} // Add spacing
           >
-            <FaInfoCircle />
+            <FaQuestionCircle />
           </button>
 
           <div className="zoom-controls">
