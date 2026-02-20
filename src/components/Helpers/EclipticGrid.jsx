@@ -11,19 +11,29 @@ export default function EclipticGrid() {
   const gridGroup = useMemo(() => {
     const group = new THREE.Group();
 
-    // Create the main grid helper
-    const grid = new THREE.GridHelper(2, 30, "#008800", "#000088");
-    group.add(grid);
+    // Create only the green lines for the X and Z axes
+    const points = [
+      new THREE.Vector3(-1, 0, 0), // X-axis start
+      new THREE.Vector3(1, 0, 0), // X-axis end
+      new THREE.Vector3(0, 0, -1), // Z-axis start
+      new THREE.Vector3(0, 0, 1), // Z-axis end
+    ];
+
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ color: "#008800" });
+    const greenLines = new THREE.LineSegments(geometry, material);
+
+    group.add(greenLines);
 
     return group;
-  }, [eclipticGridSize]);
+  }, []); // eclipticGridSize removed from dependency array as it's not used inside useMemo
 
   if (!eclipticGrid) return null;
 
   const size = (eclipticGridSize * hScale) / 100;
 
   return (
-    <group position={[0, -1, 0]} scale={[size, size, size]}>
+    <group position={[0, 0, 0]} scale={[size, size, size]}>
       <primitive object={gridGroup} />
 
       {/* Seasonal Markers */}

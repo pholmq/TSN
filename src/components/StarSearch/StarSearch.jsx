@@ -15,6 +15,7 @@ export default function StarSearch() {
 
   // --- Store State ---
   const searchStars = useStore((s) => s.searchStars);
+  const setSearchStars = useStore((s) => s.setSearchStars); // Brought in setSearchStars
 
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
@@ -307,7 +308,7 @@ export default function StarSearch() {
         onMouseDown={handleMouseDown}
         style={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "space-between", // Pushes title left and button right
           alignItems: "center",
           height: "28px",
           padding: "0 8px",
@@ -331,6 +332,31 @@ export default function StarSearch() {
         >
           <FaSearch style={{ fontSize: "10px" }} />
           Search
+        </div>
+
+        {/* --- Custom Close Button matching Leva injects --- */}
+        <div
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation(); // Prevents dragging from triggering
+            setSearchStars(false);
+          }}
+          style={{
+            cursor: "pointer",
+            color: "#8C92A4",
+            fontSize: "14px",
+            fontWeight: "bold",
+            padding: "4px",
+            marginRight: "-2px", // Minor alignment tweak
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#FFFFFF")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#8C92A4")}
+          title="Close Search"
+        >
+          ✕
         </div>
       </div>
 

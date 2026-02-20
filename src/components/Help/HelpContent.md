@@ -1,78 +1,83 @@
-# 💫 Welcome to The Tychosium
+# Welcome to The TYCHOSIUM
 
-The Tychosium is an interactive 3D simulation of the **TYCHOS model** of our solar system. It allows you to visualize celestial mechanics from a unique binary system perspective, where Earth serves as the reference point.
-
----
-
-## ☼ Navigation & Viewing
-
-### **Orbit View (Default)**
-
-Move freely around the solar system.
-
-- **Rotate:** Left-click + Drag
-- **Zoom:** Mouse Wheel / Scroll
-- **Pan:** Right-click + Drag
-- **Focus:** Double-click on any object to center the camera on it
-- **Context Menu:** Right-click an object to see more options
-
-### 🌍 **Planet Camera (Surface View)**
-
-Experience the sky from the surface of Earth or other celestial bodies.
-
-1. Open the **Controls** menu (top right).
-2. Check **"Planet camera"**.
-3. Use the **Planet Camera** panel to:
-   - **Select Body:** Switch between Earth, Moon, Mars, Mercury, Venus, or Sun.
-   - **Jump to Location:** Use the **Location** dropdown to instantly visit cities (e.g., _Rome, Stockholm, Tokyo_).
-   - **Manual Position:** Adjust **Latitude**, **Longitude**, and **Height** manually.
-   - **Look Around:** Drag the mouse to rotate your viewing angle and direction.
+The Tychosium is an interactive 3D simulator of the TYCHOS model of our solar system. It allows you to visualize the intricate orbital mechanics of our nearby celestial bodies, trace their paths over time, generate Epemerides (lists of planetary positions), discover and examine astronomical events such as conjunctions and oppositions, elcipses, etc.
 
 ---
 
-## ⏱ Time Controls
+## Basic Navigation
 
-Control the flow of time to observe planetary motions over centuries or days.
-
-- **Reset:** Return to the simulation start date (2000-01-01).
-- **Today:** Instantly jump to the current real-world date.
-- **Play/Pause:** Start/Stop the simulation (Key: `Space`).
-- **Step Forward/Back:** Move time by the selected increment (Day, Month, Year).
-- **Date:** Enter a Gregorian date (YYYY-MM-DD).
-- **Time:** Enter a UTC time.
-- **Julian Day:** Enter a scientific Julian Day number.
-- **1 sec/step equals:** Adjust how fast time passes when playing. Negative numbers run the simulation in reverse.
-- **Increment:** Adjust what 1 sec/step (and multiplier) equals (second, minute, hour...).
+- **Rotate Camera:** Left-Click + Drag
+- **Zoom:** Mouse Scroll Wheel
+- **Change camera target:** Double click on a planet
+- **Hoover any planet or star** to see its current position
 
 ---
 
-## 🔭 Stars & Search
+## Time & Main Controls (Top Right Menu)
 
-- **Star Data:** Hover your mouse over any star to reveal its Name, HR Number, Magnitude, and Color Index.
-- **Search:** Use the search bar (top left) to find stars by:
-  - **Name** (e.g., "Sirius", "Polaris")
-  - **HR Number** (e.g., "HR 123")
-- **Highlight:** Selected stars are marked with a crosshair for easy tracking.
+The primary panel controls the flow of time in the simulator.
 
----
-
-## 🛠️ Visual Settings & Tools
-
-Use the **Controls Panel** (top right) to customize your view:
-
-### **Visibility**
-
-- **Planets:** Show/hide specific planets or the Moon.
-- **Orbits:** Toggle orbital paths to see the geometry of the system.
-- **Labels:** Toggle text labels for planets and major stars.
-
-### **Helpers**
-
-- **Celestial Sphere:** Show the grid of Right Ascension and Declination.
-- **Ecliptic Grid:** Visualize the plane of the solar system.
-- **Zodiac:** Display the zodiacal band for astrological reference.
-- **Trace:** Enable **Orbital Tracing** to draw the geometric path of a planet over time (Spirograph effect).
+- **Reset:** Restores the simulator to the default starting date (2000-06-21).
+- **Today:** Sets todays date.
+- **Playback Controls:** - **Play/Pause (▶ / ⏸):** Starts or stops the progression of time.
+  - **Step Back / Step Forward (⏮ / ⏭):** Click to step one unit of time, or click and hold to move through time continuously.
+- **Date, Time (UTC), & Julian Day:** Manually enter specific dates or times. Press `Enter` to instantly jump to that exact moment.
 
 ---
 
-[**Learn more about the TYCHOS model at tychos.space →**](https://www.tychos.space)
+## Speed Controls
+
+- **1 sec/step equals:** Sets the multiplier for time progression. You can use `Up/Down` on your keyboard and you can enter negative numbers which causes the simulation to go backwards
+- **Time Unit (Dropdown):** Choose the unit of time for each step/second (e.g., Seconds, Hours, Days, Solar Years, Sidereal Years).
+
+## Main Menu
+
+Directly below the time controls is the main menu, divided into expandable sections.
+
+### Controls
+
+Toggles for primary viewing modes and control panels.
+
+- **Actual planet sizes:** Toggles between visually scaled-up planets and their true, realistic scale.
+- **Planet camera:** Activates the Planet camera.
+- **Camera follow:** Locks the camera to follow the planet that is camera target.
+- **Labels:** Shows or hides the names of planets and stars.
+- **Orbits:** Toggles the visibility of planetary orbit lines.
+- **Search:** Opens the **Search** tool to find and track specific stars or planets.
+- **Positions:** Opens a live data panel showing the Right Ascension (RA), Declination (Dec), Distance, and Elongation of the planets.
+- **Ephemerides:** Opens the Ephemerides generator that calculate historical or future planetary data over custom date ranges.
+
+### Trace
+
+Tool for drawing the paths that planets take through space over time.
+
+**Note:** To trace the Sun you need to set the 1 sec/step equals to 100 years or higher, since the trace shows the Suns motion during a great year
+
+- **Trace On/Off:** Enables tracing.
+- **Line width & Dotted line:** Customizes the appearance of the trace lines.
+- **Trace length:** Determines how far back in time the trace tail extends.
+- **Step length:** Adjusts the resolution/smoothness of the generated trace.
+- **Planets:** Select which planets that should be traced.
+
+### Planets & Orbits
+
+Adjust the visual representation of the solar system.
+
+- **Planet sizes:** Slider to manually scale up planets for better visibility.
+- **Orbits linewidth:** Adjusts the thickness of the orbit paths.
+- **Arrows:** Shows directional arrows on the orbital paths.
+- **Polar lines:** Toggles the visibility of polar axis lines on the Earth and the Sun.
+- **Graticules:** Toggles a spherical coordinate grid over the Earth and the Sun.
+- **Edit settings:** Opens advanced developer options for modifying object parameters.
+
+### Stars & Helpers
+
+Controls the fixed stars, consellation visibility and Equinox and Zodiac markers.
+
+- **Stars:** Toggles the visibility of the background starfield (Bright Star Catalogue).
+- **Divide distances by:** Pulls the stars closer/further without changing their coordinate positions.
+- **Celestial sphere:** Projects all stars onto a uniform sphere at an equidistant radius.
+- **Constellations:** Draws H.A. Reys classical constellations.
+- **Equinoxes & Solistices:** Marks the Equinoxes and Solistices.
+- **Sidereal Zodiac / Tropical Zodiac:** Displays the respective zodiacs around the solar system.
+- **Sphere & Zodiac size:** Scales the radius of the celestial sphere, the constellations and helpers..

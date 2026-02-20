@@ -242,7 +242,16 @@ const LevaUI = () => {
         Stars: {
           // Changed from "BSC Stars"
           value: BSCStars,
-          onChange: setBSCStars,
+          onChange: (v) => {
+            setBSCStars(v); // Toggle stars visibility
+
+            // Explicitly turn off the Search menu state if Stars are unchecked
+            if (!v) {
+              setSearchStars(false);
+            } else {
+              setSearchStars(true);
+            }
+          },
         },
         // "Use star distances": {
         //   value: officialStarDistances,
@@ -267,11 +276,11 @@ const LevaUI = () => {
           value: showConstellations,
           onChange: setShowConstellations,
         },
-        "Celestial grid": {
-          value: celestialSphere,
-          onChange: setCelestialSphere,
-        },
-        "Ecliptic grid": {
+        // "Celestial grid": {
+        //   value: celestialSphere,
+        //   onChange: setCelestialSphere,
+        // },
+        "Equinoxes & Solistices": {
           value: eclipticGrid,
           onChange: setEclipticGrid,
         },
@@ -283,7 +292,7 @@ const LevaUI = () => {
           value: tropicalZodiac,
           onChange: setTropicalZodiac,
         },
-        "Sphere/Grid/Zodiac size": {
+        "Sphere & Zodiac size": {
           value: hScale,
           min: 0.5,
           max: 100,
@@ -305,8 +314,18 @@ const LevaUI = () => {
     set2({
       "Actual planet sizes": actualPlanetSizes,
       Orbits: orbits,
+      Ephemerides: ephimerides,
+      Positions: showPositions,
+      Search: searchStars,
     });
-  }, [actualPlanetSizes, orbits, set2]);
+  }, [
+    actualPlanetSizes,
+    orbits,
+    ephimerides,
+    showPositions,
+    searchStars,
+    set2,
+  ]);
 
   const prevTransitioningRef = useRef(false);
   useEffect(() => {
@@ -349,7 +368,7 @@ const LevaUI = () => {
             controlWidth: "40%",
           },
           fontSizes: {
-            root: "14px",
+            root: "12px",
           },
           fonts: {
             mono: "",

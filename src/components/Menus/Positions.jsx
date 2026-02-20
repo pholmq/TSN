@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useControls, useCreateStore, Leva, folder, button } from "leva";
+import { useControls, useCreateStore, Leva, folder } from "leva";
 import { useStore, useSettingsStore, usePosStore } from "../../store";
 
 const Positions = () => {
@@ -47,19 +47,66 @@ const Positions = () => {
   // Create a custom Leva store
   const levaStore = useCreateStore();
 
-  // --- FIX START ---
-  // Add Close button inside the panel
-  // 1. Schema (First Arg): Defines the 'Close' button
-  // 2. Options (Second Arg): Connects it to your custom 'levaStore'
-  useControls(
-    {
-      Close: button(() => setShowPositions(false)),
-    },
-    { store: levaStore }
-  );
-  // --- FIX END ---
+  // Highly targeted DOM injection for the X button
+  useEffect(() => {
+    if (!showPositions) return;
 
-  // Set up Leva controls for planets
+    const interval = setInterval(() => {
+      // Find the deepest div containing ONLY the exact title text
+      const textDiv = Array.from(document.querySelectorAll("div")).find(
+        (el) =>
+          el.textContent.trim() === "Positions" && el.children.length === 0
+      );
+
+      if (textDiv) {
+        // Leva's title bar is the immediate flex container wrapping this text
+        const titleBar = textDiv.parentElement;
+
+        if (titleBar && !titleBar.querySelector(".leva-close-x")) {
+          // Allow the title bar to anchor our absolutely positioned button
+          titleBar.style.position = "relative";
+
+          const closeBtn = document.createElement("div");
+          closeBtn.className = "leva-close-x";
+          closeBtn.innerHTML = "✕";
+
+          // Style it seamlessly into the top right corner
+          Object.assign(closeBtn.style, {
+            position: "absolute",
+            right: "12px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer",
+            color: "#8C92A4",
+            fontSize: "14px",
+            fontWeight: "bold",
+            padding: "4px",
+            zIndex: "9999",
+          });
+
+          // Native hover colors
+          closeBtn.onmouseenter = () => (closeBtn.style.color = "#FFFFFF");
+          closeBtn.onmouseleave = () => (closeBtn.style.color = "#8C92A4");
+
+          // CRITICAL: Stop the click from passing through and triggering Leva's drag feature
+          closeBtn.onmousedown = (e) => e.stopPropagation();
+
+          // Close action
+          closeBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowPositions(false);
+          };
+
+          titleBar.appendChild(closeBtn);
+        }
+      }
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [showPositions, setShowPositions]);
+
+  // Set up Leva controls for planets (removed the old manual button)
   const [, set] = useControls(() => planetFolders, { store: levaStore });
 
   // Update Leva controls when `positions` change
@@ -81,6 +128,8 @@ const Positions = () => {
       className="positions-div"
       style={{
         position: "fixed",
+        top: "80px", // Adding top standard position so it matches others
+        right: "10px", // Adding right standard position
         zIndex: 2147483647,
       }}
     >
