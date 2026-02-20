@@ -242,7 +242,16 @@ const LevaUI = () => {
         Stars: {
           // Changed from "BSC Stars"
           value: BSCStars,
-          onChange: setBSCStars,
+          onChange: (v) => {
+            setBSCStars(v); // Toggle stars visibility
+
+            // Explicitly turn off the Search menu state if Stars are unchecked
+            if (!v) {
+              setSearchStars(false);
+            } else {
+              setSearchStars(true);
+            }
+          },
         },
         // "Use star distances": {
         //   value: officialStarDistances,
@@ -307,8 +316,16 @@ const LevaUI = () => {
       Orbits: orbits,
       Ephemerides: ephimerides,
       Positions: showPositions,
+      Search: searchStars,
     });
-  }, [actualPlanetSizes, orbits, ephimerides, showPositions, set2]);
+  }, [
+    actualPlanetSizes,
+    orbits,
+    ephimerides,
+    showPositions,
+    searchStars,
+    set2,
+  ]);
 
   const prevTransitioningRef = useRef(false);
   useEffect(() => {
