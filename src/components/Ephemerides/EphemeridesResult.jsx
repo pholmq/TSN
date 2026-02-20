@@ -173,7 +173,7 @@ const EphemeridesResult = () => {
       <div style={{ padding: "20px", overflowY: "auto", flexGrow: 1 }}>
         {generationError ? (
           <div style={{ padding: "10px", lineHeight: "1.6" }}>
-            <p
+            {/* <p
               style={{
                 color: "#f87171",
                 fontWeight: "bold",
@@ -182,7 +182,7 @@ const EphemeridesResult = () => {
               }}
             >
               Calculation Stopped
-            </p>
+            </p> */}
             <p style={{ whiteSpace: "pre-wrap", fontSize: "16px" }}>
               {generationError}
             </p>
