@@ -43,7 +43,7 @@ const Trace = ({ name }) => {
   useEffect(() => {
     plotPosRef.current = traceStartPos;
     pointsArrRef.current = [];
-  }, [traceStartPos]);
+  }, [traceStartPos, trace, traceStep]);
 
   useFrameInterval(() => {
     if (!trace) return;
