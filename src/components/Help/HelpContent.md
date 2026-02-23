@@ -9,7 +9,7 @@ The Tychosium is an interactive 3D simulator of the TYCHOS model of our solar sy
 - **Search** All stars, planets, comets and asteroids can be searched and tracked.
 - **Accurate scale and distances** Whith `Actual planet` sizes checked all celectial bodies are to scale and at correct relative distances. In the `Stars & Helpers` menu, the Star distances can be adjusted. Default is `42633` - the reduction factor suggested in the TYCHOS model, but if set to `1` the official star distances are used. When `Celstial sphere` is checked, the stars are projected at a uniform distance that can be adjusted with `Sphere & Zodiac size`
 - **Planet camera** When selecting `Planet camera` the camera is attched to Earth, with numerous location presets and its also possible to view the universe from other planets.
-- **Trace** In the trace menu planetary motion and retogrades can be visualized
+- **Trace** Planetary motion and retogrades can be visualized.
 - **Constellations and Zodiac wheels** In the `Stars & Helpers` the H.A. Reys beatiful way to draw constellation can be turned on, plus the tropical and sidereal zodiac and the Equinoxes to study the Precession of the Equinoxes.
 - **Perpetual calendar** The simulation allows for pratically and date and accunts for the Julian calendar and supports Julian astronomical dates.
 
@@ -28,7 +28,9 @@ The Tychosium is an interactive 3D simulator of the TYCHOS model of our solar sy
 
 The primary panel controls the flow of time in the simulator.
 
-- **Reset:** Restores the simulator to the default starting date (2000-06-21).
+- **Question mark** Shows this window.
+- **Stripes and X** Hides/Shows the main menu.
+- **Reset:** Restores the simulator to the default start date (2000-06-21).
 - **Today:** Sets todays date.
 - **Playback Controls:** - **Play/Pause (▶ / ⏸):** Starts or stops the progression of time.
   - **Step Back / Step Forward (⏮ / ⏭):** Click to step one unit of time, or click and hold to move through time continuously.
@@ -38,7 +40,7 @@ The primary panel controls the flow of time in the simulator.
 
 ## Speed Controls
 
-- **1 sec/step equals:** Sets the multiplier for time progression. You can use `Up/Down` on your keyboard and you can enter negative numbers which causes the simulation to go backwards
+- **1 sec/step equals:** Sets the multiplier for time progression. You can use `Up/Down` on your keyboard to add/remove 1 increments. Negative numbers causes the simulation to move backwards.
 - **Time Unit (Dropdown):** Choose the unit of time for each step/second (e.g., Seconds, Hours, Days, Solar Years, Sidereal Years).
 
 ## Main Menu
