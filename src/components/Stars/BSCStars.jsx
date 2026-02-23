@@ -1,4 +1,4 @@
-//
+// src/components/Stars/BSCStars.jsx
 import { useRef, useState, useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -11,14 +11,17 @@ import { movePlotModel } from "../../utils/plotModelFunctions";
 import { pointShaderMaterial, pickingShaderMaterial } from "./starShaders";
 import { LABELED_STARS } from "./LabeledStars";
 import { useBSCStarData } from "./useBSCStarData";
+import Star from "./Star"; // <-- Import the Star component
 
 const BSCStars = ({ onStarClick, onStarHover }) => {
   const pointsRef = useRef();
   const starGroupRef = useRef();
   const pickingPointsRef = useRef();
   const pickingRenderTarget = useRef();
+  const targetGroupRef = useRef(null);
 
   const [pickingScene] = useState(() => new THREE.Scene());
+  const [targetedStarData, setTargetedStarData] = useState(null); // <-- State for our fake Star
 
   const { scene, camera, gl } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
@@ -30,12 +33,11 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
   const planetCamera = useStore((s) => s.planetCamera);
   const setLabeledStarPosition = useStore((s) => s.setLabeledStarPosition);
+  const cameraTarget = useStore((s) => s.cameraTarget); // <-- Listen to camera target
 
-  // Reusable buffer
   const pixelBufferRef = useRef(new Uint8Array(4));
   const currentHoverDataRef = useRef(null);
 
-  // Use the external hook to manage all BSC star data calculations
   const {
     positions,
     colors,
@@ -46,7 +48,13 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     colorMap,
   } = useBSCStarData();
 
-  // Effect for handling selected star centering
+  // Destroy the fake star when the user targets a planet or something else
+  useEffect(() => {
+    if (cameraTarget !== "BSCStarTarget") {
+      setTargetedStarData(null);
+    }
+  }, [cameraTarget]);
+
   useEffect(() => {
     if (selectedStarHR) {
       const isSpecial = specialStarsData.some(
@@ -80,7 +88,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [selectedStarHR, starData, setSelectedStarPosition]);
 
-  // Handle Event Listeners
   useEffect(() => {
     if (!gl || !camera) return;
     pickingRenderTarget.current = new THREE.WebGLRenderTarget(1, 1);
@@ -100,8 +107,41 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       mouseDownRef.current = false;
     };
 
+    const handleDoubleClick = (event) => {
+      if (useStore.getState().runIntro) return;
+      if (currentHoverDataRef.current && targetGroupRef.current) {
+        const { index, star } = currentHoverDataRef.current;
+
+        // Position the target group exactly where the point cloud star is
+        targetGroupRef.current.position.set(
+          positions[index * 3],
+          positions[index * 3 + 1],
+          positions[index * 3 + 2]
+        );
+
+        // Read exact color to pass to the Star component (converted to HEX string for sprite canvas)
+        const r = colors[index * 3];
+        const g = colors[index * 3 + 1];
+        const b = colors[index * 3 + 2];
+        const hexColor = "#" + new THREE.Color(r, g, b).getHexString();
+
+        // Create dummy data so the clone behaves visually like a real Special Star
+        setTargetedStarData({
+          isTargetClone: true,
+          name: "BSCStarTargetMesh",
+          visible: true,
+          magnitude: star.mag ?? star.magnitude ?? star.Mag ?? 3,
+          overrideColor: hexColor,
+          colorTemp: star.colorTemp || 5000,
+        });
+
+        useStore.getState().setCameraTarget("BSCStarTarget");
+      }
+    };
+
     canvas.addEventListener("mousemove", handleHover);
     canvas.addEventListener("click", handleClick);
+    canvas.addEventListener("dblclick", handleDoubleClick);
     canvas.addEventListener("mousedown", onMouseDown);
     canvas.addEventListener("mouseup", onMouseUp);
 
@@ -109,12 +149,13 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       window.removeEventListener("resize", updateRenderTarget);
       canvas.removeEventListener("mousemove", handleHover);
       canvas.removeEventListener("click", handleClick);
+      canvas.removeEventListener("dblclick", handleDoubleClick);
       canvas.removeEventListener("mousedown", onMouseDown);
       canvas.removeEventListener("mouseup", onMouseUp);
       if (pickingRenderTarget.current) pickingRenderTarget.current.dispose();
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
-  }, [gl, camera, planetCamera]);
+  }, [gl, camera, planetCamera, positions, colors]);
 
   const handleClick = (event) => {
     if (useStore.getState().runIntro) return;
@@ -159,7 +200,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     const processPixel = () => {
       const hexColor =
         (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | pixelBuffer[2];
-      const starIndex = colorMap.get(hexColor); // Using colorMap from hook
+      const starIndex = colorMap.get(hexColor);
 
       if (starIndex !== undefined) {
         if (currentHoverIndex.current !== starIndex) {
@@ -206,7 +247,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   };
 
-  // Synchronize Buffer Attributes
   useEffect(() => {
     if (pointsRef.current) {
       const geo = pointsRef.current.geometry;
@@ -222,7 +262,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [positions, colors, pickingColors, sizes, pickingSizes]);
 
-  // Sync with Plot (Earth/Celestial Sphere rotation)
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
@@ -241,7 +280,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [plotObjects]);
 
-  // Setup Picking Scene
   useEffect(() => {
     if (pickingPointsRef.current) {
       pickingScene.add(pickingPointsRef.current);
@@ -249,7 +287,6 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     }
   }, [pickingPointsRef.current, pickingScene]);
 
-  // Handle Labeled Stars
   useEffect(() => {
     if (starData.length === 0 || !pickingPointsRef.current) return;
     LABELED_STARS.forEach((query) => {
@@ -285,6 +322,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   return (
     <>
       <group ref={starGroupRef}>
+        <group ref={targetGroupRef} name="BSCStarTarget">
+          {/* Render the fake star right here dynamically */}
+          {targetedStarData && <Star sData={targetedStarData} />}
+        </group>
         <points ref={pointsRef} raycast={() => null}>
           <bufferGeometry />
           <shaderMaterial attach="material" args={[pointShaderMaterial]} />

@@ -52,8 +52,10 @@ export default function OrbitCamera() {
 
   useLayoutEffect(() => {
     targetObjRef.current = scene.getObjectByName(cameraTarget);
-    targetObjRef.current.getWorldPosition(target);
-    controlsRef.current.setTarget(target.x, target.y, target.z, false);
+    if (targetObjRef.current) {
+      targetObjRef.current.getWorldPosition(target);
+      controlsRef.current.setTarget(target.x, target.y, target.z, false);
+    }
   }, [cameraTarget, cameraUpdate, camera]);
 
   useEffect(() => {
@@ -82,8 +84,10 @@ export default function OrbitCamera() {
   // Standard practice is: Logic/Physics (0) -> Camera (Priority > 0) -> Render (Automatic)
   useFrame(() => {
     if (cameraFollow) {
-      targetObjRef.current.getWorldPosition(target);
-      controlsRef.current.setTarget(target.x, target.y, target.z, false);
+      if (targetObjRef.current) {
+        targetObjRef.current.getWorldPosition(target);
+        controlsRef.current.setTarget(target.x, target.y, target.z, false);
+      }
     }
   }, 100); // <--- Added priority 100
   return (
