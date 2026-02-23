@@ -21,7 +21,6 @@ const AnimationController = () => {
   useFrame((state, delta) => {
     if (run) {
       posRef.current = posRef.current + delta * (speedFact * speedMultiplier);
-      invalidate(); //Ivalidate frame so we get a render since we have frameloop=demand
     }
   }, -1);
   return null;
