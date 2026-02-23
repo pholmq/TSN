@@ -123,6 +123,7 @@ const TraceLine = ({
       vertexColors={initialColors}
       lineWidth={width}
       color="white"
+      frustumCulled={false}
     />
   );
 };
