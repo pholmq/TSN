@@ -9,7 +9,7 @@ import { dateTimeToPos } from "../../utils/time-date-functions";
 import { movePlotModel } from "../../utils/plotModelFunctions";
 import { pointShaderMaterial, pickingShaderMaterial } from "./starShaders";
 import { LABELED_STARS } from "./LabeledStars";
-import { useBSCStarData } from "./useBSCStarData"; //
+import { useBSCStarData } from "./useBSCStarData";
 
 const BSCStars = ({ onStarClick, onStarHover }) => {
   const pointsRef = useRef();
@@ -43,7 +43,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     sizes,
     pickingSizes,
     colorMap,
-  } = useBSCStarData(); //
+  } = useBSCStarData();
 
   // Effect for handling selected star centering
   useEffect(() => {
