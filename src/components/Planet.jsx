@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef, useEffect, memo } from "react";
+import { useRef, useEffect, memo, useMemo } from "react";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { usePlanetCameraStore } from "./PlanetCamera/planetCameraStore";
@@ -12,10 +12,15 @@ import PlanetRings from "./PlanetRings";
 import NameLabel from "./Labels/NameLabel";
 import GeoSphere from "./Helpers/GeoSphere";
 
+// Define reusable vector outside to prevent GC pressure
+const worldPositionVec = new THREE.Vector3();
+
 const Planet = memo(function Planet({ s, actualMoon, name }) {
   const planetRef = useRef();
+  const transformRef = useRef(); // New ref for the scale group
   const pivotRef = useRef();
   const materialRef = useRef();
+
   const posRef = useStore((state) => state.posRef);
   const sunLight = useStore((state) => state.sunLight);
   const planetScale = useStore((state) => state.planetScale);
@@ -25,10 +30,6 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const planetCameraTarget = usePlanetCameraStore(
     (state) => state.planetCameraTarget
   );
-
-  const selectedStarHR = useStore((s) => s.selectedStarHR);
-  const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
-
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
 
   const { texture, isLoading } = s.texture
@@ -66,14 +67,6 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     if (planetRef.current) {
       planetRef.current.rotation.y =
         rotationStart + rotationSpeed * posRef.current;
-
-      // --- NEW: Update selected position if this planet is selected ---
-      const myID = `Planet:${name}`;
-      if (selectedStarHR === myID) {
-        const vec = new THREE.Vector3();
-        planetRef.current.getWorldPosition(vec);
-        setSelectedStarPosition(vec);
-      }
     }
   });
 
@@ -83,6 +76,12 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const showLabel =
     visible &&
     !(planetCamera && !cameraTransitioning && name === planetCameraTarget);
+
+  // Updated Geometry logic: 256 for Earth, 128 otherwise
+  const planetGeometry = useMemo(() => {
+    const segments = s.name === "Earth" ? 256 : 128;
+    return <sphereGeometry args={[size, segments, segments]} />;
+  }, [size, s.name]);
 
   return (
     <group>
@@ -98,9 +97,10 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
         )}
         {showLabel && <NameLabel s={s} />}
         {showLabel && <HoverObj s={s} />}
-        <group ref={planetRef} scale={planetScale}>
+
+        <group ref={transformRef} scale={planetScale}>
           <mesh name={name} visible={visible} ref={planetRef}>
-            <sphereGeometry args={[size, 256, 256]} />
+            {planetGeometry}
             <meshStandardMaterial
               ref={materialRef}
               color={
@@ -112,7 +112,7 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
               metalness={0.2}
               transparent={true}
               opacity={s.opacity ? s.opacity : 1}
-              depthWrite={false}
+              // depthWrite={false} // Note: Keeping this as requested, but careful with overlapping transparent objects
             />
             {s.light && <pointLight intensity={sunLight * 100000} />}
           </mesh>

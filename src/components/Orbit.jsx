@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useStore } from "../store";
 import { Line } from "@react-three/drei";
@@ -35,27 +35,47 @@ export default function Orbit({ radius, visible, s }) {
   const showOrbits = useStore((s) => s.orbits);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
 
-  let points = [];
-  let arrowPoints = [];
-  let arrowStepSize = 45;
+  // let points = [];
+  // let arrowPoints = [];
+  // let arrowStepSize = 45;
 
-  // // 360 full circle will be drawn clockwise
-  // for (let i = 0; i <= 360; i++) {
-  for (let i = 0; i <= 360; i = i + 0.1) {
-    points.push([
-      Math.sin(i * (Math.PI / 180)) * radius,
-      Math.cos(i * (Math.PI / 180)) * radius,
-      0,
-    ]);
-    if (i === arrowStepSize) {
-      arrowPoints.push([
-        Math.sin(i * (Math.PI / 180)) * radius,
-        Math.cos(i * (Math.PI / 180)) * radius,
-        0,
-      ]);
-      arrowStepSize += arrowStepSize;
+  // // // 360 full circle will be drawn clockwise
+  // // for (let i = 0; i <= 360; i++) {
+  // for (let i = 0; i <= 360; i = i + 0.1) {
+  //   points.push([
+  //     Math.sin(i * (Math.PI / 180)) * radius,
+  //     Math.cos(i * (Math.PI / 180)) * radius,
+  //     0,
+  //   ]);
+  //   if (i === arrowStepSize) {
+  //     arrowPoints.push([
+  //       Math.sin(i * (Math.PI / 180)) * radius,
+  //       Math.cos(i * (Math.PI / 180)) * radius,
+  //       0,
+  //     ]);
+  //     arrowStepSize += arrowStepSize;
+  //   }
+  // }
+
+  const { points, arrowPoints } = useMemo(() => {
+    const pts = [];
+    const aPts = [];
+    let nextArrowStep = 45;
+
+    for (let i = 0; i <= 360; i += 0.1) {
+      const rad = i * (Math.PI / 180);
+      const x = Math.sin(rad) * radius;
+      const y = Math.cos(rad) * radius;
+      pts.push([x, y, 0]);
+
+      // Fixed step logic (previously it was 45, 90, 180, 360)
+      if (i >= nextArrowStep && nextArrowStep <= 315) {
+        aPts.push([x, y, 0]);
+        nextArrowStep += 90; // Add arrows every 90 degrees
+      }
     }
-  }
+    return { points: pts, arrowPoints: aPts };
+  }, [radius]);
 
   return (
     <>
