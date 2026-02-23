@@ -2,6 +2,17 @@
 
 The Tychosium is an interactive 3D simulator of the TYCHOS model of our solar system. It allows you to visualize the intricate orbital mechanics of our nearby celestial bodies, trace their paths over time, generate Epemerides (lists of planetary positions), discover and examine astronomical events such as conjunctions and oppositions, elcipses, etc.
 
+## Features
+
+- **All planets of the Solar system** arranged in the TYCHOS model configuration in an actual Euclidian space. The simulation also includes Halleys comet and Eros.
+- **9000+ stars** with Right Ascension, Declination, Magnitude and Color temperature.
+- **Search** All stars, planets, comets and asteroids can be searched and tracked.
+- **Accurate scale and distances** Whith `Actual planet` sizes checked all celectial bodies are to scale and at correct relative distances. In the `Stars & Helpers` menu, the Star distances can be adjusted. Default is `42633` - the reduction factor suggested in the TYCHOS model, but if set to `1` the official star distances are used. When `Celstial sphere` is checked, the stars are projected at a uniform distance that can be adjusted with `Sphere & Zodiac size`
+- **Planet camera** When selecting `Planet camera` the camera is attched to Earth, with numerous location presets and its also possible to view the universe from other planets.
+- **Trace** In the trace menu planetary motion and retogrades can be visualized
+- **Constellations and Zodiac wheels** In the `Stars & Helpers` the H.A. Reys beatiful way to draw constellation can be turned on, plus the tropical and sidereal zodiac and the Equinoxes to study the Precession of the Equinoxes.
+- **Perpetual calendar** The simulation allows for pratically and date and accunts for the Julian calendar and supports Julian astronomical dates.
+
 ---
 
 ## Basic Navigation
@@ -69,6 +80,7 @@ Adjust the visual representation of the solar system.
 - **Polar lines:** Toggles the visibility of polar axis lines on the Earth and the Sun.
 - **Graticules:** Toggles a spherical coordinate grid over the Earth and the Sun.
 - **Edit settings:** Opens advanced developer options for modifying object parameters.
+- **Planets:** Select which planets, moons, comets and asteroids to view.
 
 ### Stars & Helpers
 
