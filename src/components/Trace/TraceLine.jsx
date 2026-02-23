@@ -13,88 +13,104 @@ const TraceLine = ({
 }) => {
   const line2Ref = useRef(null);
 
-  // Parse the base color once
   const baseColor = useMemo(() => new Color(color), [color]);
 
-  // OPTIMIZATION: Create buffers ONCE and reuse them.
-
-  // 1. Positions Buffer
-  const float32arr = useMemo(() => {
-    const arr = new Float32Array(traceLength * 3);
-    arr.fill(0);
-    return arr;
-  }, [traceLength]);
-
-  // 2. Colors Buffer
-  const colorsFloat32 = useMemo(() => {
-    const arr = new Float32Array(traceLength * 3);
-    // Initialize with the base color (or black)
-    const r = baseColor.r;
-    const g = baseColor.g;
-    const b = baseColor.b;
+  // Provide initial full-length arrays so Drei pre-allocates the max WebGL buffer ONCE
+  const initialPoints = useMemo(
+    () => new Array(traceLength * 3).fill(0),
+    [traceLength]
+  );
+  const initialColors = useMemo(() => {
+    const arr = new Array(traceLength * 3);
     for (let i = 0; i < traceLength; i++) {
-      arr[i * 3] = r;
-      arr[i * 3 + 1] = g;
-      arr[i * 3 + 2] = b;
+      arr[i * 3] = baseColor.r;
+      arr[i * 3 + 1] = baseColor.g;
+      arr[i * 3 + 2] = baseColor.b;
     }
     return arr;
   }, [traceLength, baseColor]);
 
-  // FIX: Create standard Arrays for 'drei' initialization to prevent crashes
-  const initialPoints = useMemo(() => Array.from(float32arr), [float32arr]);
-  const initialColors = useMemo(
-    () => Array.from(colorsFloat32),
-    [colorsFloat32]
-  );
-
-  // If lineWidth is negative the line becomes dotted
   const width = dots ? -lineWidth : lineWidth;
 
   useFrameInterval(
     () => {
-      // Safety check
       if (!pointsArrRef.current || !line2Ref.current) return;
 
-      const currentPoints = pointsArrRef.current;
-      const numPoints = currentPoints.length / 3;
+      const pts = pointsArrRef.current;
+      const numPoints = Math.floor(pts.length / 3);
+      const segmentCount = Math.max(0, numPoints - 1);
 
-      // --- 1. Update Positions ---
-      float32arr.set(currentPoints);
-      line2Ref.current.geometry.setPositions(float32arr);
+      if (segmentCount === 0) {
+        line2Ref.current.geometry.instanceCount = 0;
+        return;
+      }
 
-      // --- 2. Update Colors (Gradient Fading) ---
-      // Number of vertices to fade at each end
+      const geometry = line2Ref.current.geometry;
+
+      // Drei's LineGeometry uses InstancedInterleavedBuffers.
+      // instanceStart and instanceEnd share the SAME buffer.
+      const iStart = geometry.attributes.instanceStart;
+      const cStart = geometry.attributes.instanceColorStart;
+
+      if (!iStart || !cStart) return;
+
+      // Access the underlying shared buffer arrays
+      const positionBuffer = iStart.data;
+      const colorBuffer = cStart.data;
+
+      const posArr = positionBuffer.array;
+      const colArr = colorBuffer.array;
+
       const fadeLen = 20;
-      // Ensure we don't fade more than half the line (prevents overlap on short lines)
       const effectiveFade = Math.max(
         1,
         Math.min(fadeLen, Math.floor(numPoints / 2))
       );
 
-      for (let i = 0; i < numPoints; i++) {
-        let alpha = 1.0;
+      // Directly write into the interleaved buffer (6 floats per segment: Start XYZ, End XYZ)
+      for (let i = 0; i < segmentCount; i++) {
+        const bufferIdx = i * 6; // Index in the interleaved buffer
+        const ptIdx = i * 3; // Index in our raw points array
 
-        // Tail Fade (Oldest points - index 0)
+        // --- 1. Positions (Start XYZ, End XYZ) ---
+        posArr[bufferIdx] = pts[ptIdx];
+        posArr[bufferIdx + 1] = pts[ptIdx + 1];
+        posArr[bufferIdx + 2] = pts[ptIdx + 2];
+
+        posArr[bufferIdx + 3] = pts[ptIdx + 3];
+        posArr[bufferIdx + 4] = pts[ptIdx + 4];
+        posArr[bufferIdx + 5] = pts[ptIdx + 5];
+
+        // --- 2. Colors and Fading ---
+        let alphaStart = 1.0;
+        let alphaEnd = 1.0;
+
+        // Tail Fade (Oldest points)
         if (i < effectiveFade) {
-          alpha = i / effectiveFade;
+          alphaStart = i / effectiveFade;
+          alphaEnd = (i + 1) / effectiveFade;
         }
-        // Head Fade (Newest points - index end)
-        else if (i > numPoints - effectiveFade) {
-          alpha = (numPoints - i) / effectiveFade;
+        // Head Fade (Newest points)
+        else if (i >= numPoints - effectiveFade - 1) {
+          alphaStart = (numPoints - i) / effectiveFade;
+          alphaEnd = (numPoints - (i + 1)) / effectiveFade;
         }
 
-        // Apply alpha to RGB (Fade to black simulation)
-        const idx = i * 3;
-        colorsFloat32[idx] = baseColor.r * alpha;
-        colorsFloat32[idx + 1] = baseColor.g * alpha;
-        colorsFloat32[idx + 2] = baseColor.b * alpha;
+        colArr[bufferIdx] = baseColor.r * alphaStart;
+        colArr[bufferIdx + 1] = baseColor.g * alphaStart;
+        colArr[bufferIdx + 2] = baseColor.b * alphaStart;
+
+        colArr[bufferIdx + 3] = baseColor.r * alphaEnd;
+        colArr[bufferIdx + 4] = baseColor.g * alphaEnd;
+        colArr[bufferIdx + 5] = baseColor.b * alphaEnd;
       }
 
-      line2Ref.current.geometry.setColors(colorsFloat32);
+      // --- 3. Flag the buffers, not the attributes, for GPU upload ---
+      positionBuffer.needsUpdate = true;
+      colorBuffer.needsUpdate = true;
 
-      // --- 3. Update Instance Count ---
-      const segmentCount = (currentPoints.length - 1) / 3;
-      line2Ref.current.geometry.instanceCount = Math.max(0, segmentCount);
+      // Ensure Three.js only draws the active segments
+      geometry.instanceCount = segmentCount;
     },
     interval,
     true
@@ -104,9 +120,9 @@ const TraceLine = ({
     <Line
       ref={line2Ref}
       points={initialPoints}
-      vertexColors={initialColors} // Initialize with vertex colors enabled
+      vertexColors={initialColors}
       lineWidth={width}
-      color="white" // Base color must be white for vertex colors to tint correctly
+      color="white"
     />
   );
 };

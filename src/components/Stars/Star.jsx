@@ -1,6 +1,6 @@
-import { useRef, useEffect } from "react";
-import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { SpriteMaterial, MathUtils, Vector3 } from "three";
+import { useRef, useEffect, useMemo, memo } from "react";
+import { useThree, useFrame } from "@react-three/fiber";
+import { SpriteMaterial, Vector3, SphereGeometry } from "three";
 import FakeGlowMaterial from "../../utils/FakeGlowMaterial";
 import { useStore } from "../../store";
 import {
@@ -13,7 +13,14 @@ import createCircleTexture from "../../utils/createCircleTexture";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
 import NameLabel from "../Labels/NameLabel";
 
-export default function Star({ sData }) {
+// 1. Hoist Vector3 outside the component to completely eliminate GC pressure in useFrame
+const worldPositionVec = new Vector3();
+
+// 2. Hoist static geometry outside to share across all Star instances
+const sharedSphereGeometry = new SphereGeometry(1, 32, 32);
+
+// Wrap in React.memo to prevent unnecessary re-renders from parent state changes
+const Star = memo(function Star({ sData }) {
   const { invalidate } = useThree();
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
@@ -25,11 +32,11 @@ export default function Star({ sData }) {
 
   const s = sData;
 
-  const color = colorTemperature2rgb(s.colorTemp);
-
   const meshRef = useRef();
   const groupRef = useRef();
-  const minScreenSize = 0.1;
+
+  // 3. Memoize color conversion to avoid recalculating on every render
+  const color = useMemo(() => colorTemperature2rgb(s.colorTemp), [s.colorTemp]);
 
   useEffect(() => {
     if (meshRef.current) {
@@ -49,41 +56,44 @@ export default function Star({ sData }) {
       groupRef.current.position.set(x, y, z);
       invalidate();
     }
-  }, [s, starDistanceModifier, officialStarDistances, hScale]);
+  }, [s.ra, s.dec, s.distLy, starDistanceModifier, officialStarDistances, hScale, invalidate]);
 
-  // --- NEW: Report position if selected ---
+  // 4. Use the pre-allocated worldPositionVec instead of 'new Vector3()'
   useFrame(() => {
-    // Ensure ID format matches StarSearch logic
     const myID = s.HR ? String(s.HR) : `Special:${s.name}`;
 
     if (selectedStarHR === myID && groupRef.current) {
-      const vec = new Vector3();
-      groupRef.current.getWorldPosition(vec);
-      setSelectedStarPosition(vec);
+      groupRef.current.getWorldPosition(worldPositionVec);
+      setSelectedStarPosition(worldPositionVec);
     }
   });
 
-  const circleTexture = createCircleTexture(color);
-  const spriteMaterial = new SpriteMaterial({
-    map: circleTexture,
-    transparent: true,
-    opacity: 1,
-    alphaTest: 0.5,
-    sizeAttenuation: false,
-  });
+  // 5. Memoize the texture and material so they are strictly created ONCE per color
+  const spriteMaterial = useMemo(() => {
+    const circleTexture = createCircleTexture(color);
+    return new SpriteMaterial({
+      map: circleTexture,
+      transparent: true,
+      opacity: 1,
+      alphaTest: 0.5,
+      sizeAttenuation: false,
+    });
+  }, [color]);
 
-  let starsize;
-  if (s.magnitude < 1) {
-    starsize = 1.2;
-  } else if (s.magnitude > 1 && s.magnitude < 3) {
-    starsize = 0.6;
-  } else if (s.magnitude > 3 && s.magnitude < 5) {
-    starsize = 0.4;
-  } else {
-    starsize = 0.2;
-  }
-
-  const size = (starsize / 500) * starScale;
+  // 6. Memoize size calculations
+  const size = useMemo(() => {
+    let starsize;
+    if (s.magnitude < 1) {
+      starsize = 1.2;
+    } else if (s.magnitude >= 1 && s.magnitude < 3) {
+      starsize = 0.6;
+    } else if (s.magnitude >= 3 && s.magnitude < 5) {
+      starsize = 0.4;
+    } else {
+      starsize = 0.2;
+    }
+    return (starsize / 500) * starScale;
+  }, [s.magnitude, starScale]);
 
   if (s.BSCStar) {
     return null;
@@ -93,8 +103,7 @@ export default function Star({ sData }) {
     <group ref={groupRef} visible={s.visible}>
       {s.visible && <NameLabel s={s} />}
       <sprite material={spriteMaterial} scale={[size, size, size]} />
-      <mesh name={s.name} ref={meshRef}>
-        <sphereGeometry args={[1, 32, 32]} />
+      <mesh name={s.name} ref={meshRef} geometry={sharedSphereGeometry}>
         <FakeGlowMaterial
           glowColor={color}
           falloff={1}
@@ -105,4 +114,6 @@ export default function Star({ sData }) {
       {s.visible && <HoverObj s={s} starColor={color} />}
     </group>
   );
-}
+});
+
+export default Star;
