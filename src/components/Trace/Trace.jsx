@@ -11,7 +11,6 @@ import { getSpeedFact } from "../../utils/time-date-functions.js";
 import { movePlotModel } from "../../utils/plotModelFunctions";
 import TraceLine from "./TraceLine";
 
-// 1. Hoist Vector3 outside to eliminate GC pressure on every frame/render
 const objectPos = new Vector3();
 
 const Trace = ({ name }) => {
@@ -31,7 +30,6 @@ const Trace = ({ name }) => {
   const getSetting = useSettingsStore((s) => s.getSetting);
   const s = getSetting(name);
 
-  // Length should be a multiple of three
   const traceLength =
     Math.round((s.traceSettings.length * lengthMultiplier) / 3) * 3;
   const traceStep =
@@ -42,7 +40,6 @@ const Trace = ({ name }) => {
   const plotPosRef = useRef(traceStartPos);
   const pointsArrRef = useRef([]);
 
-  // 2. Prevent trace wiping: Only initialize/reset when traceStartPos actually changes
   useEffect(() => {
     plotPosRef.current = traceStartPos;
     pointsArrRef.current = [];
@@ -51,7 +48,6 @@ const Trace = ({ name }) => {
   useFrameInterval(() => {
     if (!trace) return;
 
-    // Check and adjust plotPos if the pos is out of bounds
     if (plotPosRef.current < posRef.current - traceLength * traceStep) {
       plotPosRef.current = posRef.current - traceLength * traceStep;
       pointsArrRef.current = [];
@@ -60,22 +56,34 @@ const Trace = ({ name }) => {
     if (plotPosRef.current > posRef.current + traceLength * traceStep) {
       plotPosRef.current = posRef.current + traceLength * traceStep;
       pointsArrRef.current = [];
-      // If we move backwards out of bounds we need to update trace start!
       setTraceStart(posRef.current);
     }
 
+    // TIME-SLICING: Limit calculations to prevent frame drops
+    // 50 is a safe baseline. Increase if it grows too slowly, decrease if it still stutters.
+    const MAX_STEPS_PER_FRAME = 50;
+    let stepsThisFrame = 0;
+
     // Rewinding backwards
-    while (plotPosRef.current > posRef.current) {
+    while (
+      plotPosRef.current > posRef.current &&
+      stepsThisFrame < MAX_STEPS_PER_FRAME
+    ) {
       plotPosRef.current -= traceStep;
-      // 3. Optimization: Modifying length directly is much faster than splicing from the end
       if (pointsArrRef.current.length >= 3) {
         pointsArrRef.current.length -= 3;
       }
+      stepsThisFrame++;
     }
 
-    // Tracing forwards
-    while (plotPosRef.current < posRef.current - traceStep) {
+    // Tracing forwards (The heavy calculation)
+    while (
+      plotPosRef.current < posRef.current - traceStep &&
+      stepsThisFrame < MAX_STEPS_PER_FRAME
+    ) {
       plotPosRef.current += traceStep;
+
+      // This is the expensive call being throttled
       movePlotModel(plotObjects, plotPosRef.current);
 
       const tracedObj = plotObjects.find((p) => p.name === name);
@@ -85,10 +93,10 @@ const Trace = ({ name }) => {
       }
 
       if (pointsArrRef.current.length > traceLength * 3) {
-        // Splice from the front (Note: if this still bottlenecks, we will need to refactor
-        // TraceLine.jsx to accept a Float32Array circular buffer instead of a standard Array)
         pointsArrRef.current.splice(0, 3);
       }
+
+      stepsThisFrame++;
     }
   }, interval);
 
