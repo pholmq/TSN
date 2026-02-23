@@ -17,6 +17,7 @@ import { usePlanetCameraStore } from "../PlanetCamera/planetCameraStore";
 const LightEffectsMenu = () => {
   const zoomLevel = useStore((state) => state.zoomLevel);
   const setZoom = useStore((state) => state.setZoom);
+  const { runIntro, setRunIntro } = useStore();
 
   const { ambientLight, glow, glowIntensity, antialiasing, stats } =
     useControls("Settings", {
@@ -114,6 +115,10 @@ const LightEffectsMenu = () => {
           "Show planet camera position": {
             value: useStore.getState().planetCameraHelper,
             onChange: (v) => useStore.setState({ planetCameraHelper: v }),
+          },
+          "Show Intro": {
+            value: runIntro,
+            onChange: (v) => setRunIntro(v),
           },
         },
         { collapsed: true }

@@ -25,6 +25,8 @@ export default function IntroText() {
 
   useFrame((state, delta) => {
     if (!runIntro) return;
+
+    // Only fade if opacity is significantly above 0
     if (materialRef.current && materialRef.current.opacity > 0.01) {
       const newOpacity = Math.max(
         materialRef.current.opacity - delta * 0.07,
@@ -36,11 +38,11 @@ export default function IntroText() {
         warningMaterialRef.current.opacity = newOpacity;
       }
 
-      // Fade the 3D logo simultaneously
       if (logoMaterialRef.current) {
         logoMaterialRef.current.opacity = newOpacity;
       }
     } else {
+      // Once faded out, turn off the flag
       setRunIntro(false);
     }
   });
