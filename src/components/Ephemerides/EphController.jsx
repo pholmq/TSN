@@ -74,9 +74,6 @@ const EphController = () => {
 
       setGenerating(true);
       resetTrigger();
-
-      //Manually kickstart the loop because frameloop="demand"
-      invalidate();
     }
   }, [
     trigger,
@@ -85,7 +82,6 @@ const EphController = () => {
     setGenerationError,
     setIsGenerating,
     setProgress,
-    invalidate, // Added to dependency array
   ]);
 
   // 2. Process Job in Chunks

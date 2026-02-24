@@ -14,9 +14,6 @@ const AnimationController = () => {
   const speedFact = useStore((s) => s.speedFact);
   const speedMultiplier = useStore((s) => s.speedMultiplier);
 
-  // Triggers a frame render on component mount/update
-  invalidate();
-
   // Priority -1 ensures this runs BEFORE components (like planets) read the position
   useFrame((state, delta) => {
     if (run) {

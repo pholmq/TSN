@@ -82,12 +82,16 @@ export default function OrbitCamera() {
   useFrame(() => {
     if (cameraFollow) {
       if (targetObjRef.current) {
+        // PERF/SYNC FIX: Force world matrix update to prevent 1-frame tracking lag
+        targetObjRef.current.updateWorldMatrix(true, false);
+
         targetObjRef.current.getWorldPosition(target);
+
         // Kept false: Interpolating every frame during tracking causes lag
         controlsRef.current.setTarget(target.x, target.y, target.z, false);
       }
     }
-  }, 100);
+  });
 
   return (
     <>
