@@ -14,6 +14,7 @@ const HoverObj = ({ s, starColor = false }) => {
   const setHoveredObjectId = useStore((state) => state.setHoveredObjectId);
   const setCameraTarget = useStore((state) => state.setCameraTarget);
   const runIntro = useStore((state) => state.runIntro); // Get runIntro state
+  const planetCamera = useStore((state) => state.planetCamera); // Get planetCamera state
 
   const { gl } = useThree(); // Get gl to access domElement
   const mouseDownRef = useRef(false); // Track mouse state
@@ -82,7 +83,9 @@ const HoverObj = ({ s, starColor = false }) => {
       scale={[size, size, size]}
       onPointerOver={handlePointerOver}
       onPointerLeave={handlePointerLeave}
-      onDoubleClick={() => setCameraTarget(s.name)}
+      onDoubleClick={() => {
+        if (!planetCamera) setCameraTarget(s.name);
+      }}
       onContextMenu={() => {
         if (showPanel) setContextMenu(true);
       }}

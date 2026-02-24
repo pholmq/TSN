@@ -14,6 +14,9 @@ export default function IntroText() {
 
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
+  // Decouple the banner's existence from runIntro so it can finish fading out
+  const [isFinished, setIsFinished] = useState(!runIntro);
+
   useEffect(() => {
     const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
     const hasTouchEvents = "ontouchstart" in window;
@@ -23,13 +26,26 @@ export default function IntroText() {
     }
   }, []);
 
+  // If the intro is ever reset/replayed, reset the banner
+  useEffect(() => {
+    if (runIntro) {
+      setIsFinished(false);
+      if (materialRef.current) materialRef.current.opacity = 1;
+      if (warningMaterialRef.current) warningMaterialRef.current.opacity = 1;
+      if (logoMaterialRef.current) logoMaterialRef.current.opacity = 1;
+    }
+  }, [runIntro]);
+
   useFrame((state, delta) => {
-    if (!runIntro) return;
+    if (isFinished) return;
 
     // Only fade if opacity is significantly above 0
     if (materialRef.current && materialRef.current.opacity > 0.01) {
+      // Fade twice as fast if the user clicked to interrupt (runIntro === false)
+      const fadeSpeed = runIntro ? 0.07 : 0.14;
+
       const newOpacity = Math.max(
-        materialRef.current.opacity - delta * 0.07,
+        materialRef.current.opacity - delta * fadeSpeed,
         0
       );
       materialRef.current.opacity = newOpacity;
@@ -42,12 +58,16 @@ export default function IntroText() {
         logoMaterialRef.current.opacity = newOpacity;
       }
     } else {
-      // Once faded out, turn off the flag
-      setRunIntro(false);
+      // Once faded out, turn off the flag and unmount
+      setIsFinished(true);
+      // Only clear runIntro if it's still true (user might have already clicked through)
+      if (runIntro) {
+        setRunIntro(false);
+      }
     }
   });
 
-  if (!runIntro) return null;
+  if (isFinished) return null;
 
   const titlePosition = [-140, 0, -150];
   const warningPos = [-180, 0, -100];

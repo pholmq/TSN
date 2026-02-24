@@ -16,6 +16,7 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
   const [pinned, setPinned] = useState(false);
   const setCameraTarget = useStore((state) => state.setCameraTarget);
   const setHoveredObjectId = useStore((state) => state.setHoveredObjectId);
+  const planetCamera = useStore((state) => state.planetCamera); // Get planetCamera state
 
   const groupRef = useRef(null);
 
@@ -69,7 +70,9 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
                 setContextMenu(true);
               }
             }}
-            onDoubleClick={() => setCameraTarget(s.name)}
+            onDoubleClick={() => {
+              if (!planetCamera) setCameraTarget(s.name);
+            }}
           >
             <div className="panel-item">
               <label

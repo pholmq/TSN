@@ -19,6 +19,7 @@ export default function OrbitCamera() {
   const setRunIntro = useStore((s) => s.setRunIntro);
   const setCameraControlsRef = useStore((s) => s.setCameraControlsRef);
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+  const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
 
   const targetObjRef = useRef(null);
 
@@ -108,6 +109,7 @@ export default function OrbitCamera() {
         smoothTime={0.4}
         // Increases the "weight" or inertia of the camera when the user manually drags it
         draggingDampingFactor={0.1}
+        minDistance={actualPlanetSizes ? 0.01 : 5}
       />
       {runIntro && <CameraAnimation controlsRef={controlsRef} />}
     </>
