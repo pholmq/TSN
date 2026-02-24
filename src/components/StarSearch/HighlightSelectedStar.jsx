@@ -1,9 +1,10 @@
-import { useStore, useSettingsStore } from "../../store";
+import { useStore, useSettingsStore, useStarStore } from "../../store";
 import { Html } from "@react-three/drei";
 import { useRef, useMemo, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import starsData from "../../settings/BSC.json";
 import specialStarsData from "../../settings/star-settings.json";
+import { LABELED_STARS } from "../Stars/LabeledStars";
 import { getRaDecDistanceFromPosition } from "../../utils/celestial-functions";
 
 const CROSSHAIR_SIZE = 40; // px
@@ -16,6 +17,7 @@ export default function HighlightSelectedStar() {
   const setSelectedStarData = useStore((s) => s.setSelectedStarData);
 
   const planetSettings = useSettingsStore((s) => s.settings);
+  const starSettings = useStarStore((s) => s.settings);
 
   const groupRef = useRef();
   const targetObjectRef = useRef(null);
@@ -43,7 +45,6 @@ export default function HighlightSelectedStar() {
       return selectedStarHR.replace("Planet:", "");
     }
 
-    // Force lookup in BSC data to guarantee the 'Name / HIP' formatting, even for Special Stars
     let targetHR = selectedStarHR;
     if (specialStarDef && specialStarDef.HR) {
       targetHR = String(specialStarDef.HR);
@@ -131,7 +132,6 @@ export default function HighlightSelectedStar() {
     }
   });
 
-  // Only hide the search text for planets (if global labels are ON) since planets manage their own 3D labels
   const isPlanet = selectedStarHR?.startsWith("Planet:");
   const pName = isPlanet ? selectedStarHR.replace("Planet:", "") : null;
   const pSetting = planetSettings.find((s) => s.name === pName);
@@ -164,13 +164,9 @@ export default function HighlightSelectedStar() {
               className="name-label"
               style={{
                 position: "absolute",
-                top: "-5px",
+                top: "0px",
                 left: "50%",
-                transform: "translateX(-50%)",
-                whiteSpace: "nowrap",
-                color: "white",
-                textShadow: "0 0 4px black",
-                fontSize: "12px",
+                transform: "translateX(-50%) translateY(-150%)", // Properly shifts it above the crosshair
               }}
             >
               <span>{starName}</span>
