@@ -9,6 +9,7 @@ export default function OrbitCamera() {
   const { scene, camera } = useThree();
   const cameraRef = useRef();
   const controlsRef = useRef();
+
   const planetCamera = useStore((s) => s.planetCamera);
   const cameraTarget = useStore((s) => s.cameraTarget);
   const cameraFollow = useStore((s) => s.cameraFollow);
@@ -16,15 +17,13 @@ export default function OrbitCamera() {
   const resetClicked = useStore((s) => s.resetClicked);
   const runIntro = useStore((s) => s.runIntro);
   const setRunIntro = useStore((s) => s.setRunIntro);
+  const setCameraControlsRef = useStore((s) => s.setCameraControlsRef);
+  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
 
   const targetObjRef = useRef(null);
 
-  // Isolate vector memory outside renders
+  // PERFORMANCE FIX: Persist Vector3 to prevent garbage collection micro-stutters
   const target = useMemo(() => new Vector3(), []);
-  const currentTarget = useMemo(() => new Vector3(), []);
-
-  const setCameraControlsRef = useStore((s) => s.setCameraControlsRef);
-  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -46,23 +45,21 @@ export default function OrbitCamera() {
       document.removeEventListener("mousedown", handleMouseDown);
       document.removeEventListener("wheel", handleMouseDown);
     };
-  }, []);
+  }, [setRunIntro]);
 
   useLayoutEffect(() => {
     targetObjRef.current = scene.getObjectByName(cameraTarget);
-    if (targetObjRef.current && controlsRef.current) {
+    if (targetObjRef.current) {
       targetObjRef.current.getWorldPosition(target);
-
-      // Allow CameraControls to handle the transition smoothly if not manually strictly following
-      if (!cameraFollow) {
-        controlsRef.current.setTarget(target.x, target.y, target.z, true);
-      }
+      // TRANSITION FIX: 'true' enables smooth interpolation to the new target
+      controlsRef.current.setTarget(target.x, target.y, target.z, true);
     }
-  }, [cameraTarget, cameraUpdate, scene, cameraFollow, target]);
+  }, [cameraTarget, cameraUpdate, camera, scene, target]);
 
   useEffect(() => {
     if (controlsRef.current && !runIntro) {
-      controlsRef.current.setPosition(0, 2200, 0);
+      // TRANSITION FIX: 'true' enables smooth return to the default position
+      controlsRef.current.setPosition(0, 2200, 0, true);
     }
   }, [resetClicked, runIntro]);
 
@@ -79,22 +76,15 @@ export default function OrbitCamera() {
         }
       });
     }
-  }, [planetCamera]);
+  }, [planetCamera, scene]);
 
-  useFrame((state, delta) => {
-    if (cameraFollow && targetObjRef.current && controlsRef.current) {
-      targetObjRef.current.getWorldPosition(target);
-      controlsRef.current.getTarget(currentTarget);
-
-      // Provides frame-independent smooth interpolation to the moving/new target
-      currentTarget.lerp(target, 1 - Math.exp(-8 * delta));
-
-      controlsRef.current.setTarget(
-        currentTarget.x,
-        currentTarget.y,
-        currentTarget.z,
-        false
-      );
+  useFrame(() => {
+    if (cameraFollow) {
+      if (targetObjRef.current) {
+        targetObjRef.current.getWorldPosition(target);
+        // Kept false: Interpolating every frame during tracking causes lag
+        controlsRef.current.setTarget(target.x, target.y, target.z, false);
+      }
     }
   }, 100);
 
@@ -113,7 +103,11 @@ export default function OrbitCamera() {
         ref={controlsRef}
         camera={cameraRef.current}
         enabled={!planetCamera}
-        minDistance={5} // Restricts maximum zoom into the current target
+        // --- CAMERA CONTROLS TWEAKS ---
+        // Adjusts how long the transition takes (default is ~0.25). Higher is slower/smoother.
+        smoothTime={0.4}
+        // Increases the "weight" or inertia of the camera when the user manually drags it
+        draggingDampingFactor={0.1}
       />
       {runIntro && <CameraAnimation controlsRef={controlsRef} />}
     </>
