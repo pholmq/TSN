@@ -1,4 +1,3 @@
-// src/components/Stars/BSCStars.jsx
 import { useRef, useState, useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -11,7 +10,7 @@ import { movePlotModel } from "../../utils/plotModelFunctions";
 import { pointShaderMaterial, pickingShaderMaterial } from "./starShaders";
 import { LABELED_STARS } from "./LabeledStars";
 import { useBSCStarData } from "./useBSCStarData";
-import Star from "./Star"; // <-- Import the Star component
+import Star from "./Star";
 
 const BSCStars = ({ onStarClick, onStarHover }) => {
   const pointsRef = useRef();
@@ -20,8 +19,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const pickingRenderTarget = useRef();
   const targetGroupRef = useRef(null);
 
+  const hiddenStarIndexRef = useRef(null);
+
   const [pickingScene] = useState(() => new THREE.Scene());
-  const [targetedStarData, setTargetedStarData] = useState(null); // <-- State for our fake Star
+  const [targetedStarData, setTargetedStarData] = useState(null);
 
   const { scene, camera, gl } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
@@ -33,7 +34,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
   const planetCamera = useStore((s) => s.planetCamera);
   const setLabeledStarPosition = useStore((s) => s.setLabeledStarPosition);
-  const cameraTarget = useStore((s) => s.cameraTarget); // <-- Listen to camera target
+  const cameraTarget = useStore((s) => s.cameraTarget);
 
   const pixelBufferRef = useRef(new Uint8Array(4));
   const currentHoverDataRef = useRef(null);
@@ -48,12 +49,25 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     colorMap,
   } = useBSCStarData();
 
-  // Destroy the fake star when the user targets a planet or something else
   useEffect(() => {
-    if (cameraTarget !== "BSCStarTarget") {
+    // Check startsWith to catch dynamic targets like "BSCStarTarget_1234"
+    if (!cameraTarget || !cameraTarget.startsWith("BSCStarTarget")) {
       setTargetedStarData(null);
+      if (hiddenStarIndexRef.current !== null && pointsRef.current) {
+        const oldIndex = hiddenStarIndexRef.current;
+        pointsRef.current.geometry.attributes.size.array[oldIndex] =
+          sizes[oldIndex];
+        pointsRef.current.geometry.attributes.size.needsUpdate = true;
+
+        if (pickingPointsRef.current) {
+          pickingPointsRef.current.geometry.attributes.size.array[oldIndex] =
+            pickingSizes[oldIndex];
+          pickingPointsRef.current.geometry.attributes.size.needsUpdate = true;
+        }
+        hiddenStarIndexRef.current = null;
+      }
     }
-  }, [cameraTarget]);
+  }, [cameraTarget, sizes, pickingSizes]);
 
   useEffect(() => {
     if (selectedStarHR) {
@@ -112,30 +126,56 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       if (currentHoverDataRef.current && targetGroupRef.current) {
         const { index, star } = currentHoverDataRef.current;
 
-        // Position the target group exactly where the point cloud star is
+        if (hiddenStarIndexRef.current !== null && pointsRef.current) {
+          const oldIndex = hiddenStarIndexRef.current;
+          pointsRef.current.geometry.attributes.size.array[oldIndex] =
+            sizes[oldIndex];
+          pointsRef.current.geometry.attributes.size.needsUpdate = true;
+          if (pickingPointsRef.current) {
+            pickingPointsRef.current.geometry.attributes.size.array[oldIndex] =
+              pickingSizes[oldIndex];
+            pickingPointsRef.current.geometry.attributes.size.needsUpdate = true;
+          }
+        }
+
+        hiddenStarIndexRef.current = index;
+        if (pointsRef.current) {
+          pointsRef.current.geometry.attributes.size.array[index] = 0;
+          pointsRef.current.geometry.attributes.size.needsUpdate = true;
+        }
+        if (pickingPointsRef.current) {
+          pickingPointsRef.current.geometry.attributes.size.array[index] = 0;
+          pickingPointsRef.current.geometry.attributes.size.needsUpdate = true;
+        }
+
         targetGroupRef.current.position.set(
           positions[index * 3],
           positions[index * 3 + 1],
           positions[index * 3 + 2]
         );
 
-        // Read exact color to pass to the Star component (converted to HEX string for sprite canvas)
         const r = colors[index * 3];
         const g = colors[index * 3 + 1];
         const b = colors[index * 3 + 2];
         const hexColor = "#" + new THREE.Color(r, g, b).getHexString();
 
-        // Create dummy data so the clone behaves visually like a real Special Star
+        // Assign the dynamic camera target so LabeledStars can intercept it
+        const targetName = `BSCStarTarget_${star.HR}`;
+        targetGroupRef.current.name = targetName;
+
         setTargetedStarData({
+          ...star,
           isTargetClone: true,
-          name: "BSCStarTargetMesh",
           visible: true,
           magnitude: star.mag ?? star.magnitude ?? star.Mag ?? 3,
           overrideColor: hexColor,
-          colorTemp: star.colorTemp || 5000,
         });
 
-        useStore.getState().setCameraTarget("BSCStarTarget");
+        if (onStarHover) onStarHover(null);
+        currentHoverIndex.current = null;
+        currentHoverDataRef.current = null;
+
+        useStore.getState().setCameraTarget(targetName);
       }
     };
 
@@ -155,7 +195,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       if (pickingRenderTarget.current) pickingRenderTarget.current.dispose();
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
-  }, [gl, camera, planetCamera, positions, colors]);
+  }, [gl, camera, planetCamera, positions, colors, sizes, pickingSizes]);
 
   const handleClick = (event) => {
     if (useStore.getState().runIntro) return;
@@ -322,8 +362,14 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   return (
     <>
       <group ref={starGroupRef}>
-        <group ref={targetGroupRef} name="BSCStarTarget">
-          {/* Render the fake star right here dynamically */}
+        <group
+          ref={targetGroupRef}
+          name={
+            targetedStarData
+              ? `BSCStarTarget_${targetedStarData.HR}`
+              : "BSCStarTarget"
+          }
+        >
           {targetedStarData && <Star sData={targetedStarData} />}
         </group>
         <points ref={pointsRef} raycast={() => null}>

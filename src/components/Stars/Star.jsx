@@ -1,4 +1,3 @@
-// src/components/Stars/Star.jsx
 import { useRef, useEffect, useMemo, memo } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import { SpriteMaterial, Vector3, SphereGeometry } from "three";
@@ -32,14 +31,12 @@ const Star = memo(function Star({ sData }) {
   const meshRef = useRef();
   const groupRef = useRef();
 
-  // Allow passing an explicit color to match the point cloud perfectly
   const color = useMemo(() => {
     if (s.overrideColor) return s.overrideColor;
     return colorTemperature2rgb(s.colorTemp);
   }, [s.colorTemp, s.overrideColor]);
 
   useEffect(() => {
-    // Bypass positioning if this is our targeted dummy clone
     if (meshRef.current && !s.isTargetClone) {
       const raRad = rightAscensionToRadians(s.ra);
       const decRad = declinationToRadians(s.dec);
@@ -60,7 +57,7 @@ const Star = memo(function Star({ sData }) {
   }, [s.ra, s.dec, s.distLy, starDistanceModifier, officialStarDistances, hScale, invalidate, s.isTargetClone]);
 
   useFrame(() => {
-    if (s.isTargetClone) return; // Prevent clone from hijacking global selection
+    if (s.isTargetClone) return;
 
     const myID = s.HR ? String(s.HR) : `Special:${s.name}`;
 
@@ -95,14 +92,20 @@ const Star = memo(function Star({ sData }) {
     return (starsize / 500) * starScale;
   }, [s.magnitude, starScale]);
 
-  // Force render if it's our clone, otherwise skip standard BSCs
   if (s.BSCStar && !s.isTargetClone) {
     return null;
   }
 
+  // Globally suppress duplicate labels: If the star is selected in Search, HighlightSelectedStar assumes responsibility
+  const myID = s.HR ? String(s.HR) : `Special:${s.name}`;
+  const isCurrentlySearched =
+    selectedStarHR === myID ||
+    (s.isTargetClone && selectedStarHR === String(s.HR));
+  const showNameLabel = s.visible && !isCurrentlySearched;
+
   return (
     <group ref={groupRef} visible={s.visible}>
-      {s.visible && !s.isTargetClone && <NameLabel s={s} />}
+      {showNameLabel && <NameLabel s={s} />}
       <sprite material={spriteMaterial} scale={[size, size, size]} />
       <mesh name={s.name} ref={meshRef} geometry={sharedSphereGeometry}>
         <FakeGlowMaterial

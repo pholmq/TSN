@@ -228,14 +228,15 @@ body {
 
 .name-label {
   color: white;
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-family: Arial, Helvetica, sans-serif;
   opacity: 0.8;
   user-select: none;
-  white-space: nowrap; /*Prevent text wrapping*/
+  white-space: nowrap; /* Prevent text wrapping */
   pointer-events: none;
-}
-
-.starSearch-input::placeholder {
-  color: #d1d5db; /* Brighter placeholder text color */
+  
+  /* --- New Background Styles --- */
+  background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent black */
+  padding: 0.2rem 0.4rem; /* Spacing around the text */
+  border-radius: 0.25rem; /* Slightly rounded corners */
 }
