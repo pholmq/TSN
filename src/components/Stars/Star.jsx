@@ -96,10 +96,12 @@ const Star = memo(function Star({ sData }) {
     return null;
   }
 
-  // Prevent double labels: Dynamically hide NameLabel on the clone if the real star is actively searched
-  const isCurrentlySelected =
-    s.isTargetClone && selectedStarHR === String(s.HR);
-  const showNameLabel = s.visible && !s.hideCloneLabel && !isCurrentlySelected;
+  // Globally suppress duplicate labels: If the star is selected in Search, HighlightSelectedStar assumes responsibility
+  const myID = s.HR ? String(s.HR) : `Special:${s.name}`;
+  const isCurrentlySearched =
+    selectedStarHR === myID ||
+    (s.isTargetClone && selectedStarHR === String(s.HR));
+  const showNameLabel = s.visible && !isCurrentlySearched;
 
   return (
     <group ref={groupRef} visible={s.visible}>
@@ -113,7 +115,6 @@ const Star = memo(function Star({ sData }) {
           glowSharpness={1}
         />
       </mesh>
-      {/* Revert to !s.isTargetClone so the targeted star never triggers a stuck 3D hover panel */}
       {s.visible && !s.isTargetClone && <HoverObj s={s} starColor={color} />}
     </group>
   );

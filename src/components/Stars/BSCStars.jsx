@@ -50,7 +50,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   } = useBSCStarData();
 
   useEffect(() => {
-    if (cameraTarget !== "BSCStarTarget") {
+    // Check startsWith to catch dynamic targets like "BSCStarTarget_1234"
+    if (!cameraTarget || !cameraTarget.startsWith("BSCStarTarget")) {
       setTargetedStarData(null);
       if (hiddenStarIndexRef.current !== null && pointsRef.current) {
         const oldIndex = hiddenStarIndexRef.current;
@@ -158,38 +159,23 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         const b = colors[index * 3 + 2];
         const hexColor = "#" + new THREE.Color(r, g, b).getHexString();
 
-        // Format name to match search: "Name HIP 12345"
-        let starName = "";
-        if (star.N) {
-          starName = star.HIP ? `${star.N} HIP ${star.HIP}` : star.N;
-        } else {
-          starName = star.HIP ? `HIP ${star.HIP}` : `HR ${star.HR}`;
-        }
-
-        const isLabeled = LABELED_STARS.some(
-          (query) =>
-            star.N?.toLowerCase() === query.toLowerCase() ||
-            star.HIP === query ||
-            String(star.HR) === query
-        );
+        // Assign the dynamic camera target so LabeledStars can intercept it
+        const targetName = `BSCStarTarget_${star.HR}`;
+        targetGroupRef.current.name = targetName;
 
         setTargetedStarData({
           ...star,
           isTargetClone: true,
-          name: starName,
           visible: true,
           magnitude: star.mag ?? star.magnitude ?? star.Mag ?? 3,
           overrideColor: hexColor,
-          colorTemp: star.colorTemp || 5000,
-          hideCloneLabel: isLabeled,
         });
 
-        // Hide hover panel instantly
         if (onStarHover) onStarHover(null);
         currentHoverIndex.current = null;
         currentHoverDataRef.current = null;
 
-        useStore.getState().setCameraTarget("BSCStarTarget");
+        useStore.getState().setCameraTarget(targetName);
       }
     };
 
@@ -376,7 +362,14 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   return (
     <>
       <group ref={starGroupRef}>
-        <group ref={targetGroupRef} name="BSCStarTarget">
+        <group
+          ref={targetGroupRef}
+          name={
+            targetedStarData
+              ? `BSCStarTarget_${targetedStarData.HR}`
+              : "BSCStarTarget"
+          }
+        >
           {targetedStarData && <Star sData={targetedStarData} />}
         </group>
         <points ref={pointsRef} raycast={() => null}>

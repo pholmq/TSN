@@ -1,10 +1,9 @@
-import { useStore, useSettingsStore, useStarStore } from "../../store"; // Import settings stores
+import { useStore, useSettingsStore } from "../../store";
 import { Html } from "@react-three/drei";
 import { useRef, useMemo, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import starsData from "../../settings/BSC.json";
 import specialStarsData from "../../settings/star-settings.json";
-import { LABELED_STARS } from "../Stars/LabeledStars";
 import { getRaDecDistanceFromPosition } from "../../utils/celestial-functions";
 
 const CROSSHAIR_SIZE = 40; // px
@@ -16,15 +15,12 @@ export default function HighlightSelectedStar() {
   const showLabels = useStore((s) => s.showLabels);
   const setSelectedStarData = useStore((s) => s.setSelectedStarData);
 
-  // Access dynamic settings to check visibility
   const planetSettings = useSettingsStore((s) => s.settings);
-  const starSettings = useStarStore((s) => s.settings);
 
   const groupRef = useRef();
   const targetObjectRef = useRef(null);
   const lastUpdateRef = useRef(0);
 
-  // --- 1. Identify Special Star Data ---
   const specialStarDef = useMemo(() => {
     if (!selectedStarHR) return null;
 
@@ -40,7 +36,6 @@ export default function HighlightSelectedStar() {
     );
   }, [selectedStarHR]);
 
-  // --- 2. Determine Display Name ---
   const starName = useMemo(() => {
     if (!selectedStarHR) return null;
 
@@ -48,23 +43,30 @@ export default function HighlightSelectedStar() {
       return selectedStarHR.replace("Planet:", "");
     }
 
-    if (specialStarDef) {
-      return specialStarDef.name;
+    // Force lookup in BSC data to guarantee the 'Name / HIP' formatting, even for Special Stars
+    let targetHR = selectedStarHR;
+    if (specialStarDef && specialStarDef.HR) {
+      targetHR = String(specialStarDef.HR);
+    } else if (selectedStarHR.startsWith("Special:")) {
+      return specialStarDef ? specialStarDef.name : "Unknown";
     }
 
-    const star = starsData.find((s) => s.HR && String(s.HR) === selectedStarHR);
-    if (star) {
-      if (star.N && star.HIP) return `${star.N} / HIP ${star.HIP}`;
-      if (star.N && star.HR) return `${star.N} / HR ${star.HR}`;
-      if (star.N) return star.N;
-      if (star.HIP) return `HIP ${star.HIP}`;
-      if (star.HR) return `HR ${star.HR}`;
+    const bscStar = starsData.find(
+      (s) => s.HR && String(s.HR) === String(targetHR)
+    );
+    if (bscStar) {
+      const n = specialStarDef?.name || bscStar.N;
+      if (n && bscStar.HIP) return `${n} / HIP ${bscStar.HIP}`;
+      if (n && bscStar.HR) return `${n} / HR ${bscStar.HR}`;
+      if (n) return n;
+      if (bscStar.HIP) return `HIP ${bscStar.HIP}`;
+      return `HR ${bscStar.HR}`;
     }
 
+    if (specialStarDef) return specialStarDef.name;
     return "Unknown";
   }, [selectedStarHR, specialStarDef]);
 
-  // --- 3. Identify Target Object in Scene ---
   useEffect(() => {
     targetObjectRef.current = null;
     if (!selectedStarHR) return;
@@ -83,25 +85,21 @@ export default function HighlightSelectedStar() {
     }
   }, [selectedStarHR, specialStarDef, scene]);
 
-  // --- 4. Cleanup ---
   useEffect(() => {
     if (!selectedStarHR) {
       setSelectedStarData(null);
     }
   }, [selectedStarHR, setSelectedStarData]);
 
-  // --- 5. Render Loop ---
   useFrame(() => {
     if (!selectedStarHR || !groupRef.current) return;
 
-    // Position Update
     if (targetObjectRef.current) {
       targetObjectRef.current.getWorldPosition(groupRef.current.position);
     } else if (selectedStarPosition) {
       groupRef.current.position.copy(selectedStarPosition);
     }
 
-    // Data Update (Throttled)
     const now = performance.now();
     if (now - lastUpdateRef.current > 100) {
       lastUpdateRef.current = now;
@@ -133,35 +131,13 @@ export default function HighlightSelectedStar() {
     }
   });
 
-  // --- 6. Check Visibility to determine if Labeled ---
-  const isLabeledStar = useMemo(() => {
-    if (!selectedStarHR) return false;
+  // Only hide the search text for planets (if global labels are ON) since planets manage their own 3D labels
+  const isPlanet = selectedStarHR?.startsWith("Planet:");
+  const pName = isPlanet ? selectedStarHR.replace("Planet:", "") : null;
+  const pSetting = planetSettings.find((s) => s.name === pName);
+  const isPlanetVisible = pSetting ? pSetting.visible : true;
 
-    // A. Planets: Check store visibility
-    if (selectedStarHR.startsWith("Planet:")) {
-      const pName = selectedStarHR.replace("Planet:", "");
-      const setting = planetSettings.find((s) => s.name === pName);
-      // If visible in store, it has a scene label, so we return true (suppress selection label)
-      return setting ? setting.visible : true;
-    }
-
-    // B. Special Stars: Check store visibility
-    if (specialStarDef) {
-      const setting = starSettings.find((s) => s.name === specialStarDef.name);
-      return setting ? setting.visible : true;
-    }
-
-    // C. BSC Stars: Check LABELED_STARS list
-    const star = starsData.find((s) => s.HR && String(s.HR) === selectedStarHR);
-    if (!star) return false;
-
-    return LABELED_STARS.some(
-      (query) =>
-        (star.N && star.N.toLowerCase() === query.toLowerCase()) ||
-        star.HIP === query ||
-        star.HR === query
-    );
-  }, [selectedStarHR, specialStarDef, planetSettings, starSettings]); // Depend on settings stores!
+  const hideText = isPlanet && showLabels && isPlanetVisible;
 
   if (!selectedStarHR) return null;
 
@@ -183,8 +159,7 @@ export default function HighlightSelectedStar() {
             transform: "translate(-50%, -50%)",
           }}
         >
-          {/* Show label only if global labels are OFF OR if the star is not considered labeled in scene */}
-          {starName && (!showLabels || !isLabeledStar) && (
+          {starName && !hideText && (
             <div
               className="name-label"
               style={{
