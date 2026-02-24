@@ -1,4 +1,4 @@
-import { useRef, useLayoutEffect, useEffect } from "react";
+import { useRef, useLayoutEffect, useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import { PerspectiveCamera, CameraControls } from "@react-three/drei";
@@ -17,14 +17,15 @@ export default function OrbitCamera() {
   const runIntro = useStore((s) => s.runIntro);
   const setRunIntro = useStore((s) => s.setRunIntro);
 
-  // Bring in the actualPlanetSizes state
   const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
 
   const targetObjRef = useRef(null);
-  const target = new Vector3();
+
+  // Isolate vector memory outside renders to prevent garbage collection spikes
+  const target = useMemo(() => new Vector3(), []);
+  const currentTarget = useMemo(() => new Vector3(), []);
 
   const setCameraControlsRef = useStore((s) => s.setCameraControlsRef);
-
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
 
   useEffect(() => {
@@ -34,19 +35,15 @@ export default function OrbitCamera() {
   }, [controlsRef.current, setCameraControlsRef]);
 
   useEffect(() => {
-    // Event handler function for mousedown
     const handleMouseDown = (event) => {
-      // Check if it's a left mouse button (button === 0)
       if (event.button === 0) {
         setRunIntro(false);
       }
     };
 
-    // Add event listener to the document for mousedown
     document.addEventListener("mousedown", handleMouseDown);
     document.addEventListener("wheel", handleMouseDown);
 
-    // Cleanup function
     return () => {
       document.removeEventListener("mousedown", handleMouseDown);
       document.removeEventListener("wheel", handleMouseDown);
@@ -55,11 +52,15 @@ export default function OrbitCamera() {
 
   useLayoutEffect(() => {
     targetObjRef.current = scene.getObjectByName(cameraTarget);
-    if (targetObjRef.current) {
+    if (targetObjRef.current && controlsRef.current) {
       targetObjRef.current.getWorldPosition(target);
-      controlsRef.current.setTarget(target.x, target.y, target.z, false);
+
+      // Allow CameraControls to handle the transition smoothly if not manually strictly following
+      if (!cameraFollow) {
+        controlsRef.current.setTarget(target.x, target.y, target.z, true);
+      }
     }
-  }, [cameraTarget, cameraUpdate, camera]);
+  }, [cameraTarget, cameraUpdate, scene, cameraFollow, target]);
 
   useEffect(() => {
     if (controlsRef.current && !runIntro) {
@@ -69,7 +70,6 @@ export default function OrbitCamera() {
 
   useEffect(() => {
     if (!planetCamera) {
-      // Ensure all planets are visible when returning to orbit view
       const { settings } = useSettingsStore.getState();
       settings.forEach((setting) => {
         if (setting.planetCamera === true) {
@@ -83,14 +83,20 @@ export default function OrbitCamera() {
     }
   }, [planetCamera]);
 
-  // Change useFrame to run AFTER animations (priority > 0, e.g., 1 or 100) to avoid race condition
-  // Standard practice is: Logic/Physics (0) -> Camera (Priority > 0) -> Render (Automatic)
-  useFrame(() => {
-    if (cameraFollow) {
-      if (targetObjRef.current) {
-        targetObjRef.current.getWorldPosition(target);
-        controlsRef.current.setTarget(target.x, target.y, target.z, false);
-      }
+  useFrame((state, delta) => {
+    if (cameraFollow && targetObjRef.current && controlsRef.current) {
+      targetObjRef.current.getWorldPosition(target);
+      controlsRef.current.getTarget(currentTarget);
+
+      // Provides frame-independent smooth interpolation to the moving/new target
+      currentTarget.lerp(target, 1 - Math.exp(-8 * delta));
+
+      controlsRef.current.setTarget(
+        currentTarget.x,
+        currentTarget.y,
+        currentTarget.z,
+        false
+      );
     }
   }, 100);
 
@@ -109,6 +115,7 @@ export default function OrbitCamera() {
         ref={controlsRef}
         camera={cameraRef.current}
         enabled={!planetCamera}
+        // Conditionally lower the min distance so you can zoom closer to tiny objects
         minDistance={actualPlanetSizes ? 0.01 : 5}
       />
       {runIntro && <CameraAnimation controlsRef={controlsRef} />}
