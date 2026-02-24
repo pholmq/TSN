@@ -19,6 +19,7 @@ export default function OrbitCamera() {
   const setRunIntro = useStore((s) => s.setRunIntro);
   const setCameraControlsRef = useStore((s) => s.setCameraControlsRef);
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+  const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
 
   const targetObjRef = useRef(null);
 
@@ -81,12 +82,16 @@ export default function OrbitCamera() {
   useFrame(() => {
     if (cameraFollow) {
       if (targetObjRef.current) {
+        // PERF/SYNC FIX: Force world matrix update to prevent 1-frame tracking lag
+        targetObjRef.current.updateWorldMatrix(true, false);
+
         targetObjRef.current.getWorldPosition(target);
+
         // Kept false: Interpolating every frame during tracking causes lag
         controlsRef.current.setTarget(target.x, target.y, target.z, false);
       }
     }
-  }, 100);
+  });
 
   return (
     <>
@@ -108,6 +113,7 @@ export default function OrbitCamera() {
         smoothTime={0.4}
         // Increases the "weight" or inertia of the camera when the user manually drags it
         draggingDampingFactor={0.1}
+        minDistance={actualPlanetSizes ? 0.01 : 5}
       />
       {runIntro && <CameraAnimation controlsRef={controlsRef} />}
     </>

@@ -52,7 +52,6 @@ const Star = memo(function Star({ sData }) {
       const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
 
       groupRef.current.position.set(x, y, z);
-      invalidate();
     }
   }, [s.ra, s.dec, s.distLy, starDistanceModifier, officialStarDistances, hScale, invalidate, s.isTargetClone]);
 

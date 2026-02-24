@@ -122,7 +122,10 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
     };
 
     const handleDoubleClick = (event) => {
-      if (useStore.getState().runIntro) return;
+      // Prevent double click actions if intro is running or planetCamera is active
+      if (useStore.getState().runIntro || useStore.getState().planetCamera)
+        return;
+
       if (currentHoverDataRef.current && targetGroupRef.current) {
         const { index, star } = currentHoverDataRef.current;
 
