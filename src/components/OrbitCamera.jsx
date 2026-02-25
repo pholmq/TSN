@@ -112,7 +112,7 @@ export default function OrbitCamera() {
         // Adjusts how long the transition takes (default is ~0.25). Higher is slower/smoother.
         smoothTime={0.4}
         // Increases the "weight" or inertia of the camera when the user manually drags it
-        draggingDampingFactor={0.1}
+        draggingSmoothTime={0.125}
         minDistance={actualPlanetSizes ? 0.01 : 5}
       />
       {runIntro && <CameraAnimation controlsRef={controlsRef} />}

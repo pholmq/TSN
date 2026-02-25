@@ -1,11 +1,6 @@
 // src/components/Stars/starShaders.js
 import * as THREE from "three";
 
-/**
- * Creates a circular texture for star rendering
- * @param {boolean} soft - If true, creates a fuzzy gradient. If false, creates a solid circle.
- * @returns {THREE.Texture} A texture for the point material
- */
 function createStarTexture(soft = false) {
   const size = 256;
   const canvas = document.createElement("canvas");
@@ -19,23 +14,15 @@ function createStarTexture(soft = false) {
   context.arc(center, center, radius, 0, Math.PI * 2);
 
   if (soft) {
-    // Create a radial gradient for the "fuzzy" look
     const gradient = context.createRadialGradient(
-      center,
-      center,
-      0,
-      center,
-      center,
-      radius
+      center, center, 0, center, center, radius
     );
-    // Adjusted color stops for higher brightness
     gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
-    gradient.addColorStop(0.4, "rgba(255, 255, 255, 1)"); // Increased solid core from 20% to 40%
-    gradient.addColorStop(0.7, "rgba(255, 255, 255, 0.6)"); // Higher opacity at the mid-falloff
-    gradient.addColorStop(1, "rgba(255, 255, 255, 0)"); // Keep the soft fade at the very edge
+    gradient.addColorStop(0.4, "rgba(255, 255, 255, 1)");
+    gradient.addColorStop(0.7, "rgba(255, 255, 255, 0.6)");
+    gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
     context.fillStyle = gradient;
   } else {
-    // Solid white for picking (hit testing)
     context.fillStyle = "white";
   }
 
@@ -45,19 +32,14 @@ function createStarTexture(soft = false) {
   return texture;
 }
 
-// Create two textures: one for looks (fuzzy), one for logic (solid)
+// Only the visual texture is needed now
 const visualTexture = createStarTexture(true);
-const pickingTexture = createStarTexture(false);
 
-/**
- * Shader material configuration for visible stars
- * Renders stars with color and opacity
- */
 export const pointShaderMaterial = {
   uniforms: {
-    pointTexture: { value: visualTexture }, // Use the fuzzy texture here
+    pointTexture: { value: visualTexture },
     opacity: { value: 1.0 },
-    alphaTest: { value: 0.01 }, // Lower threshold to allow softer edges to render
+    alphaTest: { value: 0.01 },
   },
   vertexShader: `
     attribute float size;
@@ -82,37 +64,4 @@ export const pointShaderMaterial = {
   `,
   vertexColors: true,
   transparent: true,
-};
-
-/**
- * Shader material configuration for GPU-based star picking
- * Renders stars with unique colors for pixel-perfect picking
- */
-export const pickingShaderMaterial = {
-  uniforms: {
-    pointTexture: { value: pickingTexture }, // Keep using the solid texture for accurate picking
-    alphaTest: { value: 0.1 },
-  },
-  vertexShader: `
-    attribute float size;
-    varying vec3 vColor;
-    void main() {
-      vColor = color;
-      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-      gl_PointSize = size;
-      gl_Position = projectionMatrix * mvPosition;
-    }
-  `,
-  fragmentShader: `
-    uniform sampler2D pointTexture;
-    uniform float alphaTest;
-    varying vec3 vColor;
-    void main() {
-      vec4 texColor = texture2D(pointTexture, gl_PointCoord);
-      if (texColor.a < alphaTest) discard;
-      gl_FragColor = vec4(vColor, texColor.a);
-    }
-  `,
-  vertexColors: true,
-  transparent: false,
 };
