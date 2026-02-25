@@ -100,7 +100,7 @@ export const useStore = create((set) => ({
   BSCStars: true,
   setBSCStars: (v) => set({ BSCStars: v }),
 
-  starPickingSensitivity: 2.0, // 2x the visual size
+  // starPickingSensitivity: 2.0, // 2x the visual size
 
   //Trigger update flags
   resetClicked: false,

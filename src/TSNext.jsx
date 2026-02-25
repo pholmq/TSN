@@ -1,3 +1,4 @@
+// src/TSNext.jsx
 import "./index.css";
 import { useEffect, Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
