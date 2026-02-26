@@ -5,326 +5,150 @@ import * as THREE from "three";
 import { useStore } from "../../store";
 import { usePlanetCameraStore } from "./planetCameraStore";
 
-// ==========================================
-// ADJUSTABLE CONSTANTS
-// ==========================================
-const BASE_DURATION = 10.0;
-const ORBIT_PHASE_END = 0.45;
-const FOV_BLEND_START = 0.65; // Delay FOV change until 65% through the animation
-const LANDING_BRAKE_POWER = 12;
-const RUNWAY_LENGTH = 0.25;
-const CROSSFADE_START = 0.9;
+// Timeline Constants
+const DUR = 10.0, ORBIT_PCT = 0.45, RUNWAY = 0.25, FADE_START = 0.90;
 
 export default function TransitionCamera() {
   const { scene } = useThree();
-  const transitionCamRef = useRef(null);
-
+  const cam = useRef(null);
+  
   const planetCamera = useStore((s) => s.planetCamera);
-  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
-  const setCameraTransitioning = useStore((s) => s.setCameraTransitioning);
-  const planetCameraTarget = usePlanetCameraStore((s) => s.planetCameraTarget);
+  const { cameraTransitioning, setCameraTransitioning } = useStore();
+  const target = usePlanetCameraStore((s) => s.planetCameraTarget);
 
-  const progress = useRef(0);
-  const initialized = useRef(false);
+  // Pre-allocate everything strictly once to prevent memory leaks in useFrame
+  const state = useMemo(() => ({
+    t: 0, orbitDist: 0, startFov: 50, endFov: 50, angle: 0,
+    startPos: new THREE.Vector3(), startQuat: new THREE.Quaternion(),
+    endPos: new THREE.Vector3(), endQuat: new THREE.Quaternion(),
+    center: new THREE.Vector3(), curve: new THREE.CubicBezierCurve3(),
+    vStart: new THREE.Vector3(), vMid: new THREE.Vector3(), axis: new THREE.Vector3(),
+    dir: new THREE.Vector3(), up: new THREE.Vector3(),
+    
+    // Live tracking vectors
+    look: new THREE.Vector3(), sight: new THREE.Vector3(),
+    vCur: new THREE.Vector3(), temp: new THREE.Vector3()
+  }), []);
 
-  // Pre-allocate everything to avoid memory leaks and stutter
-  const cache = useMemo(
-    () => ({
-      startPos: new THREE.Vector3(),
-      startQuat: new THREE.Quaternion(),
-      endPos: new THREE.Vector3(),
-      endQuat: new THREE.Quaternion(),
-
-      midPos: new THREE.Vector3(),
-      p1: new THREE.Vector3(),
-      p2: new THREE.Vector3(),
-      planetCenter: new THREE.Vector3(),
-
-      vStart: new THREE.Vector3(),
-      vMid: new THREE.Vector3(),
-      vCurrent: new THREE.Vector3(),
-      dir: new THREE.Vector3(),
-
-      orbitAxis: new THREE.Vector3(),
-      orbitAngle: 0,
-      lookTarget: new THREE.Vector3(),
-      sightTarget: new THREE.Vector3(),
-
-      defaultUp: new THREE.Vector3(0, 1, 0),
-      endUp: new THREE.Vector3(),
-      blendedUp: new THREE.Vector3(),
-      trackingQuat: new THREE.Quaternion(),
-
-      startFov: 50,
-      endFov: 50,
-      orbitDistance: 0,
-      curve: new THREE.CubicBezierCurve3(),
-    }),
-    []
-  );
+  useEffect(() => { if (planetCamera) setCameraTransitioning(true); }, [planetCamera, setCameraTransitioning]);
 
   useEffect(() => {
-    if (planetCamera) setCameraTransitioning(true);
-  }, [planetCamera, setCameraTransitioning]);
-
-  useEffect(() => {
-    const handlePointerDown = (e) => {
-      if (e.button === 0 && cameraTransitioning) {
-        progress.current = 1.0;
-      }
-    };
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [cameraTransitioning]);
+    const skip = (e) => e.button === 0 && cameraTransitioning && (state.t = 1.0);
+    document.addEventListener("pointerdown", skip);
+    return () => document.removeEventListener("pointerdown", skip);
+  }, [cameraTransitioning, state]);
 
   useLayoutEffect(() => {
-    if (cameraTransitioning && transitionCamRef.current) {
-      initialized.current = false;
+    if (!cameraTransitioning || !cam.current) return;
+    
+    const oCam = scene.getObjectByName("OrbitCamera");
+    const pCam = scene.getObjectByName("PlanetCamera");
+    const pObj = scene.getObjectByName(target);
+    if (!oCam || !pCam || !pObj) return;
 
-      const orbitCam = scene.getObjectByName("OrbitCamera");
-      const planetCam = scene.getObjectByName("PlanetCamera");
-      const planetObj = scene.getObjectByName(planetCameraTarget);
+    [oCam, pCam, pObj].forEach((obj) => obj.updateMatrixWorld(true));
+    if (pObj.material) { pObj.material.transparent = true; pObj.material.opacity = 1; }
 
-      if (!orbitCam || !planetCam || !planetObj) return;
+    state.t = 0;
+    oCam.getWorldPosition(state.startPos); oCam.getWorldQuaternion(state.startQuat);
+    pCam.getWorldPosition(state.endPos); pCam.getWorldQuaternion(state.endQuat);
+    pObj.getWorldPosition(state.center);
 
-      orbitCam.updateMatrixWorld(true);
-      planetCam.updateMatrixWorld(true);
-      planetObj.updateMatrixWorld(true);
+    pCam.getWorldDirection(state.dir);
+    state.up.set(0, 1, 0).applyQuaternion(state.endQuat);
+    
+    state.startFov = oCam.fov; state.endFov = pCam.fov;
+    state.orbitDist = state.startPos.distanceTo(state.center);
 
-      if (planetObj.material) {
-        planetObj.material.transparent = true;
-        planetObj.material.opacity = 1;
-        planetObj.material.needsUpdate = true;
-      }
+    // Phase 1 Target (Above/Behind)
+    const mid = state.center.clone().add(state.dir.clone().negate().add(state.up).normalize().multiplyScalar(state.orbitDist));
 
-      orbitCam.getWorldPosition(cache.startPos);
-      orbitCam.getWorldQuaternion(cache.startQuat);
-      planetCam.getWorldPosition(cache.endPos);
-      planetCam.getWorldQuaternion(cache.endQuat);
-      planetObj.getWorldPosition(cache.planetCenter);
+    // Phase 2 Landing Curve
+    const p2 = state.endPos.clone().add(state.dir.clone().multiplyScalar(-state.orbitDist * RUNWAY));
+    const p1 = mid.clone().lerp(p2, 0.5).add(state.up.clone().multiplyScalar(state.orbitDist * 0.3));
+    state.curve.v0.copy(mid); state.curve.v1.copy(p1); state.curve.v2.copy(p2); state.curve.v3.copy(state.endPos);
 
-      planetCam.getWorldDirection(cache.dir);
-      cache.endUp.set(0, 1, 0).applyQuaternion(cache.endQuat);
+    // True Spherical Orbit Math
+    state.vStart.subVectors(state.startPos, state.center).normalize();
+    state.vMid.subVectors(mid, state.center).normalize();
+    state.angle = state.vStart.angleTo(state.vMid);
+    state.axis.crossVectors(state.vStart, state.vMid).normalize();
 
-      cache.startFov = orbitCam.fov;
-      cache.endFov = planetCam.fov;
-      cache.orbitDistance = cache.startPos.distanceTo(cache.planetCenter);
-
-      // Phase 1: Orbit Target
-      const aboveBehindDir = cache.dir
-        .clone()
-        .negate()
-        .add(cache.endUp)
-        .normalize();
-      cache.midPos
-        .copy(cache.planetCenter)
-        .add(aboveBehindDir.multiplyScalar(cache.orbitDistance));
-
-      // Phase 2: Landing Arc
-      const backVector = cache.dir.clone().negate();
-      cache.p2
-        .copy(cache.endPos)
-        .add(backVector.multiplyScalar(cache.orbitDistance * RUNWAY_LENGTH));
-      cache.p1
-        .copy(cache.midPos)
-        .lerp(cache.p2, 0.5)
-        .add(cache.endUp.clone().multiplyScalar(cache.orbitDistance * 0.3));
-
-      cache.curve.v0.copy(cache.midPos);
-      cache.curve.v1.copy(cache.p1);
-      cache.curve.v2.copy(cache.p2);
-      cache.curve.v3.copy(cache.endPos);
-
-      // --- CALCULATE TRUE SPHERICAL ORBIT ---
-      cache.vStart.subVectors(cache.startPos, cache.planetCenter).normalize();
-      cache.vMid.subVectors(cache.midPos, cache.planetCenter).normalize();
-
-      cache.orbitAngle = cache.vStart.angleTo(cache.vMid);
-      cache.orbitAxis.crossVectors(cache.vStart, cache.vMid);
-
-      // Safety fallback
-      if (cache.orbitAxis.lengthSq() < 0.0001) {
-        cache.orbitAxis.set(0, 1, 0).cross(cache.vStart);
-        if (cache.orbitAxis.lengthSq() < 0.0001)
-          cache.orbitAxis.set(1, 0, 0).cross(cache.vStart);
-      }
-      cache.orbitAxis.normalize();
-
-      // Inherit initial state perfectly
-      transitionCamRef.current.fov = cache.startFov;
-      transitionCamRef.current.position.copy(cache.startPos);
-      transitionCamRef.current.quaternion.copy(cache.startQuat);
-      transitionCamRef.current.updateProjectionMatrix();
-
-      progress.current = 0;
-      initialized.current = true;
-    } else {
-      initialized.current = false;
-    }
-  }, [cameraTransitioning, scene, planetCameraTarget, cache]);
-
-  const easeInOutQuad = (x) =>
-    x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
-  const glideBrakeEase = (x) => 1 - Math.pow(1 - x, LANDING_BRAKE_POWER);
+    // Snap to exact OrbitCamera start
+    cam.current.fov = state.startFov;
+    cam.current.position.copy(state.startPos);
+    cam.current.quaternion.copy(state.startQuat);
+    cam.current.updateProjectionMatrix();
+  }, [cameraTransitioning, scene, target, state]);
 
   useFrame((_, delta) => {
-    if (
-      !cameraTransitioning ||
-      !transitionCamRef.current ||
-      !initialized.current
-    )
-      return;
+    if (!cameraTransitioning || !cam.current) return;
 
-    progress.current += delta / BASE_DURATION;
-
-    if (progress.current >= 1.0) {
-      progress.current = 1.0;
+    state.t += delta / DUR;
+    
+    if (state.t >= 1.0) {
       setCameraTransitioning(false);
-
-      const planetObj = scene.getObjectByName(planetCameraTarget);
-      if (planetObj && planetObj.material) planetObj.material.opacity = 0;
+      const pObj = scene.getObjectByName(target);
+      if (pObj?.material) pObj.material.opacity = 0;
       return;
     }
 
-    const globalEase = easeInOutQuad(progress.current);
+    const ease = (x) => x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+    const globalT = ease(state.t);
 
-    // ==========================================
-    // LIVE TARGET TRACKING
-    // ==========================================
-    const planetCam = scene.getObjectByName("PlanetCamera");
-    if (planetCam) {
-      planetCam.getWorldPosition(cache.endPos);
-      planetCam.getWorldQuaternion(cache.endQuat);
-      planetCam.getWorldDirection(cache.dir);
-      cache.endUp.set(0, 1, 0).applyQuaternion(cache.endQuat);
-
-      const backVector = cache.dir.clone().negate();
-      cache.curve.v2
-        .copy(cache.endPos)
-        .add(backVector.multiplyScalar(cache.orbitDistance * RUNWAY_LENGTH));
-      cache.curve.v3.copy(cache.endPos);
-
-      cache.sightTarget
-        .copy(cache.endPos)
-        .add(cache.dir.clone().multiplyScalar(cache.orbitDistance * 2));
+    // Live Target Tracking
+    const pCam = scene.getObjectByName("PlanetCamera");
+    if (pCam) {
+      pCam.getWorldPosition(state.endPos);
+      pCam.getWorldDirection(state.dir);
+      
+      state.temp.copy(state.dir).multiplyScalar(-state.orbitDist * RUNWAY);
+      state.curve.v2.copy(state.endPos).add(state.temp);
+      state.curve.v3.copy(state.endPos);
     }
 
-    // ==========================================
-    // FOV BLEND (DELAYED)
-    // ==========================================
-    let fovEase = 0;
-    if (progress.current > FOV_BLEND_START) {
-      const fovT =
-        (progress.current - FOV_BLEND_START) / (1.0 - FOV_BLEND_START);
-      fovEase = easeInOutQuad(fovT);
-    }
-    transitionCamRef.current.fov = THREE.MathUtils.lerp(
-      cache.startFov,
-      cache.endFov,
-      fovEase
-    );
-    transitionCamRef.current.updateProjectionMatrix();
-
-    // ==========================================
-    // POSITIONING
-    // ==========================================
-    if (progress.current <= ORBIT_PHASE_END) {
-      const localT = progress.current / ORBIT_PHASE_END;
-      const t = easeInOutQuad(localT);
-
-      cache.vCurrent
-        .copy(cache.vStart)
-        .applyAxisAngle(cache.orbitAxis, cache.orbitAngle * t);
-      transitionCamRef.current.position
-        .copy(cache.planetCenter)
-        .add(cache.vCurrent.multiplyScalar(cache.orbitDistance));
-
-      cache.lookTarget.copy(cache.planetCenter);
+    // POSITION & LOOK TARGET
+    if (state.t <= ORBIT_PCT) {
+      const t = ease(state.t / ORBIT_PCT);
+      state.vCur.copy(state.vStart).applyAxisAngle(state.axis, state.angle * t);
+      cam.current.position.copy(state.center).add(state.vCur.multiplyScalar(state.orbitDist));
+      state.look.copy(state.center);
     } else {
-      const localT =
-        (progress.current - ORBIT_PHASE_END) / (1.0 - ORBIT_PHASE_END);
-      const t = glideBrakeEase(localT);
-
-      cache.curve.getPoint(t, transitionCamRef.current.position);
-
-      const lookEase = easeInOutQuad(localT);
-      cache.lookTarget
-        .copy(cache.planetCenter)
-        .lerp(cache.sightTarget, lookEase);
+      const localT = (state.t - ORBIT_PCT) / (1 - ORBIT_PCT);
+      const t = 1 - Math.pow(1 - localT, 12); // Extreme brake
+      state.curve.getPoint(t, cam.current.position);
+      
+      state.temp.copy(state.dir).multiplyScalar(state.orbitDist * 2);
+      state.sight.copy(state.endPos).add(state.temp);
+      state.look.copy(state.center).lerp(state.sight, ease(localT));
     }
 
-    // ==========================================
-    // ROTATION
-    // ==========================================
-    cache.blendedUp
-      .copy(cache.defaultUp)
-      .lerp(cache.endUp, globalEase)
-      .normalize();
-    transitionCamRef.current.up.copy(cache.blendedUp);
-    transitionCamRef.current.lookAt(cache.lookTarget);
-    cache.trackingQuat.copy(transitionCamRef.current.quaternion);
+    // ROTATION & FOV
+    cam.current.fov = THREE.MathUtils.lerp(state.startFov, state.endFov, state.t > 0.65 ? ease((state.t - 0.65) / 0.35) : 0);
+    cam.current.updateProjectionMatrix();
+    
+    state.temp.set(0, 1, 0).lerp(state.up, globalT).normalize();
+    cam.current.up.copy(state.temp);
+    cam.current.lookAt(state.look);
 
-    if (progress.current < 0.05) {
-      const blend = progress.current / 0.05;
-      transitionCamRef.current.quaternion
-        .copy(cache.startQuat)
-        .slerp(cache.trackingQuat, blend);
-    } else {
-      transitionCamRef.current.quaternion.copy(cache.trackingQuat);
-    }
+    // DYNAMIC CROSSFADE
+    if (state.t >= FADE_START) {
+      const fade = Math.pow((state.t - FADE_START) / (1 - FADE_START), 3);
+      
+      const pObj = scene.getObjectByName(target);
+      if (pObj?.material) pObj.material.opacity = 1 - fade;
 
-    // ==========================================
-    // GROUND & PLANET CROSSFADE (DYNAMIC)
-    // ==========================================
-    const planetObj = scene.getObjectByName(planetCameraTarget);
-
-    // Find ground meshes implicitly by climbing up the tree from PlanetCamera
-    const groundMeshes = [];
-    if (planetCam && planetCam.parent && planetCam.parent.parent) {
-      planetCam.parent.parent.traverse((child) => {
-        // Force the parent groups to be visible (overriding PlanetCamera.jsx hiding logic)
+      pCam?.parent?.parent?.traverse((child) => {
         if (child.isGroup) child.visible = true;
-        if (child.isMesh) groundMeshes.push(child);
-      });
-    }
-
-    if (progress.current >= CROSSFADE_START) {
-      const fadeBlend =
-        (progress.current - CROSSFADE_START) / (1.0 - CROSSFADE_START);
-      const aggressiveFade = Math.pow(fadeBlend, 3);
-
-      if (planetObj && planetObj.material) {
-        planetObj.material.opacity = 1.0 - aggressiveFade;
-      }
-
-      groundMeshes.forEach((mesh) => {
-        mesh.visible = true;
-        if (mesh.material) {
-          mesh.material.transparent = true;
-          // Torus geometry is the horizon, sphere is the solid ground
-          if (mesh.geometry && mesh.geometry.type === "TorusGeometry") {
-            mesh.material.opacity = aggressiveFade * 0.1;
-          } else {
-            mesh.material.opacity = aggressiveFade;
-          }
+        if (child.isMesh && child.material) {
+          child.visible = true;
+          child.material.transparent = true;
+          child.material.opacity = child.geometry?.type === "TorusGeometry" ? fade * 0.1 : fade;
         }
-      });
-    } else {
-      if (planetObj && planetObj.material) planetObj.material.opacity = 1.0;
-      groundMeshes.forEach((mesh) => {
-        if (mesh.material) mesh.material.opacity = 0.0;
       });
     }
   });
 
   if (!cameraTransitioning) return null;
-
-  return (
-    <PerspectiveCamera
-      ref={transitionCamRef}
-      makeDefault={true}
-      near={0.0001}
-      far={10000000}
-    />
-  );
+  return <PerspectiveCamera ref={cam} makeDefault near={0.0001} far={10000000} />;
 }
