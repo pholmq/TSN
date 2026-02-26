@@ -14,8 +14,6 @@ const LevaUI = () => {
     setCameraFollow,
     planetCamera,
     setPlanetCamera,
-    planetCameraHelper,
-    setPlanetCameraHelper,
     orbits,
     setOrbits,
     arrows,
@@ -127,10 +125,7 @@ const LevaUI = () => {
           value: planetCamera,
           onChange: setPlanetCamera,
         },
-        // "Show planet camera position": {
-        //   value: planetCameraHelper,
-        //   onChange: setPlanetCameraHelper,
-        // },
+       
         "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
         Labels: {
           value: showLabels,

@@ -29,7 +29,6 @@ export default function PlanetCamera() {
 
   const { scene } = useThree();
   const planetCamera = useStore((s) => s.planetCamera);
-  const planetCameraHelper = useStore((s) => s.planetCameraHelper);
 
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
 
