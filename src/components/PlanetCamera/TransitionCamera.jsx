@@ -13,7 +13,6 @@ const DUR = 12.0,
 export default function TransitionCamera() {
   const { scene } = useThree();
   const cam = useRef(null);
-
   const planetCamera = useStore((s) => s.planetCamera);
   const { cameraTransitioning, setCameraTransitioning } = useStore();
   const target = usePlanetCameraStore((s) => s.planetCameraTarget);
@@ -45,12 +44,9 @@ export default function TransitionCamera() {
     []
   );
 
-  // FIX: Click-to-Skip functionality
   useEffect(() => {
     const skip = (e) => {
-      if (e.button === 0 && cameraTransitioning) {
-        state.t = 1.0;
-      }
+      if (e.button === 0 && cameraTransitioning) state.t = 1.0;
     };
     window.addEventListener("pointerdown", skip);
     return () => window.removeEventListener("pointerdown", skip);
@@ -62,7 +58,6 @@ export default function TransitionCamera() {
 
   useLayoutEffect(() => {
     if (!cameraTransitioning || !cam.current) return;
-
     const oCam = scene.getObjectByName("OrbitCamera");
     const pCam = scene.getObjectByName("PlanetCamera");
     const pObj = scene.getObjectByName(target);
@@ -80,10 +75,8 @@ export default function TransitionCamera() {
     pCam.getWorldPosition(state.endPos);
     pCam.getWorldQuaternion(state.endQuat);
     pObj.getWorldPosition(state.center);
-
     state.startUp.set(0, 1, 0).applyQuaternion(state.startQuat);
     state.endUp.set(0, 1, 0).applyQuaternion(state.endQuat);
-
     pCam.getWorldDirection(state.dir);
     state.startFov = oCam.fov;
     state.endFov = pCam.fov;
@@ -106,12 +99,10 @@ export default function TransitionCamera() {
       .clone()
       .lerp(p2, 0.5)
       .add(state.endUp.clone().multiplyScalar(state.orbitDist * 0.4));
-
     state.curve.v0.copy(mid);
     state.curve.v1.copy(p1);
     state.curve.v2.copy(p2);
     state.curve.v3.copy(state.endPos);
-
     state.vStart.subVectors(state.startPos, state.center).normalize();
     state.vMid.subVectors(mid, state.center).normalize();
     state.angle = state.vStart.angleTo(state.vMid);
@@ -125,7 +116,6 @@ export default function TransitionCamera() {
 
   useFrame((_, delta) => {
     if (!cameraTransitioning || !cam.current) return;
-
     state.t += delta / DUR;
 
     if (state.t >= 1.0) {
@@ -142,14 +132,12 @@ export default function TransitionCamera() {
 
     const pCam = scene.getObjectByName("PlanetCamera");
     const pObj = scene.getObjectByName(target);
-
     if (pCam && pObj) {
       pCam.getWorldPosition(state.endPos);
       pCam.getWorldDirection(state.dir);
       pObj.getWorldPosition(state.center);
     }
 
-    // POSITION LOGIC
     if (state.t <= ORBIT_PCT) {
       const t = easeInOut(state.t / ORBIT_PCT);
       state.vCur.copy(state.vStart).applyAxisAngle(state.axis, state.angle * t);
@@ -158,11 +146,9 @@ export default function TransitionCamera() {
         .add(state.vCur.multiplyScalar(state.orbitDist));
     } else {
       const localT = (state.t - ORBIT_PCT) / (1 - ORBIT_PCT);
-      const curveT = easeOutEx(localT);
-      state.curve.getPoint(curveT, cam.current.position);
+      state.curve.getPoint(easeOutEx(localT), cam.current.position);
     }
 
-    // LOOK TARGET
     if (state.t < 0.85) {
       state.look.copy(state.center);
     } else {
@@ -172,29 +158,20 @@ export default function TransitionCamera() {
       state.look.copy(state.center).lerp(state.sight, lookT);
     }
 
-    // UPDATE CAMERA
     cam.current.fov = THREE.MathUtils.lerp(
       state.startFov,
       state.endFov,
       state.t > 0.7 ? easeInOut((state.t - 0.7) / 0.3) : 0
     );
     cam.current.updateProjectionMatrix();
-
     state.temp.copy(state.startUp).lerp(state.endUp, globalT).normalize();
     cam.current.up.copy(state.temp);
     cam.current.lookAt(state.look);
 
-    // CROSSFADE
+    // Only fade the planet object here. Ground is handled by PlanetCamera.
     if (state.t >= FADE_START) {
       const fade = Math.pow((state.t - FADE_START) / (1 - FADE_START), 2);
       if (pObj?.material) pObj.material.opacity = 1 - fade;
-      pCam?.parent?.parent?.traverse((child) => {
-        if (child.isMesh && child.material) {
-          child.material.transparent = true;
-          child.material.opacity =
-            child.geometry?.type === "TorusGeometry" ? fade * 0.1 : fade;
-        }
-      });
     }
   });
 
