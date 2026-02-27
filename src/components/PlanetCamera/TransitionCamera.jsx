@@ -57,10 +57,18 @@ export default function TransitionCamera() {
 
   useLayoutEffect(() => {
     if (!cameraTransitioning || !cam.current) return;
+
     const oCam = scene.getObjectByName("OrbitCamera");
     const pCam = scene.getObjectByName("PlanetCamera");
     const pObj = scene.getObjectByName(target);
     if (!oCam || !pCam || !pObj) return;
+
+    // FORCED RESET: Ensure the planet is visible for the transition
+    if (pObj.material) {
+      pObj.material.transparent = true;
+      pObj.material.opacity = 1.0;
+      pObj.material.needsUpdate = true;
+    }
 
     [oCam, pCam, pObj].forEach((obj) => obj.updateMatrixWorld(true));
 
@@ -112,7 +120,6 @@ export default function TransitionCamera() {
   useFrame((_, delta) => {
     if (!cameraTransitioning || !cam.current) return;
     state.t += delta / DUR;
-
     if (state.t >= 1.0) {
       setCameraTransitioning(false);
       return;
@@ -122,7 +129,6 @@ export default function TransitionCamera() {
     const easeInOut = (x) =>
       x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
     const globalT = easeInOut(state.t);
-
     const pCam = scene.getObjectByName("PlanetCamera");
     const pObj = scene.getObjectByName(target);
     if (pCam && pObj) {
@@ -139,16 +145,16 @@ export default function TransitionCamera() {
         .add(state.vCur.multiplyScalar(state.orbitDist));
     } else {
       const localT = (state.t - ORBIT_PCT) / (1 - ORBIT_PCT);
-      const curveT = easeOutEx(localT);
-      state.curve.getPoint(curveT, cam.current.position);
+      state.curve.getPoint(easeOutEx(localT), cam.current.position);
     }
 
     if (state.t < 0.85) {
       state.look.copy(state.center);
     } else {
       const lookT = easeInOut((state.t - 0.85) / 0.15);
-      state.temp.copy(state.dir).multiplyScalar(state.orbitDist * 0.5);
-      state.sight.copy(state.endPos).add(state.temp);
+      state.sight
+        .copy(state.endPos)
+        .add(state.temp.copy(state.dir).multiplyScalar(state.orbitDist * 0.5));
       state.look.copy(state.center).lerp(state.sight, lookT);
     }
 
@@ -158,8 +164,7 @@ export default function TransitionCamera() {
       state.t > 0.7 ? easeInOut((state.t - 0.7) / 0.3) : 0
     );
     cam.current.updateProjectionMatrix();
-    state.temp.copy(state.startUp).lerp(state.endUp, globalT).normalize();
-    cam.current.up.copy(state.temp);
+    cam.current.up.copy(state.startUp).lerp(state.endUp, globalT).normalize();
     cam.current.lookAt(state.look);
   });
 
