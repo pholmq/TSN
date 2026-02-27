@@ -25,7 +25,7 @@ export default function PlanetCamera() {
   const targetObjRef = useRef(null);
   const prevTargetRef = useRef(null);
 
-  const groundFade = useRef(0); // For the slow entrance fade
+  const groundFade = useRef(0);
 
   const { scene } = useThree();
   const planetCamera = useStore((s) => s.planetCamera);
@@ -42,18 +42,22 @@ export default function PlanetCamera() {
     planCamFar,
     showGround,
   } = usePlanetCameraStore();
+
   const groundHeight = kmToUnits(usePlanetCameraStore((s) => s.groundHeight));
+  const getSetting = useSettingsStore((s) => s.getSetting);
   const planetRadiusKm = unitsToKm(
-    useSettingsStore((s) => s.getSetting)(planetCameraTarget)?.actualSize ||
-      0.00426
+    getSetting(planetCameraTarget)?.actualSize || 0.00426
   );
 
+  // FIXED STAR ZOOM LOGIC
+  const setStarScale = useStore((s) => s.setStarScale);
+  const initialStarScaleRef = useRef(useStore.getState().starScale);
+
   useEffect(() => {
+    // Baseline ratio from FOV 45
     const dampenedRatio = Math.pow(45 / planCamFov, 0.5);
-    useStore
-      .getState()
-      .setStarScale(useStore.getState().starScale * dampenedRatio);
-  }, [planCamFov]);
+    setStarScale(initialStarScaleRef.current * dampenedRatio);
+  }, [planCamFov, setStarScale]);
 
   useLayoutEffect(() => {
     if (prevTargetRef.current?.material)
@@ -64,16 +68,13 @@ export default function PlanetCamera() {
     prevTargetRef.current = targetObjRef.current;
   }, [planetCameraTarget, scene]);
 
-  // Reset ground fade when a transition begins
   useEffect(() => {
     if (cameraTransitioning) groundFade.current = 0;
   }, [cameraTransitioning]);
 
   useFrame((_, delta) => {
-    // Slow Fade In: Increase by delta * 0.4 (~2.5 seconds total)
     if (!cameraTransitioning && planetCamera && groundFade.current < 1) {
       groundFade.current = Math.min(1, groundFade.current + delta * 0.4);
-
       if (groundMountRef.current) {
         groundMountRef.current.traverse((child) => {
           if (child.isMesh && child.material) {
@@ -87,7 +88,7 @@ export default function PlanetCamera() {
     }
   });
 
-  // Height-based Fade: Handover control only once the entry fade is done
+  // Height-based Visibility logic
   useEffect(() => {
     if (!latAxisRef.current || cameraTransitioning || groundFade.current < 1)
       return;
@@ -109,22 +110,26 @@ export default function PlanetCamera() {
         gOpacity = 1 - pOpacity;
       }
 
-      // Restore planet opacity logic
+      // Update Planet Visibility
       targetObjRef.current.material.transparent = true;
-      targetObjRef.current.material.opacity = pOpacity;
+      targetObjRef.current.material.opacity = showGround ? pOpacity : 1.0;
       targetObjRef.current.material.needsUpdate = true;
 
+      // Update Ground Visibility
       if (groundMountRef.current) {
-        groundMountRef.current.traverse((child) => {
-          if (child.isMesh && child.material) {
-            child.material.transparent = true;
-            child.material.opacity = gOpacity;
-          }
-        });
-        groundMountRef.current.visible = gOpacity > 0;
+        if (showGround) {
+          groundMountRef.current.traverse((child) => {
+            if (child.isMesh && child.material) {
+              child.material.transparent = true;
+              child.material.opacity = gOpacity;
+            }
+          });
+          groundMountRef.current.visible = gOpacity > 0;
+        } else {
+          groundMountRef.current.visible = false;
+        }
       }
 
-      // Cleanup if planet camera is turned off
       if (!planetCamera) {
         targetObjRef.current.material.opacity = 1;
         if (groundMountRef.current) groundMountRef.current.visible = false;
@@ -165,7 +170,7 @@ export default function PlanetCamera() {
           <group
             ref={groundMountRef}
             position={[0, kmToUnits(planetRadiusKm) + groundHeight, 0]}
-            visible={false}
+            visible={showGround}
           >
             <Ground />
           </group>

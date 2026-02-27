@@ -139,7 +139,8 @@ export default function TransitionCamera() {
         .add(state.vCur.multiplyScalar(state.orbitDist));
     } else {
       const localT = (state.t - ORBIT_PCT) / (1 - ORBIT_PCT);
-      state.curve.getPoint(easeOutEx(localT), cam.current.position);
+      const curveT = easeOutEx(localT);
+      state.curve.getPoint(curveT, cam.current.position);
     }
 
     if (state.t < 0.85) {
@@ -162,8 +163,12 @@ export default function TransitionCamera() {
     cam.current.lookAt(state.look);
   });
 
-  if (!cameraTransitioning) return null;
   return (
-    <PerspectiveCamera ref={cam} makeDefault near={0.0001} far={10000000} />
+    <PerspectiveCamera
+      ref={cam}
+      makeDefault={cameraTransitioning}
+      near={0.0001}
+      far={10000000}
+    />
   );
 }
