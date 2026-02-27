@@ -5,10 +5,9 @@ import * as THREE from "three";
 import { useStore } from "../../store";
 import { usePlanetCameraStore } from "./planetCameraStore";
 
-// Adjusted DUR for a more cinematic feel
 const DUR = 12.0,
   ORBIT_PCT = 0.4,
-  RUNWAY = 0.3,
+  RUNWAY = 0.5,
   FADE_START = 0.85;
 
 export default function TransitionCamera() {
@@ -45,6 +44,17 @@ export default function TransitionCamera() {
     }),
     []
   );
+
+  // FIX: Click-to-Skip functionality
+  useEffect(() => {
+    const skip = (e) => {
+      if (e.button === 0 && cameraTransitioning) {
+        state.t = 1.0;
+      }
+    };
+    window.addEventListener("pointerdown", skip);
+    return () => window.removeEventListener("pointerdown", skip);
+  }, [cameraTransitioning, state]);
 
   useEffect(() => {
     if (planetCamera) setCameraTransitioning(true);
@@ -117,6 +127,7 @@ export default function TransitionCamera() {
     if (!cameraTransitioning || !cam.current) return;
 
     state.t += delta / DUR;
+
     if (state.t >= 1.0) {
       setCameraTransitioning(false);
       const pObj = scene.getObjectByName(target);
@@ -124,7 +135,7 @@ export default function TransitionCamera() {
       return;
     }
 
-    const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
+    const easeOutEx = (x) => 1 - Math.pow(1 - x, 6);
     const easeInOut = (x) =>
       x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
     const globalT = easeInOut(state.t);
@@ -147,12 +158,11 @@ export default function TransitionCamera() {
         .add(state.vCur.multiplyScalar(state.orbitDist));
     } else {
       const localT = (state.t - ORBIT_PCT) / (1 - ORBIT_PCT);
-      // Changed from Math.pow(..., 12) to easeOutCubic for a much slower final approach
-      const curveT = easeOutCubic(localT);
+      const curveT = easeOutEx(localT);
       state.curve.getPoint(curveT, cam.current.position);
     }
 
-    // LOOK TARGET - Locked on planet until the very end
+    // LOOK TARGET
     if (state.t < 0.85) {
       state.look.copy(state.center);
     } else {
