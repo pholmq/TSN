@@ -95,14 +95,24 @@ export default function PlanetCamera() {
     if (targetObjRef.current?.material) {
       const lowHeight = planetRadiusKm * 1.0005;
       const highHeight = planetRadiusKm * 1.001;
-      let gOpacity;
+      let pOpacity, gOpacity;
 
-      if (planCamHeight <= lowHeight) gOpacity = 1;
-      else if (planCamHeight >= highHeight) gOpacity = 0;
-      else
-        gOpacity =
-          1 -
-          Math.pow((planCamHeight - lowHeight) / (highHeight - lowHeight), 3);
+      if (planCamHeight <= lowHeight) {
+        pOpacity = 0;
+        gOpacity = 1;
+      } else if (planCamHeight >= highHeight) {
+        pOpacity = 1;
+        gOpacity = 0;
+      } else {
+        const prog = (planCamHeight - lowHeight) / (highHeight - lowHeight);
+        pOpacity = Math.pow(prog, 3);
+        gOpacity = 1 - pOpacity;
+      }
+
+      // Restore planet opacity logic
+      targetObjRef.current.material.transparent = true;
+      targetObjRef.current.material.opacity = pOpacity;
+      targetObjRef.current.material.needsUpdate = true;
 
       if (groundMountRef.current) {
         groundMountRef.current.traverse((child) => {
@@ -112,6 +122,12 @@ export default function PlanetCamera() {
           }
         });
         groundMountRef.current.visible = gOpacity > 0;
+      }
+
+      // Cleanup if planet camera is turned off
+      if (!planetCamera) {
+        targetObjRef.current.material.opacity = 1;
+        if (groundMountRef.current) groundMountRef.current.visible = false;
       }
     }
   }, [

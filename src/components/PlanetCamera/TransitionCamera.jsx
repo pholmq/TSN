@@ -7,8 +7,7 @@ import { usePlanetCameraStore } from "./planetCameraStore";
 
 const DUR = 12.0,
   ORBIT_PCT = 0.4,
-  RUNWAY = 0.5,
-  FADE_START = 0.85;
+  RUNWAY = 0.5;
 
 export default function TransitionCamera() {
   const { scene } = useThree();
@@ -64,10 +63,6 @@ export default function TransitionCamera() {
     if (!oCam || !pCam || !pObj) return;
 
     [oCam, pCam, pObj].forEach((obj) => obj.updateMatrixWorld(true));
-    if (pObj.material) {
-      pObj.material.transparent = true;
-      pObj.material.opacity = 1;
-    }
 
     state.t = 0;
     oCam.getWorldPosition(state.startPos);
@@ -120,8 +115,6 @@ export default function TransitionCamera() {
 
     if (state.t >= 1.0) {
       setCameraTransitioning(false);
-      const pObj = scene.getObjectByName(target);
-      if (pObj?.material) pObj.material.opacity = 0;
       return;
     }
 
@@ -167,12 +160,6 @@ export default function TransitionCamera() {
     state.temp.copy(state.startUp).lerp(state.endUp, globalT).normalize();
     cam.current.up.copy(state.temp);
     cam.current.lookAt(state.look);
-
-    // Only fade the planet object here. Ground is handled by PlanetCamera.
-    if (state.t >= FADE_START) {
-      const fade = Math.pow((state.t - FADE_START) / (1 - FADE_START), 2);
-      if (pObj?.material) pObj.material.opacity = 1 - fade;
-    }
   });
 
   if (!cameraTransitioning) return null;
