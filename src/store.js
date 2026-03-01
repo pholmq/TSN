@@ -32,7 +32,7 @@ export const useStore = create((set) => ({
   planetCamera: false,
   setPlanetCamera: (v) => set({ planetCamera: v }),
 
-  planetCameraHelper: true,
+  planetCameraHelper: false,
   setPlanetCameraHelper: (v) => set({ planetCameraHelper: v }),
 
   orbits: true,
