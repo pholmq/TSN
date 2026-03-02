@@ -79,8 +79,9 @@ export default function PlanetCamera() {
       if (groundMountRef.current) {
         groundMountRef.current.traverse((child) => {
           if (child.isMesh && child.material) {
+            const baseOpacity = child.userData.baseOpacity || 1; // Safely read the base opacity
             child.material.transparent = true;
-            child.material.opacity = groundFade.current;
+            child.material.opacity = baseOpacity * groundFade.current;
           }
         });
         groundMountRef.current.visible = true;
@@ -111,8 +112,9 @@ export default function PlanetCamera() {
         if (showGround && groundFade.current >= 1) {
           groundMountRef.current.traverse((child) => {
             if (child.isMesh && child.material) {
+              const baseOpacity = child.userData.baseOpacity || 1; // Safely read the base opacity
               child.material.transparent = true;
-              child.material.opacity = gOpacity;
+              child.material.opacity = baseOpacity * gOpacity;
             }
           });
           groundMountRef.current.visible = gOpacity > 0;
