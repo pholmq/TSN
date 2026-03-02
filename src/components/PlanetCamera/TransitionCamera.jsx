@@ -39,7 +39,7 @@ export default function TransitionCamera() {
       leveledQuat: new THREE.Quaternion(),
       look: new THREE.Vector3(),
       sight: new THREE.Vector3(),
-      startSight: new THREE.Vector3(), // ADDED: To capture the initial focal point
+      startSight: new THREE.Vector3(),
       vCur: new THREE.Vector3(),
       temp: new THREE.Vector3(),
       angle: 0,
@@ -91,7 +91,6 @@ export default function TransitionCamera() {
     state.endFov = pCam.fov;
     state.orbitDist = state.startPos.distanceTo(state.center);
 
-    // --- NEW: Calculate exactly where the OrbitCamera is currently looking ---
     const oCamForward = new THREE.Vector3(0, 0, -1)
       .applyQuaternion(state.startQuat)
       .normalize();
@@ -99,7 +98,6 @@ export default function TransitionCamera() {
       .copy(state.startPos)
       .add(oCamForward.multiplyScalar(state.orbitDist));
 
-    // --- THE HORIZONTAL RUNWAY TARGET ---
     const mountQuat = new THREE.Quaternion();
     mount.getWorldQuaternion(mountQuat);
     const localYawQuat = new THREE.Quaternion().setFromAxisAngle(
@@ -113,7 +111,6 @@ export default function TransitionCamera() {
       .normalize();
     state.leveledUp.set(0, 1, 0).applyQuaternion(state.leveledQuat).normalize();
 
-    // Calculate mid using the SAFE horizontal runway vector
     const mid = state.center
       .clone()
       .add(
@@ -124,7 +121,6 @@ export default function TransitionCamera() {
           .multiplyScalar(state.orbitDist)
       );
 
-    // Calculate the curve
     const p2 = state.endPos
       .clone()
       .add(worldBackward.clone().multiplyScalar(state.orbitDist * RUNWAY));
@@ -137,7 +133,6 @@ export default function TransitionCamera() {
     state.curve.v2.copy(p2);
     state.curve.v3.copy(state.endPos);
 
-    // Target look position for the end of the glide (horizontal forward)
     const forward = new THREE.Vector3(0, 0, -1)
       .applyQuaternion(state.leveledQuat)
       .normalize();
@@ -145,7 +140,6 @@ export default function TransitionCamera() {
       .copy(state.endPos)
       .add(forward.multiplyScalar(state.orbitDist * 0.5));
 
-    // Your mathematical spherical orbit logic
     state.vStart.subVectors(state.startPos, state.center).normalize();
     state.vMid.subVectors(mid, state.center).normalize();
     state.angle = state.vStart.angleTo(state.vMid);
@@ -161,7 +155,22 @@ export default function TransitionCamera() {
     if (!cameraTransitioning || !cam.current) return;
     state.t += delta / DUR;
 
+    // --- FIX 1: DYNAMIC ROTATION TRACKING ---
+    const pCam = scene.getObjectByName("PlanetCamera");
+    if (pCam) {
+      pCam.getWorldPosition(state.endPos);
+      pCam.getWorldQuaternion(state.endQuat); // Ensure the target rotation never goes stale!
+    }
+
     if (state.t >= 1.0) {
+      // --- FIX 2: FORCE 100% MATHEMATICAL ALIGNMENT BEFORE SWAPPING ---
+      // This explicitly removes the 99.9% render micro-flicker by snapping
+      // matrices perfectly to the PlanetCamera right before handoff.
+      cam.current.position.copy(state.endPos);
+      cam.current.quaternion.copy(state.endQuat);
+      cam.current.fov = state.endFov;
+      cam.current.updateProjectionMatrix();
+
       setCameraTransitioning(false);
       return;
     }
@@ -170,11 +179,6 @@ export default function TransitionCamera() {
     const easeInOut = (x) =>
       x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
 
-    // Ensure moving objects are tracked
-    const pCam = scene.getObjectByName("PlanetCamera");
-    if (pCam) pCam.getWorldPosition(state.endPos);
-
-    // --- PHASE 1: ORBIT (No rolls, smoothly pan look target to planet camera) ---
     if (state.t <= ORBIT_PCT) {
       const localT = state.t / ORBIT_PCT;
       const t = easeInOut(localT);
@@ -185,19 +189,27 @@ export default function TransitionCamera() {
         .add(state.vCur.multiplyScalar(state.orbitDist));
 
       cam.current.up.copy(state.startUp);
-
-      // FIX: Smoothly interpolate the look target from its original sightline to the planet camera
       state.look.copy(state.startSight).lerp(state.endPos, t);
       cam.current.lookAt(state.look);
-    }
-
-    // --- PHASE 2: FLY IN (Roll to horizontal, look ahead) ---
-    else if (state.t <= GLIDE_PCT) {
+    } else if (state.t <= GLIDE_PCT) {
       const localT = (state.t - ORBIT_PCT) / (GLIDE_PCT - ORBIT_PCT);
       const tPos = easeOutEx(localT);
       const tLook = easeInOut(localT);
 
       state.curve.getPoint(tPos, cam.current.position);
+
+      const landingRadius = state.endPos.distanceTo(state.center);
+      const currentRadius = cam.current.position.distanceTo(state.center);
+
+      if (currentRadius < landingRadius) {
+        const outwardDir = cam.current.position
+          .clone()
+          .sub(state.center)
+          .normalize();
+        cam.current.position
+          .copy(state.center)
+          .add(outwardDir.multiplyScalar(landingRadius));
+      }
 
       cam.current.up
         .copy(state.startUp)
@@ -206,23 +218,26 @@ export default function TransitionCamera() {
 
       state.look.copy(state.endPos).lerp(state.sight, tLook);
       cam.current.lookAt(state.look);
-    }
 
-    // --- PHASE 3: LANDED ADJUST (Tilt to Planet Camera pitch, adjust FOV) ---
-    else {
+      cam.current.fov = THREE.MathUtils.lerp(
+        state.startFov,
+        state.endFov,
+        tLook
+      );
+      cam.current.updateProjectionMatrix();
+    } else {
       const localT = (state.t - GLIDE_PCT) / (1 - GLIDE_PCT);
       const t = easeInOut(localT);
 
       cam.current.position.copy(state.endPos);
 
-      // Tilt from leveled horizontal to final custom pitch
       cam.current.quaternion.slerpQuaternions(
         state.leveledQuat,
         state.endQuat,
         t
       );
 
-      cam.current.fov = THREE.MathUtils.lerp(state.startFov, state.endFov, t);
+      cam.current.fov = state.endFov;
       cam.current.updateProjectionMatrix();
     }
   });
