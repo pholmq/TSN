@@ -2,8 +2,10 @@ import { useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
-import { useStore } from "../../store";
+import { useStore, useSettingsStore } from "../../store"; // Added useSettingsStore
 import { usePlanetCameraStore } from "./planetCameraStore";
+import { Ground } from "./Ground"; // Added Ground Component
+import { kmToUnits, unitsToKm } from "../../utils/celestial-functions"; // Added math utilities
 
 const DUR = 12.0;
 const ORBIT_PCT = 0.4;
@@ -13,6 +15,7 @@ const RUNWAY = 0.5;
 export default function TransitionCamera() {
   const { scene } = useThree();
   const cam = useRef(null);
+  const groundRef = useRef(null); // Reference for our fade-in ground
   const planetCamera = useStore((s) => s.planetCamera);
   const { cameraTransitioning, setCameraTransitioning } = useStore();
   const target = usePlanetCameraStore((s) => s.planetCameraTarget);
@@ -43,6 +46,7 @@ export default function TransitionCamera() {
       vCur: new THREE.Vector3(),
       temp: new THREE.Vector3(),
       angle: 0,
+      groundPos: new THREE.Vector3(), // Added vector for the Ground's world position
     }),
     []
   );
@@ -111,6 +115,19 @@ export default function TransitionCamera() {
       .normalize();
     state.leveledUp.set(0, 1, 0).applyQuaternion(state.leveledQuat).normalize();
 
+    // --- CALCULATE PERFECT GROUND POSITION ---
+    // Mathematically calculates the exact world-space coordinates where the PlanetCamera places its ground
+    const planetRadiusKm = unitsToKm(
+      useSettingsStore.getState().getSetting(target)?.actualSize || 0.00426
+    );
+    const groundHeightUnits = kmToUnits(
+      usePlanetCameraStore.getState().groundHeight
+    );
+    const groundOffset = kmToUnits(planetRadiusKm) + groundHeightUnits;
+    state.groundPos
+      .copy(state.center)
+      .add(state.leveledUp.clone().multiplyScalar(groundOffset));
+
     const mid = state.center
       .clone()
       .add(
@@ -155,22 +172,7 @@ export default function TransitionCamera() {
     if (!cameraTransitioning || !cam.current) return;
     state.t += delta / DUR;
 
-    // --- FIX 1: DYNAMIC ROTATION TRACKING ---
-    const pCam = scene.getObjectByName("PlanetCamera");
-    if (pCam) {
-      pCam.getWorldPosition(state.endPos);
-      pCam.getWorldQuaternion(state.endQuat); // Ensure the target rotation never goes stale!
-    }
-
     if (state.t >= 1.0) {
-      // --- FIX 2: FORCE 100% MATHEMATICAL ALIGNMENT BEFORE SWAPPING ---
-      // This explicitly removes the 99.9% render micro-flicker by snapping
-      // matrices perfectly to the PlanetCamera right before handoff.
-      cam.current.position.copy(state.endPos);
-      cam.current.quaternion.copy(state.endQuat);
-      cam.current.fov = state.endFov;
-      cam.current.updateProjectionMatrix();
-
       setCameraTransitioning(false);
       return;
     }
@@ -178,6 +180,32 @@ export default function TransitionCamera() {
     const easeOutEx = (x) => 1 - Math.pow(1 - x, 6);
     const easeInOut = (x) =>
       x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+
+    // --- GROUND FADE LOGIC ---
+    if (groundRef.current) {
+      groundRef.current.position.copy(state.groundPos);
+      groundRef.current.quaternion.copy(state.leveledQuat);
+
+      // Kicks in much earlier (t > 0.5) so it hides clipping flawlessly
+      if (state.t > 0.5) {
+        groundRef.current.visible = true;
+        const fade = THREE.MathUtils.clamp((state.t - 0.5) / 0.3, 0, 1);
+        groundRef.current.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            // Preserves the 0.1 horizon / 1.0 ground ratio from your component
+            const baseOpacity =
+              child.geometry.type === "TorusGeometry" ? 0.1 : 1.0;
+            child.material.opacity = baseOpacity * fade;
+          }
+        });
+      } else {
+        groundRef.current.visible = false;
+      }
+    }
+
+    const pCam = scene.getObjectByName("PlanetCamera");
+    if (pCam) pCam.getWorldPosition(state.endPos);
 
     if (state.t <= ORBIT_PCT) {
       const localT = state.t / ORBIT_PCT;
@@ -189,6 +217,7 @@ export default function TransitionCamera() {
         .add(state.vCur.multiplyScalar(state.orbitDist));
 
       cam.current.up.copy(state.startUp);
+
       state.look.copy(state.startSight).lerp(state.endPos, t);
       cam.current.lookAt(state.look);
     } else if (state.t <= GLIDE_PCT) {
@@ -219,6 +248,8 @@ export default function TransitionCamera() {
       state.look.copy(state.endPos).lerp(state.sight, tLook);
       cam.current.lookAt(state.look);
 
+      // --- MOVED FOV LERP ---
+      // Dynamically zooming during the forward flight prevents the "moving backward" illusion
       cam.current.fov = THREE.MathUtils.lerp(
         state.startFov,
         state.endFov,
@@ -237,17 +268,24 @@ export default function TransitionCamera() {
         t
       );
 
+      // --- LOCKED FOV ---
       cam.current.fov = state.endFov;
       cam.current.updateProjectionMatrix();
     }
   });
 
   return (
-    <PerspectiveCamera
-      ref={cam}
-      makeDefault={cameraTransitioning}
-      near={0.0001}
-      far={10000000}
-    />
+    <>
+      <PerspectiveCamera
+        ref={cam}
+        makeDefault={cameraTransitioning}
+        near={0.0001}
+        far={10000000}
+      />
+      {/* Renders precisely in the world space over the fading planet */}
+      {/* <group ref={groundRef} visible={false}>
+        <Ground />
+      </group> */}
+    </>
   );
 }
