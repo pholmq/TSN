@@ -48,13 +48,34 @@ export default function PlanetCamera() {
   const groundHeight = kmToUnits(usePlanetCameraStore((s) => s.groundHeight));
 
   const setStarScale = useStore((s) => s.setStarScale);
-  const initialStarScaleRef = useRef(useStore.getState().starScale);
+  const originalScaleRef = useRef(null);
 
+  // 1. CAPTURE & RESTORE EFFECT
   useEffect(() => {
-    const rawRatio = 45 / planCamFov;
-    const dampenedRatio = Math.pow(rawRatio, 0.5);
-    setStarScale(initialStarScaleRef.current * dampenedRatio);
-  }, [planCamFov, setStarScale]);
+    if (planetCamera) {
+      // Capture the clean, normal star scale the exact moment the camera engages
+      originalScaleRef.current = useStore.getState().starScale;
+    }
+
+    // CLEANUP FUNCTION: This is guaranteed to run when the component unmounts
+    // or when planetCamera turns false, safely restoring the stars!
+    return () => {
+      if (planetCamera && originalScaleRef.current !== null) {
+        setStarScale(originalScaleRef.current);
+        originalScaleRef.current = null;
+      }
+    };
+  }, [planetCamera, setStarScale]);
+
+  // 2. DYNAMIC ZOOM EFFECT
+  useEffect(() => {
+    if (planetCamera && originalScaleRef.current !== null) {
+      // Apply the dynamic FOV dampening against the clean base scale
+      const rawRatio = 45 / planCamFov;
+      const dampenedRatio = Math.pow(rawRatio, 0.5);
+      setStarScale(originalScaleRef.current * dampenedRatio);
+    }
+  }, [planCamFov, planetCamera, setStarScale]);
 
   useLayoutEffect(() => {
     if (planetCamSystemRef.current.parent)
