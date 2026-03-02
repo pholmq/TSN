@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useMemo, useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PerspectiveCamera } from "@react-three/drei";
@@ -46,6 +46,19 @@ export default function PlanetCamera() {
       0.00426
   );
   const groundHeight = kmToUnits(usePlanetCameraStore((s) => s.groundHeight));
+
+  // Calculate altitude-based opacities globally so both hooks can use them
+  const { pOpacity, gOpacity } = useMemo(() => {
+    const low = planetRadiusKm * 1.0005;
+    const high = planetRadiusKm * 1.001;
+    let p =
+      planCamHeight <= low
+        ? 0
+        : planCamHeight >= high
+        ? 1
+        : Math.pow((planCamHeight - low) / (high - low), 3);
+    return { pOpacity: p, gOpacity: 1 - p };
+  }, [planCamHeight, planetRadiusKm]);
 
   const setStarScale = useStore((s) => s.setStarScale);
   const originalScaleRef = useRef(null);
@@ -98,14 +111,21 @@ export default function PlanetCamera() {
     ) {
       groundFade.current = Math.min(1, groundFade.current + delta * 0.4);
       if (groundMountRef.current) {
-        groundMountRef.current.traverse((child) => {
-          if (child.isMesh && child.material) {
-            const baseOpacity = child.userData.baseOpacity || 1; // Safely read the base opacity
-            child.material.transparent = true;
-            child.material.opacity = baseOpacity * groundFade.current;
-          }
-        });
-        groundMountRef.current.visible = true;
+        // ONLY show the ground if the altitude logic (gOpacity) allows it
+        if (gOpacity > 0) {
+          groundMountRef.current.traverse((child) => {
+            if (child.isMesh && child.material) {
+              const baseOpacity = child.userData.baseOpacity || 1;
+              child.material.transparent = true;
+              // Combine the fade-in animation WITH the altitude opacity
+              child.material.opacity =
+                baseOpacity * groundFade.current * gOpacity;
+            }
+          });
+          groundMountRef.current.visible = true;
+        } else {
+          groundMountRef.current.visible = false;
+        }
       }
     }
   });
