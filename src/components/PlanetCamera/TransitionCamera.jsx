@@ -39,6 +39,7 @@ export default function TransitionCamera() {
       leveledQuat: new THREE.Quaternion(),
       look: new THREE.Vector3(),
       sight: new THREE.Vector3(),
+      startSight: new THREE.Vector3(), // ADDED: To capture the initial focal point
       vCur: new THREE.Vector3(),
       temp: new THREE.Vector3(),
       angle: 0,
@@ -90,8 +91,15 @@ export default function TransitionCamera() {
     state.endFov = pCam.fov;
     state.orbitDist = state.startPos.distanceTo(state.center);
 
+    // --- NEW: Calculate exactly where the OrbitCamera is currently looking ---
+    const oCamForward = new THREE.Vector3(0, 0, -1)
+      .applyQuaternion(state.startQuat)
+      .normalize();
+    state.startSight
+      .copy(state.startPos)
+      .add(oCamForward.multiplyScalar(state.orbitDist));
+
     // --- THE HORIZONTAL RUNWAY TARGET ---
-    // Extract purely leveled directions to avoid clipping into the planet
     const mountQuat = new THREE.Quaternion();
     mount.getWorldQuaternion(mountQuat);
     const localYawQuat = new THREE.Quaternion().setFromAxisAngle(
@@ -166,7 +174,7 @@ export default function TransitionCamera() {
     const pCam = scene.getObjectByName("PlanetCamera");
     if (pCam) pCam.getWorldPosition(state.endPos);
 
-    // --- PHASE 1: ORBIT (No rolls, looking at planet camera) ---
+    // --- PHASE 1: ORBIT (No rolls, smoothly pan look target to planet camera) ---
     if (state.t <= ORBIT_PCT) {
       const localT = state.t / ORBIT_PCT;
       const t = easeInOut(localT);
@@ -177,7 +185,10 @@ export default function TransitionCamera() {
         .add(state.vCur.multiplyScalar(state.orbitDist));
 
       cam.current.up.copy(state.startUp);
-      cam.current.lookAt(state.endPos);
+
+      // FIX: Smoothly interpolate the look target from its original sightline to the planet camera
+      state.look.copy(state.startSight).lerp(state.endPos, t);
+      cam.current.lookAt(state.look);
     }
 
     // --- PHASE 2: FLY IN (Roll to horizontal, look ahead) ---
