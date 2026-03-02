@@ -5,42 +5,22 @@ export function Ground() {
   const groundSize = usePlanetCameraStore((s) => s.groundSize) / 10000;
   const planetCameraTarget = usePlanetCameraStore((s) => s.planetCameraTarget);
 
-  // Define colors for each planet
   const planetGroundColors = {
-    Earth: {
-      ground: "#003300", // Dark green
-      horizon: "#004400", // Slightly lighter green (very subtle)
-    },
-    Moon: {
-      ground: "#4A4A4A", // Medium gray
-      horizon: "#8B8B8B", // Lighter gray
-    },
-    Mars: {
-      ground: "#B7410E", // Rust orange-red
-      horizon: "#D2691E", // Chocolate/tan
-    },
-    Mercury: {
-      ground: "#696969", // Dim gray (darker than Moon)
-      horizon: "#A9A9A9", // Dark gray (lighter than ground)
-    },
-    Venus: {
-      ground: "#B8860B", // Dark goldenrod
-      horizon: "#DAA520", // Lighter goldenrod
-    },
-    Sun: {
-      ground: "#FFA500", // Orange
-      horizon: "#FFD700", // Gold
-    },
+    Earth: { ground: "#003300", horizon: "#004400" },
+    Moon: { ground: "#4A4A4A", horizon: "#8B8B8B" },
+    Mars: { ground: "#B7410E", horizon: "#D2691E" },
+    Mercury: { ground: "#696969", horizon: "#A9A9A9" },
+    Venus: { ground: "#B8860B", horizon: "#DAA520" },
+    Sun: { ground: "#FFA500", horizon: "#FFD700" },
   };
 
-  // Get colors for current planet, default to Earth if not found
   const colors =
     planetGroundColors[planetCameraTarget] || planetGroundColors.Earth;
 
   return (
     <group>
-      {/* Horizon ring (torus) - slightly brighter/different color */}
-      <mesh rotation-x={-Math.PI / 2}>
+      {/* Horizon ring - Base opacity 0.1 */}
+      <mesh rotation-x={-Math.PI / 2} userData={{ baseOpacity: 0.1 }}>
         <torusGeometry args={[groundSize, groundSize / 200, 32, 100]} />
         <meshBasicMaterial
           color={colors.horizon}
@@ -50,8 +30,8 @@ export function Ground() {
         />
       </mesh>
 
-      {/* Ground hemisphere */}
-      <mesh rotation-x={Math.PI}>
+      {/* Ground hemisphere - Base opacity 0.7 (Slightly transparent!) */}
+      <mesh rotation-x={Math.PI} userData={{ baseOpacity: 0.7 }}>
         <sphereGeometry
           args={[groundSize, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]}
         />
@@ -59,7 +39,7 @@ export function Ground() {
           color={colors.ground}
           side={THREE.DoubleSide}
           transparent={true}
-          opacity={1}
+          opacity={0.7}
         />
       </mesh>
     </group>

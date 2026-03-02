@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useMemo, useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PerspectiveCamera } from "@react-three/drei";
@@ -47,14 +47,48 @@ export default function PlanetCamera() {
   );
   const groundHeight = kmToUnits(usePlanetCameraStore((s) => s.groundHeight));
 
-  const setStarScale = useStore((s) => s.setStarScale);
-  const initialStarScaleRef = useRef(useStore.getState().starScale);
+  // Calculate altitude-based opacities globally so both hooks can use them
+  const { pOpacity, gOpacity } = useMemo(() => {
+    const low = planetRadiusKm * 1.0005;
+    const high = planetRadiusKm * 1.001;
+    let p =
+      planCamHeight <= low
+        ? 0
+        : planCamHeight >= high
+        ? 1
+        : Math.pow((planCamHeight - low) / (high - low), 3);
+    return { pOpacity: p, gOpacity: 1 - p };
+  }, [planCamHeight, planetRadiusKm]);
 
+  const setStarScale = useStore((s) => s.setStarScale);
+  const originalScaleRef = useRef(null);
+
+  // 1. CAPTURE & RESTORE EFFECT
   useEffect(() => {
-    const rawRatio = 45 / planCamFov;
-    const dampenedRatio = Math.pow(rawRatio, 0.5);
-    setStarScale(initialStarScaleRef.current * dampenedRatio);
-  }, [planCamFov, setStarScale]);
+    if (planetCamera) {
+      // Capture the clean, normal star scale the exact moment the camera engages
+      originalScaleRef.current = useStore.getState().starScale;
+    }
+
+    // CLEANUP FUNCTION: This is guaranteed to run when the component unmounts
+    // or when planetCamera turns false, safely restoring the stars!
+    return () => {
+      if (planetCamera && originalScaleRef.current !== null) {
+        setStarScale(originalScaleRef.current);
+        originalScaleRef.current = null;
+      }
+    };
+  }, [planetCamera, setStarScale]);
+
+  // 2. DYNAMIC ZOOM EFFECT
+  useEffect(() => {
+    if (planetCamera && originalScaleRef.current !== null) {
+      // Apply the dynamic FOV dampening against the clean base scale
+      const rawRatio = 45 / planCamFov;
+      const dampenedRatio = Math.pow(rawRatio, 0.5);
+      setStarScale(originalScaleRef.current * dampenedRatio);
+    }
+  }, [planCamFov, planetCamera, setStarScale]);
 
   useLayoutEffect(() => {
     if (planetCamSystemRef.current.parent)
@@ -77,13 +111,21 @@ export default function PlanetCamera() {
     ) {
       groundFade.current = Math.min(1, groundFade.current + delta * 0.4);
       if (groundMountRef.current) {
-        groundMountRef.current.traverse((child) => {
-          if (child.isMesh && child.material) {
-            child.material.transparent = true;
-            child.material.opacity = groundFade.current;
-          }
-        });
-        groundMountRef.current.visible = true;
+        // ONLY show the ground if the altitude logic (gOpacity) allows it
+        if (gOpacity > 0) {
+          groundMountRef.current.traverse((child) => {
+            if (child.isMesh && child.material) {
+              const baseOpacity = child.userData.baseOpacity || 1;
+              child.material.transparent = true;
+              // Combine the fade-in animation WITH the altitude opacity
+              child.material.opacity =
+                baseOpacity * groundFade.current * gOpacity;
+            }
+          });
+          groundMountRef.current.visible = true;
+        } else {
+          groundMountRef.current.visible = false;
+        }
       }
     }
   });
@@ -111,8 +153,9 @@ export default function PlanetCamera() {
         if (showGround && groundFade.current >= 1) {
           groundMountRef.current.traverse((child) => {
             if (child.isMesh && child.material) {
+              const baseOpacity = child.userData.baseOpacity || 1; // Safely read the base opacity
               child.material.transparent = true;
-              child.material.opacity = gOpacity;
+              child.material.opacity = baseOpacity * gOpacity;
             }
           });
           groundMountRef.current.visible = gOpacity > 0;
