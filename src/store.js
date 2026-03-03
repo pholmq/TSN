@@ -20,11 +20,18 @@ export const useStore = create((set) => ({
   setSearchStars: (v) => set({ searchStars: v }),
   activeCamera: "orbit",
   cameraTarget: "Earth",
-  cameraUpdate: 0, // Add a trigger value
+  cameraUpdate: 0,
   setCameraTarget: (v) =>
     set((state) => ({
       cameraTarget: v,
       cameraUpdate: state.cameraUpdate + 1,
+    })),
+  searchTarget: null,
+  searchUpdate: 0,
+  setSearchTarget: (v) =>
+    set((state) => ({
+      searchTarget: v,
+      searchUpdate: state.searchUpdate + 1,
     })),
   cameraFollow: false,
   setCameraFollow: (v) => set({ cameraFollow: v }),

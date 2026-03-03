@@ -32,6 +32,11 @@ export default function StarSearch() {
   const planetCamera = useStore((s) => s.planetCamera);
   const prevCameraUpdate = useRef(cameraUpdate);
 
+  // --- Dedicated Search Target Sync State (Planet Camera) ---
+  const searchTarget = useStore((s) => s.searchTarget);
+  const searchUpdate = useStore((s) => s.searchUpdate);
+  const prevSearchUpdate = useRef(searchUpdate);
+
   // --- Dragging State ---
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -39,17 +44,15 @@ export default function StarSearch() {
 
   // --- Initialization & Cleanup ---
   useEffect(() => {
-    // 1. If search is hidden (but component stays mounted), clear state
+    // 1. If search is hidden (closed by user), clear state.
+    // CRITICAL FIX: Removed the `return () => setSelectedStarHR(null)` cleanup block.
+    // Cleanups run on dependency changes (like when searchStars goes false -> true).
+    // This was wiping out the selection before FocusSearchedStar could react!
     if (!searchStars) {
       setQuery("");
       setResults([]);
       setSelectedStarHR(null);
     }
-
-    // 2. If search is CLOSED (component unmounts), this cleanup runs guaranteed
-    return () => {
-      setSelectedStarHR(null);
-    };
   }, [searchStars, setSelectedStarHR]);
 
   useEffect(() => {
@@ -114,72 +117,81 @@ export default function StarSearch() {
     return [...planets, ...special, ...bsc];
   }, []);
 
+  // --- Reusable Target Selection Logic ---
+  // --- Reusable Target Selection Logic ---
+  const triggerSelection = React.useCallback(
+    (targetStr) => {
+      // 1. Strict pass: Try an exact ID or Name match first (Solves HR 424 vs HIP 424 overlap)
+      let obj = indexedObjects.find(
+        (o) => o.id === targetStr || o.name === targetStr
+      );
+
+      // 2. Loose pass: Fallback if exact match wasn't found
+      if (!obj) {
+        obj = indexedObjects.find(
+          (o) =>
+            (o.N && String(o.N) === targetStr) ||
+            (o.HR && String(o.HR) === targetStr) ||
+            (o.HIP && String(o.HIP) === targetStr) ||
+            (o.HIP && `HIP-${o.HIP}` === targetStr)
+        );
+      }
+
+      if (obj) {
+        if (obj.type === "planet") {
+          useSettingsStore
+            .getState()
+            .updateSetting({ name: obj.name, visible: true });
+        } else if (obj.type === "special") {
+          useStarStore
+            .getState()
+            .updateSetting({ name: obj.name, visible: true });
+        }
+
+        setSearchStars(true);
+        setSelectedStarHR(obj.id);
+
+        let displayText = obj.displayName;
+        if (obj.type === "star" || (obj.type === "special" && obj.HR)) {
+          if (obj.N && obj.HIP) {
+            displayText = `${obj.N} / HIP ${obj.HIP}`;
+          } else if (obj.N && obj.HR) {
+            displayText = `${obj.N} / HR ${obj.HR}`;
+          } else if (obj.HIP) {
+            displayText = `HIP ${obj.HIP}`;
+          } else if (obj.HR) {
+            displayText = `HR ${obj.HR}`;
+          }
+        }
+
+        setQuery(displayText);
+        setResults([]);
+      }
+    },
+    [indexedObjects, setSearchStars, setSelectedStarHR]
+  );
+
   // --- Sync Search with Orbit Camera Double Click ---
   useEffect(() => {
-    // Only process if cameraUpdate actually increments (avoids trigger on mount)
     if (cameraUpdate > prevCameraUpdate.current) {
       prevCameraUpdate.current = cameraUpdate;
-
-      // Only trigger if we are in orbit mode
       if (!planetCamera && cameraTarget) {
-        let cleanTarget = String(cameraTarget);
-        
-        // Strip the BSCStarTarget_ prefix that BSCStars.jsx adds to double-clicked targets
-        if (cleanTarget.startsWith("BSCStarTarget_")) {
-          cleanTarget = cleanTarget.replace("BSCStarTarget_", "");
-        }
-
-        // Broaden the search to catch HR and HIP numbers regardless of data type
-        const obj = indexedObjects.find(
-          (o) =>
-            (o.name && String(o.name) === cleanTarget) ||
-            (o.N && String(o.N) === cleanTarget) ||
-            (o.id && String(o.id) === cleanTarget) ||
-            (o.HR && String(o.HR) === cleanTarget) ||
-            (o.HIP && String(o.HIP) === cleanTarget) ||
-            (o.HIP && `HIP-${o.HIP}` === cleanTarget)
-        );
-
-        if (obj) {
-          if (obj.type === "planet") {
-            useSettingsStore
-              .getState()
-              .updateSetting({ name: obj.name, visible: true });
-          } else if (obj.type === "special") {
-            useStarStore
-              .getState()
-              .updateSetting({ name: obj.name, visible: true });
-          }
-
-          setSearchStars(true);
-          setSelectedStarHR(obj.id);
-
-          let displayText = obj.displayName;
-          if (obj.type === "star" || (obj.type === "special" && obj.HR)) {
-            if (obj.N && obj.HIP) {
-              displayText = `${obj.N} / HIP ${obj.HIP}`;
-            } else if (obj.N && obj.HR) {
-              displayText = `${obj.N} / HR ${obj.HR}`;
-            } else if (obj.HIP) {
-              displayText = `HIP ${obj.HIP}`;
-            } else if (obj.HR) {
-              displayText = `HR ${obj.HR}`;
-            }
-          }
-
-          setQuery(displayText);
-          setResults([]);
-        }
+        let cleanTarget = String(cameraTarget).replace("BSCStarTarget_", "");
+        triggerSelection(cleanTarget);
       }
     }
-  }, [
-    cameraUpdate,
-    cameraTarget,
-    planetCamera,
-    indexedObjects,
-    setSearchStars,
-    setSelectedStarHR,
-  ]);
+  }, [cameraUpdate, cameraTarget, planetCamera, triggerSelection]);
+
+  // --- Sync Search with Dedicated Search Target (Planet Camera) ---
+  useEffect(() => {
+    if (searchUpdate > prevSearchUpdate.current) {
+      prevSearchUpdate.current = searchUpdate;
+      if (searchTarget) {
+        let cleanTarget = String(searchTarget).replace("BSCStarTarget_", "");
+        triggerSelection(cleanTarget);
+      }
+    }
+  }, [searchUpdate, searchTarget, triggerSelection]);
 
   const handleChange = (e) => {
     const value = e.target.value.trim();
