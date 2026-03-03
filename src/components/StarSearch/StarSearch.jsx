@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import starsData from "../../settings/BSC.json";
 import celestialData from "../../settings/celestial-settings.json";
@@ -15,7 +15,7 @@ export default function StarSearch() {
 
   // --- Store State ---
   const searchStars = useStore((s) => s.searchStars);
-  const setSearchStars = useStore((s) => s.setSearchStars); // Brought in setSearchStars
+  const setSearchStars = useStore((s) => s.setSearchStars);
 
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
@@ -25,6 +25,12 @@ export default function StarSearch() {
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const runIntro = useStore((s) => s.runIntro);
   const cameraControlsRef = useStore((s) => s.cameraControlsRef);
+
+  // --- Orbit Target Sync State ---
+  const cameraTarget = useStore((s) => s.cameraTarget);
+  const cameraUpdate = useStore((s) => s.cameraUpdate);
+  const planetCamera = useStore((s) => s.planetCamera);
+  const prevCameraUpdate = useRef(cameraUpdate);
 
   // --- Dragging State ---
   const [isDragging, setIsDragging] = useState(false);
@@ -44,7 +50,7 @@ export default function StarSearch() {
     return () => {
       setSelectedStarHR(null);
     };
-  }, [searchStars, setSelectedStarHR]); // Trigger on searchStars change or unmount
+  }, [searchStars, setSelectedStarHR]);
 
   useEffect(() => {
     setQuery("");
@@ -107,6 +113,73 @@ export default function StarSearch() {
 
     return [...planets, ...special, ...bsc];
   }, []);
+
+  // --- Sync Search with Orbit Camera Double Click ---
+  useEffect(() => {
+    // Only process if cameraUpdate actually increments (avoids trigger on mount)
+    if (cameraUpdate > prevCameraUpdate.current) {
+      prevCameraUpdate.current = cameraUpdate;
+
+      // Only trigger if we are in orbit mode
+      if (!planetCamera && cameraTarget) {
+        let cleanTarget = String(cameraTarget);
+        
+        // Strip the BSCStarTarget_ prefix that BSCStars.jsx adds to double-clicked targets
+        if (cleanTarget.startsWith("BSCStarTarget_")) {
+          cleanTarget = cleanTarget.replace("BSCStarTarget_", "");
+        }
+
+        // Broaden the search to catch HR and HIP numbers regardless of data type
+        const obj = indexedObjects.find(
+          (o) =>
+            (o.name && String(o.name) === cleanTarget) ||
+            (o.N && String(o.N) === cleanTarget) ||
+            (o.id && String(o.id) === cleanTarget) ||
+            (o.HR && String(o.HR) === cleanTarget) ||
+            (o.HIP && String(o.HIP) === cleanTarget) ||
+            (o.HIP && `HIP-${o.HIP}` === cleanTarget)
+        );
+
+        if (obj) {
+          if (obj.type === "planet") {
+            useSettingsStore
+              .getState()
+              .updateSetting({ name: obj.name, visible: true });
+          } else if (obj.type === "special") {
+            useStarStore
+              .getState()
+              .updateSetting({ name: obj.name, visible: true });
+          }
+
+          setSearchStars(true);
+          setSelectedStarHR(obj.id);
+
+          let displayText = obj.displayName;
+          if (obj.type === "star" || (obj.type === "special" && obj.HR)) {
+            if (obj.N && obj.HIP) {
+              displayText = `${obj.N} / HIP ${obj.HIP}`;
+            } else if (obj.N && obj.HR) {
+              displayText = `${obj.N} / HR ${obj.HR}`;
+            } else if (obj.HIP) {
+              displayText = `HIP ${obj.HIP}`;
+            } else if (obj.HR) {
+              displayText = `HR ${obj.HR}`;
+            }
+          }
+
+          setQuery(displayText);
+          setResults([]);
+        }
+      }
+    }
+  }, [
+    cameraUpdate,
+    cameraTarget,
+    planetCamera,
+    indexedObjects,
+    setSearchStars,
+    setSelectedStarHR,
+  ]);
 
   const handleChange = (e) => {
     const value = e.target.value.trim();
