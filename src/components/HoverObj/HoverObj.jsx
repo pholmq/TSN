@@ -13,6 +13,7 @@ const HoverObj = ({ s, starColor = false }) => {
   const hoveredObjectId = useStore((state) => state.hoveredObjectId);
   const setHoveredObjectId = useStore((state) => state.setHoveredObjectId);
   const setCameraTarget = useStore((state) => state.setCameraTarget);
+  const setSearchTarget = useStore((state) => state.setSearchTarget);
   const runIntro = useStore((state) => state.runIntro); // Get runIntro state
   const planetCamera = useStore((state) => state.planetCamera); // Get planetCamera state
 
@@ -84,7 +85,11 @@ const HoverObj = ({ s, starColor = false }) => {
       onPointerOver={handlePointerOver}
       onPointerLeave={handlePointerLeave}
       onDoubleClick={() => {
-        if (!planetCamera) setCameraTarget(s.name);
+        if (planetCamera) {
+          setSearchTarget(s.name);
+        } else {
+          setCameraTarget(s.name);
+        }
       }}
       onContextMenu={() => {
         if (showPanel) setContextMenu(true);

@@ -248,8 +248,16 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
   const handleDoubleClick = (e) => {
     e.stopPropagation();
-    if (useStore.getState().runIntro || useStore.getState().planetCamera)
-      return;
+    if (useStore.getState().runIntro) return;
+    // --- Planet Camera Intercept ---
+    if (useStore.getState().planetCamera) {
+      if (currentHoverDataRef.current) {
+        useStore
+          .getState()
+          .setSearchTarget(String(currentHoverDataRef.current.star.HR));
+      }
+      return; // Exit early to prevent Orbit target cloning
+    }
 
     if (currentHoverDataRef.current && targetGroupRef.current) {
       const { index, star } = currentHoverDataRef.current;

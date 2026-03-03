@@ -135,6 +135,12 @@ export default function FocusSearchedStar() {
         dateTime
       );
 
+      // Calculate shortest path for Azimuth (Direction) to prevent 360 degree spins
+      let diffAz = (azimuth - currentDirection) % 360;
+      if (diffAz < -180) diffAz += 360;
+      if (diffAz > 180) diffAz -= 360;
+      const targetAzimuth = currentDirection + diffAz;
+
       // Tween to target angles
       const coords = { angle: currentAngle, direction: currentDirection };
       const setPlanCamAngle = usePlanetCameraStore.getState().setPlanCamAngle;
@@ -145,7 +151,7 @@ export default function FocusSearchedStar() {
       if (tweenRef.current) tweenRef.current.stop();
 
       tweenRef.current = new TWEEN.Tween(coords)
-        .to({ angle: altitude, direction: azimuth }, 2000)
+        .to({ angle: altitude, direction: targetAzimuth }, 2000)
         .easing(TWEEN.Easing.Quadratic.Out)
         .onUpdate(() => {
           setPlanCamAngle(coords.angle);

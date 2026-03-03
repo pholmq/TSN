@@ -6,7 +6,7 @@ export function Ground() {
   const planetCameraTarget = usePlanetCameraStore((s) => s.planetCameraTarget);
 
   const planetGroundColors = {
-    Earth: { ground: "#003300", horizon: "#004400" },
+    Earth: { ground: "#000080", horizon: "#0000a0" },
     Moon: { ground: "#4A4A4A", horizon: "#8B8B8B" },
     Mars: { ground: "#B7410E", horizon: "#D2691E" },
     Mercury: { ground: "#696969", horizon: "#A9A9A9" },
