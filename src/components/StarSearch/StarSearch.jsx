@@ -44,10 +44,6 @@ export default function StarSearch() {
 
   // --- Initialization & Cleanup ---
   useEffect(() => {
-    // 1. If search is hidden (closed by user), clear state.
-    // CRITICAL FIX: Removed the `return () => setSelectedStarHR(null)` cleanup block.
-    // Cleanups run on dependency changes (like when searchStars goes false -> true).
-    // This was wiping out the selection before FocusSearchedStar could react!
     if (!searchStars) {
       setQuery("");
       setResults([]);
@@ -118,7 +114,6 @@ export default function StarSearch() {
   }, []);
 
   // --- Reusable Target Selection Logic ---
-  // --- Reusable Target Selection Logic ---
   const triggerSelection = React.useCallback(
     (targetStr) => {
       // 1. Strict pass: Try an exact ID or Name match first (Solves HR 424 vs HIP 424 overlap)
@@ -151,20 +146,8 @@ export default function StarSearch() {
         setSearchStars(true);
         setSelectedStarHR(obj.id);
 
-        let displayText = obj.displayName;
-        if (obj.type === "star" || (obj.type === "special" && obj.HR)) {
-          if (obj.N && obj.HIP) {
-            displayText = `${obj.N} / HIP ${obj.HIP}`;
-          } else if (obj.N && obj.HR) {
-            displayText = `${obj.N} / HR ${obj.HR}`;
-          } else if (obj.HIP) {
-            displayText = `HIP ${obj.HIP}`;
-          } else if (obj.HR) {
-            displayText = `HR ${obj.HR}`;
-          }
-        }
-
-        setQuery(displayText);
+        // MODIFICATION: Leave the search input field empty when triggered by a double click
+        setQuery("");
         setResults([]);
       }
     },
