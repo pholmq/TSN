@@ -10,7 +10,7 @@ export const usePlanetCameraStore = create((set) => ({
   planCamLong: 0,
   setPlanCamLong: (v) => set({ planCamLong: v }),
 
-  planCamHeight: 6370,
+  planCamHeight: 6370.002,
   setPlanCamHeight: (v) => set({ planCamHeight: v }),
 
   planCamAngle: 0,
