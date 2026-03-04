@@ -22,7 +22,8 @@
     "texture": "/textures/8k_earth_daymap.jpg",
     "unicodeSymbol": "&#x1F728;",
     "planetCamera": true,
-    "description": "EARTH orbital Ø: 113 230 656 km (the “PVP” orbit), Orbital circumference: 355 724 597 km, Diameter at equator: 12756.3 km, Equatorial circumference: 40075 km"
+    "groundColor": "#000080",
+    "horizonColor": "#000080"
   },
   {
     "name": "Moon deferent A",
@@ -44,6 +45,8 @@
     "texture": "/textures/planets/2k_moon.jpg",
     "unicodeSymbol": "&#x263D;",
     "planetCamera": true,
+    "groundColor": "#4A4A4A",
+    "horizonColor": "#8B8B8B",
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
   },
@@ -67,6 +70,8 @@
     "glow": true,
     "unicodeSymbol": "&#x2609;",
     "planetCamera": true,
+    "groundColor": "#FFA500",
+    "horizonColor": "#FFD700",
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 10, "stepFact": "sYear" }
   },
@@ -92,6 +97,8 @@
     "textureTint": "#555555",
     "unicodeSymbol": "&#x263F;",
     "planetCamera": true,
+    "groundColor": "#696969",
+    "horizonColor": "#A9A9A9",
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
   },
@@ -116,6 +123,8 @@
     "texture": "/textures/planets/2k_venus.jpg",
     "unicodeSymbol": "&#x2640;",
     "planetCamera": true,
+    "groundColor": "#B8860B",
+    "horizonColor": "#DAA520",
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
   },
@@ -141,6 +150,8 @@
     "texture": "/textures/planets/2k_mars.jpg",
     "unicodeSymbol": "&#x2642;",
     "planetCamera": true,
+    "groundColor": "#B7410E",
+    "horizonColor": "#D2691E",
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
   },
