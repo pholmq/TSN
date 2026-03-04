@@ -116,7 +116,7 @@ export default function StarSearch() {
   // --- Reusable Target Selection Logic ---
   const triggerSelection = React.useCallback(
     (targetStr) => {
-      // 1. Strict pass: Try an exact ID or Name match first (Solves HR 424 vs HIP 424 overlap)
+      // 1. Strict pass: Try an exact ID or Name match first
       let obj = indexedObjects.find(
         (o) => o.id === targetStr || o.name === targetStr
       );
@@ -146,7 +146,6 @@ export default function StarSearch() {
         setSearchStars(true);
         setSelectedStarHR(obj.id);
 
-        // MODIFICATION: Leave the search input field empty when triggered by a double click
         setQuery("");
         setResults([]);
       }
@@ -245,21 +244,9 @@ export default function StarSearch() {
     }
 
     setSelectedStarHR(obj.id);
-    let displayText = obj.displayName;
 
-    if (obj.type === "star" || (obj.type === "special" && obj.HR)) {
-      if (obj.N && obj.HIP) {
-        displayText = `${obj.N} / HIP ${obj.HIP}`;
-      } else if (obj.N && obj.HR) {
-        displayText = `${obj.N} / HR ${obj.HR}`;
-      } else if (obj.HIP) {
-        displayText = `HIP ${obj.HIP}`;
-      } else if (obj.HR) {
-        displayText = `HR ${obj.HR}`;
-      }
-    }
-
-    setQuery(displayText);
+    // Clear input query on selection
+    setQuery("");
     setResults([]);
 
     setTimeout(() => {
@@ -376,7 +363,7 @@ export default function StarSearch() {
         onMouseDown={handleMouseDown}
         style={{
           display: "flex",
-          justifyContent: "space-between", // Pushes title left and button right
+          justifyContent: "space-between",
           alignItems: "center",
           height: "28px",
           padding: "0 8px",
@@ -406,7 +393,7 @@ export default function StarSearch() {
         <div
           onClick={(e) => {
             e.preventDefault();
-            e.stopPropagation(); // Prevents dragging from triggering
+            e.stopPropagation();
             setSearchStars(false);
           }}
           style={{
@@ -415,7 +402,7 @@ export default function StarSearch() {
             fontSize: "14px",
             fontWeight: "bold",
             padding: "4px",
-            marginRight: "-2px", // Minor alignment tweak
+            marginRight: "-2px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -533,7 +520,7 @@ export default function StarSearch() {
                 </span>
                 <div style={{ fontWeight: "normal" }}>
                   {displayString}
-                  {selectedObject.type === "planet" &&
+                  {selectedObject?.type === "planet" &&
                     selectedObject.unicodeSymbol && (
                       <span
                         style={{ marginLeft: "6px" }}

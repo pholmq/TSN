@@ -12,6 +12,7 @@ const CROSSHAIR_SIZE = 40; // px
 export default function HighlightSelectedStar() {
   const { scene } = useThree();
   const selectedStarHR = useStore((s) => s.selectedStarHR);
+  const searchStars = useStore((s) => s.searchStars);
   const selectedStarPosition = useStore((s) => s.selectedStarPosition);
   const showLabels = useStore((s) => s.showLabels);
   const setSelectedStarData = useStore((s) => s.setSelectedStarData);
@@ -139,8 +140,7 @@ export default function HighlightSelectedStar() {
 
   const hideText = isPlanet && showLabels && isPlanetVisible;
 
-  if (!selectedStarHR) return null;
-
+  if (!selectedStarHR || !searchStars) return null;
   return (
     <group ref={groupRef}>
       <Html
