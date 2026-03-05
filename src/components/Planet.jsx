@@ -9,7 +9,7 @@ import PolarLine from "./Helpers/PolarLine";
 import TropicalZodiac from "./Helpers/TropicalZodiac";
 import HoverObj from "../components/HoverObj/HoverObj";
 import PlanetRings from "./PlanetRings";
-import NameLabel from "./Labels/NameLabel";
+import NameLabel from "./Labels/NameLabelBillboard";
 import GeoSphere from "./Helpers/GeoSphere";
 
 // Define reusable vector outside to prevent GC pressure

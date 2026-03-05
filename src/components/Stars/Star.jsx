@@ -11,7 +11,7 @@ import {
 import HoverObj from "../HoverObj/HoverObj";
 import createCircleTexture from "../../utils/createCircleTexture";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
-import NameLabel from "../Labels/NameLabel";
+import NameLabel from "../Labels/NameLabelBillboard";
 
 const worldPositionVec = new Vector3();
 const sharedSphereGeometry = new SphereGeometry(1, 32, 32);
