@@ -38,6 +38,9 @@ import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
 import TransitionCamera from "./components/PlanetCamera/TransitionCamera";
 import Constellations from "./components/Stars/Constellations";
 import PlanetCameraHelper from "./components/PlanetCamera/PlanetCameraHelper";
+import { VideoCanvas } from "./components/Recorder/r3f-video-recorder"; 
+import RecorderMenu from "./components/Menus/RecorderMenu";
+import RecorderController from "./components/Recorder/RecorderController";
 
 const isTouchDevice = () => {
   return (
@@ -117,18 +120,23 @@ const TSNext = () => {
         <StarDataPanel />
         <PlanetCameraCompass />
         <Help />
+        <RecorderMenu />
         {BSCStarsOn && !isTouchDev && searchStars && <StarSearch />}
       </div>
-      <Canvas
+      <VideoCanvas
         id="canvas"
         frameloop="always"
-        gl={{ logarithmicDepthBuffer: true }}
+        fps={60} 
+        gl={{ 
+          logarithmicDepthBuffer: true,
+          preserveDrawingBuffer: true // Required for pixel extraction
+        }}
         style={getCanvasStyle()}
         raycaster={{
           params: { Line: { threshold: 0.1 } },
         }}
       >
-        {/* IntroQuote is always rendered and visible */}
+        <RecorderController />
         <IntroQuote />
 
         {/* Other components wrapped in Suspense */}
@@ -157,7 +165,7 @@ const TSNext = () => {
           <Constellations />
           <PlanetCameraHelper />
         </Suspense>
-      </Canvas>
+      </VideoCanvas>
     </>
   );
 };

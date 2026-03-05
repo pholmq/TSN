@@ -177,6 +177,9 @@ export const useStore = create((set) => ({
   cameraTransitioning: false,
   setCameraTransitioning: (transitioning) =>
     set({ cameraTransitioning: transitioning }),
+
+  showRecorder: false,
+  setShowRecorder: (v) => set({ showRecorder: v }),
 }));
 
 export const usePosStore = create((set) => ({

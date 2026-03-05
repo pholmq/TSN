@@ -120,6 +120,10 @@ const LightEffectsMenu = () => {
             value: runIntro,
             onChange: (v) => setRunIntro(v),
           },
+          "Video Recorder": {
+            value: useStore.getState().showRecorder,
+            onChange: (v) => useStore.setState({ showRecorder: v }),
+          },
         },
         { collapsed: true }
       ),
