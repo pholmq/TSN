@@ -58,7 +58,7 @@ const LightEffectsMenu = () => {
         hint: "Glow can affect performance",
       },
 
-      "developer settings": folder(
+      "experimental settings": folder(
         {
           antialiasing: {
             label: "Anti-Aliasing",
@@ -120,8 +120,12 @@ const LightEffectsMenu = () => {
             value: runIntro,
             onChange: (v) => setRunIntro(v),
           },
+          "Video Recorder": {
+            value: useStore.getState().showRecorder,
+            onChange: (v) => useStore.setState({ showRecorder: v }),
+          },
         },
-        { collapsed: true }
+        { collapsed: false }
       ),
     });
 
