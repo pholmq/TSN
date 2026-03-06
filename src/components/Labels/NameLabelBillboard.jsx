@@ -4,7 +4,6 @@ import { Text, Billboard } from "@react-three/drei";
 import { useStore } from "../../store";
 import * as THREE from "three";
 
-// Reusable vectors to prevent garbage collection stutter
 const worldPos = new THREE.Vector3();
 const camWorldPos = new THREE.Vector3();
 const parentScale = new THREE.Vector3();
@@ -12,25 +11,24 @@ const parentScale = new THREE.Vector3();
 const NameLabel = ({ s }) => {
   const showLabels = useStore((state) => state.showLabels);
   const runIntro = useStore((state) => state.runIntro);
+  const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
+  const planetScale = useStore((state) => state.planetScale);
   const planetCamera = useStore((state) => state.planetCamera);
 
   const billboardRef = useRef();
   const textRef = useRef();
 
-  const PIXEL_HEIGHT = planetCamera ? 9 : 13; 
-  const PIXEL_OFFSET_Y = PIXEL_HEIGHT * 1.7; 
+  const baseSize = actualPlanetSizes ? (s.actualSize || s.size) : s.size;
+  
+  // Set the larger pixel sizes for Planet Camera mode
+  const PIXEL_HEIGHT = planetCamera ? 11 : 13; 
+  const PIXEL_PADDING = planetCamera ? 4 : 6; 
 
   useFrame(({ camera, size }) => {
     if (!billboardRef.current || !textRef.current) return;
 
-    // 1. Get exact WORLD position of the label
     billboardRef.current.getWorldPosition(worldPos);
-
-    // 2. THE FIX: Get the exact WORLD position of the camera!
-    // We cannot use camera.position because the PlanetCamera is parented to the Earth!
     camera.getWorldPosition(camWorldPos);
-
-    // 3. Calculate true absolute distance in 3D space
     const distance = camWorldPos.distanceTo(worldPos);
 
     const vFov = (camera.fov * Math.PI) / 180;
@@ -42,6 +40,7 @@ const NameLabel = ({ s }) => {
     const scaleY = parentScale.y || 1;
     const scaleZ = parentScale.z || 1;
 
+    // 1. Maintain locked screen-pixel size
     const targetScale = pixelSize3D * PIXEL_HEIGHT;
     textRef.current.scale.set(
       targetScale / scaleX, 
@@ -49,8 +48,15 @@ const NameLabel = ({ s }) => {
       targetScale / scaleZ
     );
 
-    const targetY = pixelSize3D * PIXEL_OFFSET_Y;
-    textRef.current.position.set(0, targetY / scaleY, 0);
+    // 2. THE CRUST LOGIC: 
+    // The visual radius is ALREADY in local 3D space, so it needs NO division.
+    const localCrustRadius = baseSize * planetScale;
+    
+    // The 6-pixel gap is in WORLD space, so we MUST divide it by scaleY to match local space.
+    const localPadding = (pixelSize3D * PIXEL_PADDING) / scaleY;
+
+    // 3. Stack them cleanly
+    textRef.current.position.set(0, localCrustRadius + localPadding, 0);
   });
 
   if (runIntro || !showLabels) return null;
@@ -61,7 +67,8 @@ const NameLabel = ({ s }) => {
         <Text
           ref={textRef}
           anchorX="center"
-          anchorY="middle" 
+          // Crucial: Anchor to the bottom so the text grows UPWARDS from the crust!
+          anchorY="bottom" 
           color="#ffffff"
           fontSize={1}
           
