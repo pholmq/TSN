@@ -1,6 +1,12 @@
 import { useRef, useEffect, useMemo, memo } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
-import { SpriteMaterial, Vector3, SphereGeometry } from "three";
+import {
+  SpriteMaterial,
+  Vector3,
+  SphereGeometry,
+  Color,
+  BufferAttribute,
+} from "three";
 import FakeGlowMaterial from "../../utils/FakeGlowMaterial";
 import { useStore } from "../../store";
 import {
@@ -12,6 +18,7 @@ import HoverObj from "../HoverObj/HoverObj";
 import createCircleTexture from "../../utils/createCircleTexture";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
 import NameLabel from "../Labels/NameLabelBillboard";
+import { pointShaderMaterial } from "./starShaders";
 
 const worldPositionVec = new Vector3();
 const sharedSphereGeometry = new SphereGeometry(1, 32, 32);
@@ -30,11 +37,46 @@ const Star = memo(function Star({ sData }) {
 
   const meshRef = useRef();
   const groupRef = useRef();
+  const pointRef = useRef();
 
   const color = useMemo(() => {
     if (s.overrideColor) return s.overrideColor;
     return colorTemperature2rgb(s.colorTemp);
   }, [s.colorTemp, s.overrideColor]);
+
+  // Mount the position, color, and size directly to the new point geometry
+  useEffect(() => {
+    if (pointRef.current) {
+      const c = new Color(color);
+      const geo = pointRef.current.geometry;
+
+      geo.setAttribute(
+        "position",
+        new BufferAttribute(new Float32Array([0, 0, 0]), 3)
+      );
+      geo.setAttribute(
+        "color",
+        new BufferAttribute(new Float32Array([c.r, c.g, c.b]), 3)
+      );
+
+      let starsize;
+      if (s.magnitude < 1) {
+        starsize = 1.2;
+      } else if (s.magnitude >= 1 && s.magnitude < 3) {
+        starsize = 0.6;
+      } else if (s.magnitude >= 3 && s.magnitude < 5) {
+        starsize = 0.4;
+      } else {
+        starsize = 0.2;
+      }
+
+      const visualSize = starsize * starScale * 10;
+      geo.setAttribute(
+        "size",
+        new BufferAttribute(new Float32Array([visualSize]), 1)
+      );
+    }
+  }, [color, s.magnitude, starScale]);
 
   useEffect(() => {
     if (meshRef.current && !s.isTargetClone) {
@@ -105,7 +147,12 @@ const Star = memo(function Star({ sData }) {
   return (
     <group ref={groupRef} visible={s.visible}>
       {showNameLabel && <NameLabel s={s} />}
-      <sprite material={spriteMaterial} scale={[size, size, size]} />
+
+      <points ref={pointRef}>
+        <bufferGeometry />
+        <shaderMaterial attach="material" args={[pointShaderMaterial]} />
+      </points>
+
       <mesh name={s.name} ref={meshRef} geometry={sharedSphereGeometry}>
         <FakeGlowMaterial
           glowColor={color}
