@@ -22,6 +22,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
   const starGroupRef = useRef();
   const targetGroupRef = useRef(null);
   const hiddenStarIndexRef = useRef(null);
+  const hiddenStarSizeRef = useRef(null);
 
   const [targetedStarData, setTargetedStarData] = useState(null);
 
@@ -46,7 +47,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       if (hiddenStarIndexRef.current !== null && pointsRef.current) {
         const oldIndex = hiddenStarIndexRef.current;
         pointsRef.current.geometry.attributes.size.array[oldIndex] =
-          sizes[oldIndex];
+          hiddenStarSizeRef.current;
         pointsRef.current.geometry.attributes.size.needsUpdate = true;
         hiddenStarIndexRef.current = null;
       }
@@ -265,12 +266,15 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       if (hiddenStarIndexRef.current !== null && pointsRef.current) {
         const oldIndex = hiddenStarIndexRef.current;
         pointsRef.current.geometry.attributes.size.array[oldIndex] =
-          sizes[oldIndex];
+          hiddenStarSizeRef.current;
         pointsRef.current.geometry.attributes.size.needsUpdate = true;
       }
 
       hiddenStarIndexRef.current = index;
       if (pointsRef.current) {
+        // FIX: Save the true size before shrinking it
+        hiddenStarSizeRef.current =
+          pointsRef.current.geometry.attributes.size.array[index];
         pointsRef.current.geometry.attributes.size.array[index] = 0;
         pointsRef.current.geometry.attributes.size.needsUpdate = true;
       }
