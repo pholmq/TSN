@@ -1,113 +1,159 @@
-import { useRef, useEffect } from "react";
-import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { SpriteMaterial, MathUtils, Vector3 } from "three";
+import { useRef, useEffect, useMemo, memo } from "react";
+import { useThree, useFrame } from "@react-three/fiber";
+import {
+  SpriteMaterial,
+  Vector3,
+  SphereGeometry,
+  Color,
+  BufferAttribute,
+} from "three";
 import FakeGlowMaterial from "../../utils/FakeGlowMaterial";
 import { useStore } from "../../store";
 import {
   declinationToRadians,
   rightAscensionToRadians,
   sphericalToCartesian,
-  convertMagnitude,
 } from "../../utils/celestial-functions";
 import HoverObj from "../HoverObj/HoverObj";
 import createCircleTexture from "../../utils/createCircleTexture";
 import colorTemperature2rgb from "../../utils/colorTempToRGB";
-import NameLabel from "../Labels/NameLabel";
+import NameLabel from "../Labels/NameLabelBillboard";
+import { pointShaderMaterial } from "./starShaders";
 
-export default function Star({ sData }) {
-  const { camera, invalidate } = useThree();
+const worldPositionVec = new Vector3();
+const sharedSphereGeometry = new SphereGeometry(1, 32, 32);
+
+const Star = memo(function Star({ sData }) {
+  const { invalidate } = useThree();
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const hScale = useStore((s) => s.hScale);
   const starScale = useStore((s) => s.starScale);
 
-  // const s = settings.find((obj) => obj.name === name);
+  const selectedStarHR = useStore((s) => s.selectedStarHR);
+  const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
 
   const s = sData;
 
-  // console.log(s)
-
-  const color = colorTemperature2rgb(s.colorTemp);
-
   const meshRef = useRef();
   const groupRef = useRef();
-  const minScreenSize = 0.1;
+  const pointRef = useRef();
 
-  const prevCameraPos = useRef(new Vector3());
-  const prevFov = useRef(null);
+  const color = useMemo(() => {
+    if (s.overrideColor) return s.overrideColor;
+    return colorTemperature2rgb(s.colorTemp);
+  }, [s.colorTemp, s.overrideColor]);
 
-  const updateScale = (camera) => {
-    if (!meshRef.current) return;
-    const distance = camera.position.distanceTo(meshRef.current.position);
-    const fov = MathUtils.degToRad(camera.fov);
-    const apparentSize = (2 * Math.tan(fov / 2) * 1) / distance;
+  // Mount the position, color, and size directly to the new point geometry
+  useEffect(() => {
+    if (pointRef.current) {
+      const c = new Color(color);
+      const geo = pointRef.current.geometry;
 
-    if (distance > 0.1) {
-      if (apparentSize < minScreenSize) {
-        const scale = (minScreenSize / apparentSize) * 1;
-        meshRef.current.scale.set(scale, scale, scale);
+      geo.setAttribute(
+        "position",
+        new BufferAttribute(new Float32Array([0, 0, 0]), 3)
+      );
+      geo.setAttribute(
+        "color",
+        new BufferAttribute(new Float32Array([c.r, c.g, c.b]), 3)
+      );
+
+      let starsize;
+      if (s.magnitude < 1) {
+        starsize = 1.2;
+      } else if (s.magnitude >= 1 && s.magnitude < 3) {
+        starsize = 0.6;
+      } else if (s.magnitude >= 3 && s.magnitude < 5) {
+        starsize = 0.4;
       } else {
-        meshRef.current.scale.set(1, 1, 1);
+        starsize = 0.2;
       }
+
+      const visualSize = starsize * starScale * 10;
+      geo.setAttribute(
+        "size",
+        new BufferAttribute(new Float32Array([visualSize]), 1)
+      );
     }
-  };
+  }, [color, s.magnitude, starScale]);
 
   useEffect(() => {
-    if (meshRef.current) {
-      const raRad = rightAscensionToRadians(s.ra); // Convert RA to radians
-      const decRad = declinationToRadians(s.dec); // Convert Dec to radians
+    if (meshRef.current && !s.isTargetClone) {
+      const raRad = rightAscensionToRadians(s.ra);
+      const decRad = declinationToRadians(s.dec);
       let dist;
       if (!officialStarDistances) {
         dist = (20000 * hScale) / 100;
       } else {
-        //Convert light year distance to world units (1Ly = 63241 AU, 1 AU = 100 world units)
         const worldDist = s.distLy * 63241 * 100;
         dist =
-          worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1); // Distance
+          worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1);
       }
 
-      // Convert spherical coordinates (RA, Dec, Dist) to Cartesian coordinates (x, y, z)
       const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
 
-      // Set the position of the star
       groupRef.current.position.set(x, y, z);
-      // updateScale(camera);
-      invalidate();
     }
-  }, [s, starDistanceModifier, officialStarDistances, hScale]);
+  }, [s.ra, s.dec, s.distLy, starDistanceModifier, officialStarDistances, hScale, invalidate, s.isTargetClone]);
 
-  const circleTexture = createCircleTexture(color);
-  const spriteMaterial = new SpriteMaterial({
-    map: circleTexture,
-    transparent: true,
-    opacity: 1,
-    alphaTest: 0.5,
-    sizeAttenuation: false,
-    // depthTest: false,
+  useFrame(() => {
+    if (s.isTargetClone) return;
+
+    const myID = s.HR ? String(s.HR) : `Special:${s.name}`;
+
+    if (selectedStarHR === myID && groupRef.current) {
+      groupRef.current.getWorldPosition(worldPositionVec);
+      setSelectedStarPosition(worldPositionVec);
+    }
   });
-  let starsize;
-  if (s.magnitude < 1) {
-    starsize = 1.2;
-  } else if (s.magnitude > 1 && s.magnitude < 3) {
-    starsize = 0.6;
-  } else if (s.magnitude > 3 && s.magnitude < 5) {
-    starsize = 0.4;
-  } else {
-    starsize = 0.2;
-  }
 
-  const size = (starsize / 500) * starScale;
+  const spriteMaterial = useMemo(() => {
+    const circleTexture = createCircleTexture(color);
+    return new SpriteMaterial({
+      map: circleTexture,
+      transparent: true,
+      opacity: 1,
+      alphaTest: 0.5,
+      sizeAttenuation: false,
+    });
+  }, [color]);
 
-  if (s.BSCStar) {
+  const size = useMemo(() => {
+    let starsize;
+    if (s.magnitude < 1) {
+      starsize = 1.2;
+    } else if (s.magnitude >= 1 && s.magnitude < 3) {
+      starsize = 0.6;
+    } else if (s.magnitude >= 3 && s.magnitude < 5) {
+      starsize = 0.4;
+    } else {
+      starsize = 0.2;
+    }
+    return (starsize / 500) * starScale;
+  }, [s.magnitude, starScale]);
+
+  if (s.BSCStar && !s.isTargetClone) {
     return null;
   }
 
+  // Globally suppress duplicate labels: If the star is selected in Search, HighlightSelectedStar assumes responsibility
+  const myID = s.HR ? String(s.HR) : `Special:${s.name}`;
+  const isCurrentlySearched =
+    selectedStarHR === myID ||
+    (s.isTargetClone && selectedStarHR === String(s.HR));
+  const showNameLabel = s.visible && !isCurrentlySearched;
+
   return (
     <group ref={groupRef} visible={s.visible}>
-      {s.visible && <NameLabel s={s} />}
-      <sprite material={spriteMaterial} scale={[size, size, size]} />
-      <mesh name={s.name} ref={meshRef}>
-        <sphereGeometry args={[1, 32, 32]} />
+      {showNameLabel && <NameLabel s={s} />}
+
+      <points ref={pointRef}>
+        <bufferGeometry />
+        <shaderMaterial attach="material" args={[pointShaderMaterial]} />
+      </points>
+
+      <mesh name={s.name} ref={meshRef} geometry={sharedSphereGeometry}>
         <FakeGlowMaterial
           glowColor={color}
           falloff={1}
@@ -115,7 +161,9 @@ export default function Star({ sData }) {
           glowSharpness={1}
         />
       </mesh>
-      {s.visible && <HoverObj s={s} starColor={color} />}
+      {s.visible && !s.isTargetClone && <HoverObj s={s} starColor={color} />}
     </group>
   );
-}
+});
+
+export default Star;

@@ -1,51 +1,53 @@
-import { useRef } from "react";
 import { Html } from "@react-three/drei";
 import { useStore } from "../../store";
+import labeledStarsData from "../../settings/labeled-stars.json";
 
-export const LABELED_STARS = [
-  "Polaris",
-  "Sirius",
-  "Procyon",
-  "Deneb Algedi",
-  "Betelgeuse",
-  "Rigel",
-  "Canopus",
-  "Vega",
-  "Thuban",
-  "Capella",
-  "Altair",
-  "Aldebaran",
-  "Antares",
-  "Arcturus",
-  "Achernar",
-  "Polaris Australis",
-  "Hadar",
-];
+export const LABELED_STARS = labeledStarsData;
 
 export default function LabeledStars() {
   const showLabels = useStore((s) => s.showLabels);
   const runIntro = useStore((s) => s.runIntro);
   const labeledStarPositions = useStore((s) => s.labeledStarPositions);
+  const bscVisible = useStore((s) => s.BSCStars);
 
-  if (runIntro || !showLabels) return null;
+  const selectedStarHR = useStore((s) => s.selectedStarHR);
+  const cameraTarget = useStore((s) => s.cameraTarget);
+
+  // Extract the HR number if the camera is currently targeting a point cloud clone
+  const targetedHR = cameraTarget?.startsWith("BSCStarTarget_")
+    ? cameraTarget.split("_")[1]
+    : null;
+
+  if (runIntro || !showLabels || !bscVisible) return null;
 
   return (
     <>
-      {Array.from(labeledStarPositions.values()).map((star) => (
-        <Html
-          key={star.name}
-          position={star.position}
-          portal={{ current: document.body }}
-          style={{ pointerEvents: "none" }}
-        >
-          <div
-            className="name-label"
-            style={{ transform: "translateX(-50%) translateY(-170%)" }}
+      {Array.from(labeledStarPositions.entries()).map(([hr, star]) => {
+        // Destroy the static label if the star is actively searched OR targeted by the camera
+        if (
+          String(hr) === String(selectedStarHR) ||
+          String(hr) === String(targetedHR)
+        ) {
+          return null;
+        }
+
+        return (
+          <Html
+            key={star.name}
+            position={star.position}
+            portal={{ current: document.body }}
+            zIndexRange={[16777271, 100000]}
+            style={{ pointerEvents: "none" }}
           >
-            <span>{star.name}</span>
-          </div>
-        </Html>
-      ))}
+            <div
+              className="name-label"
+              style={{ transform: "translateX(-50%) translateY(-170%)" }}
+            >
+              <span>{star.name}</span>
+            </div>
+          </Html>
+        );
+      })}
     </>
   );
 }

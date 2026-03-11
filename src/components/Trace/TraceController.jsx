@@ -1,46 +1,48 @@
 import { useControls } from "leva";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useStore, useSettingsStore, useTraceStore } from "../../store";
 import Trace from "./Trace";
+
 const TraceController = () => {
   const { settings } = useSettingsStore();
   const { trace, setTraceStart } = useTraceStore();
   const posRef = useStore((s) => s.posRef);
 
-  const traceablePlanets = settings
-    .filter((item) => item.traceable)
-    .map((item) => item.name);
+  // OPTIMIZATION: Memoize the configuration object to prevent re-creation on every render
+  const planetsConfig = useMemo(() => {
+    const checkboxes = { "Planets:": { value: "", editable: false } };
 
-  //Create a leva checkbox object for each traceable planet
-  const checkboxes = {};
-  traceablePlanets.forEach((item) => {
-    checkboxes[item] = false;
-  });
-  //Mars should be on by default
-  checkboxes.Mars = true;
+    settings
+      .filter((item) => item.traceable)
+      .forEach((item) => {
+        checkboxes[item.name] = item.name === "Mars"; // Default Mars to true
+      });
 
-  const tracedPlanets = useControls("Trace", {
-    "Planets:": { value: "", editable: false },
-    ...checkboxes,
-  });
+    return checkboxes;
+  }, [settings]);
 
-  //Filter out the planets that are checked
-  const checkedPlanets = Object.keys(tracedPlanets)
-    .filter((key) => tracedPlanets[key] === true)
-    .map((key) => key);
+  const tracedPlanets = useControls("Trace", planetsConfig);
 
-  //If trace is turned on, update trace startPos
+  // Filter out the planets that are checked
+  // OPTIMIZATION: Memoize this list so we don't map/filter on every render
+  const checkedPlanets = useMemo(
+    () =>
+      Object.keys(tracedPlanets).filter(
+        (key) => tracedPlanets[key] === true && key !== "Planets:"
+      ),
+    [tracedPlanets]
+  );
+
   useEffect(() => {
     if (trace) {
       setTraceStart(posRef.current);
     }
-  }, [trace]);
+  }, [trace, setTraceStart]); // Added dependency
 
-  // Trace checked planets
   return (
     <>
-      {checkedPlanets.map((item, index) => (
-        <Trace name={item} key={index} />
+      {checkedPlanets.map((item) => (
+        <Trace name={item} key={item} />
       ))}
     </>
   );

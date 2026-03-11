@@ -10,7 +10,8 @@ function CelestialSphere() {
   const meshRef = useRef();
   const wireframeRef = useRef();
 
-  const size = (celestialSphereSize * hScale) / 100;
+  // Apply a 2/3 scaling factor to make it one-third smaller
+  const size = ((celestialSphereSize * hScale) / 100) * (2 / 3);
 
   // Recreate PolarGridHelper whenever celestialSphereSize changes
   const polarGrid = useMemo(

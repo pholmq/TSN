@@ -1,21 +1,29 @@
 import { useEffect, useRef } from "react";
 import { useControls, useCreateStore, Leva, button } from "leva";
-import { useStore, useSettingsStore } from "../../store";
+import { useStore, useSettingsStore, usePlotStore } from "../../store";
 import {
   isValidDate,
   posToDate,
   speedFactOpts,
   sDay,
 } from "../../utils/time-date-functions";
-// Import the new store
-import { useEphemeridesStore } from "./ephemeridesStore";
+import { usePlotterStore } from "./plotStore";
 
-const Ephemerides = () => {
-  const { ephimerides, posRef } = useStore();
+const Plot = () => {
+  const { plot, posRef } = useStore(); // Using existing posRef
   const { settings } = useSettingsStore();
-  const setGenerationParams = useEphemeridesStore((s) => s.setGenerationParams);
 
-  const levaEphStore = useCreateStore();
+  // We reuse the 'ephimerides' flag in the main store to show this UI,
+  // or you might want to create a new 'showPlot' flag in your main store.
+  // Assuming for now we rely on a similar trigger or a new one.
+  // *Note: You likely need to add a 'plot' boolean to your main store.js if you want a separate menu toggle.*
+  // For this example, I will assume this component is rendered when active.
+
+  const setGenerationParams = usePlotStore((s) => s.setGenerationParams);
+  const isGenerating = usePlotStore((s) => s.isGenerating);
+  const clearResults = usePlotStore((s) => s.clearResults);
+
+  const levaPlotStore = useCreateStore();
 
   const valuesRef = useRef({
     "Start Date": posToDate(posRef.current),
@@ -26,7 +34,7 @@ const Ephemerides = () => {
 
   const checkboxes = {};
   settings.forEach((s) => {
-    if (s.type === "planet" && s.name !== "Earth") {
+    if (s.type === "planet") {
       if (valuesRef.current[s.name] === undefined) {
         valuesRef.current[s.name] = false;
       }
@@ -40,14 +48,15 @@ const Ephemerides = () => {
   });
 
   const handleCreate = () => {
+    if (isGenerating) return;
+
     const formValues = valuesRef.current;
 
     const checkedPlanets = settings
-      .filter((s) => s.type === "planet" && s.name !== "Earth")
+      .filter((s) => s.type === "planet")
       .filter((s) => formValues[s.name] === true)
       .map((s) => s.name);
 
-    // Send command to the Controller inside the Canvas
     setGenerationParams({
       startDate: formValues["Start Date"],
       endDate: formValues["End Date"],
@@ -58,35 +67,32 @@ const Ephemerides = () => {
   };
 
   const handleInvalidInput = (field, fallbackValue) => {
-    levaEphStore.set({ [field]: fallbackValue });
+    levaPlotStore.set({ [field]: fallbackValue });
     valuesRef.current[field] = fallbackValue;
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
   };
 
-  // Effect to update Start/End Date to current position when menu is opened
+  // Initialize dates
   useEffect(() => {
-    if (ephimerides) {
+    if (posRef.current) {
       const currentDate = posToDate(posRef.current);
-      
-      // Update valuesRef so generation uses the new date
       valuesRef.current["Start Date"] = currentDate;
       valuesRef.current["End Date"] = currentDate;
-
-      // Update Leva UI to show the new date
-      levaEphStore.set({ 
-        "Start Date": currentDate, 
-        "End Date": currentDate 
+      levaPlotStore.set({
+        "Start Date": currentDate,
+        "End Date": currentDate,
       });
     }
-  }, [ephimerides, posRef, levaEphStore]);
+  }, [posRef, levaPlotStore]);
 
   useControls(
     {
-      Generate: button(handleCreate),
+      "Generate Plots": button(handleCreate, { disabled: isGenerating }),
+      "Clear Plots": button(clearResults),
       "Start Date": {
-        value: posToDate(posRef.current),
+        value: posToDate(posRef.current || 0),
         onChange: (v) => {
           valuesRef.current["Start Date"] = v;
         },
@@ -96,7 +102,7 @@ const Ephemerides = () => {
         },
       },
       "End Date": {
-        value: posToDate(posRef.current),
+        value: posToDate(posRef.current || 0),
         onChange: (v) => {
           valuesRef.current["End Date"] = v;
         },
@@ -124,17 +130,17 @@ const Ephemerides = () => {
       },
       ...checkboxes,
     },
-    { store: levaEphStore },
-    [settings]
+    { store: levaPlotStore },
+    [settings, isGenerating]
   );
 
   return (
     <>
-      {ephimerides && (
+      {plot && (
         <div className="settings-div">
           <Leva
-            store={levaEphStore}
-            titleBar={{ drag: true, title: "Ephemerides", filter: false }}
+            store={levaPlotStore}
+            titleBar={{ drag: true, title: "Plot Generator", filter: false }}
             fill={false}
             hideCopyButton
             theme={{
@@ -149,4 +155,4 @@ const Ephemerides = () => {
   );
 };
 
-export default Ephemerides;
+export default Plot;

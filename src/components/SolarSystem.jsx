@@ -32,6 +32,9 @@ const SolarSystem = () => {
               <Cobj name="Neptune deferent">
                 <Cobj name="Neptune" />
               </Cobj>
+              <Cobj name="Pluto deferent">
+                <Cobj name="Pluto" />
+              </Cobj>
             </Cobj>
           </Cobj>
           <Cobj name="Venus deferent A">

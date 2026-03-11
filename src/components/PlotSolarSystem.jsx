@@ -1,4 +1,4 @@
-import  Pobj  from "./Pobj";
+import Pobj from "./Pobj";
 
 const PlotSolarSystem = () => {
   return (
@@ -13,7 +13,7 @@ const PlotSolarSystem = () => {
           <Pobj name="Sun deferent">
             <Pobj name="Sun">
               <Pobj name="Halleys deferent">
-                <Pobj name="Halleys"/>
+                <Pobj name="Halleys" />
               </Pobj>
 
               <Pobj name="Jupiter deferent">
@@ -27,6 +27,9 @@ const PlotSolarSystem = () => {
               </Pobj>
               <Pobj name="Neptune deferent">
                 <Pobj name="Neptune" />
+              </Pobj>
+              <Pobj name="Pluto deferent">
+                <Pobj name="Pluto" />
               </Pobj>
             </Pobj>
           </Pobj>

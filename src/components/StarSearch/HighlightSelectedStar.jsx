@@ -1,122 +1,212 @@
-import { useStore } from "../../store";
+import { useStore, useSettingsStore, useStarStore } from "../../store";
 import { Html } from "@react-three/drei";
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
+import { useThree, useFrame } from "@react-three/fiber";
 import starsData from "../../settings/BSC.json";
-
+import specialStarsData from "../../settings/star-settings.json";
 import { LABELED_STARS } from "../Stars/LabeledStars";
+import { getRaDecDistanceFromPosition } from "../../utils/celestial-functions";
 
 const CROSSHAIR_SIZE = 40; // px
 
 export default function HighlightSelectedStar() {
-  const position = useStore((s) => s.selectedStarPosition);
+  const { scene } = useThree();
   const selectedStarHR = useStore((s) => s.selectedStarHR);
+  const searchStars = useStore((s) => s.searchStars);
+  const selectedStarPosition = useStore((s) => s.selectedStarPosition);
   const showLabels = useStore((s) => s.showLabels);
-  const portalRef = useRef(document.body);
+  const setSelectedStarData = useStore((s) => s.setSelectedStarData);
 
-  // Get the selected star data and compute the display name
-  const starName = useMemo(() => {
+  const planetSettings = useSettingsStore((s) => s.settings);
+  const starSettings = useStarStore((s) => s.settings);
+
+  const groupRef = useRef();
+  const targetObjectRef = useRef(null);
+  const lastUpdateRef = useRef(0);
+
+  const specialStarDef = useMemo(() => {
     if (!selectedStarHR) return null;
 
-    const star = starsData.find((s) => s.HR?.toString() === selectedStarHR);
-    if (!star) return null;
-
-    // Apply the same naming logic: Name + HIP, or just HIP, or just HR
-    if (star.N && star.HIP) {
-      return `${star.N} / HIP ${star.HIP}`;
-    } else if (star.N && star.HR) {
-      return `${star.N} / HR ${star.HR}`;
-    } else if (star.HIP) {
-      return `HIP ${star.HIP}`;
-    } else if (star.HR) {
-      return `HR ${star.HR}`;
+    if (selectedStarHR.startsWith("Special:")) {
+      const name = selectedStarHR.replace("Special:", "");
+      return specialStarsData.find((s) => s.name === name);
     }
-    return "Unknown";
-  }, [selectedStarHR]);
 
-  const isLabeledStar = useMemo(() => {
-    if (!selectedStarHR) return false;
-    const star = starsData.find((s) => s.HR?.toString() === selectedStarHR);
-    if (!star) return false;
+    if (selectedStarHR.startsWith("Planet:")) return null;
 
-    return LABELED_STARS.some(
-      (query) =>
-        (star.N && star.N.toLowerCase() === query.toLowerCase()) ||
-        star.HIP === query ||
-        star.HR === query
+    return specialStarsData.find(
+      (s) => s.HR && String(s.HR) === String(selectedStarHR)
     );
   }, [selectedStarHR]);
 
-  if (!position) return null;
+  const starName = useMemo(() => {
+    if (!selectedStarHR) return null;
 
+    if (selectedStarHR.startsWith("Planet:")) {
+      return selectedStarHR.replace("Planet:", "");
+    }
+
+    let targetHR = selectedStarHR;
+    if (specialStarDef && specialStarDef.HR) {
+      targetHR = String(specialStarDef.HR);
+    } else if (selectedStarHR.startsWith("Special:")) {
+      return specialStarDef ? specialStarDef.name : "Unknown";
+    }
+
+    const bscStar = starsData.find(
+      (s) => s.HR && String(s.HR) === String(targetHR)
+    );
+    if (bscStar) {
+      const n = specialStarDef?.name || bscStar.N;
+      if (n && bscStar.HIP) return `${n} / HIP ${bscStar.HIP}`;
+      if (n && bscStar.HR) return `${n} / HR ${bscStar.HR}`;
+      if (n) return n;
+      if (bscStar.HIP) return `HIP ${bscStar.HIP}`;
+      return `HR ${bscStar.HR}`;
+    }
+
+    if (specialStarDef) return specialStarDef.name;
+    return "Unknown";
+  }, [selectedStarHR, specialStarDef]);
+
+  useEffect(() => {
+    targetObjectRef.current = null;
+    if (!selectedStarHR) return;
+
+    let objName = null;
+
+    if (selectedStarHR.startsWith("Planet:")) {
+      objName = selectedStarHR.replace("Planet:", "");
+    } else if (specialStarDef) {
+      objName = specialStarDef.name;
+    }
+
+    if (objName) {
+      const obj = scene.getObjectByName(objName);
+      if (obj) targetObjectRef.current = obj;
+    }
+  }, [selectedStarHR, specialStarDef, scene]);
+
+  useEffect(() => {
+    if (!selectedStarHR) {
+      setSelectedStarData(null);
+    }
+  }, [selectedStarHR, setSelectedStarData]);
+
+  useFrame(() => {
+    if (!selectedStarHR || !groupRef.current) return;
+
+    if (targetObjectRef.current) {
+      targetObjectRef.current.getWorldPosition(groupRef.current.position);
+    } else if (selectedStarPosition) {
+      groupRef.current.position.copy(selectedStarPosition);
+    }
+
+    const now = performance.now();
+    if (now - lastUpdateRef.current > 100) {
+      lastUpdateRef.current = now;
+
+      const currentPos = groupRef.current.position;
+      let magnitude = "N/A";
+
+      if (specialStarDef) {
+        magnitude = specialStarDef.magnitude || specialStarDef.V;
+      } else {
+        const star = starsData.find(
+          (s) => String(s.HR) === String(selectedStarHR)
+        );
+        if (star) magnitude = star.V;
+      }
+
+      const { ra, dec, dist, elongation } = getRaDecDistanceFromPosition(
+        currentPos,
+        scene
+      );
+
+      setSelectedStarData({
+        ra,
+        dec,
+        dist,
+        elongation,
+        mag: magnitude,
+      });
+    }
+  });
+
+  const isPlanet = selectedStarHR?.startsWith("Planet:");
+  const pName = isPlanet ? selectedStarHR.replace("Planet:", "") : null;
+  const pSetting = planetSettings.find((s) => s.name === pName);
+  const isPlanetVisible = pSetting ? pSetting.visible : true;
+
+  const hideText = isPlanet && showLabels && isPlanetVisible;
+
+  if (!selectedStarHR || !searchStars) return null;
   return (
-    <Html
-      position={position}
-      portal={{ current: document.body }}
-      style={{ pointerEvents: "none" }}
-      zIndexRange={[10, 0]}
-    >
-      <div
-        style={{
-          width: `${CROSSHAIR_SIZE}px`,
-          height: `${CROSSHAIR_SIZE}px`,
-          position: "absolute",
-          top: "0",
-          left: "0",
-          transform: "translate(-50%, -50%)",
-        }}
+    <group ref={groupRef}>
+      <Html
+        position={[0, 0, 0]}
+        portal={{ current: document.body }}
+        style={{ pointerEvents: "none" }}
+        zIndexRange={[10, 0]}
       >
-        {/* Star name label above the crosshair */}
-        {starName && !(showLabels && isLabeledStar) && (
+        <div
+          style={{
+            width: `${CROSSHAIR_SIZE}px`,
+            height: `${CROSSHAIR_SIZE}px`,
+            position: "absolute",
+            top: "0",
+            left: "0",
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          {starName && !hideText && (
+            <div
+              className="name-label"
+              style={{
+                position: "absolute",
+                top: "0px",
+                left: "50%",
+                transform: "translateX(-50%) translateY(-150%)", // Properly shifts it above the crosshair
+              }}
+            >
+              <span>{starName}</span>
+            </div>
+          )}
           <div
-            className="name-label"
             style={{
               position: "absolute",
-              top: "-5px",
+              bottom: 0,
               left: "50%",
+              width: "4px",
+              height: "30%",
+              background: "yellow",
               transform: "translateX(-50%)",
             }}
-          >
-            <span>{starName}</span>
-          </div>
-        )}
-
-        {/* Bottom arm */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: "50%",
-            width: "4px",
-            height: "30%",
-            background: "yellow",
-            transform: "translateX(-50%)",
-          }}
-        />
-        {/* Left arm */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: "50%",
-            height: "4px",
-            width: "30%",
-            background: "yellow",
-            transform: "translateY(-50%)",
-          }}
-        />
-        {/* Right arm */}
-        <div
-          style={{
-            position: "absolute",
-            right: 0,
-            top: "50%",
-            height: "4px",
-            width: "30%",
-            background: "yellow",
-            transform: "translateY(-50%)",
-          }}
-        />
-      </div>
-    </Html>
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: "50%",
+              height: "4px",
+              width: "30%",
+              background: "yellow",
+              transform: "translateY(-50%)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              right: 0,
+              top: "50%",
+              height: "4px",
+              width: "30%",
+              background: "yellow",
+              transform: "translateY(-50%)",
+            }}
+          />
+        </div>
+      </Html>
+    </group>
   );
 }

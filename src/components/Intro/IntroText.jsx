@@ -2,63 +2,92 @@ import React, { useRef, useState, useEffect } from "react";
 import { Text3D } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useStore } from "../../store";
+import TychosLogo3D from "./TychosLogo3D";
 
 export default function IntroText() {
   const runIntro = useStore((s) => s.runIntro);
   const setRunIntro = useStore((s) => s.setRunIntro);
-  const materialRef = useRef();
-  const warningMaterialRef = useRef(); // New ref for the warning text material
 
-  // State to track if the device is touch-enabled
+  const materialRef = useRef();
+  const warningMaterialRef = useRef();
+  const logoMaterialRef = useRef(); // Ref for the 3D logo
+
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-  // Check for touch capabilities on mount
+  // Decouple the banner's existence from runIntro so it can finish fading out
+  const [isFinished, setIsFinished] = useState(!runIntro);
+
   useEffect(() => {
-    // Use modern CSS media query for "coarse" pointer (standard for touchscreens)
     const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
-    // Check for 'ontouchstart' event for broader compatibility
-    const hasTouchEvents = 'ontouchstart' in window;
-    
+    const hasTouchEvents = "ontouchstart" in window;
+
     if (isCoarsePointer || hasTouchEvents) {
       setIsTouchDevice(true);
     }
   }, []);
 
-  // Animate opacity over time using the ref
+  // If the intro is ever reset/replayed, reset the banner
+  useEffect(() => {
+    if (runIntro) {
+      setIsFinished(false);
+      if (materialRef.current) materialRef.current.opacity = 1;
+      if (warningMaterialRef.current) warningMaterialRef.current.opacity = 1;
+      if (logoMaterialRef.current) logoMaterialRef.current.opacity = 1;
+    }
+  }, [runIntro]);
+
   useFrame((state, delta) => {
-    if (!runIntro) return;
+    if (isFinished) return;
+
+    // Only fade if opacity is significantly above 0
     if (materialRef.current && materialRef.current.opacity > 0.01) {
+      // Fade twice as fast if the user clicked to interrupt (runIntro === false)
+      const fadeSpeed = runIntro ? 0.07 : 0.14;
+
       const newOpacity = Math.max(
-        materialRef.current.opacity - delta * 0.07,
+        materialRef.current.opacity - delta * fadeSpeed,
         0
       );
       materialRef.current.opacity = newOpacity;
 
-      // Apply the same fade to the warning text material if it exists
       if (warningMaterialRef.current) {
         warningMaterialRef.current.opacity = newOpacity;
       }
+
+      if (logoMaterialRef.current) {
+        logoMaterialRef.current.opacity = newOpacity;
+      }
     } else {
-      // End the introduction once the text is fully faded
-      setRunIntro(false);
+      // Once faded out, turn off the flag and unmount
+      setIsFinished(true);
+      // Only clear runIntro if it's still true (user might have already clicked through)
+      if (runIntro) {
+        setRunIntro(false);
+      }
     }
   });
 
-  // Don't render if intro is not running
-  if (!runIntro) return null;
+  if (isFinished) return null;
 
-  // Title position and size constants for easy reference and alignment
-  const titlePosition = [-140, 0, -100];
-  const warningPos = [-180, 0, -100]; 
+  const titlePosition = [-140, 0, -150];
+  const warningPos = [-180, 0, -100];
+
+  // Adjusted to sit much closer to the left of the title
+  const logoPosition = [-125, 0, -185];
 
   return (
     <>
-      {/* Main Title Text: "The TYCHOSIUM" */}
+      <TychosLogo3D
+        materialRef={logoMaterialRef}
+        position={logoPosition}
+        rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
+      />
+
       <Text3D
         font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
         position={titlePosition}
         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-        size={20}
+        size={30}
         height={8}
         curveSegments={12}
         bevelEnabled
@@ -67,7 +96,7 @@ export default function IntroText() {
         bevelOffset={0}
         bevelSegments={8}
       >
-        The TYCHOSIUM
+        The Tychosium
         <meshStandardMaterial
           ref={materialRef}
           color="white"
@@ -77,15 +106,13 @@ export default function IntroText() {
           opacity={1}
         />
       </Text3D>
-      
-      {/* Conditional Warning Text for Touch Devices, positioned below the title */}
+
       {isTouchDevice && (
         <Text3D
-        font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
-          // Shifted position to be visually 'under' the main title (adjusting X coordinate)
+          font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
           position={warningPos}
           rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-          size={10}
+          size={20}
           height={2}
           curveSegments={12}
           bevelEnabled
@@ -97,7 +124,7 @@ export default function IntroText() {
           Optimized for Mouse & Keyboard
           <meshStandardMaterial
             ref={warningMaterialRef}
-            color="#FFD700" // Yellow/Gold color for a warning hint
+            color="#FFFFFF"
             metalness={0.2}
             roughness={0.5}
             transparent={true}

@@ -1,3 +1,4 @@
+// src/TSNext.jsx
 import "./index.css";
 import { useEffect, Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
@@ -10,11 +11,14 @@ import PlotSolarSystem from "./components/PlotSolarSystem";
 import TraceController from "./components/Trace/TraceController";
 import LightEffectsMenu from "./components/Menus/LightEffectsMenu";
 import PlanetsPositionsMenu from "./components/Menus/PlanetsPositionsMenu";
-import StarsHelpersMenu from "./components/Menus/StarsHelpersMenu";
 import PosController from "./components/PosController";
 import Positions from "./components/Menus/Positions";
-import Ephemerides from "./components/Menus/Ephemerides";
-import EphController from "./components/EphController";
+import Ephemerides from "./components/Ephemerides/Ephemerides";
+import EphController from "./components/Ephemerides/EphController";
+import EphemeridesResult from "./components/Ephemerides/EphemeridesResult";
+import EphemeridesProgress from "./components/Ephemerides/EphemeridesProgress";
+import Plot from "./components/Plot/Plot";
+// import PlotController from "./components/Plot/PlotController";
 import Stars from "./components/Stars/Stars";
 import LabeledStars from "./components/Stars/LabeledStars";
 // import BSCStars from "./components/Stars/BSCStars";
@@ -32,7 +36,11 @@ import HighlightSelectedStar from "./components/StarSearch/HighlightSelectedStar
 import Help from "./components/Help/Help";
 import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
 import TransitionCamera from "./components/PlanetCamera/TransitionCamera";
-import Constellations from"./components/Stars/Constellations";
+import Constellations from "./components/Stars/Constellations";
+import PlanetCameraHelper from "./components/PlanetCamera/PlanetCameraHelper";
+import { VideoCanvas } from "./components/Recorder/r3f-video-recorder"; 
+import RecorderMenu from "./components/Menus/RecorderMenu";
+import RecorderController from "./components/Recorder/RecorderController";
 
 const isTouchDevice = () => {
   return (
@@ -67,6 +75,7 @@ const TSNext = () => {
   const searchStars = useStore((s) => s.searchStars);
   const planetCamera = useStore((s) => s.planetCamera);
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+  const showPerf = useStore((s) => s.showPerf);
 
   const isTouchDev = isTouchDevice();
 
@@ -103,20 +112,31 @@ const TSNext = () => {
         <UserInterface />
         <Positions />
         <Ephemerides />
+        <EphemeridesResult />
+        <EphemeridesProgress />
+        <Plot />
         <EditSettings />
         <PlanetCameraUI />
         <StarDataPanel />
         <PlanetCameraCompass />
         <Help />
+        <RecorderMenu />
         {BSCStarsOn && !isTouchDev && searchStars && <StarSearch />}
       </div>
-      <Canvas
+      <VideoCanvas
         id="canvas"
-        frameloop="demand"
-        gl={{ logarithmicDepthBuffer: true }}
+        frameloop="always"
+        fps={60} 
+        gl={{ 
+          logarithmicDepthBuffer: true,
+          preserveDrawingBuffer: true // Required for pixel extraction
+        }}
         style={getCanvasStyle()}
+        raycaster={{
+          params: { Line: { threshold: 0.1 } },
+        }}
       >
-        {/* IntroQuote is always rendered and visible */}
+        <RecorderController />
         <IntroQuote />
 
         {/* Other components wrapped in Suspense */}
@@ -132,8 +152,8 @@ const TSNext = () => {
           <PosController />
           <TraceController />
           <EphController />
+          {/* <PlotController /> */}
           <PlanetsPositionsMenu />
-          <StarsHelpersMenu />
           <LightEffectsMenu />
           <SolarSystem />
           <PlotSolarSystem />
@@ -143,8 +163,9 @@ const TSNext = () => {
           {BSCStarsOn && !isTouchDev && <HighlightSelectedStar />}
           <Zodiac />
           <Constellations />
+          <PlanetCameraHelper />
         </Suspense>
-      </Canvas>
+      </VideoCanvas>
     </>
   );
 };

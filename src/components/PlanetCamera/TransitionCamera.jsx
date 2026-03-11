@@ -1,227 +1,335 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PerspectiveCamera } from "@react-three/drei";
-import { Vector3, Quaternion, CubicBezierCurve3 } from "three";
-import { useStore } from "../../store";
-import { usePlanetCameraStore } from "./planetCameraStore";
 import * as THREE from "three";
+import { useStore, useSettingsStore } from "../../store";
+import { usePlanetCameraStore } from "./planetCameraStore";
+import { Ground } from "./Ground";
+import { kmToUnits, unitsToKm } from "../../utils/celestial-functions";
+
+const DUR = 12.0;
+const ORBIT_PCT = 0.4;
+const GLIDE_PCT = 0.85;
+const RUNWAY = 0.5;
 
 export default function TransitionCamera() {
-  const transitionCamRef = useRef(null);
-  const curveRef = useRef(null);
-  const lookAtTargetRef = useRef(new Vector3());
-  const progress = useRef(0);
-
   const { scene } = useThree();
+  const cam = useRef(null);
+  const groundRef = useRef(null);
   const planetCamera = useStore((s) => s.planetCamera);
-  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
-  const setCameraTransitioning = useStore((s) => s.setCameraTransitioning);
+  const { cameraTransitioning, setCameraTransitioning } = useStore();
 
-  const planetCameraTarget = usePlanetCameraStore((s) => s.planetCameraTarget);
+  // --- NEW: Pull in altitude and ground settings ---
+  const target = usePlanetCameraStore((s) => s.planetCameraTarget);
+  const planCamHeight = usePlanetCameraStore((s) => s.planCamHeight);
+  const showGround = usePlanetCameraStore((s) => s.showGround);
 
-  const startQuat = useRef(new Quaternion());
-  const endQuat = useRef(new Quaternion());
-  const startFov = useRef(15);
+  // --- NEW: Pre-calculate the exact final opacities based on altitude ---
+  const targetOpacities = useMemo(() => {
+    const pRadiusKm = unitsToKm(
+      useSettingsStore.getState().getSetting(target)?.actualSize || 0.00426
+    );
+    const low = pRadiusKm * 1.0005;
+    const high = pRadiusKm * 1.001;
+
+    let pOpacity =
+      planCamHeight <= low
+        ? 0
+        : planCamHeight >= high
+        ? 1
+        : Math.pow((planCamHeight - low) / (high - low), 3);
+
+    let gOpacity = 1 - pOpacity;
+
+    return {
+      planet: showGround ? pOpacity : 0,
+      ground: showGround ? gOpacity : 0,
+    };
+  }, [planCamHeight, target, showGround]);
+
+  const state = useMemo(
+    () => ({
+      t: 0,
+      orbitDist: 0,
+      startFov: 50,
+      endFov: 50,
+      startPos: new THREE.Vector3(),
+      startQuat: new THREE.Quaternion(),
+      endPos: new THREE.Vector3(),
+      endQuat: new THREE.Quaternion(),
+      center: new THREE.Vector3(),
+      curve: new THREE.CubicBezierCurve3(),
+      vStart: new THREE.Vector3(),
+      vMid: new THREE.Vector3(),
+      axis: new THREE.Vector3(),
+      dir: new THREE.Vector3(),
+      startUp: new THREE.Vector3(),
+      endUp: new THREE.Vector3(),
+      leveledUp: new THREE.Vector3(),
+      leveledQuat: new THREE.Quaternion(),
+      look: new THREE.Vector3(),
+      sight: new THREE.Vector3(),
+      startSight: new THREE.Vector3(),
+      vCur: new THREE.Vector3(),
+      temp: new THREE.Vector3(),
+      angle: 0,
+      groundPos: new THREE.Vector3(),
+    }),
+    []
+  );
 
   useEffect(() => {
-    if (planetCamera) {
-      setCameraTransitioning(true);
+    const skip = (e) => {
+      if (e.button === 0 && cameraTransitioning) state.t = 1.0;
+    };
+    window.addEventListener("pointerdown", skip);
+    return () => window.removeEventListener("pointerdown", skip);
+  }, [cameraTransitioning, state]);
+
+  useEffect(() => {
+    if (planetCamera) setCameraTransitioning(true);
+  }, [planetCamera, setCameraTransitioning]);
+
+  useLayoutEffect(() => {
+    if (!cameraTransitioning || !cam.current) return;
+
+    const oCam = scene.getObjectByName("OrbitCamera");
+    const pCam = scene.getObjectByName("PlanetCamera");
+    const pObj = scene.getObjectByName(target);
+    const mount = pCam?.parent;
+    if (!oCam || !pCam || !pObj || !mount) return;
+
+    if (pObj.material) {
+      pObj.material.transparent = true;
+      pObj.material.opacity = 1.0;
+      pObj.material.needsUpdate = true;
     }
-  }, [planetCamera]);
 
-  useEffect(() => {
-    const handleClick = (event) => {
-      if (event.button === 0 && cameraTransitioning) {
-        // Left click - stop transition immediately
-        setCameraTransitioning(false);
-      }
-    };
+    [oCam, pCam, pObj, mount].forEach((obj) => obj.updateMatrixWorld(true));
 
-    document.addEventListener("mousedown", handleClick);
-    return () => {
-      document.removeEventListener("mousedown", handleClick);
-    };
-  }, [cameraTransitioning]);
+    state.t = 0;
+    oCam.getWorldPosition(state.startPos);
+    oCam.getWorldQuaternion(state.startQuat);
+    pCam.getWorldPosition(state.endPos);
+    pCam.getWorldQuaternion(state.endQuat);
+    pObj.getWorldPosition(state.center);
 
-  useEffect(() => {
-    if (cameraTransitioning && transitionCamRef.current) {
-      const orbitCam = scene.getObjectByName("OrbitCamera");
-      const planetCam = scene.getObjectByName("PlanetCamera");
-      const planetObj = scene.getObjectByName(planetCameraTarget);
+    state.startUp.set(0, 1, 0).applyQuaternion(state.startQuat);
+    state.endUp.set(0, 1, 0).applyQuaternion(state.endQuat);
+    pCam.getWorldDirection(state.dir);
 
-      if (!orbitCam || !planetCam || !planetObj) return;
+    state.startFov = oCam.fov;
+    state.endFov = pCam.fov;
+    state.orbitDist = state.startPos.distanceTo(state.center);
 
-      // FORCE planet visible
-      if (planetObj.material) {
-        planetObj.material.transparent = true;
-        planetObj.material.opacity = 1;
-        planetObj.material.needsUpdate = true;
-      }
+    const oCamForward = new THREE.Vector3(0, 0, -1)
+      .applyQuaternion(state.startQuat)
+      .normalize();
+    state.startSight
+      .copy(state.startPos)
+      .add(oCamForward.multiplyScalar(state.orbitDist));
 
-      // Get positions
-      const startPos = new Vector3();
-      orbitCam.getWorldPosition(startPos);
+    const mountQuat = new THREE.Quaternion();
+    mount.getWorldQuaternion(mountQuat);
+    const localYawQuat = new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(0, 1, 0),
+      pCam.rotation.y
+    );
+    state.leveledQuat.copy(mountQuat).multiply(localYawQuat);
 
-      const endPos = new Vector3();
-      planetCam.getWorldPosition(endPos);
+    const worldBackward = new THREE.Vector3(0, 0, 1)
+      .applyQuaternion(state.leveledQuat)
+      .normalize();
+    state.leveledUp.set(0, 1, 0).applyQuaternion(state.leveledQuat).normalize();
 
-      const planetCenter = new Vector3();
-      planetObj.getWorldPosition(planetCenter);
+    const planetRadiusKm = unitsToKm(
+      useSettingsStore.getState().getSetting(target)?.actualSize || 0.00426
+    );
+    const groundHeightUnits = kmToUnits(
+      usePlanetCameraStore.getState().groundHeight
+    );
+    const groundOffset = kmToUnits(planetRadiusKm) + groundHeightUnits;
+    state.groundPos
+      .copy(state.center)
+      .add(state.leveledUp.clone().multiplyScalar(groundOffset));
 
-      // Save orientations
-      orbitCam.getWorldQuaternion(startQuat.current);
-      planetCam.getWorldQuaternion(endQuat.current);
-      startFov.current = orbitCam.fov;
-
-      // DEBUG: Show planet camera actual orientation
-      // const debugGroup1 = new THREE.Group();
-      // debugGroup1.name = "debugPlanetCam";
-      // debugGroup1.position.copy(endPos);
-      // debugGroup1.quaternion.copy(endQuat.current);
-
-      // const forwardArrow1 = new THREE.ArrowHelper(
-      //   new THREE.Vector3(0, 0, -1),
-      //   new THREE.Vector3(0, 0, 0),
-      //   10,
-      //   0x0000ff // Blue = forward
-      // );
-      // const upArrow1 = new THREE.ArrowHelper(
-      //   new THREE.Vector3(0, 1, 0),
-      //   new THREE.Vector3(0, 0, 0),
-      //   10,
-      //   0x00ff00 // Green = up
-      // );
-      // debugGroup1.add(forwardArrow1);
-      // debugGroup1.add(upArrow1);
-      // scene.add(debugGroup1);
-
-      // Calculate approach (your existing code)
-      const planetCamWorldDirection = new Vector3();
-      planetCam.getWorldDirection(planetCamWorldDirection);
-
-      const approachDirection = planetCamWorldDirection.clone().negate();
-      const endDist = new Vector3().subVectors(endPos, planetCenter).length();
-      const approachAltitude = endDist * 2;
-      const approachDistance = endDist * 4;
-
-      const approachPoint = endPos
-        .clone()
-        .add(approachDirection.multiplyScalar(approachDistance));
-      const heightOffset = approachAltitude - endDist;
-      const planetUp = new Vector3()
-        .subVectors(endPos, planetCenter)
-        .normalize();
-      approachPoint.add(planetUp.multiplyScalar(heightOffset));
-
-      const midPoint = new Vector3().lerpVectors(startPos, approachPoint, 0.5);
-
-      // DEBUG: Show calculated end position and approach direction
-      // const debugGroup2 = new THREE.Group();
-      // debugGroup2.name = "debugCalculated";
-      // debugGroup2.position.copy(endPos);
-
-      // const approachArrow = new THREE.ArrowHelper(
-      //   approachDirection.normalize(),
-      //   new THREE.Vector3(0, 0, 0),
-      //   10,
-      //   0xff0000 // Red = approach direction
-      // );
-      // debugGroup2.add(approachArrow);
-      // scene.add(debugGroup2);
-
-      curveRef.current = new CubicBezierCurve3(
-        startPos,
-        midPoint,
-        approachPoint,
-        endPos
+    const mid = state.center
+      .clone()
+      .add(
+        worldBackward
+          .clone()
+          .add(state.leveledUp)
+          .normalize()
+          .multiplyScalar(state.orbitDist)
       );
 
-      // Set initial camera state
-      transitionCamRef.current.position.copy(startPos);
-      transitionCamRef.current.quaternion.copy(startQuat.current);
-      transitionCamRef.current.fov = startFov.current;
-      transitionCamRef.current.updateProjectionMatrix();
+    const p2 = state.endPos
+      .clone()
+      .add(worldBackward.clone().multiplyScalar(state.orbitDist * RUNWAY));
+    const p1 = mid
+      .clone()
+      .lerp(p2, 0.5)
+      .add(state.leveledUp.clone().multiplyScalar(state.orbitDist * 0.4));
+    state.curve.v0.copy(mid);
+    state.curve.v1.copy(p1);
+    state.curve.v2.copy(p2);
+    state.curve.v3.copy(state.endPos);
 
-      lookAtTargetRef.current.copy(planetCenter);
-      progress.current = 0;
+    const forward = new THREE.Vector3(0, 0, -1)
+      .applyQuaternion(state.leveledQuat)
+      .normalize();
+    state.sight
+      .copy(state.endPos)
+      .add(forward.multiplyScalar(state.orbitDist * 0.5));
 
-      // Cleanup
-      return () => {
-        const debug1 = scene.getObjectByName("debugPlanetCam");
-        const debug2 = scene.getObjectByName("debugCalculated");
-        if (debug1) scene.remove(debug1);
-        if (debug2) scene.remove(debug2);
-      };
+    state.vStart.subVectors(state.startPos, state.center).normalize();
+    state.vMid.subVectors(mid, state.center).normalize();
+    state.angle = state.vStart.angleTo(state.vMid);
+    state.axis.crossVectors(state.vStart, state.vMid).normalize();
+
+    cam.current.fov = state.startFov;
+    cam.current.position.copy(state.startPos);
+    cam.current.quaternion.copy(state.startQuat);
+    cam.current.updateProjectionMatrix();
+  }, [cameraTransitioning, scene, target, state]);
+
+  useFrame((_, delta) => {
+    if (!cameraTransitioning || !cam.current) return;
+    state.t += delta / DUR;
+
+    const pCam = scene.getObjectByName("PlanetCamera");
+    const pObj = scene.getObjectByName(target);
+
+    if (pCam) {
+      pCam.getWorldPosition(state.endPos);
+      pCam.getWorldQuaternion(state.endQuat);
     }
-  }, [cameraTransitioning]);
 
-  const duration = 10; // seconds
+    // --- FIX: DYNAMICALLY FADE PLANET OPACITY ---
+    if (pObj && pObj.material) {
+      // Linearly fade the planet from 1.0 to its target opacity as we approach
+      pObj.material.opacity = THREE.MathUtils.lerp(
+        1.0,
+        targetOpacities.planet,
+        state.t
+      );
+    }
 
-  const blendStartQuat = useRef(new Quaternion());
+    // --- FIX: CONDITIONAL GROUND FADE LOGIC ---
+    if (groundRef.current) {
+      groundRef.current.position.copy(state.groundPos);
+      groundRef.current.quaternion.copy(state.leveledQuat);
 
-  useFrame((state, delta) => {
-    if (cameraTransitioning && curveRef.current && transitionCamRef.current) {
-      progress.current += delta / duration;
+      // Only fade in the ground if the target camera altitude says it should be visible
+      if (state.t > 0.5 && targetOpacities.ground > 0) {
+        groundRef.current.visible = true;
+        const fade = THREE.MathUtils.clamp((state.t - 0.5) / 0.3, 0, 1);
 
-      //WIP Since the animation doesent work yet we end premature
-      if (progress.current >= 0.5) {
-        progress.current = 1;
-        setCameraTransitioning(false);
-      }
-      //
-      if (progress.current >= 1) {
-        progress.current = 1;
-        setCameraTransitioning(false);
-      }
-
-      const eased = 1 - Math.pow(1 - progress.current, 8);
-
-      // Get point on curve
-      const point = curveRef.current.getPoint(eased);
-      transitionCamRef.current.position.copy(point);
-
-      if (progress.current < 0.95) {
-        // First 95%: look at planet with gradually rotating UP
-        const defaultUp = new Vector3(0, 1, 0);
-        const planetCamUp = new Vector3(0, 1, 0).applyQuaternion(
-          endQuat.current
-        );
-
-        const blendedUp = new Vector3().lerpVectors(
-          defaultUp,
-          planetCamUp,
-          eased
-        );
-
-        transitionCamRef.current.up.copy(blendedUp);
-        transitionCamRef.current.lookAt(lookAtTargetRef.current);
-
-        // Save quaternion at 95% for smooth blend
-        if (progress.current >= 0.94) {
-          blendStartQuat.current.copy(transitionCamRef.current.quaternion);
-        }
+        groundRef.current.traverse((child) => {
+          if (child.isMesh && child.material) {
+            const baseOpacity = child.userData.baseOpacity || 1;
+            child.material.transparent = true;
+            // Limit the maximum fade by the target's gOpacity
+            child.material.opacity =
+              baseOpacity * fade * targetOpacities.ground;
+          }
+        });
       } else {
-        // Last 5%: gentle blend to final orientation
-        const blendProgress = (progress.current - 0.95) / 0.05;
-        const currentQuat = new Quaternion();
-
-        currentQuat.slerpQuaternions(
-          blendStartQuat.current,
-          endQuat.current,
-          blendProgress
-        );
-        transitionCamRef.current.quaternion.copy(currentQuat);
+        groundRef.current.visible = false;
       }
+    }
+
+    if (state.t >= 1.0) {
+      cam.current.position.copy(state.endPos);
+      cam.current.quaternion.copy(state.endQuat);
+      cam.current.fov = state.endFov;
+      cam.current.updateProjectionMatrix();
+
+      // Ensure exact final opacity before handing off
+      if (pObj && pObj.material) pObj.material.opacity = targetOpacities.planet;
+
+      setCameraTransitioning(false);
+      return;
+    }
+
+    const easeOutEx = (x) => 1 - Math.pow(1 - x, 6);
+    const easeInOut = (x) =>
+      x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+
+    if (state.t <= ORBIT_PCT) {
+      const localT = state.t / ORBIT_PCT;
+      const t = easeInOut(localT);
+
+      state.vCur.copy(state.vStart).applyAxisAngle(state.axis, state.angle * t);
+      cam.current.position
+        .copy(state.center)
+        .add(state.vCur.multiplyScalar(state.orbitDist));
+
+      cam.current.up.copy(state.startUp);
+      state.look.copy(state.startSight).lerp(state.endPos, t);
+      cam.current.lookAt(state.look);
+    } else if (state.t <= GLIDE_PCT) {
+      const localT = (state.t - ORBIT_PCT) / (GLIDE_PCT - ORBIT_PCT);
+      const tPos = easeOutEx(localT);
+      const tLook = easeInOut(localT);
+
+      state.curve.getPoint(tPos, cam.current.position);
+
+      const landingRadius = state.endPos.distanceTo(state.center);
+      const currentRadius = cam.current.position.distanceTo(state.center);
+
+      if (currentRadius < landingRadius) {
+        const outwardDir = cam.current.position
+          .clone()
+          .sub(state.center)
+          .normalize();
+        cam.current.position
+          .copy(state.center)
+          .add(outwardDir.multiplyScalar(landingRadius));
+      }
+
+      cam.current.up
+        .copy(state.startUp)
+        .lerp(state.leveledUp, tLook)
+        .normalize();
+
+      state.look.copy(state.endPos).lerp(state.sight, tLook);
+      cam.current.lookAt(state.look);
+
+      cam.current.fov = THREE.MathUtils.lerp(
+        state.startFov,
+        state.endFov,
+        tLook
+      );
+      cam.current.updateProjectionMatrix();
+    } else {
+      const localT = (state.t - GLIDE_PCT) / (1 - GLIDE_PCT);
+      const t = easeInOut(localT);
+
+      cam.current.position.copy(state.endPos);
+
+      cam.current.quaternion.slerpQuaternions(
+        state.leveledQuat,
+        state.endQuat,
+        t
+      );
+
+      cam.current.fov = state.endFov;
+      cam.current.updateProjectionMatrix();
     }
   });
-  if (!cameraTransitioning) return null;
 
   return (
-    <PerspectiveCamera
-      ref={transitionCamRef}
-      makeDefault={true}
-      near={0.0001}
-      far={10000000000000}
-    />
+    <>
+      <PerspectiveCamera
+        ref={cam}
+        makeDefault={cameraTransitioning}
+        near={0.0001}
+        far={10000000}
+      />
+      {/* <group ref={groundRef} visible={false}>
+        <Ground />
+      </group> */}
+    </>
   );
 }

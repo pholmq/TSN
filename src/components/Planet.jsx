@@ -1,19 +1,26 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef, useEffect, memo } from "react";
+import { useRef, useEffect, memo, useMemo } from "react";
+import * as THREE from "three";
 import { useStore } from "../store";
 import { usePlanetCameraStore } from "./PlanetCamera/planetCameraStore";
 import useTextureLoader from "../utils/useTextureLoader";
 import CelestialSphere from "./Helpers/CelestialSphere";
 import PolarLine from "./Helpers/PolarLine";
+import TropicalZodiac from "./Helpers/TropicalZodiac";
 import HoverObj from "../components/HoverObj/HoverObj";
 import PlanetRings from "./PlanetRings";
-import NameLabel from "./Labels/NameLabel";
+import NameLabel from "./Labels/NameLabelBillboard";
 import GeoSphere from "./Helpers/GeoSphere";
 
+// Define reusable vector outside to prevent GC pressure
+const worldPositionVec = new THREE.Vector3();
+
 const Planet = memo(function Planet({ s, actualMoon, name }) {
-  const planetRef = useRef(); // Group for rotation and scaling
+  const planetRef = useRef();
+  const transformRef = useRef(); // New ref for the scale group
   const pivotRef = useRef();
   const materialRef = useRef();
+
   const posRef = useStore((state) => state.posRef);
   const sunLight = useStore((state) => state.sunLight);
   const planetScale = useStore((state) => state.planetScale);
@@ -23,7 +30,6 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const planetCameraTarget = usePlanetCameraStore(
     (state) => state.planetCameraTarget
   );
-
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
 
   const { texture, isLoading } = s.texture
@@ -40,8 +46,8 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     }
   }, [texture, s.light]);
 
-  const rotationSpeed = s.rotationSpeed || 0;
-  const rotationStart = s.rotationStart || 0;
+  const rotationSpeed = Number(s.rotationSpeed || 0);
+  const rotationStart = Number(s.rotationStart || 0);
 
   let size = actualPlanetSizes ? s.actualSize : s.size;
   let visible = s.visible;
@@ -52,72 +58,82 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
 
   useFrame(() => {
     if (s.fixedTilt && pivotRef.current) {
-      //Adjust the tilt so that it's fixed in respect to the orbit
       pivotRef.current.rotation.y = -(
         s.speed * posRef.current -
         s.startPos * (Math.PI / 180)
       );
     }
 
-    if (rotationSpeed && planetRef.current) {
-      // Rotate the group containing the planet
+    if (planetRef.current) {
       planetRef.current.rotation.y =
         rotationStart + rotationSpeed * posRef.current;
     }
   });
 
-  const tilt = s.tilt || 0;
-  const tiltb = s.tiltb || 0;
+  const tilt = Number(s.tilt || 0);
+  const tiltb = Number(s.tiltb || 0);
 
-  // Hide label and hoverObj if this planet is the active planet camera target
   const showLabel =
     visible &&
     !(planetCamera && !cameraTransitioning && name === planetCameraTarget);
 
+  // Updated Geometry logic: 256 for Earth, 128 otherwise
+  const planetGeometry = useMemo(() => {
+    const segments = s.name === "Earth" ? 256 : 128;
+    return <sphereGeometry args={[size, segments, segments]} />;
+  }, [size, s.name]);
+
   return (
-    <group
-      ref={pivotRef}
-      rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}
-    >
-      {s.name === "Earth" && <CelestialSphere />}
-      {(s.name === "Earth" || s.name === "Sun") && (
-        <PolarLine visible={visible} />
-      )}
-      {showLabel && <NameLabel s={s} />}
-      {showLabel && <HoverObj s={s} />}
-      <group ref={planetRef} scale={planetScale}>
-        <mesh name={name} visible={visible} ref={planetRef}>
-          <sphereGeometry args={[size, 256, 256]} />
-          <meshStandardMaterial
-            ref={materialRef}
-            color={isLoading || !texture ? s.color : "#ffffff"}
-            emissive={s.light && s.color}
-            emissiveIntensity={s.light && sunLight}
-            roughness={0.7}
-            metalness={0.2}
-            transparent={true}
-            opacity={s.opacity ? s.opacity : 1}
-            depthWrite={false}
-          />
-          {s.light && <pointLight intensity={sunLight * 100000} />}
-        </mesh>
-        {s.geoSphere && geoSphere ? (
-          <GeoSphere
-            s={s}
-            size={size}
-            visible={visible}
-            color={s.geoSphereColor}
-          />
-        ) : null}
-        {s.rings && (
-          <PlanetRings
-            innerRadius={s.rings.innerRadius + s.size}
-            outerRadius={s.rings.outerRadius + s.size}
-            texture={s.rings.texture}
-            opacity={s.rings.opacity}
-            actualSize={s.actualSize}
-          />
+    <group>
+      {s.name === "Earth" && <TropicalZodiac />}
+      <group
+        ref={pivotRef}
+        rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}
+      >
+        {s.name === "Earth" && <CelestialSphere />}
+
+        {(s.name === "Earth" || s.name === "Sun") && (
+          <PolarLine visible={visible} />
         )}
+        {showLabel && <NameLabel s={s} />}
+        {showLabel && <HoverObj s={s} />}
+
+        <group ref={transformRef} scale={planetScale}>
+          <mesh name={name} visible={visible} ref={planetRef}>
+            {planetGeometry}
+            <meshStandardMaterial
+              ref={materialRef}
+              color={
+                isLoading || !texture ? s.color : s.textureTint || "#ffffff"
+              }
+              emissive={s.light && s.color}
+              emissiveIntensity={s.light && sunLight}
+              roughness={0.7}
+              metalness={0.2}
+              transparent={true}
+              opacity={s.opacity ? s.opacity : 1}
+              // depthWrite={false} // Note: Keeping this as requested, but careful with overlapping transparent objects
+            />
+            {s.light && <pointLight intensity={sunLight * 100000} />}
+          </mesh>
+          {s.geoSphere && geoSphere ? (
+            <GeoSphere
+              s={s}
+              size={size}
+              visible={visible}
+              color={s.geoSphereColor}
+            />
+          ) : null}
+          {s.rings && (
+            <PlanetRings
+              innerRadius={s.rings.innerRadius + s.size}
+              outerRadius={s.rings.outerRadius + s.size}
+              texture={s.rings.texture}
+              opacity={s.rings.opacity}
+              actualSize={s.actualSize}
+            />
+          )}
+        </group>
       </group>
     </group>
   );

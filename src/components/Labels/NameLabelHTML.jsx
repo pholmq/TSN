@@ -16,6 +16,7 @@ const NameLabel = ({ s }) => {
       <Html
         visible={showLabels}
         portal={{ current: portalRef.current }} // Render in body to avoid scaling issues
+        zIndexRange={[16777271, 100000]} // <-- Forces minimum z-index to stay above the canvas
         style={{ pointerEvents: "none" }}
       >
         <div

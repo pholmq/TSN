@@ -1,362 +1,111 @@
-import { useRef, useMemo, useState, useEffect } from "react";
+// src/components/Stars/BSCStars.jsx
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Vector3, Quaternion } from "three";
-import { usePlotStore } from "../../store";
+import { usePlotStore, useStore } from "../../store";
 import bscSettings from "../../settings/BSC.json";
+import specialStarsData from "../../settings/star-settings.json";
 import { dateTimeToPos } from "../../utils/time-date-functions";
-import { useStore } from "../../store";
-import {
-  declinationToRadians,
-  rightAscensionToRadians,
-  sphericalToCartesian,
-} from "../../utils/celestial-functions";
-
 import { movePlotModel } from "../../utils/plotModelFunctions";
-
-import colorTemperature2rgb from "../../utils/colorTempToRGB";
-
-import { pointShaderMaterial, pickingShaderMaterial } from "./starShaders";
-
+import { pointShaderMaterial } from "./starShaders";
 import { LABELED_STARS } from "./LabeledStars";
+import { useBSCStarData } from "./useBSCStarData";
+import Star from "./Star";
 
-function createCircleTexture() {
-  const size = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const context = canvas.getContext("2d");
-  context.beginPath();
-  context.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
-  context.fillStyle = "white";
-  context.fill();
-  const texture = new THREE.Texture(canvas);
-  texture.needsUpdate = true;
-  return texture;
-}
+// Cache vectors outside the component to prevent garbage collection stutters
+const _v1 = new THREE.Vector3();
+const _worldPos = new THREE.Vector3();
 
 const BSCStars = ({ onStarClick, onStarHover }) => {
   const pointsRef = useRef();
   const starGroupRef = useRef();
-  const pickingPointsRef = useRef();
-  const pickingRenderTarget = useRef();
+  const targetGroupRef = useRef(null);
+  const hiddenStarIndexRef = useRef(null);
+  const hiddenStarSizeRef = useRef(null);
 
-  // FIX: Use useState to create a stable scene instance that persists across renders
-  const [pickingScene] = useState(() => new THREE.Scene());
+  const [targetedStarData, setTargetedStarData] = useState(null);
 
-  const colorMap = useRef(new Map());
-  const [hoveredPoint, setHoveredPoint] = useState(null);
-  const { scene, camera, gl } = useThree();
+  // Access imperative R3F state to get real-time mouse/camera without re-renders
+  const getThreeState = useThree((state) => state.get);
+
   const plotObjects = usePlotStore((s) => s.plotObjects);
-  const lastHoverTime = useRef(0);
   const currentHoverIndex = useRef(null);
-  const debugPicking = useRef(false);
-
-  const officialStarDistances = useStore((s) => s.officialStarDistances);
-  const starDistanceModifier = useStore((s) => s.starDistanceModifier);
-  const hScale = useStore((s) => s.hScale);
-  const starScale = useStore((s) => s.starScale);
-  const starPickingSensitivity = useStore((s) => s.starPickingSensitivity);
+  const currentHoverDataRef = useRef(null);
 
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarPosition = useStore((s) => s.setSelectedStarPosition);
-
-  const planetCamera = useStore((s) => s.planetCamera);
-
   const setLabeledStarPosition = useStore((s) => s.setLabeledStarPosition);
+  const cameraTarget = useStore((s) => s.cameraTarget);
 
+  const { positions, colors, starData, sizes } = useBSCStarData();
+
+  // Handle Target/Focus Reset
   useEffect(() => {
-    //Used by StarSearch
+    if (!cameraTarget || !cameraTarget.startsWith("BSCStarTarget")) {
+      setTargetedStarData(null);
+      if (hiddenStarIndexRef.current !== null && pointsRef.current) {
+        const oldIndex = hiddenStarIndexRef.current;
+        pointsRef.current.geometry.attributes.size.array[oldIndex] =
+          hiddenStarSizeRef.current;
+        pointsRef.current.geometry.attributes.size.needsUpdate = true;
+        hiddenStarIndexRef.current = null;
+      }
+    }
+  }, [cameraTarget, sizes]);
+
+  // Handle Search Selection
+  useEffect(() => {
+    if (selectedStarHR) {
+      const isSpecial = specialStarsData.some(
+        (s) =>
+          (s.HR && String(s.HR) === selectedStarHR) ||
+          selectedStarHR.startsWith("Special:")
+      );
+      if (isSpecial) return;
+    }
+
     if (selectedStarHR && starData.length > 0 && pointsRef.current) {
       const star = starData.find(
         (s) => parseInt(s.HR) === parseInt(selectedStarHR)
       );
-      // console.log(starData);
       if (!star) {
-        console.warn(`Star with HR ${selectedStarHR} not found.`);
-        setSelectedStarPosition(null);
+        if (!selectedStarHR.includes(":")) setSelectedStarPosition(null);
         return;
       }
-
       const starIndex = star.index;
-
-      const positions =
-        pickingPointsRef.current.geometry.attributes.position.array;
-      const x = positions[starIndex * 3];
-      const y = positions[starIndex * 3 + 1];
-      const z = positions[starIndex * 3 + 2];
-
-      // Create a Vector3 and transform to world space
-      const pos = new THREE.Vector3(x, y, z);
-      pickingPointsRef.current.localToWorld(pos);
-      // console.log("Selected star position:", pos);
-
+      const posArray = pointsRef.current.geometry.attributes.position.array;
+      const pos = new THREE.Vector3(
+        posArray[starIndex * 3],
+        posArray[starIndex * 3 + 1],
+        posArray[starIndex * 3 + 2]
+      );
+      pointsRef.current.localToWorld(pos);
       setSelectedStarPosition(pos);
-    } else {
+    } else if (!selectedStarHR) {
       setSelectedStarPosition(null);
     }
-  }, [selectedStarHR]);
+  }, [selectedStarHR, starData, setSelectedStarPosition]);
 
-  // Memoize star attributes with selective picking sensitivity
-  const { positions, colors, sizes, pickingSizes, starData, pickingColors } =
-    useMemo(() => {
-      const positions = [];
-      const colors = [];
-      const pickingColors = [];
-      const sizes = [];
-      const pickingSizes = [];
-      const starData = [];
-      const scale = 0.1;
-
-      // Clear previous color mapping
-      colorMap.current.clear();
-
-      // Iterate over BSC.json
-      bscSettings.forEach((s, index) => {
-        // Parse string fields to numbers
-        const magnitude = parseFloat(s.V);
-        const colorTemp = parseFloat(s.K) || 5778;
-
-        const raRad = rightAscensionToRadians(s.RA);
-        const decRad = declinationToRadians(s.Dec);
-
-        const distLy = parseFloat(s.P) * 3.26156378;
-        let dist;
-        if (!officialStarDistances) {
-          dist = (20000 * hScale) / 100;
-        } else {
-          const worldDist = distLy * 63241 * 100;
-          dist =
-            worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1);
-        }
-
-        const { x, y, z } = sphericalToCartesian(raRad, decRad, dist);
-        positions.push(x, y, z);
-
-        const { red, green, blue } = colorTemperature2rgb(colorTemp, true);
-        colors.push(red, green, blue);
-
-        // Generate unique picking color for this star
-        const colorIndex = index + 1; // Start from 1 to avoid black
-        const r = (colorIndex & 0xff) / 255;
-        const g = ((colorIndex >> 8) & 0xff) / 255;
-        const b = ((colorIndex >> 16) & 0xff) / 255;
-
-        pickingColors.push(r, g, b);
-
-        // Create hex color for lookup
-        const rInt = Math.round(r * 255);
-        const gInt = Math.round(g * 255);
-        const bInt = Math.round(b * 255);
-        const hexColor = (rInt << 16) | (gInt << 8) | bInt;
-
-        colorMap.current.set(hexColor, index);
-
-        // Size based on magnitude
-        let starsize;
-        if (magnitude < 1) {
-          starsize = 1.2;
-        } else if (magnitude > 1 && magnitude < 3) {
-          starsize = 0.6;
-        } else if (magnitude > 3 && magnitude < 5) {
-          starsize = 0.4;
-        } else {
-          starsize = 0.2;
-        }
-
-        const visualSize = starsize * starScale * 10;
-
-        // Apply picking sensitivity only to dim stars (magnitude 3+)
-        let pickingSize;
-        if (magnitude >= 3) {
-          // Use sensitivity multiplier for dim stars
-          pickingSize = visualSize * starPickingSensitivity;
-        } else {
-          // Bright stars keep their visual size for picking
-          pickingSize = visualSize;
-        }
-
-        sizes.push(visualSize);
-        pickingSizes.push(pickingSize);
-
-        // Store metadata for mouseover
-        starData.push({
-          // Show name and HIP, or just HIP, or just HR:
-          name: (() => {
-            if (s.N && s.HIP) {
-              return `${s.N} / HIP ${s.HIP}`;
-            } else if (s.HIP) {
-              return `HIP ${s.HIP}`;
-            } else if (s.HR) {
-              return `HR ${s.HR}`;
-            }
-            return "Unknown";
-          })(),
-          HR: s.HR,
-          magnitude: isNaN(magnitude) ? 5 : magnitude,
-          colorTemp,
-          ra: s.RA,
-          dec: s.Dec,
-          distLy,
-          index: index,
-        });
-      });
-
-      return {
-        positions: new Float32Array(positions),
-        colors: new Float32Array(colors),
-        pickingColors: new Float32Array(pickingColors),
-        sizes: new Float32Array(sizes),
-        pickingSizes: new Float32Array(pickingSizes),
-        starData,
-      };
-    }, [
-      officialStarDistances,
-      hScale,
-      starDistanceModifier,
-      starScale,
-      starPickingSensitivity,
-    ]);
-
-  // Initialize picking setup
-  useEffect(() => {
-    if (!gl || !camera) return;
-
-    // Create picking render target
-    pickingRenderTarget.current = new THREE.WebGLRenderTarget(1, 1);
-    pickingRenderTarget.current.samples = 0; // Disable anti-aliasing
-
-    // Update render target size
-    const updateRenderTarget = () => {
-      const { width, height } = gl.domElement;
-      pickingRenderTarget.current.setSize(width, height);
-    };
-    window.addEventListener("resize", updateRenderTarget);
-    updateRenderTarget();
-
-    // Add event listener
-    const canvas = gl.domElement;
-    canvas.addEventListener("mousemove", handleHover);
-
-    return () => {
-      window.removeEventListener("resize", updateRenderTarget);
-      canvas.removeEventListener("mousemove", handleHover);
-      if (pickingRenderTarget.current) {
-        pickingRenderTarget.current.dispose();
-      }
-    };
-  }, [gl, camera, planetCamera]);
-
-  // Handle hover (throttled)
-  const handleHover = (event) => {
-    if (!pickingPointsRef.current || !pickingRenderTarget.current) return;
-
-    const now = performance.now();
-    if (now - lastHoverTime.current < 300) return; // Throttle to 10Hz
-    lastHoverTime.current = now;
-
-    const { clientX, clientY } = event;
-    const { width, height } = gl.domElement;
-    const rect = gl.domElement.getBoundingClientRect();
-
-    const x = Math.round((clientX - rect.left) * (width / rect.width));
-    const y = Math.round((clientY - rect.top) * (height / rect.height));
-
-    gl.setRenderTarget(pickingRenderTarget.current);
-    gl.clear();
-    // FIX: Use pickingScene directly (not .current)
-    gl.render(pickingScene, camera);
-    gl.setRenderTarget(null);
-
-    if (debugPicking.current) {
-      gl.render(pickingScene, camera);
-    }
-
-    const pixelBuffer = new Uint8Array(4);
-    gl.readRenderTargetPixels(
-      pickingRenderTarget.current,
-      x,
-      height - y,
-      1,
-      1,
-      pixelBuffer
-    );
-
-    const hexColor =
-      (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | pixelBuffer[2];
-    const starIndex = colorMap.current.get(hexColor);
-
-    if (starIndex !== undefined) {
-      if (currentHoverIndex.current !== starIndex) {
-        currentHoverIndex.current = starIndex;
-        setHoveredPoint(starIndex);
-
-        const star = starData[starIndex];
-        // Get the position attribute
-        const positions =
-          pickingPointsRef.current.geometry.attributes.position.array;
-
-        // Get the specific point's local position
-        const x = positions[starIndex * 3];
-        const y = positions[starIndex * 3 + 1];
-        const z = positions[starIndex * 3 + 2];
-
-        // Create a Vector3 and transform to world space
-        const worldPosition = new THREE.Vector3(x, y, z);
-        pickingPointsRef.current.localToWorld(worldPosition);
-
-        onStarHover({ star, position: worldPosition, index: starIndex }, event);
-      }
-    } else {
-      if (currentHoverIndex.current !== null) {
-        currentHoverIndex.current = null;
-        setHoveredPoint(null);
-        if (onStarHover) {
-          onStarHover(null);
-        }
-      }
-    }
-  };
-
-  // Update buffer attributes when positions, sizes, or picking sensitivity change
+  // Sync Attributes to Geometry
   useEffect(() => {
     if (pointsRef.current) {
-      const geometry = pointsRef.current.geometry;
-      geometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positions, 3)
-      );
-      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-      geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-      geometry.attributes.position.needsUpdate = true;
-      geometry.attributes.color.needsUpdate = true;
-      geometry.attributes.size.needsUpdate = true;
-    }
+      const geo = pointsRef.current.geometry;
+      geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      geo.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
 
-    if (pickingPointsRef.current) {
-      const geometry = pickingPointsRef.current.geometry;
-      geometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positions, 3)
-      );
-      geometry.setAttribute(
-        "color",
-        new THREE.BufferAttribute(pickingColors, 3)
-      );
-      geometry.setAttribute("size", new THREE.BufferAttribute(pickingSizes, 1));
-      geometry.attributes.position.needsUpdate = true;
-      geometry.attributes.color.needsUpdate = true;
-      geometry.attributes.size.needsUpdate = true;
+      geo.computeBoundingBox();
+      geo.computeBoundingSphere();
     }
-  }, [positions, colors, pickingColors, sizes, pickingSizes]);
+  }, [positions, colors, sizes]);
 
-  // Update picking scene when star group transforms
+  // Apply Geocentric rotations
   useEffect(() => {
     if (plotObjects.length > 0 && starGroupRef.current) {
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
       const worldPosition = new Vector3();
       const worldQuaternion = new Quaternion();
-
       movePlotModel(plotObjects, epochJ2000Pos);
       const earthObj = plotObjects.find((p) => p.name === "Earth");
       earthObj.cSphereRef.current.getWorldPosition(worldPosition);
@@ -364,139 +113,227 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
       starGroupRef.current.position.copy(worldPosition);
       starGroupRef.current.quaternion.copy(worldQuaternion);
-
-      // Update picking scene transformation
-      // FIX: Use pickingScene directly (not .current)
-      if (pickingPointsRef.current && pickingScene) {
-        pickingPointsRef.current.position.copy(worldPosition);
-        pickingPointsRef.current.quaternion.copy(worldQuaternion);
-      }
     }
-  }, [plotObjects, pickingScene]);
+  }, [plotObjects]);
 
-  // Add picking points to picking scene
+  // Update Labeled Stars
   useEffect(() => {
-    // FIX: Use pickingScene directly (not .current) and check for existence
-    if (pickingPointsRef.current && pickingScene) {
-      pickingScene.add(pickingPointsRef.current);
-      return () => {
-        if (pickingScene && pickingPointsRef.current) {
-          pickingScene.remove(pickingPointsRef.current);
-        }
-      };
-    }
-  }, [pickingPointsRef.current, pickingScene]);
-
-  useEffect(() => {
-    if (starData.length === 0 || !pickingPointsRef.current) return;
-
+    if (starData.length === 0 || !pointsRef.current) return;
     LABELED_STARS.forEach((query) => {
-      const bscIndex = bscSettings.findIndex(
+      const bscStar = bscSettings.find(
         (s) =>
-          (s.N && s.N.toLowerCase() === query.toLowerCase()) ||
+          s.N?.toLowerCase() === query.toLowerCase() ||
           s.HIP === query ||
           s.HR === query
       );
-
-      if (bscIndex === -1) return;
-
-      const bscStar = bscSettings[bscIndex];
+      if (!bscStar) return;
 
       const star = starData.find(
         (s) => parseInt(s.HR) === parseInt(bscStar.HR)
       );
       if (!star) return;
 
-      const starIndex = star.index;
-
-      const positions =
-        pickingPointsRef.current.geometry.attributes.position.array;
-      const x = positions[starIndex * 3];
-      const y = positions[starIndex * 3 + 1];
-      const z = positions[starIndex * 3 + 2];
-
-      const pos = new THREE.Vector3(x, y, z);
-      pickingPointsRef.current.localToWorld(pos);
-
-      let displayName =
-        bscStar.N || (bscStar.HIP ? `HIP ${bscStar.HIP}` : `HR ${bscStar.HR}`);
-
-      setLabeledStarPosition(bscStar.HR, pos, displayName);
+      const posArray = pointsRef.current.geometry.attributes.position.array;
+      const pos = new THREE.Vector3(
+        posArray[star.index * 3],
+        posArray[star.index * 3 + 1],
+        posArray[star.index * 3 + 2]
+      );
+      pointsRef.current.localToWorld(pos);
+      setLabeledStarPosition(
+        bscStar.HR,
+        pos,
+        bscStar.N || (bscStar.HIP ? `HIP ${bscStar.HIP}` : `HR ${bscStar.HR}`)
+      );
     });
-
-    return () => {
-      LABELED_STARS.forEach((query) => {
-        const bscIndex = bscSettings.findIndex(
-          (s) =>
-            (s.N && s.N.toLowerCase() === query.toLowerCase()) ||
-            s.HIP === query ||
-            s.HR === query
-        );
-
-        if (bscIndex !== -1) {
-          const bscStar = bscSettings[bscIndex];
-          // Passing null removes the label from the store
-          setLabeledStarPosition(bscStar.HR, null); 
-        }
-      });
-    };
-
   }, [starData, setLabeledStarPosition, plotObjects]);
 
+  // 💥 THE FIX: Screen-Space Raycaster Override
+  const customRaycast = useCallback(
+    (raycaster, intersects) => {
+      if (!pointsRef.current || useStore.getState().runIntro) return;
+
+      const { camera, size, pointer } = getThreeState();
+      const geometry = pointsRef.current.geometry;
+      const posArray = geometry.attributes.position.array;
+      const matrixWorld = pointsRef.current.matrixWorld;
+
+      // Define hover radius in CSS screen pixels (Adjust this up or down for feel)
+      const HOVER_RADIUS_PX = 4;
+      const thresholdSqPx = HOVER_RADIUS_PX * HOVER_RADIUS_PX;
+
+      // Map R3F NDC pointer to physical screen pixels
+      const pointerPxX = ((pointer.x + 1) / 2) * size.width;
+      const pointerPxY = ((-pointer.y + 1) / 2) * size.height;
+
+      for (let i = 0; i < posArray.length / 3; i++) {
+        _v1.set(posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]);
+        _v1.applyMatrix4(matrixWorld);
+
+        // Save the true 3D world position before modifying the vector
+        _worldPos.copy(_v1);
+
+        // Project the 3D star to 2D screen space
+        _v1.project(camera);
+
+        // Skip if the star is behind the camera or totally off screen
+        if (_v1.z > 1 || _v1.z < -1) continue;
+        if (_v1.x < -1.2 || _v1.x > 1.2 || _v1.y < -1.2 || _v1.y > 1.2)
+          continue;
+
+        // Convert star to physical screen pixels
+        const starPxX = ((_v1.x + 1) / 2) * size.width;
+        const starPxY = ((-_v1.y + 1) / 2) * size.height;
+
+        // Calculate 2D pixel distance to the mouse
+        const distSq =
+          (starPxX - pointerPxX) ** 2 + (starPxY - pointerPxY) ** 2;
+
+        // If the mouse is within our exact pixel radius, it's a hit!
+        if (distSq < thresholdSqPx) {
+          const distance3D = raycaster.ray.origin.distanceTo(_worldPos);
+
+          intersects.push({
+            distance: distance3D, // True 3D distance ensures R3F sorts overlapping objects correctly
+            distanceToRay: Math.sqrt(distSq),
+            point: _worldPos.clone(),
+            index: i,
+            face: null,
+            object: pointsRef.current,
+          });
+        }
+      }
+    },
+    [getThreeState]
+  );
+
+  // --- NATIVE R3F POINTER EVENTS ---
+
+  const handlePointerMove = (e) => {
+    e.stopPropagation();
+
+    const starIndex = e.index;
+
+    if (starIndex !== undefined && currentHoverIndex.current !== starIndex) {
+      currentHoverIndex.current = starIndex;
+      const star = starData[starIndex];
+
+      const worldPosition = new THREE.Vector3(
+        positions[starIndex * 3],
+        positions[starIndex * 3 + 1],
+        positions[starIndex * 3 + 2]
+      );
+      if (pointsRef.current) pointsRef.current.localToWorld(worldPosition);
+
+      const hoverData = { star, position: worldPosition, index: starIndex };
+      currentHoverDataRef.current = hoverData;
+
+      if (onStarHover) onStarHover(hoverData, e);
+    }
+  };
+
+  const handlePointerOut = (e) => {
+    e.stopPropagation();
+    currentHoverIndex.current = null;
+    currentHoverDataRef.current = null;
+    if (onStarHover) onStarHover(null);
+  };
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (useStore.getState().runIntro) return;
+    if (currentHoverDataRef.current && onStarClick) {
+      onStarClick(currentHoverDataRef.current, e);
+    }
+  };
+
+  const handleDoubleClick = (e) => {
+    e.stopPropagation();
+    if (useStore.getState().runIntro) return;
+    // --- Planet Camera Intercept ---
+    if (useStore.getState().planetCamera) {
+      if (currentHoverDataRef.current) {
+        useStore
+          .getState()
+          .setSearchTarget(String(currentHoverDataRef.current.star.HR));
+      }
+      return; // Exit early to prevent Orbit target cloning
+    }
+
+    if (currentHoverDataRef.current && targetGroupRef.current) {
+      const { index, star } = currentHoverDataRef.current;
+
+      if (hiddenStarIndexRef.current !== null && pointsRef.current) {
+        const oldIndex = hiddenStarIndexRef.current;
+        pointsRef.current.geometry.attributes.size.array[oldIndex] =
+          hiddenStarSizeRef.current;
+        pointsRef.current.geometry.attributes.size.needsUpdate = true;
+      }
+
+      hiddenStarIndexRef.current = index;
+      if (pointsRef.current) {
+        // FIX: Save the true size before shrinking it
+        hiddenStarSizeRef.current =
+          pointsRef.current.geometry.attributes.size.array[index];
+        pointsRef.current.geometry.attributes.size.array[index] = 0;
+        pointsRef.current.geometry.attributes.size.needsUpdate = true;
+      }
+
+      targetGroupRef.current.position.set(
+        positions[index * 3],
+        positions[index * 3 + 1],
+        positions[index * 3 + 2]
+      );
+
+      const r = colors[index * 3];
+      const g = colors[index * 3 + 1];
+      const b = colors[index * 3 + 2];
+      const hexColor = "#" + new THREE.Color(r, g, b).getHexString();
+
+      const targetName = `BSCStarTarget_${star.HR}`;
+      targetGroupRef.current.name = targetName;
+
+      setTargetedStarData({
+        ...star,
+        isTargetClone: true,
+        visible: true,
+        magnitude: star.mag ?? star.magnitude ?? star.Mag ?? 3,
+        overrideColor: hexColor,
+      });
+
+      if (onStarHover) onStarHover(null);
+      currentHoverIndex.current = null;
+      currentHoverDataRef.current = null;
+      useStore.getState().setCameraTarget(targetName);
+    }
+  };
+
   return (
-    <>
-      <group ref={starGroupRef}>
-        {/* Visible stars */}
-        <points ref={pointsRef}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              array={positions}
-              count={positions.length / 3}
-              itemSize={3}
-            />
-            <bufferAttribute
-              attach="attributes-color"
-              array={colors}
-              count={colors.length / 3}
-              itemSize={3}
-            />
-            <bufferAttribute
-              attach="attributes-size"
-              array={sizes}
-              count={sizes.length}
-              itemSize={1}
-            />
-          </bufferGeometry>
-          <shaderMaterial attach="material" args={[pointShaderMaterial]} />
-        </points>
+    <group ref={starGroupRef}>
+      <group
+        ref={targetGroupRef}
+        name={
+          targetedStarData
+            ? `BSCStarTarget_${targetedStarData.HR}`
+            : "BSCStarTarget"
+        }
+      >
+        {targetedStarData && <Star sData={targetedStarData} />}
       </group>
 
-      {/* Picking stars with selective sensitivity for dim stars */}
-      <points ref={pickingPointsRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            array={positions}
-            count={positions.length / 3}
-            itemSize={3}
-          />
-          <bufferAttribute
-            attach="attributes-color"
-            array={pickingColors}
-            count={pickingColors.length / 3}
-            itemSize={3}
-          />
-          <bufferAttribute
-            attach="attributes-size"
-            array={pickingSizes}
-            count={pickingSizes.length}
-            itemSize={1}
-          />
-        </bufferGeometry>
-        <shaderMaterial attach="material" args={[pickingShaderMaterial]} />
+      {/* Attach the custom raycaster directly to the mesh */}
+      <points
+        ref={pointsRef}
+        raycast={customRaycast}
+        onPointerMove={handlePointerMove}
+        onPointerOut={handlePointerOut}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+      >
+        <bufferGeometry />
+        <shaderMaterial attach="material" args={[pointShaderMaterial]} />
       </points>
-    </>
+    </group>
   );
 };
 

@@ -14,8 +14,6 @@ const LevaUI = () => {
     setCameraFollow,
     planetCamera,
     setPlanetCamera,
-    planetCameraHelper,
-    setPlanetCameraHelper,
     orbits,
     setOrbits,
     arrows,
@@ -32,6 +30,8 @@ const LevaUI = () => {
     setZodiac,
     zodiacSize,
     setZodiacSize,
+    tropicalZodiac,
+    setTropicalZodiac,
     polarLine,
     setPolarLine,
     polarLineSize,
@@ -60,6 +60,8 @@ const LevaUI = () => {
     setGeoSphere,
     ephimerides,
     setEphemerides,
+    plot,
+    setPlot,
     BSCStars,
     setBSCStars,
     hScale,
@@ -123,10 +125,7 @@ const LevaUI = () => {
           value: planetCamera,
           onChange: setPlanetCamera,
         },
-        // "Show planet camera position": {
-        //   value: planetCameraHelper,
-        //   onChange: setPlanetCameraHelper,
-        // },
+       
         "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
         Labels: {
           value: showLabels,
@@ -136,7 +135,7 @@ const LevaUI = () => {
           value: orbits,
           onChange: setOrbits,
         },
-        "Search stars": {
+        Search: {
           value: searchStars,
           onChange: setSearchStars,
         },
@@ -149,11 +148,17 @@ const LevaUI = () => {
           value: ephimerides,
           onChange: setEphemerides,
         },
+        // Plot: {
+        //   value: plot,
+        //   onChange: (v) => {
+        //     setPlot(v);
+        //   },
+        // },
       },
       { collapsed: false }
     ),
 
-    "Trace": folder(
+    Trace: folder(
       {
         TraceOnOff: {
           label: "Trace On/Off",
@@ -229,9 +234,19 @@ const LevaUI = () => {
     "Stars & Helpers": folder(
       {
         // Moved to the top of "Stars & Helpers"
-        "BSC Stars": {
+        Stars: {
+          // Changed from "BSC Stars"
           value: BSCStars,
-          onChange: setBSCStars,
+          onChange: (v) => {
+            setBSCStars(v); // Toggle stars visibility
+
+            // Explicitly turn off the Search menu state if Stars are unchecked
+            if (!v) {
+              setSearchStars(false);
+            } else {
+              setSearchStars(true);
+            }
+          },
         },
         // "Use star distances": {
         //   value: officialStarDistances,
@@ -244,22 +259,23 @@ const LevaUI = () => {
           step: 100,
           onChange: setStarDistanceModifier,
         },
-        "Equidistant stars": {
+        //Renamed equdistant stars to Celestial sphere in the meny. Easier to understand.
+        "Celestial sphere": {
           value: false,
           min: 1,
           step: 100,
           onChange: setEquidistantStars,
         },
         // Added Constellations here
-        "Constellations": {
+        Constellations: {
           value: showConstellations,
           onChange: setShowConstellations,
         },
-        "Celestial sphere": {
-          value: celestialSphere,
-          onChange: setCelestialSphere,
-        },
-        "Ecliptic grid": {
+        // "Celestial grid": {
+        //   value: celestialSphere,
+        //   onChange: setCelestialSphere,
+        // },
+        "Equinoxes & Solistices": {
           value: eclipticGrid,
           onChange: setEclipticGrid,
         },
@@ -267,7 +283,11 @@ const LevaUI = () => {
           value: zodiac,
           onChange: setZodiac,
         },
-        "Sphere/Grid/Zodiac size": {
+        "Tropical Zodiac": {
+          value: tropicalZodiac,
+          onChange: setTropicalZodiac,
+        },
+        "Sphere & Zodiac size": {
           value: hScale,
           min: 0.5,
           max: 100,
@@ -277,7 +297,7 @@ const LevaUI = () => {
       },
       { collapsed: true }
     ),
-    "Light & Effects": folder(
+    Settings: folder(
       {},
       //Populated in LightEffectsMenu
       { collapsed: true }
@@ -289,8 +309,18 @@ const LevaUI = () => {
     set2({
       "Actual planet sizes": actualPlanetSizes,
       Orbits: orbits,
+      Ephemerides: ephimerides,
+      Positions: showPositions,
+      Search: searchStars,
     });
-  }, [actualPlanetSizes, orbits, set2]);
+  }, [
+    actualPlanetSizes,
+    orbits,
+    ephimerides,
+    showPositions,
+    searchStars,
+    set2,
+  ]);
 
   const prevTransitioningRef = useRef(false);
   useEffect(() => {
@@ -329,8 +359,11 @@ const LevaUI = () => {
         titleBar={false}
         hideCopyButton
         theme={{
+          sizes: {
+            controlWidth: "40%",
+          },
           fontSizes: {
-            root: "16px",
+            root: "12px",
           },
           fonts: {
             mono: "",
@@ -349,8 +382,11 @@ const LevaUI = () => {
           titleBar={false}
           hideCopyButton
           theme={{
+            sizes: {
+              controlWidth: "40%",
+            },
             fontSizes: {
-              root: "16px",
+              root: "12px",
             },
             fonts: {
               mono: "",

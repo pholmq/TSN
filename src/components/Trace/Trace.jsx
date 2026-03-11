@@ -1,4 +1,5 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
+import { Vector3 } from "three";
 import useFrameInterval from "../../utils/useFrameInterval";
 import {
   useStore,
@@ -6,14 +7,14 @@ import {
   useTraceStore,
   useSettingsStore,
 } from "../../store";
-import { Vector3 } from "three";
 import { getSpeedFact } from "../../utils/time-date-functions.js";
 import { movePlotModel } from "../../utils/plotModelFunctions";
 import TraceLine from "./TraceLine";
 
+const objectPos = new Vector3();
+
 const Trace = ({ name }) => {
   const plotObjects = usePlotStore((s) => s.plotObjects);
-  const plotPosRef = useRef(0);
   const posRef = useStore((s) => s.posRef);
   const {
     trace,
@@ -25,53 +26,80 @@ const Trace = ({ name }) => {
     traceStartPos,
     setTraceStart,
   } = useTraceStore();
+
   const getSetting = useSettingsStore((s) => s.getSetting);
   const s = getSetting(name);
-  //length should be multible by three
+
   const traceLength =
     Math.round((s.traceSettings.length * lengthMultiplier) / 3) * 3;
   const traceStep =
     s.traceSettings.step *
     getSpeedFact(s.traceSettings.stepFact) *
     stepMultiplier;
-  const pointsArrRef = useRef([]);
-  const tracedObj = plotObjects.find((p) => p.name === name);
-  const objectPos = new Vector3();
 
-  plotPosRef.current = traceStartPos;
-  pointsArrRef.current = [];
+  const plotPosRef = useRef(traceStartPos);
+  const pointsArrRef = useRef([]);
+
+  useEffect(() => {
+    plotPosRef.current = traceStartPos;
+    pointsArrRef.current = [];
+  }, [traceStartPos, trace, traceStep]);
 
   useFrameInterval(() => {
     if (!trace) return;
 
-    // Check and adjust plotPos if the pos is out of bounds
     if (plotPosRef.current < posRef.current - traceLength * traceStep) {
       plotPosRef.current = posRef.current - traceLength * traceStep;
       pointsArrRef.current = [];
     }
+
     if (plotPosRef.current > posRef.current + traceLength * traceStep) {
       plotPosRef.current = posRef.current + traceLength * traceStep;
       pointsArrRef.current = [];
-      //If we move backwards out of bounds we need to update trace start!
       setTraceStart(posRef.current);
     }
 
-    while (plotPosRef.current > posRef.current) {
-      plotPosRef.current = plotPosRef.current - traceStep;
+    // TIME-SLICING: Limit calculations to prevent frame drops
+    // 50 is a safe baseline. Increase if it grows too slowly, decrease if it still stutters.
+    const MAX_STEPS_PER_FRAME = 50;
+    let stepsThisFrame = 0;
 
-      pointsArrRef.current.splice(pointsArrRef.current.length - 3, 3);
+    // Rewinding backwards
+    while (
+      plotPosRef.current > posRef.current &&
+      stepsThisFrame < MAX_STEPS_PER_FRAME
+    ) {
+      plotPosRef.current -= traceStep;
+      if (pointsArrRef.current.length >= 3) {
+        pointsArrRef.current.length -= 3;
+      }
+      stepsThisFrame++;
     }
 
-    while (plotPosRef.current < posRef.current - traceStep) {
-      plotPosRef.current = plotPosRef.current + traceStep;
+    // Tracing forwards (The heavy calculation)
+    while (
+      plotPosRef.current < posRef.current - traceStep &&
+      stepsThisFrame < MAX_STEPS_PER_FRAME
+    ) {
+      plotPosRef.current += traceStep;
+
+      // This is the expensive call being throttled
       movePlotModel(plotObjects, plotPosRef.current);
-      tracedObj.pivotRef.current.getWorldPosition(objectPos);
-      if (pointsArrRef.current.length + 3 > traceLength * 3) {
+
+      const tracedObj = plotObjects.find((p) => p.name === name);
+      if (tracedObj && tracedObj.pivotRef.current) {
+        tracedObj.pivotRef.current.getWorldPosition(objectPos);
+        pointsArrRef.current.push(objectPos.x, objectPos.y, objectPos.z);
+      }
+
+      if (pointsArrRef.current.length > traceLength * 3) {
         pointsArrRef.current.splice(0, 3);
       }
-      pointsArrRef.current.push(objectPos.x, objectPos.y, objectPos.z);
+
+      stepsThisFrame++;
     }
   }, interval);
+
   return (
     <TraceLine
       pointsArrRef={pointsArrRef}
@@ -80,6 +108,7 @@ const Trace = ({ name }) => {
       dots={dotted}
       lineWidth={lineWidth}
       interval={interval}
+      raycast={() => null}
     />
   );
 };

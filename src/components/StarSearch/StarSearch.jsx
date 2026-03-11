@@ -1,39 +1,179 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import starsData from "../../settings/BSC.json";
-import { useStore } from "../../store";
+import celestialData from "../../settings/celestial-settings.json";
+import specialStarsData from "../../settings/star-settings.json";
+import miscData from "../../settings/misc-settings.json";
+import { useStore, useSettingsStore, useStarStore } from "../../store";
 import createCrosshairTexture from "../../utils/createCrosshairTexture";
 import * as THREE from "three";
+import { FaSearch } from "react-icons/fa";
 
 export default function StarSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
 
+  // --- Store State ---
+  const searchStars = useStore((s) => s.searchStars);
+  const setSearchStars = useStore((s) => s.setSearchStars);
+
   const selectedStarHR = useStore((s) => s.selectedStarHR);
   const setSelectedStarHR = useStore((s) => s.setSelectedStarHR);
+
+  const selectedStarData = useStore((s) => s.selectedStarData);
+
   const officialStarDistances = useStore((s) => s.officialStarDistances);
   const runIntro = useStore((s) => s.runIntro);
-
   const cameraControlsRef = useStore((s) => s.cameraControlsRef);
 
-  //setSelectedStarHR(null) on component mount
+  // --- Orbit Target Sync State ---
+  const cameraTarget = useStore((s) => s.cameraTarget);
+  const cameraUpdate = useStore((s) => s.cameraUpdate);
+  const planetCamera = useStore((s) => s.planetCamera);
+  const prevCameraUpdate = useRef(cameraUpdate);
+
+  // --- Dedicated Search Target Sync State (Planet Camera) ---
+  const searchTarget = useStore((s) => s.searchTarget);
+  const searchUpdate = useStore((s) => s.searchUpdate);
+  const prevSearchUpdate = useRef(searchUpdate);
+
+  // --- Dragging State ---
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  // --- Initialization & Cleanup ---
+  useEffect(() => {
+    if (!searchStars) {
+      setQuery("");
+      setResults([]);
+      setSelectedStarHR(null);
+    }
+  }, [searchStars, setSelectedStarHR]);
+
   useEffect(() => {
     setQuery("");
     setResults([]);
     setSelectedStarHR(null);
+  }, [officialStarDistances, setSelectedStarHR]);
+
+  // --- Search Logic ---
+  const indexedObjects = useMemo(() => {
+    // 1. Prepare Special Stars First
+    const special = specialStarsData.map((star) => ({
+      ...star,
+      id: star.HR ? String(star.HR) : `Special:${star.name}`,
+      type: "special",
+      displayName: star.name,
+      HR_display: star.HR ? `HR ${star.HR}` : null,
+      N: star.name,
+    }));
+
+    const specialHRs = new Set(
+      special.filter((s) => s.HR).map((s) => String(s.HR))
+    );
+
+    // 2. BSC Stars
+    const bsc = starsData
+      .filter((star) => {
+        if (star.HR && specialHRs.has(String(star.HR))) {
+          return false;
+        }
+        return true;
+      })
+      .map((star) => ({
+        ...star,
+        id: star.HR ? String(star.HR) : `HIP-${star.HIP}`,
+        type: "star",
+        HR_display: star.HR ? `HR ${star.HR}` : null,
+        HIP_display: star.HIP ? `HIP ${star.HIP}` : null,
+        displayName: star.N || (star.HR ? `HR ${star.HR}` : `HIP ${star.HIP}`),
+      }));
+
+    // 3. Planets
+    const planets = celestialData
+      .filter(
+        (p) =>
+          !p.name.includes("deferent") &&
+          p.name !== "SystemCenter" &&
+          !p.name.includes("def")
+      )
+      .map((p) => {
+        const misc = miscData.find((m) => m.name === p.name);
+        return {
+          ...p,
+          ...misc,
+          id: `Planet:${p.name}`,
+          type: "planet",
+          displayName: p.name,
+          N: p.name,
+        };
+      });
+
+    return [...planets, ...special, ...bsc];
   }, []);
 
-  // If officialStarDistances changes (toggles), clear the search field and results
-  useEffect(() => {
-    setQuery("");
-    setResults([]);
-    setSelectedStarHR(null);
-  }, [officialStarDistances]);
+  // --- Reusable Target Selection Logic ---
+  const triggerSelection = React.useCallback(
+    (targetStr) => {
+      // 1. Strict pass: Try an exact ID or Name match first
+      let obj = indexedObjects.find(
+        (o) => o.id === targetStr || o.name === targetStr
+      );
 
-  const indexedStars = starsData.map((star) => ({
-    ...star,
-    HR_display: star.HR ? `HR ${star.HR}` : null,
-    HIP_display: star.HIP ? `HIP ${star.HIP}` : null,
-  }));
+      // 2. Loose pass: Fallback if exact match wasn't found
+      if (!obj) {
+        obj = indexedObjects.find(
+          (o) =>
+            (o.N && String(o.N) === targetStr) ||
+            (o.HR && String(o.HR) === targetStr) ||
+            (o.HIP && String(o.HIP) === targetStr) ||
+            (o.HIP && `HIP-${o.HIP}` === targetStr)
+        );
+      }
+
+      if (obj) {
+        if (obj.type === "planet") {
+          useSettingsStore
+            .getState()
+            .updateSetting({ name: obj.name, visible: true });
+        } else if (obj.type === "special") {
+          useStarStore
+            .getState()
+            .updateSetting({ name: obj.name, visible: true });
+        }
+
+        setSearchStars(true);
+        setSelectedStarHR(obj.id);
+
+        setQuery("");
+        setResults([]);
+      }
+    },
+    [indexedObjects, setSearchStars, setSelectedStarHR]
+  );
+
+  // --- Sync Search with Orbit Camera Double Click ---
+  useEffect(() => {
+    if (cameraUpdate > prevCameraUpdate.current) {
+      prevCameraUpdate.current = cameraUpdate;
+      if (!planetCamera && cameraTarget) {
+        let cleanTarget = String(cameraTarget).replace("BSCStarTarget_", "");
+        triggerSelection(cleanTarget);
+      }
+    }
+  }, [cameraUpdate, cameraTarget, planetCamera, triggerSelection]);
+
+  // --- Sync Search with Dedicated Search Target (Planet Camera) ---
+  useEffect(() => {
+    if (searchUpdate > prevSearchUpdate.current) {
+      prevSearchUpdate.current = searchUpdate;
+      if (searchTarget) {
+        let cleanTarget = String(searchTarget).replace("BSCStarTarget_", "");
+        triggerSelection(cleanTarget);
+      }
+    }
+  }, [searchUpdate, searchTarget, triggerSelection]);
 
   const handleChange = (e) => {
     const value = e.target.value.trim();
@@ -48,72 +188,67 @@ export default function StarSearch() {
     const lower = value.toLowerCase();
     let filtered = [];
 
-    // Check for explicit HR number search (starts with "hr ")
     if (lower.startsWith("hr ")) {
       const hrQuery = value.slice(3).trim();
-      filtered = indexedStars.filter((star) => star.HR && star.HR === hrQuery);
-    }
-    // Check for explicit HIP number search (starts with "hip ")
-    else if (lower.startsWith("hip ")) {
-      const hipQuery = value.slice(4).trim();
-      filtered = indexedStars.filter(
-        (star) => star.HIP && star.HIP === hipQuery
+      filtered = indexedObjects.filter(
+        (obj) => obj.HR && String(obj.HR) === hrQuery
       );
-    }
-    // General search across name, HR, and HIP
-    else {
-      const nameMatches = indexedStars.filter((star) =>
-        star.N ? star.N.toLowerCase().includes(lower) : false
+    } else if (lower.startsWith("hip ")) {
+      const hipQuery = value.slice(4).trim();
+      filtered = indexedObjects.filter(
+        (obj) => obj.HIP && String(obj.HIP) === hipQuery
+      );
+    } else {
+      const nameMatches = indexedObjects.filter((obj) =>
+        obj.N ? obj.N.toLowerCase().includes(lower) : false
       );
 
       const digits = value.replace(/\D/g, "");
-
       let hrMatches = [];
       let hipMatches = [];
 
       if (lower === "hr") {
-        hrMatches = indexedStars.filter(
-          (star) => star.HR || (star.N && star.N.toLowerCase().includes("hr"))
+        hrMatches = indexedObjects.filter(
+          (obj) => obj.HR || (obj.N && obj.N.toLowerCase().includes("hr"))
         );
       } else if (lower === "hip") {
-        hipMatches = indexedStars.filter(
-          (star) => star.HIP || (star.N && star.N.toLowerCase().includes("hip"))
+        hipMatches = indexedObjects.filter(
+          (obj) => obj.HIP || (obj.N && obj.N.toLowerCase().includes("hip"))
         );
       } else if (digits) {
-        hrMatches = indexedStars.filter(
-          (star) => star.HR && star.HR.includes(digits)
+        hrMatches = indexedObjects.filter(
+          (obj) => obj.HR && String(obj.HR).includes(digits)
         );
-        hipMatches = indexedStars.filter(
-          (star) => star.HIP && star.HIP.includes(digits)
+        hipMatches = indexedObjects.filter(
+          (obj) => obj.HIP && String(obj.HIP).includes(digits)
         );
       }
 
       const all = [...nameMatches, ...hrMatches, ...hipMatches];
-      const unique = Array.from(new Set(all));
-      filtered = unique;
+      filtered = Array.from(
+        new Map(all.map((item) => [item.id, item])).values()
+      );
     }
 
-    setResults(filtered);
+    setResults(filtered.slice(0, 50));
   };
 
-  const handleSelect = (star) => {
-    setSelectedStarHR(star.HR);
-    let displayText;
-    if (star.N && star.HIP) {
-      displayText = `${star.N} / HIP ${star.HIP}`;
-    } else if (star.N && star.HR) {
-      displayText = `${star.N} / HR ${star.HR}`;
-    } else if (star.HIP) {
-      displayText = `HIP ${star.HIP}`;
-    } else if (star.HR) {
-      displayText = `HR ${star.HR}`;
-    } else {
-      displayText = "Unknown";
+  const handleSelect = (obj) => {
+    // Force visibility for Planets and Special Stars
+    if (obj.type === "planet") {
+      useSettingsStore
+        .getState()
+        .updateSetting({ name: obj.name, visible: true });
+    } else if (obj.type === "special") {
+      useStarStore.getState().updateSetting({ name: obj.name, visible: true });
     }
-    setQuery(displayText);
+
+    setSelectedStarHR(obj.id);
+
+    // Clear input query on selection
+    setQuery("");
     setResults([]);
 
-    // Rotate camera around target to view star
     setTimeout(() => {
       const starPos = useStore.getState().selectedStarPosition;
       if (!starPos || !cameraControlsRef?.current) return;
@@ -123,79 +258,181 @@ export default function StarSearch() {
       controls.getTarget(target);
 
       const currentDist = controls.camera.position.distanceTo(target);
-
-      // Direction from star to target
       const starToTarget = target.clone().sub(starPos).normalize();
-
-      // Base position on line
       const basePos = target
         .clone()
         .add(starToTarget.multiplyScalar(currentDist));
 
-      // Offset downward so star appears higher
       const up = new THREE.Vector3(0, 1, 0);
-      const offset = up.multiplyScalar(currentDist * -0.07); // Adjust 0.2 for vertical position
-
+      const offset = up.multiplyScalar(currentDist * -0.07);
       const newPos = basePos.sub(offset);
 
       controls.setPosition(newPos.x, newPos.y, newPos.z, true);
     }, 100);
   };
 
-  // Derive star info from selectedStarHR
-  const selectedStar = useMemo(() => {
+  // --- Display Helpers ---
+  const selectedObject = useMemo(() => {
     return selectedStarHR
-      ? starsData.find((star) => star.HR?.toString() === selectedStarHR)
+      ? indexedObjects.find((obj) => obj.id === selectedStarHR)
       : null;
-  }, [selectedStarHR]);
+  }, [selectedStarHR, indexedObjects]);
 
-  const hrHipString = useMemo(() => {
-    if (!selectedStar) return "N/A";
-    if (selectedStar.N && selectedStar.HIP) {
-      return `${selectedStar.N} / HIP ${selectedStar.HIP}`;
-    } else if (selectedStar.N && selectedStar.HR) {
-      return `${selectedStar.N} / HR ${selectedStar.HR}`;
-    } else if (selectedStar.HIP) {
-      return `HIP ${selectedStar.HIP}`;
-    } else if (selectedStar.HR) {
-      return `HR ${selectedStar.HR}`;
+  const displayString = useMemo(() => {
+    if (!selectedObject) return "N/A";
+
+    if (selectedObject.type === "planet") {
+      return selectedObject.displayName;
     }
+
+    if (selectedObject.type === "special" && selectedObject.displayName) {
+      return selectedObject.displayName;
+    }
+
+    if (selectedObject.N && selectedObject.HIP) {
+      return `${selectedObject.N} / HIP ${selectedObject.HIP}`;
+    } else if (selectedObject.N && selectedObject.HR) {
+      return `${selectedObject.N} / HR ${selectedObject.HR}`;
+    } else if (selectedObject.HIP) {
+      return `HIP ${selectedObject.HIP}`;
+    } else if (selectedObject.HR) {
+      return `HR ${selectedObject.HR}`;
+    }
+
     return "Unknown";
-  }, [selectedStar]);
+  }, [selectedObject]);
 
-  // Create crosshair texture once
-  const crosshairTexture = useMemo(() => createCrosshairTexture(), []);
-  const crosshairImageSrc = crosshairTexture.image.toDataURL(); // Convert to base64 src
+  const crosshairImageSrc = useMemo(
+    () => createCrosshairTexture().image.toDataURL(),
+    []
+  );
 
-  return (
-    !runIntro && (
+  // --- Dragging Logic ---
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      setPosition({
+        x: position.x + (e.clientX - dragStart.x),
+        y: position.y + (e.clientY - dragStart.y),
+      });
+      setDragStart({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseUp = () => setIsDragging(false);
+
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, dragStart, position]);
+
+  const handleMouseDown = (e) => {
+    if (e.target.closest(".popup-header")) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  if (runIntro || !searchStars) return null;
+
+  return createPortal(
+    <div
+      style={{
+        position: "fixed",
+        top: `${30 + position.y}px`,
+        left: `${30 + position.x}px`,
+        width: "240px",
+        backgroundColor: "#111827",
+        opacity: 0.85,
+        color: "white",
+        borderRadius: "6px",
+        zIndex: 2147483647,
+        display: "flex",
+        flexDirection: "column",
+        userSelect: isDragging ? "none" : "auto",
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif",
+      }}
+    >
       <div
+        className="popup-header"
+        onMouseDown={handleMouseDown}
         style={{
-          position: "fixed",
-          top: "20px",
-          left: "20px",
-          zIndex: 1000,
-          width: "310px",
-          opacity: 0.8,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          height: "28px",
+          padding: "0 8px",
+          cursor: isDragging ? "grab" : "default",
+          backgroundColor: "#181c20",
+          borderBottom: "1px solid #181c20",
+          borderTopLeftRadius: "6px",
+          borderTopRightRadius: "6px",
         }}
       >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "12px",
+            fontWeight: "600",
+            color: "white",
+            pointerEvents: "none",
+          }}
+        >
+          <FaSearch style={{ fontSize: "10px" }} />
+          Search
+        </div>
+
+        {/* --- Custom Close Button matching Leva injects --- */}
+        <div
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setSearchStars(false);
+          }}
+          style={{
+            cursor: "pointer",
+            color: "#8C92A4",
+            fontSize: "14px",
+            fontWeight: "bold",
+            padding: "4px",
+            marginRight: "-2px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#FFFFFF")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#8C92A4")}
+          title="Close Search"
+        >
+          ✕
+        </div>
+      </div>
+
+      <div style={{ padding: "12px" }}>
         <input
           type="text"
           value={query}
           onChange={handleChange}
           onClick={(e) => e.target.select()}
-          placeholder="Search stars by name/number"
+          placeholder="Search star or planet..."
           style={{
-            fontSize: "18px",
+            fontSize: "12px",
             color: "#ffffff",
             backgroundColor: "#374151",
-            borderRadius: "0.25rem",
-            padding: "0.5rem",
+            borderRadius: "4px",
+            padding: "6px 10px",
             border: "none",
             outline: "none",
-            flexGrow: 1,
             width: "100%",
             boxSizing: "border-box",
+            marginBottom: results.length > 0 || selectedStarHR ? "8px" : "0",
           }}
           className="starSearch-input"
         />
@@ -205,34 +442,41 @@ export default function StarSearch() {
             style={{
               width: "100%",
               backgroundColor: "#1f2937",
-              borderRadius: "0 0 8px 8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              maxHeight: "200px",
+              borderRadius: "4px",
+              maxHeight: "180px",
               overflowY: "auto",
-              marginTop: "4px",
               listStyle: "none",
               padding: 0,
+              margin: 0,
             }}
           >
-            {results.map((star, index) => {
-              const parts = [];
-              if (star.N) parts.push(star.N);
-              if (star.HIP_display) parts.push(star.HIP_display);
-              if (star.HR_display) parts.push(star.HR_display);
-              const displayText =
-                parts.length > 0 ? parts.join(" / ") : "Unknown";
-
+            {results.map((obj, index) => {
+              let displayText = obj.displayName;
+              if (obj.type === "star" || (obj.type === "special" && obj.HR)) {
+                const parts = [];
+                if (obj.N) parts.push(obj.N);
+                if (obj.HIP_display) parts.push(obj.HIP_display);
+                if (obj.HR_display) parts.push(obj.HR_display);
+                displayText = parts.length > 0 ? parts.join(" / ") : "Unknown";
+              }
               return (
                 <li
                   key={index}
-                  onClick={() => handleSelect(star)}
+                  onClick={() => handleSelect(obj)}
                   style={{
-                    padding: "10px",
-                    color: "#fff",
-                    fontSize: "18px",
+                    padding: "6px 10px",
+                    color: "#d1d5db",
+                    fontSize: "12px",
                     cursor: "pointer",
-                    borderBottom: "1px solid #444",
+                    borderBottom:
+                      index < results.length - 1 ? "1px solid #374151" : "none",
                   }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#374151")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
                 >
                   {displayText}
                 </li>
@@ -240,16 +484,16 @@ export default function StarSearch() {
             })}
           </ul>
         )}
-        {/* Selected star info */}
+
         {selectedStarHR && (
           <div
             style={{
-              marginTop: "10px",
+              marginTop: "8px",
               backgroundColor: "#1f2937",
               color: "white",
               padding: "10px",
-              borderRadius: "8px",
-              fontSize: "14px",
+              borderRadius: "4px",
+              fontSize: "13px",
               lineHeight: "1.5",
             }}
           >
@@ -258,17 +502,96 @@ export default function StarSearch() {
                 src={crosshairImageSrc}
                 alt="Crosshair"
                 style={{
-                  width: "40px",
-                  height: "40px",
-                  filter: "brightness(2.5) drop-shadow(0 0 6px yellow)",
+                  width: "28px",
+                  height: "28px",
+                  filter: "brightness(2.5) drop-shadow(0 0 4px yellow)",
                   flexShrink: 0,
                 }}
               />
-              <strong>{hrHipString}</strong>
+              <div>
+                <span
+                  style={{
+                    color: "#9ca3af",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  SELECTED
+                </span>
+                <div style={{ fontWeight: "normal" }}>
+                  {displayString}
+                  {selectedObject?.type === "planet" &&
+                    selectedObject.unicodeSymbol && (
+                      <span
+                        style={{ marginLeft: "6px" }}
+                        dangerouslySetInnerHTML={{
+                          __html: selectedObject.unicodeSymbol,
+                        }}
+                      />
+                    )}
+                </div>
+              </div>
             </div>
+
+            {selectedStarData && (
+              <div
+                style={{
+                  marginTop: "12px",
+                  borderTop: "1px solid #374151",
+                  paddingTop: "10px",
+                  fontSize: "12px",
+                  color: "#d1d5db",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "4px",
+                }}
+              >
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <span style={{ color: "#9ca3af" }}>RA:</span>
+                  <span style={{ textAlign: "right", maxWidth: "65%" }}>
+                    {selectedStarData.ra}
+                  </span>
+                </div>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <span style={{ color: "#9ca3af" }}>Dec:</span>
+                  <span style={{ textAlign: "right", maxWidth: "65%" }}>
+                    {selectedStarData.dec}
+                  </span>
+                </div>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <span style={{ color: "#9ca3af" }}>Distance:</span>
+                  <span>{selectedStarData.dist}</span>
+                </div>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <span style={{ color: "#9ca3af" }}>Elongation:</span>
+                  <span>{selectedStarData.elongation}</span>
+                </div>
+                {selectedStarData.mag !== "N/A" &&
+                  selectedStarData.mag !== undefined && (
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ color: "#9ca3af" }}>Magnitude:</span>
+                      <span>{selectedStarData.mag}</span>
+                    </div>
+                  )}
+              </div>
+            )}
           </div>
         )}
       </div>
-    )
+    </div>,
+    document.body
   );
 }

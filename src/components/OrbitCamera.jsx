@@ -1,4 +1,4 @@
-import { useRef, useLayoutEffect, useEffect } from "react";
+import { useRef, useLayoutEffect, useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import { PerspectiveCamera, CameraControls } from "@react-three/drei";
@@ -9,6 +9,7 @@ export default function OrbitCamera() {
   const { scene, camera } = useThree();
   const cameraRef = useRef();
   const controlsRef = useRef();
+
   const planetCamera = useStore((s) => s.planetCamera);
   const cameraTarget = useStore((s) => s.cameraTarget);
   const cameraFollow = useStore((s) => s.cameraFollow);
@@ -16,13 +17,14 @@ export default function OrbitCamera() {
   const resetClicked = useStore((s) => s.resetClicked);
   const runIntro = useStore((s) => s.runIntro);
   const setRunIntro = useStore((s) => s.setRunIntro);
+  const setCameraControlsRef = useStore((s) => s.setCameraControlsRef);
+  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+  const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
 
   const targetObjRef = useRef(null);
-  const target = new Vector3();
 
-  const setCameraControlsRef = useStore((s) => s.setCameraControlsRef);
-
-  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+  // PERFORMANCE FIX: Persist Vector3 to prevent garbage collection micro-stutters
+  const target = useMemo(() => new Vector3(), []);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -31,40 +33,39 @@ export default function OrbitCamera() {
   }, [controlsRef.current, setCameraControlsRef]);
 
   useEffect(() => {
-    // Event handler function for mousedown
     const handleMouseDown = (event) => {
-      // Check if it's a left mouse button (button === 0)
       if (event.button === 0) {
         setRunIntro(false);
       }
     };
 
-    // Add event listener to the document for mousedown
     document.addEventListener("mousedown", handleMouseDown);
     document.addEventListener("wheel", handleMouseDown);
 
-    // Cleanup function
     return () => {
       document.removeEventListener("mousedown", handleMouseDown);
       document.removeEventListener("wheel", handleMouseDown);
     };
-  }, []);
+  }, [setRunIntro]);
 
   useLayoutEffect(() => {
     targetObjRef.current = scene.getObjectByName(cameraTarget);
-    targetObjRef.current.getWorldPosition(target);
-    controlsRef.current.setTarget(target.x, target.y, target.z, false);
-  }, [cameraTarget, cameraUpdate, camera]);
+    if (targetObjRef.current) {
+      targetObjRef.current.getWorldPosition(target);
+      // TRANSITION FIX: 'true' enables smooth interpolation to the new target
+      controlsRef.current.setTarget(target.x, target.y, target.z, true);
+    }
+  }, [cameraTarget, cameraUpdate, camera, scene, target]);
 
   useEffect(() => {
     if (controlsRef.current && !runIntro) {
-      controlsRef.current.setPosition(0, 2200, 0);
+      // TRANSITION FIX: 'true' enables smooth return to the default position
+      controlsRef.current.setPosition(0, 2200, 0, true);
     }
   }, [resetClicked, runIntro]);
 
   useEffect(() => {
     if (!planetCamera) {
-      // Ensure all planets are visible when returning to orbit view
       const { settings } = useSettingsStore.getState();
       settings.forEach((setting) => {
         if (setting.planetCamera === true) {
@@ -76,12 +77,19 @@ export default function OrbitCamera() {
         }
       });
     }
-  }, [planetCamera]);
+  }, [planetCamera, scene]);
 
   useFrame(() => {
     if (cameraFollow) {
-      targetObjRef.current.getWorldPosition(target);
-      controlsRef.current.setTarget(target.x, target.y, target.z, false);
+      if (targetObjRef.current) {
+        // PERF/SYNC FIX: Force world matrix update to prevent 1-frame tracking lag
+        targetObjRef.current.updateWorldMatrix(true, false);
+
+        targetObjRef.current.getWorldPosition(target);
+
+        // Kept false: Interpolating every frame during tracking causes lag
+        controlsRef.current.setTarget(target.x, target.y, target.z, false);
+      }
     }
   });
 
@@ -92,13 +100,21 @@ export default function OrbitCamera() {
         name="OrbitCamera"
         ref={cameraRef}
         position={[-30000000, 10000000, 0]}
-        // position={[0, 2200, 0]}
-        // position={[-3000, 1000, 0]}
         fov={15}
         near={0.0001}
         far={10000000000000}
       />
-      <CameraControls ref={controlsRef} camera={cameraRef.current} />
+      <CameraControls
+        ref={controlsRef}
+        camera={cameraRef.current}
+        enabled={!planetCamera}
+        // --- CAMERA CONTROLS TWEAKS ---
+        // Adjusts how long the transition takes (default is ~0.25). Higher is slower/smoother.
+        smoothTime={0.4}
+        // Increases the "weight" or inertia of the camera when the user manually drags it
+        draggingSmoothTime={0.125}
+        minDistance={actualPlanetSizes ? 0.01 : 5}
+      />
       {runIntro && <CameraAnimation controlsRef={controlsRef} />}
     </>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   FaPlay,
   FaPause,
@@ -6,6 +7,7 @@ import {
   FaStepForward,
   FaBars,
   FaTimes,
+  FaQuestionCircle,
   FaShareAlt,
   FaExternalLinkAlt,
   FaGithub,
@@ -34,6 +36,8 @@ import {
 } from "../utils/time-date-functions";
 import UIZoom from "./UIZoom";
 
+import TychosLogoIcon from "../utils/TychosLogoIcon";
+
 const UserInterface = () => {
   const {
     run,
@@ -59,6 +63,10 @@ const UserInterface = () => {
   const julianRef = useRef();
   const intervalRef = useRef();
 
+  // Refs for stepping logic
+  const steppingInterval = useRef(null);
+  const steppingTimeout = useRef(null);
+
   useEffect(() => {
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
@@ -80,6 +88,66 @@ const UserInterface = () => {
       clearInterval(intervalRef.current);
     }
   }, [run]);
+
+  // Cleanup stepping timers on unmount
+  useEffect(() => {
+    return () => stopStepping();
+  }, []);
+
+  const performStep = (direction) => {
+    // direction: 1 for forward, -1 for backward
+    if (speedFact === sYear) {
+      posRef.current =
+        dateToDays(
+          addYears(dateRef.current.value, speedMultiplier * direction)
+        ) *
+          sDay +
+        timeToPos(timeRef.current.value);
+    } else if (speedFact === sMonth) {
+      posRef.current =
+        dateToDays(
+          addMonths(dateRef.current.value, speedMultiplier * direction)
+        ) *
+          sDay +
+        timeToPos(timeRef.current.value);
+    } else {
+      posRef.current += speedFact * speedMultiplier * direction;
+    }
+
+    dateRef.current.value = posToDate(posRef.current);
+    timeRef.current.value = posToTime(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current);
+    updateAC();
+  };
+
+  const startStepping = (direction) => {
+    // 1. Perform immediate step for responsiveness
+    performStep(direction);
+
+    // 2. Clear any existing timers to be safe
+    if (steppingTimeout.current) clearTimeout(steppingTimeout.current);
+    if (steppingInterval.current) clearInterval(steppingInterval.current);
+
+    // 3. Set a timeout: wait 500ms before starting the continuous loop
+    steppingTimeout.current = setTimeout(() => {
+      steppingInterval.current = setInterval(() => {
+        performStep(direction);
+      }, 100); // Speed of continuous stepping
+    }, 500); // Delay before continuous stepping starts
+  };
+
+  const stopStepping = () => {
+    // Clear the timeout (if user released button before 500ms)
+    if (steppingTimeout.current) {
+      clearTimeout(steppingTimeout.current);
+      steppingTimeout.current = null;
+    }
+    // Clear the interval (if continuous stepping was running)
+    if (steppingInterval.current) {
+      clearInterval(steppingInterval.current);
+      steppingInterval.current = null;
+    }
+  };
 
   function dateKeyDown(e) {
     // Prevent planet camera from moving
@@ -186,7 +254,7 @@ const UserInterface = () => {
     toggleShowMenu();
   };
 
-  return (
+  return createPortal(
     <>
       <button
         hidden={showMenu}
@@ -196,7 +264,7 @@ const UserInterface = () => {
           position: "fixed",
           top: "14px",
           right: "12px",
-          zIndex: 20,
+          zIndex: 2147483647,
           background: "#374151",
           border: "none",
           borderRadius: "6px",
@@ -205,16 +273,30 @@ const UserInterface = () => {
           cursor: "pointer",
         }}
       ></button>
-      <div className="menu" hidden={runIntro || !showMenu}>
+      <div
+        className="menu"
+        hidden={runIntro || !showMenu}
+        style={{ zIndex: 2147483647 }}
+      >
         <div className="menu-item">
-          <span className="menu-header"> The TYCHOSIUM</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <TychosLogoIcon size={25} />{" "}
+            {/* Bumped size to match the 2rem font */}
+            <span className="menu-header">The Tychosium</span>
+          </div>
           <button
             className="menu-button menu-header-button"
             title="Help"
             onClick={() => setShowHelp(true)}
             style={{ marginRight: "0.25rem", marginLeft: "0.5rem" }} // Add spacing
           >
-            <FaInfoCircle />
+            <FaQuestionCircle />
           </button>
 
           <div className="zoom-controls">
@@ -254,65 +336,27 @@ const UserInterface = () => {
           >
             Today
           </button>
+
+          {/* BACKWARD BUTTON */}
           <button
             className="menu-button"
-            onClick={() => {
-              if (speedFact === sYear) {
-                posRef.current =
-                  dateToDays(
-                    addYears(dateRef.current.value, -speedMultiplier)
-                  ) *
-                    sDay +
-                  timeToPos(timeRef.current.value);
-              } else {
-                if (speedFact === sMonth) {
-                  posRef.current =
-                    dateToDays(
-                      addMonths(dateRef.current.value, -speedMultiplier)
-                    ) *
-                      sDay +
-                    timeToPos(timeRef.current.value);
-                } else {
-                  posRef.current -= speedFact * speedMultiplier;
-                }
-              }
-
-              dateRef.current.value = posToDate(posRef.current);
-              timeRef.current.value = posToTime(posRef.current);
-              julianRef.current.value = posToJulianDay(posRef.current);
-              updateAC();
-            }}
+            onMouseDown={() => startStepping(-1)}
+            onMouseUp={stopStepping}
+            onMouseLeave={stopStepping}
           >
             <FaStepBackward />
           </button>
+
           <button className="menu-button" onClick={toggleRun}>
             {run ? <FaPause /> : <FaPlay />}
           </button>
+
+          {/* FORWARD BUTTON */}
           <button
             className="menu-button"
-            onClick={() => {
-              if (speedFact === sYear) {
-                posRef.current =
-                  dateToDays(addYears(dateRef.current.value, speedMultiplier)) *
-                    sDay +
-                  timeToPos(timeRef.current.value);
-              } else {
-                if (speedFact === sMonth) {
-                  posRef.current =
-                    dateToDays(
-                      addMonths(dateRef.current.value, speedMultiplier)
-                    ) *
-                      sDay +
-                    timeToPos(timeRef.current.value);
-                } else {
-                  posRef.current += speedFact * speedMultiplier;
-                }
-              }
-              dateRef.current.value = posToDate(posRef.current);
-              timeRef.current.value = posToTime(posRef.current);
-              julianRef.current.value = posToJulianDay(posRef.current);
-              updateAC();
-            }}
+            onMouseDown={() => startStepping(1)}
+            onMouseUp={stopStepping}
+            onMouseLeave={stopStepping}
           >
             <FaStepForward />
           </button>
@@ -357,12 +401,13 @@ const UserInterface = () => {
           />
         </div>
         <div className="menu-item">
-          <div>
+          <div className="leva-container">
             <LevaUI />
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
 

@@ -1,6 +1,8 @@
 // LightEffectsMenu.js
 import { useEffect } from "react";
 import { Stats } from "@react-three/drei";
+import { Perf } from "r3f-perf";
+
 import {
   EffectComposer,
   Bloom,
@@ -13,8 +15,19 @@ import { useStore } from "../../store";
 import { usePlanetCameraStore } from "../PlanetCamera/planetCameraStore";
 
 const LightEffectsMenu = () => {
+  const zoomLevel = useStore((state) => state.zoomLevel);
+  const setZoom = useStore((state) => state.setZoom);
+  const { runIntro, setRunIntro } = useStore();
+
   const { ambientLight, glow, glowIntensity, antialiasing, stats } =
-    useControls("Light & Effects", {
+    useControls("Settings", {
+      "UI & Labels size": {
+        value: zoomLevel,
+        min: 60,
+        max: 120,
+        step: 1,
+        onChange: (v) => setZoom(v),
+      },
       ambientLight: {
         label: "Ambient light",
         value: 1,
@@ -30,6 +43,7 @@ const LightEffectsMenu = () => {
         step: 0.1,
         onChange: (v) => useStore.setState({ sunLight: v }),
       },
+
       glow: {
         label: "Glow",
         value: true,
@@ -37,23 +51,24 @@ const LightEffectsMenu = () => {
       },
       glowIntensity: {
         label: "Glow strength",
-        value: 0.5,
+        value: 0.2,
         min: 0.1,
         max: 2,
         step: 0.1,
         hint: "Glow can affect performance",
       },
-      antialiasing: {
-        label: "Anti-Aliasing",
-        value: "SMAA",
-        options: ["FXAA", "SMAA", "None"],
-      },
-      stats: {
-        value: false,
-        label: "Show FPS",
-      },
-      Settings: folder(
+
+      "experimental settings": folder(
         {
+          antialiasing: {
+            label: "Anti-Aliasing",
+            value: "SMAA",
+            options: ["FXAA", "SMAA", "None"],
+          },
+          stats: {
+            value: false,
+            label: "Show FPS",
+          },
           "Star sizes": {
             value: useStore.getState().starScale,
             min: 0.1,
@@ -97,8 +112,20 @@ const LightEffectsMenu = () => {
             step: 0.1,
             onChange: (v) => usePlanetCameraStore.setState({ groundHeight: v }),
           },
+          "Show planet camera position": {
+            value: useStore.getState().planetCameraHelper,
+            onChange: (v) => useStore.setState({ planetCameraHelper: v }),
+          },
+          "Show Intro": {
+            value: runIntro,
+            onChange: (v) => setRunIntro(v),
+          },
+          "Video Recorder": {
+            value: useStore.getState().showRecorder,
+            onChange: (v) => useStore.setState({ showRecorder: v }),
+          },
         },
-        { collapsed: true }
+        { collapsed: false }
       ),
     });
 
@@ -111,7 +138,18 @@ const LightEffectsMenu = () => {
         {antialiasing === "SMAA" && <SMAA />}
         {glow && <Bloom luminanceThreshold={0} intensity={glowIntensity / 2} />}
       </EffectComposer>
-      {stats && <Stats />}
+      {stats && (
+        <Perf
+          position="top-left"
+          style={{
+            transform: "scale(2)",
+            transformOrigin: "top left",
+            zIndex: 9999,
+            top: "10px",
+            left: "10px",
+          }}
+        />
+      )}
     </>
   );
 };

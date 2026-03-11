@@ -20,11 +20,18 @@ export const useStore = create((set) => ({
   setSearchStars: (v) => set({ searchStars: v }),
   activeCamera: "orbit",
   cameraTarget: "Earth",
-  cameraUpdate: 0, // Add a trigger value
+  cameraUpdate: 0,
   setCameraTarget: (v) =>
     set((state) => ({
       cameraTarget: v,
       cameraUpdate: state.cameraUpdate + 1,
+    })),
+  searchTarget: null,
+  searchUpdate: 0,
+  setSearchTarget: (v) =>
+    set((state) => ({
+      searchTarget: v,
+      searchUpdate: state.searchUpdate + 1,
     })),
   cameraFollow: false,
   setCameraFollow: (v) => set({ cameraFollow: v }),
@@ -52,11 +59,15 @@ export const useStore = create((set) => ({
   showMenu: true,
   toggleShowMenu: () => set((state) => ({ showMenu: !state.showMenu })),
 
-  sunLight: 2,
+  sunLight: 1,
 
   zodiac: false,
   setZodiac: (v) => set({ zodiac: v }),
-  zodiacSize: 100,
+
+  tropicalZodiac: false,
+  setTropicalZodiac: (v) => set({ tropicalZodiac: v }),
+
+  zodiacSize: 130,
   setZodiacSize: (v) => set({ zodiacSize: v }),
 
   polarLine: false,
@@ -81,7 +92,7 @@ export const useStore = create((set) => ({
 
   officialStarDistances: true,
   setOfficialStarDistances: (v) => set({ officialStarDistances: v }),
-  
+
   // Added Constellations State
   showConstellations: false,
   setShowConstellations: (v) => set({ showConstellations: v }),
@@ -96,7 +107,7 @@ export const useStore = create((set) => ({
   BSCStars: true,
   setBSCStars: (v) => set({ BSCStars: v }),
 
-  starPickingSensitivity: 2.0, // 2x the visual size
+  // starPickingSensitivity: 2.0, // 2x the visual size
 
   //Trigger update flags
   resetClicked: false,
@@ -105,7 +116,7 @@ export const useStore = create((set) => ({
   updAC: false, //When this value changes AnimationController rerenders
   updateAC: () => set((state) => ({ updAC: !state.updAC })),
 
-  zoomLevel: 80, // Initial zoom level
+  zoomLevel: 60, // Initial zoom level
   setZoom: (level) => set({ zoomLevel: level }),
   zoomIn: () =>
     set((state) => ({
@@ -136,11 +147,18 @@ export const useStore = create((set) => ({
   ephimerides: false,
   setEphemerides: (v) => set({ ephimerides: v }),
 
+  plot: false,
+  setPlot: (v) => set({ plot: v }),
+
   selectedStarHR: null,
   setSelectedStarHR: (starHR) => set({ selectedStarHR: starHR }),
+
   selectedStarPosition: null,
   setSelectedStarPosition: (position) =>
     set({ selectedStarPosition: position }),
+
+  selectedStarData: null,
+  setSelectedStarData: (data) => set({ selectedStarData: data }),
 
   showHelp: false,
   setShowHelp: (v) => set({ showHelp: v }),
@@ -159,6 +177,9 @@ export const useStore = create((set) => ({
   cameraTransitioning: false,
   setCameraTransitioning: (transitioning) =>
     set({ cameraTransitioning: transitioning }),
+
+  showRecorder: false,
+  setShowRecorder: (v) => set({ showRecorder: v }),
 }));
 
 export const usePosStore = create((set) => ({

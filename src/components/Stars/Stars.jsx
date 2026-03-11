@@ -2,7 +2,7 @@
 import { useRef, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import { Vector3, Quaternion } from "three";
-import { usePlotStore, useStarStore } from "../../store";
+import { usePlotStore, useStarStore, useStore } from "../../store"; // Import useStore
 import Star from "./Star";
 import { dateTimeToPos } from "../../utils/time-date-functions";
 import { movePlotModel } from "../../utils/plotModelFunctions";
@@ -11,12 +11,16 @@ const Stars = () => {
   const plotObjects = usePlotStore((s) => s.plotObjects);
   const starSettings = useStarStore((s) => s.settings);
 
+  // FIX: Subscribe to the global BSCStars flag
+  const showStars = useStore((s) => s.BSCStars);
+
   const starGroupRef = useRef();
 
   const worldPosition = new Vector3();
   const worldQuaternion = new Quaternion();
 
   useEffect(() => {
+    // Only update position if the group exists (which depends on showStars)
     if (plotObjects.length > 0 && starGroupRef.current) {
       const epochJ2000Pos = dateTimeToPos("2000-01-01", "12:00:00");
       //We move the plot model to Epoch J2000 and copy Earths position and tilt
@@ -28,7 +32,10 @@ const Stars = () => {
       starGroupRef.current.position.copy(worldPosition);
       starGroupRef.current.quaternion.copy(worldQuaternion);
     }
-  }, [plotObjects]);
+  }, [plotObjects, showStars]); // Added showStars to dependency (optional but good practice)
+
+  // FIX: If the toggle is off, don't render any stars from this group
+  if (!showStars) return null;
 
   return (
     <group ref={starGroupRef}>
