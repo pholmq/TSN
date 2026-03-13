@@ -291,8 +291,8 @@ export default function StarSearch() {
 
     if (selectedObject.N && selectedObject.HIP) {
       return `${selectedObject.N} / HIP ${selectedObject.HIP}`;
-    } else if (selectedObject.N && selectedObject.HR) {
-      return `${selectedObject.N} / HR ${selectedObject.HR}`;
+    } else if (selectedObject.N) {
+      return selectedObject.N;
     } else if (selectedObject.HIP) {
       return `HIP ${selectedObject.HIP}`;
     } else if (selectedObject.HR) {
@@ -453,11 +453,12 @@ export default function StarSearch() {
             {results.map((obj, index) => {
               let displayText = obj.displayName;
               if (obj.type === "star" || (obj.type === "special" && obj.HR)) {
-                const parts = [];
-                if (obj.N) parts.push(obj.N);
-                if (obj.HIP_display) parts.push(obj.HIP_display);
-                if (obj.HR_display) parts.push(obj.HR_display);
-                displayText = parts.length > 0 ? parts.join(" / ") : "Unknown";
+                if (obj.N && obj.HIP_display)
+                  displayText = `${obj.N} / ${obj.HIP_display}`;
+                else if (obj.N) displayText = obj.N;
+                else if (obj.HIP_display) displayText = obj.HIP_display;
+                else if (obj.HR_display) displayText = obj.HR_display;
+                else displayText = "Unknown";
               }
               return (
                 <li
