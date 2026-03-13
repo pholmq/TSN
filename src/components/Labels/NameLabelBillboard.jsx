@@ -1,88 +1,100 @@
-import { useRef, Suspense } from "react";
+import { useRef, Suspense, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Text, Billboard } from "@react-three/drei";
+import { Text } from "@react-three/drei";
 import { useStore } from "../../store";
 import * as THREE from "three";
 
 const worldPos = new THREE.Vector3();
-const camWorldPos = new THREE.Vector3();
-const parentScale = new THREE.Vector3();
+const parentQuat = new THREE.Quaternion();
 
 const NameLabel = ({ s }) => {
   const showLabels = useStore((state) => state.showLabels);
   const runIntro = useStore((state) => state.runIntro);
+  const planetCamera = useStore((state) => state.planetCamera);
   const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
   const planetScale = useStore((state) => state.planetScale);
-  const planetCamera = useStore((state) => state.planetCamera);
 
-  const billboardRef = useRef();
-  const textRef = useRef();
+  const groupRef = useRef();
+  const scaleGroupRef = useRef(); // Protects Troika Text from seeing the scale updates
 
-  const baseSize = actualPlanetSizes ? (s.actualSize || s.size) : s.size;
-  
-  // Set the larger pixel sizes for Planet Camera mode
-  const PIXEL_HEIGHT = planetCamera ? 11 : 13; 
-  const PIXEL_PADDING = planetCamera ? 4 : 6; 
+  const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
+
+  const PIXEL_FONT_SIZE = planetCamera ? 11 : 13;
+  const PIXEL_PADDING = 10;
+
+  const baseSize = actualPlanetSizes
+    ? s.actualSize || s.size || 0
+    : s.size || 0;
+  const localRadius = baseSize * (planetScale || 1);
+
+  useEffect(() => {
+    if (groupRef.current && groupRef.current.parent) {
+      groupRef.current.parent.getWorldScale(cachedParentScale.current);
+    }
+  }, [planetScale]);
 
   useFrame(({ camera, size }) => {
-    if (!billboardRef.current || !textRef.current) return;
+    if (!groupRef.current || !scaleGroupRef.current) return;
 
-    billboardRef.current.getWorldPosition(worldPos);
-    camera.getWorldPosition(camWorldPos);
-    const distance = camWorldPos.distanceTo(worldPos);
+    // Guaranteed current-frame rotation (fixes the 1-frame jitter)
+    if (groupRef.current.parent) {
+      groupRef.current.parent.getWorldQuaternion(parentQuat);
+      parentQuat.invert();
+      groupRef.current.quaternion
+        .copy(camera.quaternion)
+        .premultiply(parentQuat);
+    } else {
+      groupRef.current.quaternion.copy(camera.quaternion);
+    }
 
+    // Guaranteed current-frame position (fixes the 1-frame jitter)
+    groupRef.current.getWorldPosition(worldPos);
+
+    const distance = camera.position.distanceTo(worldPos);
     const vFov = (camera.fov * Math.PI) / 180;
-    const visibleHeight = (2 * Math.tan(vFov / 2) * distance) / camera.zoom;
-    const pixelSize3D = visibleHeight / size.height;
+    const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
 
-    billboardRef.current.getWorldScale(parentScale);
-    const scaleX = parentScale.x || 1;
-    const scaleY = parentScale.y || 1;
-    const scaleZ = parentScale.z || 1;
-
-    // 1. Maintain locked screen-pixel size
-    const targetScale = pixelSize3D * PIXEL_HEIGHT;
-    textRef.current.scale.set(
-      targetScale / scaleX, 
-      targetScale / scaleY, 
-      targetScale / scaleZ
+    // Apply scaling strictly to the WRAPPER group, saving massive CPU overhead
+    scaleGroupRef.current.scale.set(
+      unitsPerPixel / (cachedParentScale.current.x || 1),
+      unitsPerPixel / (cachedParentScale.current.y || 1),
+      unitsPerPixel / (cachedParentScale.current.z || 1)
     );
 
-    // 2. THE CRUST LOGIC: 
-    // The visual radius is ALREADY in local 3D space, so it needs NO division.
-    const localCrustRadius = baseSize * planetScale;
-    
-    // The 6-pixel gap is in WORLD space, so we MUST divide it by scaleY to match local space.
-    const localPadding = (pixelSize3D * PIXEL_PADDING) / scaleY;
-
-    // 3. Stack them cleanly
-    textRef.current.position.set(0, localCrustRadius + localPadding, 0);
+    scaleGroupRef.current.position.set(
+      0,
+      localRadius +
+        (PIXEL_PADDING * unitsPerPixel) / (cachedParentScale.current.y || 1),
+      0
+    );
   });
 
   if (runIntro || !showLabels) return null;
 
   return (
     <Suspense fallback={null}>
-      <Billboard ref={billboardRef}>
-        <Text
-          ref={textRef}
-          anchorX="center"
-          // Crucial: Anchor to the bottom so the text grows UPWARDS from the crust!
-          anchorY="bottom" 
-          color="#ffffff"
-          fontSize={1}
-          
-          transparent={true}
-          depthTest={false}
-          depthWrite={false}
-          renderOrder={9999999}
-          
-          outlineWidth={0.08}
-          outlineColor="#000000"
-        >
-          {s.name}
-        </Text>
-      </Billboard>
+      <group ref={groupRef}>
+        <group ref={scaleGroupRef}>
+          <Text
+            raycast={() => null}
+            fontSize={PIXEL_FONT_SIZE}
+            color="#ffffff"
+            anchorX="center"
+            anchorY="bottom"
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+            material-depthTest={false}
+            material-depthWrite={false}
+            renderOrder={9999999}
+            outlineWidth={PIXEL_FONT_SIZE * 0.08}
+            outlineColor="#000000"
+            characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- "
+          >
+            {s.name}
+          </Text>
+        </group>
+      </group>
     </Suspense>
   );
 };
