@@ -12,6 +12,8 @@ const TEXT_OFFSET_Y = 10;
 
 const worldPos = new THREE.Vector3();
 const parentQuat = new THREE.Quaternion();
+const cameraWorldPos = new THREE.Vector3();
+const cameraWorldQuat = new THREE.Quaternion();
 
 export default function HighlightSelectedStar() {
   const { scene } = useThree();
@@ -98,26 +100,28 @@ export default function HighlightSelectedStar() {
     if (!selectedStarHR || !groupRef.current) return;
 
     if (targetObjectRef.current) {
-      // Reverted to standard getWorldPosition to eliminate rubber-banding jitter
       targetObjectRef.current.getWorldPosition(groupRef.current.position);
     } else if (selectedStarPosition) {
       groupRef.current.position.copy(selectedStarPosition);
     }
 
     if (canvasGroupRef.current) {
+      cameraWorldPos.setFromMatrixPosition(camera.matrixWorld);
+      cameraWorldQuat.setFromRotationMatrix(camera.matrixWorld);
+
       if (canvasGroupRef.current.parent) {
         canvasGroupRef.current.parent.getWorldQuaternion(parentQuat);
         parentQuat.invert();
         canvasGroupRef.current.quaternion
-          .copy(camera.quaternion)
+          .copy(cameraWorldQuat)
           .premultiply(parentQuat);
       } else {
-        canvasGroupRef.current.quaternion.copy(camera.quaternion);
+        canvasGroupRef.current.quaternion.copy(cameraWorldQuat);
       }
 
       canvasGroupRef.current.getWorldPosition(worldPos);
 
-      const distance = camera.position.distanceTo(worldPos);
+      const distance = cameraWorldPos.distanceTo(worldPos);
       const vFov = (camera.fov * Math.PI) / 180;
       const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
 

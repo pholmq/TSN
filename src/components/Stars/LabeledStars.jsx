@@ -9,10 +9,12 @@ export const LABELED_STARS = labeledStarsData;
 
 const worldPos = new THREE.Vector3();
 const parentQuat = new THREE.Quaternion();
+const cameraWorldPos = new THREE.Vector3();
+const cameraWorldQuat = new THREE.Quaternion();
 
 const StarLabelCanvas = ({ name, position }) => {
   const groupRef = useRef();
-  const scaleGroupRef = useRef(); // Protects Troika Text
+  const scaleGroupRef = useRef();
 
   const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
 
@@ -28,19 +30,20 @@ const StarLabelCanvas = ({ name, position }) => {
   useFrame(({ camera, size }) => {
     if (!groupRef.current || !scaleGroupRef.current) return;
 
+    cameraWorldPos.setFromMatrixPosition(camera.matrixWorld);
+    cameraWorldQuat.setFromRotationMatrix(camera.matrixWorld);
+
     if (groupRef.current.parent) {
       groupRef.current.parent.getWorldQuaternion(parentQuat);
       parentQuat.invert();
-      groupRef.current.quaternion
-        .copy(camera.quaternion)
-        .premultiply(parentQuat);
+      groupRef.current.quaternion.copy(cameraWorldQuat).premultiply(parentQuat);
     } else {
-      groupRef.current.quaternion.copy(camera.quaternion);
+      groupRef.current.quaternion.copy(cameraWorldQuat);
     }
 
     groupRef.current.getWorldPosition(worldPos);
 
-    const distance = camera.position.distanceTo(worldPos);
+    const distance = cameraWorldPos.distanceTo(worldPos);
     const vFov = (camera.fov * Math.PI) / 180;
     const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
 
