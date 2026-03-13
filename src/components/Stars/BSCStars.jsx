@@ -67,7 +67,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
     if (selectedStarHR && starData.length > 0 && pointsRef.current) {
       const star = starData.find(
-        (s) => parseInt(s.HR) === parseInt(selectedStarHR)
+        (s) =>
+          (s.HR && String(s.HR) === String(selectedStarHR)) ||
+          (s.HIP && `HIP-${s.HIP}` === String(selectedStarHR))
       );
       if (!star) {
         if (!selectedStarHR.includes(":")) setSelectedStarPosition(null);
@@ -290,7 +292,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       const b = colors[index * 3 + 2];
       const hexColor = "#" + new THREE.Color(r, g, b).getHexString();
 
-      const targetName = `BSCStarTarget_${star.HR}`;
+      const targetId = star.HR ? star.HR : `HIP-${star.HIP}`;
+      const targetName = `BSCStarTarget_${targetId}`;
       targetGroupRef.current.name = targetName;
 
       setTargetedStarData({
@@ -314,7 +317,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         ref={targetGroupRef}
         name={
           targetedStarData
-            ? `BSCStarTarget_${targetedStarData.HR}`
+            ? `BSCStarTarget_${
+                targetedStarData.HR || "HIP-" + targetedStarData.HIP
+              }`
             : "BSCStarTarget"
         }
       >

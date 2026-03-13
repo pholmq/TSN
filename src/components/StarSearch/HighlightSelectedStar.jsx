@@ -65,12 +65,14 @@ export default function HighlightSelectedStar() {
       return specialStarDef ? specialStarDef.name : "Unknown";
 
     const bscStar = starsData.find(
-      (s) => s.HR && String(s.HR) === String(targetHR)
+      (s) =>
+        (s.HR && String(s.HR) === String(targetHR)) ||
+        (s.HIP && `HIP-${s.HIP}` === String(targetHR))
     );
+
     if (bscStar) {
       const n = specialStarDef?.name || bscStar.N;
       if (n && bscStar.HIP) return `${n} / HIP ${bscStar.HIP}`;
-      if (n && bscStar.HR) return `${n} / HR ${bscStar.HR}`;
       if (n) return n;
       if (bscStar.HIP) return `HIP ${bscStar.HIP}`;
       return `HR ${bscStar.HR}`;
@@ -78,7 +80,6 @@ export default function HighlightSelectedStar() {
     if (specialStarDef) return specialStarDef.name;
     return "Unknown";
   }, [selectedStarHR, specialStarDef]);
-
   useEffect(() => {
     targetObjectRef.current = null;
     if (!selectedStarHR) return;
@@ -126,7 +127,15 @@ export default function HighlightSelectedStar() {
       // Calculate planar depth distance to maintain perfect pixel scaling
       camera.getWorldDirection(cameraForward);
       vectorToObject.subVectors(worldPos, cameraWorldPos);
-      const depthDistance = Math.max(vectorToObject.dot(cameraForward), 0.001);
+
+      const dotProduct = vectorToObject.dot(cameraForward);
+      const isBehind = dotProduct < 0;
+
+      // THE FIX: Hide the UI entirely if it is behind the camera
+      // to prevent negative-depth screen-space garbling
+      canvasGroupRef.current.visible = !isBehind;
+
+      const depthDistance = Math.max(dotProduct, 0.001);
 
       let unitsPerPixel;
       if (camera.isOrthographicCamera) {
@@ -156,7 +165,9 @@ export default function HighlightSelectedStar() {
         magnitude = specialStarDef.magnitude || specialStarDef.V;
       } else {
         const star = starsData.find(
-          (s) => String(s.HR) === String(selectedStarHR)
+          (s) =>
+            (s.HR && String(s.HR) === String(selectedStarHR)) ||
+            (s.HIP && `HIP-${s.HIP}` === String(selectedStarHR))
         );
         if (star) magnitude = star.V;
       }
