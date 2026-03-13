@@ -83,6 +83,10 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     return <sphereGeometry args={[size, segments, segments]} />;
   }, [size, s.name]);
 
+  // PERFORMANCE FIX: Dynamically set transparency to enable early-Z culling
+  const planetOpacity = s.opacity !== undefined ? s.opacity : 1;
+  const isTransparent = planetOpacity < 1;
+
   return (
     <group>
       {s.name === "Earth" && <TropicalZodiac />}
@@ -110,9 +114,9 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
               emissiveIntensity={s.light && sunLight}
               roughness={0.7}
               metalness={0.2}
-              transparent={true}
-              opacity={s.opacity ? s.opacity : 1}
-              // depthWrite={false} // Note: Keeping this as requested, but careful with overlapping transparent objects
+              transparent={isTransparent}
+              opacity={planetOpacity}
+              depthWrite={!isTransparent}
             />
             {s.light && <pointLight intensity={sunLight * 100000} />}
           </mesh>
