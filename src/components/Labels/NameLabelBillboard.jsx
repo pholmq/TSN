@@ -1,88 +1,89 @@
 import { useRef, Suspense } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Text, Billboard } from "@react-three/drei";
+import { Text } from "@react-three/drei";
 import { useStore } from "../../store";
 import * as THREE from "three";
 
+// Pre-allocate variables outside the component to prevent memory leaks in useFrame
 const worldPos = new THREE.Vector3();
-const camWorldPos = new THREE.Vector3();
 const parentScale = new THREE.Vector3();
+const parentQuat = new THREE.Quaternion();
 
 const NameLabel = ({ s }) => {
   const showLabels = useStore((state) => state.showLabels);
   const runIntro = useStore((state) => state.runIntro);
+  const planetCamera = useStore((state) => state.planetCamera);
   const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
   const planetScale = useStore((state) => state.planetScale);
-  const planetCamera = useStore((state) => state.planetCamera);
 
-  const billboardRef = useRef();
+  const groupRef = useRef();
   const textRef = useRef();
 
-  const baseSize = actualPlanetSizes ? (s.actualSize || s.size) : s.size;
-  
-  // Set the larger pixel sizes for Planet Camera mode
-  const PIXEL_HEIGHT = planetCamera ? 11 : 13; 
-  const PIXEL_PADDING = planetCamera ? 4 : 6; 
+  const PIXEL_FONT_SIZE = planetCamera ? 11 : 13;
+  const PIXEL_PADDING = 10; // Increased to push the label slightly further away
+
+  // Calculate the local physical radius to push the label exactly to the planet's top edge
+  const baseSize = actualPlanetSizes ? s.actualSize || s.size : s.size;
+  const localRadius = baseSize * planetScale;
 
   useFrame(({ camera, size }) => {
-    if (!billboardRef.current || !textRef.current) return;
+    if (!groupRef.current || !textRef.current) return;
 
-    billboardRef.current.getWorldPosition(worldPos);
-    camera.getWorldPosition(camWorldPos);
-    const distance = camWorldPos.distanceTo(worldPos);
+    // 1. Orient strictly horizontally to the screen
+    if (groupRef.current.parent) {
+      groupRef.current.parent.getWorldQuaternion(parentQuat);
+      parentQuat.invert();
+      groupRef.current.quaternion
+        .copy(camera.quaternion)
+        .premultiply(parentQuat);
+    } else {
+      groupRef.current.quaternion.copy(camera.quaternion);
+    }
 
+    // 2. Calculate pixel-to-3D ratio
+    groupRef.current.getWorldPosition(worldPos);
+    const distance = camera.position.distanceTo(worldPos);
     const vFov = (camera.fov * Math.PI) / 180;
-    const visibleHeight = (2 * Math.tan(vFov / 2) * distance) / camera.zoom;
-    const pixelSize3D = visibleHeight / size.height;
+    const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
 
-    billboardRef.current.getWorldScale(parentScale);
-    const scaleX = parentScale.x || 1;
-    const scaleY = parentScale.y || 1;
-    const scaleZ = parentScale.z || 1;
+    // 3. Nullify parent scale for the text font
+    groupRef.current.parent.getWorldScale(parentScale);
+    const scaleX = unitsPerPixel / (parentScale.x || 1);
+    const scaleY = unitsPerPixel / (parentScale.y || 1);
+    const scaleZ = unitsPerPixel / (parentScale.z || 1);
 
-    // 1. Maintain locked screen-pixel size
-    const targetScale = pixelSize3D * PIXEL_HEIGHT;
-    textRef.current.scale.set(
-      targetScale / scaleX, 
-      targetScale / scaleY, 
-      targetScale / scaleZ
+    textRef.current.scale.set(scaleX, scaleY, scaleZ);
+
+    // 4. Place exactly centered above:
+    // X is 0 (centered), Y is radius + padding
+    textRef.current.position.set(
+      0,
+      localRadius + (PIXEL_PADDING * unitsPerPixel) / (parentScale.y || 1),
+      0
     );
-
-    // 2. THE CRUST LOGIC: 
-    // The visual radius is ALREADY in local 3D space, so it needs NO division.
-    const localCrustRadius = baseSize * planetScale;
-    
-    // The 6-pixel gap is in WORLD space, so we MUST divide it by scaleY to match local space.
-    const localPadding = (pixelSize3D * PIXEL_PADDING) / scaleY;
-
-    // 3. Stack them cleanly
-    textRef.current.position.set(0, localCrustRadius + localPadding, 0);
   });
 
   if (runIntro || !showLabels) return null;
 
   return (
     <Suspense fallback={null}>
-      <Billboard ref={billboardRef}>
+      <group ref={groupRef}>
         <Text
           ref={textRef}
-          anchorX="center"
-          // Crucial: Anchor to the bottom so the text grows UPWARDS from the crust!
-          anchorY="bottom" 
+          fontSize={PIXEL_FONT_SIZE}
           color="#ffffff"
-          fontSize={1}
-          
+          anchorX="center"
+          anchorY="bottom"
           transparent={true}
           depthTest={false}
           depthWrite={false}
           renderOrder={9999999}
-          
-          outlineWidth={0.08}
+          outlineWidth={PIXEL_FONT_SIZE * 0.08}
           outlineColor="#000000"
         >
           {s.name}
         </Text>
-      </Billboard>
+      </group>
     </Suspense>
   );
 };
