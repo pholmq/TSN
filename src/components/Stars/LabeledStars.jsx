@@ -9,10 +9,14 @@ export const LABELED_STARS = labeledStarsData;
 
 const worldPos = new THREE.Vector3();
 const parentQuat = new THREE.Quaternion();
+const cameraWorldPos = new THREE.Vector3();
+const cameraWorldQuat = new THREE.Quaternion();
+const cameraForward = new THREE.Vector3();
+const vectorToObject = new THREE.Vector3();
 
 const StarLabelCanvas = ({ name, position }) => {
   const groupRef = useRef();
-  const scaleGroupRef = useRef(); // Protects Troika Text
+  const scaleGroupRef = useRef();
 
   const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
 
@@ -28,21 +32,32 @@ const StarLabelCanvas = ({ name, position }) => {
   useFrame(({ camera, size }) => {
     if (!groupRef.current || !scaleGroupRef.current) return;
 
+    cameraWorldPos.setFromMatrixPosition(camera.matrixWorld);
+    cameraWorldQuat.setFromRotationMatrix(camera.matrixWorld);
+
     if (groupRef.current.parent) {
       groupRef.current.parent.getWorldQuaternion(parentQuat);
       parentQuat.invert();
-      groupRef.current.quaternion
-        .copy(camera.quaternion)
-        .premultiply(parentQuat);
+      groupRef.current.quaternion.copy(cameraWorldQuat).premultiply(parentQuat);
     } else {
-      groupRef.current.quaternion.copy(camera.quaternion);
+      groupRef.current.quaternion.copy(cameraWorldQuat);
     }
 
     groupRef.current.getWorldPosition(worldPos);
 
-    const distance = camera.position.distanceTo(worldPos);
-    const vFov = (camera.fov * Math.PI) / 180;
-    const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
+    // Project distance along the camera's Z-axis to avoid edge-of-screen distortion
+    camera.getWorldDirection(cameraForward);
+    vectorToObject.subVectors(worldPos, cameraWorldPos);
+    const depthDistance = Math.max(vectorToObject.dot(cameraForward), 0.001);
+
+    let unitsPerPixel;
+    if (camera.isOrthographicCamera) {
+      unitsPerPixel = (camera.top - camera.bottom) / camera.zoom / size.height;
+    } else {
+      const vFov = (camera.fov * Math.PI) / 180;
+      unitsPerPixel =
+        (2 * Math.tan(vFov / 2) * depthDistance) / (size.height * camera.zoom);
+    }
 
     scaleGroupRef.current.scale.set(
       unitsPerPixel / (cachedParentScale.current.x || 1),

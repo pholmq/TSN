@@ -101,7 +101,7 @@ export default function OrbitCamera() {
         ref={cameraRef}
         position={[-30000000, 10000000, 0]}
         fov={15}
-        near={0.0001}
+        near={0.01} // PERFORMANCE FIX: Increased from 0.0001 to restore depth precision and fix z-fighting
         far={10000000000000}
       />
       <CameraControls

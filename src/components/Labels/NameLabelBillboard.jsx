@@ -6,6 +6,12 @@ import * as THREE from "three";
 
 const worldPos = new THREE.Vector3();
 const parentQuat = new THREE.Quaternion();
+const cameraWorldPos = new THREE.Vector3();
+const cameraWorldQuat = new THREE.Quaternion();
+
+// Pre-allocate depth projection vectors
+const cameraForward = new THREE.Vector3();
+const vectorToObject = new THREE.Vector3();
 
 const NameLabel = ({ s }) => {
   const showLabels = useStore((state) => state.showLabels);
@@ -15,7 +21,7 @@ const NameLabel = ({ s }) => {
   const planetScale = useStore((state) => state.planetScale);
 
   const groupRef = useRef();
-  const scaleGroupRef = useRef(); // Protects Troika Text from seeing the scale updates
+  const scaleGroupRef = useRef();
 
   const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
 
@@ -36,34 +42,49 @@ const NameLabel = ({ s }) => {
   useFrame(({ camera, size }) => {
     if (!groupRef.current || !scaleGroupRef.current) return;
 
-    // Guaranteed current-frame rotation (fixes the 1-frame jitter)
+    cameraWorldPos.setFromMatrixPosition(camera.matrixWorld);
+    cameraWorldQuat.setFromRotationMatrix(camera.matrixWorld);
+
     if (groupRef.current.parent) {
       groupRef.current.parent.getWorldQuaternion(parentQuat);
       parentQuat.invert();
-      groupRef.current.quaternion
-        .copy(camera.quaternion)
-        .premultiply(parentQuat);
+      groupRef.current.quaternion.copy(cameraWorldQuat).premultiply(parentQuat);
     } else {
-      groupRef.current.quaternion.copy(camera.quaternion);
+      groupRef.current.quaternion.copy(cameraWorldQuat);
     }
 
-    // Guaranteed current-frame position (fixes the 1-frame jitter)
     groupRef.current.getWorldPosition(worldPos);
 
-    const distance = camera.position.distanceTo(worldPos);
-    const vFov = (camera.fov * Math.PI) / 180;
-    const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
+    // THE FIX: Calculate planar depth distance instead of radial Euclidean distance
+    camera.getWorldDirection(cameraForward);
+    vectorToObject.subVectors(worldPos, cameraWorldPos);
+    const depthDistance = Math.max(vectorToObject.dot(cameraForward), 0.001);
 
-    // Apply scaling strictly to the WRAPPER group, saving massive CPU overhead
+    let unitsPerPixel;
+    if (camera.isOrthographicCamera) {
+      unitsPerPixel = (camera.top - camera.bottom) / camera.zoom / size.height;
+    } else {
+      const vFov = (camera.fov * Math.PI) / 180;
+      // Use depthDistance instead of radial distance
+      unitsPerPixel =
+        (2 * Math.tan(vFov / 2) * depthDistance) / (size.height * camera.zoom);
+    }
+
     scaleGroupRef.current.scale.set(
       unitsPerPixel / (cachedParentScale.current.x || 1),
       unitsPerPixel / (cachedParentScale.current.y || 1),
       unitsPerPixel / (cachedParentScale.current.z || 1)
     );
 
+    const maxRadiusPixels = 40;
+    const effectiveLocalRadius = Math.min(
+      localRadius,
+      maxRadiusPixels * unitsPerPixel
+    );
+
     scaleGroupRef.current.position.set(
       0,
-      localRadius +
+      effectiveLocalRadius +
         (PIXEL_PADDING * unitsPerPixel) / (cachedParentScale.current.y || 1),
       0
     );
