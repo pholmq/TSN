@@ -61,7 +61,7 @@ const Trace = ({ name }) => {
 
     // TIME-SLICING: Limit calculations to prevent frame drops
     // 50 is a safe baseline. Increase if it grows too slowly, decrease if it still stutters.
-    const MAX_STEPS_PER_FRAME = 50;
+    const MAX_STEPS_PER_FRAME = 5;
     let stepsThisFrame = 0;
 
     // Rewinding backwards
