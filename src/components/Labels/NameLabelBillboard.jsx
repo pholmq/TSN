@@ -9,6 +9,10 @@ const parentQuat = new THREE.Quaternion();
 const cameraWorldPos = new THREE.Vector3();
 const cameraWorldQuat = new THREE.Quaternion();
 
+// Pre-allocate depth projection vectors
+const cameraForward = new THREE.Vector3();
+const vectorToObject = new THREE.Vector3();
+
 const NameLabel = ({ s }) => {
   const showLabels = useStore((state) => state.showLabels);
   const runIntro = useStore((state) => state.runIntro);
@@ -51,17 +55,19 @@ const NameLabel = ({ s }) => {
 
     groupRef.current.getWorldPosition(worldPos);
 
-    // Prevent singularity if camera is exactly inside the object
-    const distance = Math.max(cameraWorldPos.distanceTo(worldPos), 0.001);
+    // THE FIX: Calculate planar depth distance instead of radial Euclidean distance
+    camera.getWorldDirection(cameraForward);
+    vectorToObject.subVectors(worldPos, cameraWorldPos);
+    const depthDistance = Math.max(vectorToObject.dot(cameraForward), 0.001);
 
-    // FIX: Incorporate camera.zoom so scrolling/zooming doesn't destroy the pixel scale
     let unitsPerPixel;
     if (camera.isOrthographicCamera) {
       unitsPerPixel = (camera.top - camera.bottom) / camera.zoom / size.height;
     } else {
       const vFov = (camera.fov * Math.PI) / 180;
+      // Use depthDistance instead of radial distance
       unitsPerPixel =
-        (2 * Math.tan(vFov / 2) * distance) / (size.height * camera.zoom);
+        (2 * Math.tan(vFov / 2) * depthDistance) / (size.height * camera.zoom);
     }
 
     scaleGroupRef.current.scale.set(
@@ -70,8 +76,6 @@ const NameLabel = ({ s }) => {
       unitsPerPixel / (cachedParentScale.current.z || 1)
     );
 
-    // FIX: Cap the physical radius offset to a max of 40 screen pixels.
-    // When far away, it sits at the crust. When close up, it clamps near the center and stays visible.
     const maxRadiusPixels = 40;
     const effectiveLocalRadius = Math.min(
       localRadius,

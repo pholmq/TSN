@@ -14,6 +14,8 @@ const worldPos = new THREE.Vector3();
 const parentQuat = new THREE.Quaternion();
 const cameraWorldPos = new THREE.Vector3();
 const cameraWorldQuat = new THREE.Quaternion();
+const cameraForward = new THREE.Vector3();
+const vectorToObject = new THREE.Vector3();
 
 export default function HighlightSelectedStar() {
   const { scene } = useThree();
@@ -121,7 +123,10 @@ export default function HighlightSelectedStar() {
 
       canvasGroupRef.current.getWorldPosition(worldPos);
 
-      const distance = Math.max(cameraWorldPos.distanceTo(worldPos), 0.001);
+      // Calculate planar depth distance to maintain perfect pixel scaling
+      camera.getWorldDirection(cameraForward);
+      vectorToObject.subVectors(worldPos, cameraWorldPos);
+      const depthDistance = Math.max(vectorToObject.dot(cameraForward), 0.001);
 
       let unitsPerPixel;
       if (camera.isOrthographicCamera) {
@@ -130,7 +135,8 @@ export default function HighlightSelectedStar() {
       } else {
         const vFov = (camera.fov * Math.PI) / 180;
         unitsPerPixel =
-          (2 * Math.tan(vFov / 2) * distance) / (size.height * camera.zoom);
+          (2 * Math.tan(vFov / 2) * depthDistance) /
+          (size.height * camera.zoom);
       }
 
       const scaleX = unitsPerPixel / (cachedParentScale.current.x || 1);

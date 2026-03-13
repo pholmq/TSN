@@ -11,6 +11,8 @@ const worldPos = new THREE.Vector3();
 const parentQuat = new THREE.Quaternion();
 const cameraWorldPos = new THREE.Vector3();
 const cameraWorldQuat = new THREE.Quaternion();
+const cameraForward = new THREE.Vector3();
+const vectorToObject = new THREE.Vector3();
 
 const StarLabelCanvas = ({ name, position }) => {
   const groupRef = useRef();
@@ -43,7 +45,10 @@ const StarLabelCanvas = ({ name, position }) => {
 
     groupRef.current.getWorldPosition(worldPos);
 
-    const distance = Math.max(cameraWorldPos.distanceTo(worldPos), 0.001);
+    // Project distance along the camera's Z-axis to avoid edge-of-screen distortion
+    camera.getWorldDirection(cameraForward);
+    vectorToObject.subVectors(worldPos, cameraWorldPos);
+    const depthDistance = Math.max(vectorToObject.dot(cameraForward), 0.001);
 
     let unitsPerPixel;
     if (camera.isOrthographicCamera) {
@@ -51,7 +56,7 @@ const StarLabelCanvas = ({ name, position }) => {
     } else {
       const vFov = (camera.fov * Math.PI) / 180;
       unitsPerPixel =
-        (2 * Math.tan(vFov / 2) * distance) / (size.height * camera.zoom);
+        (2 * Math.tan(vFov / 2) * depthDistance) / (size.height * camera.zoom);
     }
 
     scaleGroupRef.current.scale.set(
