@@ -38,11 +38,15 @@ const Trace = ({ name }) => {
     stepMultiplier;
 
   const plotPosRef = useRef(traceStartPos);
-  const pointsArrRef = useRef([]);
+
+  // PERFORMANCE FIX: Pre-allocate a fixed-size Float32Array to completely stop Garbage Collection pauses
+  const maxFloats = traceLength * 3;
+  const pointsArrRef = useRef(new Float32Array(maxFloats));
+  const pointCountRef = useRef(0); // Tracks how many points are currently active
 
   useEffect(() => {
     plotPosRef.current = traceStartPos;
-    pointsArrRef.current = [];
+    pointCountRef.current = 0; // Reset
   }, [traceStartPos, trace, traceStep]);
 
   useFrameInterval(() => {
@@ -50,18 +54,17 @@ const Trace = ({ name }) => {
 
     if (plotPosRef.current < posRef.current - traceLength * traceStep) {
       plotPosRef.current = posRef.current - traceLength * traceStep;
-      pointsArrRef.current = [];
+      pointCountRef.current = 0;
     }
 
     if (plotPosRef.current > posRef.current + traceLength * traceStep) {
       plotPosRef.current = posRef.current + traceLength * traceStep;
-      pointsArrRef.current = [];
+      pointCountRef.current = 0;
       setTraceStart(posRef.current);
     }
 
-    // TIME-SLICING: Limit calculations to prevent frame drops
-    // 50 is a safe baseline. Increase if it grows too slowly, decrease if it still stutters.
-    const MAX_STEPS_PER_FRAME = 5;
+    // Lowered slightly to prevent main-thread locking from heavy movePlotModel math
+    const MAX_STEPS_PER_FRAME = 20;
     let stepsThisFrame = 0;
 
     // Rewinding backwards
@@ -70,8 +73,9 @@ const Trace = ({ name }) => {
       stepsThisFrame < MAX_STEPS_PER_FRAME
     ) {
       plotPosRef.current -= traceStep;
-      if (pointsArrRef.current.length >= 3) {
-        pointsArrRef.current.length -= 3;
+      if (pointCountRef.current > 0) {
+        // Just move the pointer back, zero GC allocations!
+        pointCountRef.current--;
       }
       stepsThisFrame++;
     }
@@ -83,19 +87,28 @@ const Trace = ({ name }) => {
     ) {
       plotPosRef.current += traceStep;
 
-      // This is the expensive call being throttled
       movePlotModel(plotObjects, plotPosRef.current);
 
       const tracedObj = plotObjects.find((p) => p.name === name);
       if (tracedObj && tracedObj.pivotRef.current) {
         tracedObj.pivotRef.current.getWorldPosition(objectPos);
-        pointsArrRef.current.push(objectPos.x, objectPos.y, objectPos.z);
-      }
 
-      if (pointsArrRef.current.length > traceLength * 3) {
-        pointsArrRef.current.splice(0, 3);
+        if (pointCountRef.current * 3 >= maxFloats) {
+          // Array is full. Use raw memory move (blazing fast) instead of array.splice()
+          pointsArrRef.current.copyWithin(0, 3);
+          const lastIdx = maxFloats - 3;
+          pointsArrRef.current[lastIdx] = objectPos.x;
+          pointsArrRef.current[lastIdx + 1] = objectPos.y;
+          pointsArrRef.current[lastIdx + 2] = objectPos.z;
+        } else {
+          // Fill next available slot
+          const idx = pointCountRef.current * 3;
+          pointsArrRef.current[idx] = objectPos.x;
+          pointsArrRef.current[idx + 1] = objectPos.y;
+          pointsArrRef.current[idx + 2] = objectPos.z;
+          pointCountRef.current++;
+        }
       }
-
       stepsThisFrame++;
     }
   }, interval);
@@ -103,6 +116,7 @@ const Trace = ({ name }) => {
   return (
     <TraceLine
       pointsArrRef={pointsArrRef}
+      pointCountRef={pointCountRef} // Pass the pointer down so the line knows where to stop drawing
       traceLength={traceLength}
       color={s.color}
       dots={dotted}

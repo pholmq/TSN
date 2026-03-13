@@ -5,6 +5,7 @@ import useFrameInterval from "../../utils/useFrameInterval";
 
 const TraceLine = ({
   pointsArrRef,
+  pointCountRef,
   traceLength,
   color,
   dots,
@@ -15,11 +16,13 @@ const TraceLine = ({
 
   const baseColor = useMemo(() => new Color(color), [color]);
 
-  // Provide initial full-length arrays so Drei pre-allocates the max WebGL buffer ONCE
+  // FIX: Reverted to standard Array. Drei requires a standard Array for the 'points' prop
+  // on initial mount because it uses Array.prototype.flat() internally.
   const initialPoints = useMemo(
     () => new Array(traceLength * 3).fill(0),
     [traceLength]
   );
+
   const initialColors = useMemo(() => {
     const arr = new Array(traceLength * 3);
     for (let i = 0; i < traceLength; i++) {
@@ -36,8 +39,10 @@ const TraceLine = ({
     () => {
       if (!pointsArrRef.current || !line2Ref.current) return;
 
+      // pts here is the Float32Array from Trace.jsx
       const pts = pointsArrRef.current;
-      const numPoints = Math.floor(pts.length / 3);
+
+      const numPoints = pointCountRef.current;
       const segmentCount = Math.max(0, numPoints - 1);
 
       if (segmentCount === 0) {
@@ -47,14 +52,12 @@ const TraceLine = ({
 
       const geometry = line2Ref.current.geometry;
 
-      // Drei's LineGeometry uses InstancedInterleavedBuffers.
-      // instanceStart and instanceEnd share the SAME buffer.
       const iStart = geometry.attributes.instanceStart;
       const cStart = geometry.attributes.instanceColorStart;
 
       if (!iStart || !cStart) return;
 
-      // Access the underlying shared buffer arrays
+      // These are the raw WebGL Float32Arrays
       const positionBuffer = iStart.data;
       const colorBuffer = cStart.data;
 
@@ -67,12 +70,11 @@ const TraceLine = ({
         Math.min(fadeLen, Math.floor(numPoints / 2))
       );
 
-      // Directly write into the interleaved buffer (6 floats per segment: Start XYZ, End XYZ)
       for (let i = 0; i < segmentCount; i++) {
-        const bufferIdx = i * 6; // Index in the interleaved buffer
-        const ptIdx = i * 3; // Index in our raw points array
+        const bufferIdx = i * 6;
+        const ptIdx = i * 3;
 
-        // --- 1. Positions (Start XYZ, End XYZ) ---
+        // Writing our internal Float32Array directly into the WebGL Float32Array
         posArr[bufferIdx] = pts[ptIdx];
         posArr[bufferIdx + 1] = pts[ptIdx + 1];
         posArr[bufferIdx + 2] = pts[ptIdx + 2];
@@ -81,17 +83,13 @@ const TraceLine = ({
         posArr[bufferIdx + 4] = pts[ptIdx + 4];
         posArr[bufferIdx + 5] = pts[ptIdx + 5];
 
-        // --- 2. Colors and Fading ---
         let alphaStart = 1.0;
         let alphaEnd = 1.0;
 
-        // Tail Fade (Oldest points)
         if (i < effectiveFade) {
           alphaStart = i / effectiveFade;
           alphaEnd = (i + 1) / effectiveFade;
-        }
-        // Head Fade (Newest points)
-        else if (i >= numPoints - effectiveFade - 1) {
+        } else if (i >= numPoints - effectiveFade - 1) {
           alphaStart = (numPoints - i) / effectiveFade;
           alphaEnd = (numPoints - (i + 1)) / effectiveFade;
         }
@@ -105,11 +103,9 @@ const TraceLine = ({
         colArr[bufferIdx + 5] = baseColor.b * alphaEnd;
       }
 
-      // --- 3. Flag the buffers, not the attributes, for GPU upload ---
       positionBuffer.needsUpdate = true;
       colorBuffer.needsUpdate = true;
 
-      // Ensure Three.js only draws the active segments
       geometry.instanceCount = segmentCount;
     },
     interval,
