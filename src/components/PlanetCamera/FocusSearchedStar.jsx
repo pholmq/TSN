@@ -80,9 +80,11 @@ export default function FocusSearchedStar() {
       }
     } else {
       // It's not a scene object, handle as a standard BSC Star
-      const star = starsData.find(
-        (s) => s.HR && String(s.HR) === selectedStarHR
-      );
+      // It's not a scene object, handle as a standard BSC Star
+      const star = starsData.find((s) => {
+        const sId = s.HR ? String(s.HR) : `HIP-${s.HIP}`;
+        return sId === String(selectedStarHR);
+      });
 
       if (star) {
         const raRaw = star.RA;

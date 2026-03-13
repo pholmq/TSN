@@ -127,7 +127,15 @@ export default function HighlightSelectedStar() {
       // Calculate planar depth distance to maintain perfect pixel scaling
       camera.getWorldDirection(cameraForward);
       vectorToObject.subVectors(worldPos, cameraWorldPos);
-      const depthDistance = Math.max(vectorToObject.dot(cameraForward), 0.001);
+
+      const dotProduct = vectorToObject.dot(cameraForward);
+      const isBehind = dotProduct < 0;
+
+      // THE FIX: Hide the UI entirely if it is behind the camera
+      // to prevent negative-depth screen-space garbling
+      canvasGroupRef.current.visible = !isBehind;
+
+      const depthDistance = Math.max(dotProduct, 0.001);
 
       let unitsPerPixel;
       if (camera.isOrthographicCamera) {
