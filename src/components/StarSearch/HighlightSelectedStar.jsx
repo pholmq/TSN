@@ -1,13 +1,17 @@
 import { useStore, useSettingsStore, useStarStore } from "../../store";
-import { Html } from "@react-three/drei";
+import { Text } from "@react-three/drei";
 import { useRef, useMemo, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import starsData from "../../settings/BSC.json";
 import specialStarsData from "../../settings/star-settings.json";
-import { LABELED_STARS } from "../Stars/LabeledStars";
 import { getRaDecDistanceFromPosition } from "../../utils/celestial-functions";
 
-const CROSSHAIR_SIZE = 40; // px
+const PIXEL_FONT_SIZE = 13;
+const TEXT_OFFSET_Y = 10;
+
+const worldPos = new THREE.Vector3();
+const parentQuat = new THREE.Quaternion();
 
 export default function HighlightSelectedStar() {
   const { scene } = useThree();
@@ -18,22 +22,28 @@ export default function HighlightSelectedStar() {
   const setSelectedStarData = useStore((s) => s.setSelectedStarData);
 
   const planetSettings = useSettingsStore((s) => s.settings);
-  const starSettings = useStarStore((s) => s.settings);
 
   const groupRef = useRef();
+  const canvasGroupRef = useRef();
   const targetObjectRef = useRef(null);
   const lastUpdateRef = useRef(0);
 
+  const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
+
+  useEffect(() => {
+    if (canvasGroupRef.current && canvasGroupRef.current.parent) {
+      canvasGroupRef.current.parent.getWorldScale(cachedParentScale.current);
+    }
+  }, []);
+
   const specialStarDef = useMemo(() => {
     if (!selectedStarHR) return null;
-
     if (selectedStarHR.startsWith("Special:")) {
-      const name = selectedStarHR.replace("Special:", "");
-      return specialStarsData.find((s) => s.name === name);
+      return specialStarsData.find(
+        (s) => s.name === selectedStarHR.replace("Special:", "")
+      );
     }
-
     if (selectedStarHR.startsWith("Planet:")) return null;
-
     return specialStarsData.find(
       (s) => s.HR && String(s.HR) === String(selectedStarHR)
     );
@@ -41,17 +51,14 @@ export default function HighlightSelectedStar() {
 
   const starName = useMemo(() => {
     if (!selectedStarHR) return null;
-
-    if (selectedStarHR.startsWith("Planet:")) {
+    if (selectedStarHR.startsWith("Planet:"))
       return selectedStarHR.replace("Planet:", "");
-    }
 
     let targetHR = selectedStarHR;
-    if (specialStarDef && specialStarDef.HR) {
+    if (specialStarDef && specialStarDef.HR)
       targetHR = String(specialStarDef.HR);
-    } else if (selectedStarHR.startsWith("Special:")) {
+    else if (selectedStarHR.startsWith("Special:"))
       return specialStarDef ? specialStarDef.name : "Unknown";
-    }
 
     const bscStar = starsData.find(
       (s) => s.HR && String(s.HR) === String(targetHR)
@@ -64,7 +71,6 @@ export default function HighlightSelectedStar() {
       if (bscStar.HIP) return `HIP ${bscStar.HIP}`;
       return `HR ${bscStar.HR}`;
     }
-
     if (specialStarDef) return specialStarDef.name;
     return "Unknown";
   }, [selectedStarHR, specialStarDef]);
@@ -74,12 +80,9 @@ export default function HighlightSelectedStar() {
     if (!selectedStarHR) return;
 
     let objName = null;
-
-    if (selectedStarHR.startsWith("Planet:")) {
+    if (selectedStarHR.startsWith("Planet:"))
       objName = selectedStarHR.replace("Planet:", "");
-    } else if (specialStarDef) {
-      objName = specialStarDef.name;
-    }
+    else if (specialStarDef) objName = specialStarDef.name;
 
     if (objName) {
       const obj = scene.getObjectByName(objName);
@@ -88,24 +91,46 @@ export default function HighlightSelectedStar() {
   }, [selectedStarHR, specialStarDef, scene]);
 
   useEffect(() => {
-    if (!selectedStarHR) {
-      setSelectedStarData(null);
-    }
+    if (!selectedStarHR) setSelectedStarData(null);
   }, [selectedStarHR, setSelectedStarData]);
 
-  useFrame(() => {
+  useFrame(({ camera, size }) => {
     if (!selectedStarHR || !groupRef.current) return;
 
     if (targetObjectRef.current) {
+      // Reverted to standard getWorldPosition to eliminate rubber-banding jitter
       targetObjectRef.current.getWorldPosition(groupRef.current.position);
     } else if (selectedStarPosition) {
       groupRef.current.position.copy(selectedStarPosition);
     }
 
+    if (canvasGroupRef.current) {
+      if (canvasGroupRef.current.parent) {
+        canvasGroupRef.current.parent.getWorldQuaternion(parentQuat);
+        parentQuat.invert();
+        canvasGroupRef.current.quaternion
+          .copy(camera.quaternion)
+          .premultiply(parentQuat);
+      } else {
+        canvasGroupRef.current.quaternion.copy(camera.quaternion);
+      }
+
+      canvasGroupRef.current.getWorldPosition(worldPos);
+
+      const distance = camera.position.distanceTo(worldPos);
+      const vFov = (camera.fov * Math.PI) / 180;
+      const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
+
+      const scaleX = unitsPerPixel / (cachedParentScale.current.x || 1);
+      const scaleY = unitsPerPixel / (cachedParentScale.current.y || 1);
+      const scaleZ = unitsPerPixel / (cachedParentScale.current.z || 1);
+
+      canvasGroupRef.current.scale.set(scaleX, scaleY, scaleZ);
+    }
+
     const now = performance.now();
     if (now - lastUpdateRef.current > 100) {
       lastUpdateRef.current = now;
-
       const currentPos = groupRef.current.position;
       let magnitude = "N/A";
 
@@ -122,14 +147,7 @@ export default function HighlightSelectedStar() {
         currentPos,
         scene
       );
-
-      setSelectedStarData({
-        ra,
-        dec,
-        dist,
-        elongation,
-        mag: magnitude,
-      });
+      setSelectedStarData({ ra, dec, dist, elongation, mag: magnitude });
     }
   });
 
@@ -137,76 +155,65 @@ export default function HighlightSelectedStar() {
   const pName = isPlanet ? selectedStarHR.replace("Planet:", "") : null;
   const pSetting = planetSettings.find((s) => s.name === pName);
   const isPlanetVisible = pSetting ? pSetting.visible : true;
-
   const hideText = isPlanet && showLabels && isPlanetVisible;
 
   if (!selectedStarHR || !searchStars) return null;
+
   return (
     <group ref={groupRef}>
-      <Html
-        position={[0, 0, 0]}
-        portal={{ current: document.body }}
-        style={{ pointerEvents: "none" }}
-        zIndexRange={[10, 0]}
-      >
-        <div
-          style={{
-            width: `${CROSSHAIR_SIZE}px`,
-            height: `${CROSSHAIR_SIZE}px`,
-            position: "absolute",
-            top: "0",
-            left: "0",
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          {starName && !hideText && (
-            <div
-              className="name-label"
-              style={{
-                position: "absolute",
-                top: "0px",
-                left: "50%",
-                transform: "translateX(-50%) translateY(-150%)", // Properly shifts it above the crosshair
-              }}
-            >
-              <span>{starName}</span>
-            </div>
-          )}
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: "50%",
-              width: "4px",
-              height: "30%",
-              background: "yellow",
-              transform: "translateX(-50%)",
-            }}
+      <group ref={canvasGroupRef}>
+        {starName && !hideText && (
+          <Text
+            raycast={() => null}
+            position={[0, TEXT_OFFSET_Y, 0]}
+            fontSize={PIXEL_FONT_SIZE}
+            color="#ffffff"
+            anchorX="center"
+            anchorY="bottom"
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+            material-depthTest={false}
+            material-depthWrite={false}
+            renderOrder={9999999}
+            outlineWidth={PIXEL_FONT_SIZE * 0.08}
+            outlineColor="#000000"
+            characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- /:"
+          >
+            {starName}
+          </Text>
+        )}
+        <mesh position={[0, -14, 0]} renderOrder={9999999} raycast={() => null}>
+          <planeGeometry args={[4, 12]} />
+          <meshBasicMaterial
+            color="yellow"
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+            toneMapped={false}
           />
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: "50%",
-              height: "4px",
-              width: "30%",
-              background: "yellow",
-              transform: "translateY(-50%)",
-            }}
+        </mesh>
+        <mesh position={[-14, 0, 0]} renderOrder={9999999} raycast={() => null}>
+          <planeGeometry args={[12, 4]} />
+          <meshBasicMaterial
+            color="yellow"
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+            toneMapped={false}
           />
-          <div
-            style={{
-              position: "absolute",
-              right: 0,
-              top: "50%",
-              height: "4px",
-              width: "30%",
-              background: "yellow",
-              transform: "translateY(-50%)",
-            }}
+        </mesh>
+        <mesh position={[14, 0, 0]} renderOrder={9999999} raycast={() => null}>
+          <planeGeometry args={[12, 4]} />
+          <meshBasicMaterial
+            color="yellow"
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+            toneMapped={false}
           />
-        </div>
-      </Html>
+        </mesh>
+      </group>
     </group>
   );
 }

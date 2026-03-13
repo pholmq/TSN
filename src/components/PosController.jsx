@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
 import { useStore, useSettingsStore, usePosStore } from "../store";
 import { getRaDecDistance } from "../utils/celestial-functions";
@@ -6,40 +6,34 @@ import useFrameInterval from "../utils/useFrameInterval";
 
 const PosController = () => {
   const { scene } = useThree();
-  const { settings } = useSettingsStore();
-  const showPositions = useStore((s) => s.showPositions);
+  const trackedNames = useRef([]);
 
-  const tracked = settings
-    .filter((item) => item.traceable)
-    .map((item) => item.name);
+  // OPTIMIZATION: Only parse the traceable settings once on mount (or when settings drastically change)
+  useEffect(() => {
+    const tracked = useSettingsStore
+      .getState()
+      .settings.filter((item) => item.traceable)
+      .map((item) => item.name);
 
-  usePosStore.setState(() => ({ trackedObjects: tracked }));
+    trackedNames.current = tracked;
 
-  function updatePositions() {
-    let positions = {}; // Fresh object for positions
-
-    for (const item of tracked) {
-      positions[item] = getRaDecDistance(item, scene);
-    }
-    // Update the store with new positions
-    usePosStore.setState({ positions });
-  }
-
-  let previousPosRef = null;
+    // Move side-effects out of the render body and into a layout effect
+    usePosStore.setState({ trackedObjects: tracked });
+  }, []);
 
   useFrameInterval(() => {
-    if (!showPositions) return;
-    const currentPosRef = useStore.getState().posRef.current;
+    // OPTIMIZATION: Read imperatively to avoid component re-renders when toggling the UI
+    if (!useStore.getState().showPositions) return;
 
-    updatePositions();
+    let positions = {};
 
-    // Update the previous value for the next check
-    previousPosRef = currentPosRef;
+    // Use the cached names array instead of filtering the settings store every 200ms
+    for (const item of trackedNames.current) {
+      positions[item] = getRaDecDistance(item, scene);
+    }
+
+    usePosStore.setState({ positions });
   }, 200);
-
-  useEffect(() => {
-    updatePositions();
-  }, []);
 
   return null;
 };
