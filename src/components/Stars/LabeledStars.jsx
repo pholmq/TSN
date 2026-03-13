@@ -1,4 +1,4 @@
-import { useRef, Suspense } from "react";
+import { useRef, Suspense, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import { useStore } from "../../store";
@@ -9,15 +9,24 @@ export const LABELED_STARS = labeledStarsData;
 
 // Pre-allocate memory outside components
 const worldPos = new THREE.Vector3();
-const parentScale = new THREE.Vector3();
 const parentQuat = new THREE.Quaternion();
 
 const StarLabelCanvas = ({ name, position }) => {
   const groupRef = useRef();
   const textRef = useRef();
 
+  // Cache the parent scale to avoid 60fps matrix recalculations
+  const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
+
   const PIXEL_FONT_SIZE = 13;
-  const PIXEL_PADDING = 10; // Increased to hover further above the star
+  const PIXEL_PADDING = 10;
+
+  // OPTIMIZATION: Only fetch the parent's scale once on mount
+  useEffect(() => {
+    if (groupRef.current && groupRef.current.parent) {
+      groupRef.current.parent.getWorldScale(cachedParentScale.current);
+    }
+  }, []);
 
   useFrame(({ camera, size }) => {
     if (!groupRef.current || !textRef.current) return;
@@ -37,17 +46,16 @@ const StarLabelCanvas = ({ name, position }) => {
     const vFov = (camera.fov * Math.PI) / 180;
     const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
 
-    groupRef.current.parent.getWorldScale(parentScale);
-    const scaleX = unitsPerPixel / (parentScale.x || 1);
-    const scaleY = unitsPerPixel / (parentScale.y || 1);
-    const scaleZ = unitsPerPixel / (parentScale.z || 1);
+    // Use cached scale
+    const scaleX = unitsPerPixel / (cachedParentScale.current.x || 1);
+    const scaleY = unitsPerPixel / (cachedParentScale.current.y || 1);
+    const scaleZ = unitsPerPixel / (cachedParentScale.current.z || 1);
 
     textRef.current.scale.set(scaleX, scaleY, scaleZ);
 
-    // X is 0 (centered), push Y strictly upwards
     textRef.current.position.set(
       0,
-      (PIXEL_PADDING * unitsPerPixel) / (parentScale.y || 1),
+      (PIXEL_PADDING * unitsPerPixel) / (cachedParentScale.current.y || 1),
       0
     );
   });
@@ -56,6 +64,7 @@ const StarLabelCanvas = ({ name, position }) => {
     <group ref={groupRef} position={position}>
       <Text
         ref={textRef}
+        raycast={() => null} // Prevent label from intercepting star clicks
         fontSize={PIXEL_FONT_SIZE}
         color="#ffffff"
         anchorX="center"
@@ -63,9 +72,13 @@ const StarLabelCanvas = ({ name, position }) => {
         transparent={true}
         depthTest={false}
         depthWrite={false}
+        material-depthTest={false}
+        material-depthWrite={false}
         renderOrder={9999999}
         outlineWidth={PIXEL_FONT_SIZE * 0.08}
         outlineColor="#000000"
+        // OPTIMIZATION: Prevent generation of unused SDF glyphs
+        characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- /:"
       >
         {name}
       </Text>

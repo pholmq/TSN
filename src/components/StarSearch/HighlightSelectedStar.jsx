@@ -1,13 +1,18 @@
 import { useStore, useSettingsStore, useStarStore } from "../../store";
-import { Html } from "@react-three/drei";
+import { Text } from "@react-three/drei";
 import { useRef, useMemo, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import starsData from "../../settings/BSC.json";
 import specialStarsData from "../../settings/star-settings.json";
-import { LABELED_STARS } from "../Stars/LabeledStars";
 import { getRaDecDistanceFromPosition } from "../../utils/celestial-functions";
 
-const CROSSHAIR_SIZE = 40; // px
+const PIXEL_FONT_SIZE = 13;
+const TEXT_OFFSET_Y = 10;
+
+// Pre-allocate memory outside component
+const worldPos = new THREE.Vector3();
+const parentQuat = new THREE.Quaternion();
 
 export default function HighlightSelectedStar() {
   const { scene } = useThree();
@@ -18,11 +23,21 @@ export default function HighlightSelectedStar() {
   const setSelectedStarData = useStore((s) => s.setSelectedStarData);
 
   const planetSettings = useSettingsStore((s) => s.settings);
-  const starSettings = useStarStore((s) => s.settings);
 
   const groupRef = useRef();
+  const canvasGroupRef = useRef();
   const targetObjectRef = useRef(null);
   const lastUpdateRef = useRef(0);
+
+  // Cache parent scale
+  const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
+
+  // OPTIMIZATION: Only calculate parent scale once
+  useEffect(() => {
+    if (canvasGroupRef.current && canvasGroupRef.current.parent) {
+      canvasGroupRef.current.parent.getWorldScale(cachedParentScale.current);
+    }
+  }, []);
 
   const specialStarDef = useMemo(() => {
     if (!selectedStarHR) return null;
@@ -93,13 +108,37 @@ export default function HighlightSelectedStar() {
     }
   }, [selectedStarHR, setSelectedStarData]);
 
-  useFrame(() => {
+  useFrame(({ camera, size }) => {
     if (!selectedStarHR || !groupRef.current) return;
 
     if (targetObjectRef.current) {
       targetObjectRef.current.getWorldPosition(groupRef.current.position);
     } else if (selectedStarPosition) {
       groupRef.current.position.copy(selectedStarPosition);
+    }
+
+    if (canvasGroupRef.current) {
+      if (canvasGroupRef.current.parent) {
+        canvasGroupRef.current.parent.getWorldQuaternion(parentQuat);
+        parentQuat.invert();
+        canvasGroupRef.current.quaternion
+          .copy(camera.quaternion)
+          .premultiply(parentQuat);
+      } else {
+        canvasGroupRef.current.quaternion.copy(camera.quaternion);
+      }
+
+      canvasGroupRef.current.getWorldPosition(worldPos);
+      const distance = camera.position.distanceTo(worldPos);
+      const vFov = (camera.fov * Math.PI) / 180;
+      const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
+
+      // Use cached parent scale
+      const scaleX = unitsPerPixel / (cachedParentScale.current.x || 1);
+      const scaleY = unitsPerPixel / (cachedParentScale.current.y || 1);
+      const scaleZ = unitsPerPixel / (cachedParentScale.current.z || 1);
+
+      canvasGroupRef.current.scale.set(scaleX, scaleY, scaleZ);
     }
 
     const now = performance.now();
@@ -141,72 +180,66 @@ export default function HighlightSelectedStar() {
   const hideText = isPlanet && showLabels && isPlanetVisible;
 
   if (!selectedStarHR || !searchStars) return null;
+
   return (
     <group ref={groupRef}>
-      <Html
-        position={[0, 0, 0]}
-        portal={{ current: document.body }}
-        style={{ pointerEvents: "none" }}
-        zIndexRange={[10, 0]}
-      >
-        <div
-          style={{
-            width: `${CROSSHAIR_SIZE}px`,
-            height: `${CROSSHAIR_SIZE}px`,
-            position: "absolute",
-            top: "0",
-            left: "0",
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          {starName && !hideText && (
-            <div
-              className="name-label"
-              style={{
-                position: "absolute",
-                top: "0px",
-                left: "50%",
-                transform: "translateX(-50%) translateY(-150%)", // Properly shifts it above the crosshair
-              }}
-            >
-              <span>{starName}</span>
-            </div>
-          )}
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: "50%",
-              width: "4px",
-              height: "30%",
-              background: "yellow",
-              transform: "translateX(-50%)",
-            }}
+      <group ref={canvasGroupRef}>
+        {starName && !hideText && (
+          <Text
+            raycast={() => null}
+            position={[0, TEXT_OFFSET_Y, 0]}
+            fontSize={PIXEL_FONT_SIZE}
+            color="#ffffff"
+            anchorX="center"
+            anchorY="bottom"
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+            material-depthTest={false}
+            material-depthWrite={false}
+            renderOrder={9999999}
+            outlineWidth={PIXEL_FONT_SIZE * 0.08}
+            outlineColor="#000000"
+            // OPTIMIZATION: Prevent generation of unused SDF glyphs
+            characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- /:"
+          >
+            {starName}
+          </Text>
+        )}
+
+        <mesh position={[0, -14, 0]} renderOrder={9999999} raycast={() => null}>
+          <planeGeometry args={[4, 12]} />
+          <meshBasicMaterial
+            color="yellow"
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+            toneMapped={false}
           />
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: "50%",
-              height: "4px",
-              width: "30%",
-              background: "yellow",
-              transform: "translateY(-50%)",
-            }}
+        </mesh>
+
+        <mesh position={[-14, 0, 0]} renderOrder={9999999} raycast={() => null}>
+          <planeGeometry args={[12, 4]} />
+          <meshBasicMaterial
+            color="yellow"
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+            toneMapped={false}
           />
-          <div
-            style={{
-              position: "absolute",
-              right: 0,
-              top: "50%",
-              height: "4px",
-              width: "30%",
-              background: "yellow",
-              transform: "translateY(-50%)",
-            }}
+        </mesh>
+
+        <mesh position={[14, 0, 0]} renderOrder={9999999} raycast={() => null}>
+          <planeGeometry args={[12, 4]} />
+          <meshBasicMaterial
+            color="yellow"
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+            toneMapped={false}
           />
-        </div>
-      </Html>
+        </mesh>
+      </group>
     </group>
   );
 }
