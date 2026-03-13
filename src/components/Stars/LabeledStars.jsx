@@ -43,9 +43,16 @@ const StarLabelCanvas = ({ name, position }) => {
 
     groupRef.current.getWorldPosition(worldPos);
 
-    const distance = cameraWorldPos.distanceTo(worldPos);
-    const vFov = (camera.fov * Math.PI) / 180;
-    const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
+    const distance = Math.max(cameraWorldPos.distanceTo(worldPos), 0.001);
+
+    let unitsPerPixel;
+    if (camera.isOrthographicCamera) {
+      unitsPerPixel = (camera.top - camera.bottom) / camera.zoom / size.height;
+    } else {
+      const vFov = (camera.fov * Math.PI) / 180;
+      unitsPerPixel =
+        (2 * Math.tan(vFov / 2) * distance) / (size.height * camera.zoom);
+    }
 
     scaleGroupRef.current.scale.set(
       unitsPerPixel / (cachedParentScale.current.x || 1),

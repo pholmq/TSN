@@ -6,7 +6,6 @@ import * as THREE from "three";
 
 const worldPos = new THREE.Vector3();
 const parentQuat = new THREE.Quaternion();
-// Pre-allocate camera world vectors
 const cameraWorldPos = new THREE.Vector3();
 const cameraWorldQuat = new THREE.Quaternion();
 
@@ -39,8 +38,6 @@ const NameLabel = ({ s }) => {
   useFrame(({ camera, size }) => {
     if (!groupRef.current || !scaleGroupRef.current) return;
 
-    // THE FIX: Always extract absolute world coordinates from the camera,
-    // bypassing any local nesting from the PlanetCamera
     cameraWorldPos.setFromMatrixPosition(camera.matrixWorld);
     cameraWorldQuat.setFromRotationMatrix(camera.matrixWorld);
 
@@ -54,10 +51,18 @@ const NameLabel = ({ s }) => {
 
     groupRef.current.getWorldPosition(worldPos);
 
-    // Use the absolute camera distance
-    const distance = cameraWorldPos.distanceTo(worldPos);
-    const vFov = (camera.fov * Math.PI) / 180;
-    const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
+    // Prevent singularity if camera is exactly inside the object
+    const distance = Math.max(cameraWorldPos.distanceTo(worldPos), 0.001);
+
+    // FIX: Incorporate camera.zoom so scrolling/zooming doesn't destroy the pixel scale
+    let unitsPerPixel;
+    if (camera.isOrthographicCamera) {
+      unitsPerPixel = (camera.top - camera.bottom) / camera.zoom / size.height;
+    } else {
+      const vFov = (camera.fov * Math.PI) / 180;
+      unitsPerPixel =
+        (2 * Math.tan(vFov / 2) * distance) / (size.height * camera.zoom);
+    }
 
     scaleGroupRef.current.scale.set(
       unitsPerPixel / (cachedParentScale.current.x || 1),
@@ -65,9 +70,17 @@ const NameLabel = ({ s }) => {
       unitsPerPixel / (cachedParentScale.current.z || 1)
     );
 
+    // FIX: Cap the physical radius offset to a max of 40 screen pixels.
+    // When far away, it sits at the crust. When close up, it clamps near the center and stays visible.
+    const maxRadiusPixels = 40;
+    const effectiveLocalRadius = Math.min(
+      localRadius,
+      maxRadiusPixels * unitsPerPixel
+    );
+
     scaleGroupRef.current.position.set(
       0,
-      localRadius +
+      effectiveLocalRadius +
         (PIXEL_PADDING * unitsPerPixel) / (cachedParentScale.current.y || 1),
       0
     );
