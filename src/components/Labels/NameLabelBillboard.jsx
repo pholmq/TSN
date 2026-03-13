@@ -16,8 +16,6 @@ const NameLabel = ({ s }) => {
 
   const groupRef = useRef();
   const textRef = useRef();
-
-  // Cache the scale calculations outside the frame loop
   const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
 
   const PIXEL_FONT_SIZE = planetCamera ? 11 : 13;
@@ -28,9 +26,9 @@ const NameLabel = ({ s }) => {
     : s.size || 0;
   const localRadius = baseSize * (planetScale || 1);
 
-  // OPTIMIZATION: Only calculate parent scale when the UI slider actually changes
   useEffect(() => {
     if (groupRef.current && groupRef.current.parent) {
+      // It is okay to calculate scale once on mount/slider change
       groupRef.current.parent.getWorldScale(cachedParentScale.current);
     }
   }, [planetScale]);
@@ -38,11 +36,10 @@ const NameLabel = ({ s }) => {
   useFrame(({ camera, size }) => {
     if (!groupRef.current || !textRef.current) return;
 
-    // Fast-path orientation
+    // THE FIX: Read from the cached matrix memory instead of forcing recalculations
     if (groupRef.current.parent) {
-      // getWorldQuaternion is still required if the planet is actively tilting/rotating,
-      // but we removed the scale recalculation.
-      groupRef.current.parent.getWorldQuaternion(parentQuat);
+      // 0 CPU cost rotation read
+      parentQuat.setFromRotationMatrix(groupRef.current.parent.matrixWorld);
       parentQuat.invert();
       groupRef.current.quaternion
         .copy(camera.quaternion)
@@ -51,13 +48,13 @@ const NameLabel = ({ s }) => {
       groupRef.current.quaternion.copy(camera.quaternion);
     }
 
-    // Fast-path distance
-    groupRef.current.getWorldPosition(worldPos);
+    // 0 CPU cost position read
+    worldPos.setFromMatrixPosition(groupRef.current.matrixWorld);
+
     const distance = camera.position.distanceTo(worldPos);
     const vFov = (camera.fov * Math.PI) / 180;
     const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
 
-    // Use the cached scale instead of forcing a matrix update
     const scaleX = unitsPerPixel / (cachedParentScale.current.x || 1);
     const scaleY = unitsPerPixel / (cachedParentScale.current.y || 1);
     const scaleZ = unitsPerPixel / (cachedParentScale.current.z || 1);
@@ -92,7 +89,7 @@ const NameLabel = ({ s }) => {
           renderOrder={9999999}
           outlineWidth={PIXEL_FONT_SIZE * 0.08}
           outlineColor="#000000"
-          characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- " // OPTIMIZATION: Pre-compiles only necessary glyphs
+          characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- "
         >
           {s.name}
         </Text>

@@ -10,7 +10,6 @@ import { getRaDecDistanceFromPosition } from "../../utils/celestial-functions";
 const PIXEL_FONT_SIZE = 13;
 const TEXT_OFFSET_Y = 10;
 
-// Pre-allocate memory outside component
 const worldPos = new THREE.Vector3();
 const parentQuat = new THREE.Quaternion();
 
@@ -29,10 +28,8 @@ export default function HighlightSelectedStar() {
   const targetObjectRef = useRef(null);
   const lastUpdateRef = useRef(0);
 
-  // Cache parent scale
   const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
 
-  // OPTIMIZATION: Only calculate parent scale once
   useEffect(() => {
     if (canvasGroupRef.current && canvasGroupRef.current.parent) {
       canvasGroupRef.current.parent.getWorldScale(cachedParentScale.current);
@@ -41,14 +38,12 @@ export default function HighlightSelectedStar() {
 
   const specialStarDef = useMemo(() => {
     if (!selectedStarHR) return null;
-
     if (selectedStarHR.startsWith("Special:")) {
-      const name = selectedStarHR.replace("Special:", "");
-      return specialStarsData.find((s) => s.name === name);
+      return specialStarsData.find(
+        (s) => s.name === selectedStarHR.replace("Special:", "")
+      );
     }
-
     if (selectedStarHR.startsWith("Planet:")) return null;
-
     return specialStarsData.find(
       (s) => s.HR && String(s.HR) === String(selectedStarHR)
     );
@@ -56,17 +51,14 @@ export default function HighlightSelectedStar() {
 
   const starName = useMemo(() => {
     if (!selectedStarHR) return null;
-
-    if (selectedStarHR.startsWith("Planet:")) {
+    if (selectedStarHR.startsWith("Planet:"))
       return selectedStarHR.replace("Planet:", "");
-    }
 
     let targetHR = selectedStarHR;
-    if (specialStarDef && specialStarDef.HR) {
+    if (specialStarDef && specialStarDef.HR)
       targetHR = String(specialStarDef.HR);
-    } else if (selectedStarHR.startsWith("Special:")) {
+    else if (selectedStarHR.startsWith("Special:"))
       return specialStarDef ? specialStarDef.name : "Unknown";
-    }
 
     const bscStar = starsData.find(
       (s) => s.HR && String(s.HR) === String(targetHR)
@@ -79,7 +71,6 @@ export default function HighlightSelectedStar() {
       if (bscStar.HIP) return `HIP ${bscStar.HIP}`;
       return `HR ${bscStar.HR}`;
     }
-
     if (specialStarDef) return specialStarDef.name;
     return "Unknown";
   }, [selectedStarHR, specialStarDef]);
@@ -89,12 +80,9 @@ export default function HighlightSelectedStar() {
     if (!selectedStarHR) return;
 
     let objName = null;
-
-    if (selectedStarHR.startsWith("Planet:")) {
+    if (selectedStarHR.startsWith("Planet:"))
       objName = selectedStarHR.replace("Planet:", "");
-    } else if (specialStarDef) {
-      objName = specialStarDef.name;
-    }
+    else if (specialStarDef) objName = specialStarDef.name;
 
     if (objName) {
       const obj = scene.getObjectByName(objName);
@@ -103,23 +91,26 @@ export default function HighlightSelectedStar() {
   }, [selectedStarHR, specialStarDef, scene]);
 
   useEffect(() => {
-    if (!selectedStarHR) {
-      setSelectedStarData(null);
-    }
+    if (!selectedStarHR) setSelectedStarData(null);
   }, [selectedStarHR, setSelectedStarData]);
 
   useFrame(({ camera, size }) => {
     if (!selectedStarHR || !groupRef.current) return;
 
     if (targetObjectRef.current) {
-      targetObjectRef.current.getWorldPosition(groupRef.current.position);
+      // THE FIX: Instead of getWorldPosition, read the matrix cache
+      groupRef.current.position.setFromMatrixPosition(
+        targetObjectRef.current.matrixWorld
+      );
     } else if (selectedStarPosition) {
       groupRef.current.position.copy(selectedStarPosition);
     }
 
     if (canvasGroupRef.current) {
       if (canvasGroupRef.current.parent) {
-        canvasGroupRef.current.parent.getWorldQuaternion(parentQuat);
+        parentQuat.setFromRotationMatrix(
+          canvasGroupRef.current.parent.matrixWorld
+        );
         parentQuat.invert();
         canvasGroupRef.current.quaternion
           .copy(camera.quaternion)
@@ -128,12 +119,12 @@ export default function HighlightSelectedStar() {
         canvasGroupRef.current.quaternion.copy(camera.quaternion);
       }
 
-      canvasGroupRef.current.getWorldPosition(worldPos);
+      worldPos.setFromMatrixPosition(canvasGroupRef.current.matrixWorld);
+
       const distance = camera.position.distanceTo(worldPos);
       const vFov = (camera.fov * Math.PI) / 180;
       const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
 
-      // Use cached parent scale
       const scaleX = unitsPerPixel / (cachedParentScale.current.x || 1);
       const scaleY = unitsPerPixel / (cachedParentScale.current.y || 1);
       const scaleZ = unitsPerPixel / (cachedParentScale.current.z || 1);
@@ -144,7 +135,6 @@ export default function HighlightSelectedStar() {
     const now = performance.now();
     if (now - lastUpdateRef.current > 100) {
       lastUpdateRef.current = now;
-
       const currentPos = groupRef.current.position;
       let magnitude = "N/A";
 
@@ -161,14 +151,7 @@ export default function HighlightSelectedStar() {
         currentPos,
         scene
       );
-
-      setSelectedStarData({
-        ra,
-        dec,
-        dist,
-        elongation,
-        mag: magnitude,
-      });
+      setSelectedStarData({ ra, dec, dist, elongation, mag: magnitude });
     }
   });
 
@@ -176,7 +159,6 @@ export default function HighlightSelectedStar() {
   const pName = isPlanet ? selectedStarHR.replace("Planet:", "") : null;
   const pSetting = planetSettings.find((s) => s.name === pName);
   const isPlanetVisible = pSetting ? pSetting.visible : true;
-
   const hideText = isPlanet && showLabels && isPlanetVisible;
 
   if (!selectedStarHR || !searchStars) return null;
@@ -200,13 +182,11 @@ export default function HighlightSelectedStar() {
             renderOrder={9999999}
             outlineWidth={PIXEL_FONT_SIZE * 0.08}
             outlineColor="#000000"
-            // OPTIMIZATION: Prevent generation of unused SDF glyphs
             characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- /:"
           >
             {starName}
           </Text>
         )}
-
         <mesh position={[0, -14, 0]} renderOrder={9999999} raycast={() => null}>
           <planeGeometry args={[4, 12]} />
           <meshBasicMaterial
@@ -217,7 +197,6 @@ export default function HighlightSelectedStar() {
             toneMapped={false}
           />
         </mesh>
-
         <mesh position={[-14, 0, 0]} renderOrder={9999999} raycast={() => null}>
           <planeGeometry args={[12, 4]} />
           <meshBasicMaterial
@@ -228,7 +207,6 @@ export default function HighlightSelectedStar() {
             toneMapped={false}
           />
         </mesh>
-
         <mesh position={[14, 0, 0]} renderOrder={9999999} raycast={() => null}>
           <planeGeometry args={[12, 4]} />
           <meshBasicMaterial

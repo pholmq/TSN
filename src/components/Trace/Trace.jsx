@@ -39,14 +39,13 @@ const Trace = ({ name }) => {
 
   const plotPosRef = useRef(traceStartPos);
 
-  // PERFORMANCE FIX: Pre-allocate a fixed-size Float32Array to completely stop Garbage Collection pauses
   const maxFloats = traceLength * 3;
   const pointsArrRef = useRef(new Float32Array(maxFloats));
-  const pointCountRef = useRef(0); // Tracks how many points are currently active
+  const pointCountRef = useRef(0);
 
   useEffect(() => {
     plotPosRef.current = traceStartPos;
-    pointCountRef.current = 0; // Reset
+    pointCountRef.current = 0;
   }, [traceStartPos, trace, traceStep]);
 
   useFrameInterval(() => {
@@ -63,45 +62,43 @@ const Trace = ({ name }) => {
       setTraceStart(posRef.current);
     }
 
-    // Lowered slightly to prevent main-thread locking from heavy movePlotModel math
-    const MAX_STEPS_PER_FRAME = 20;
-    let stepsThisFrame = 0;
+    // THE FIX: Time-slicing budget.
+    // We only allow this function to run for 2 milliseconds per frame.
+    const startTime = performance.now();
+    const TIME_BUDGET_MS = 2;
 
-    // Rewinding backwards
+    // Rewinding backwards (Extremely fast, usually negligible)
     while (
       plotPosRef.current > posRef.current &&
-      stepsThisFrame < MAX_STEPS_PER_FRAME
+      performance.now() - startTime < TIME_BUDGET_MS
     ) {
       plotPosRef.current -= traceStep;
-      if (pointCountRef.current > 0) {
-        // Just move the pointer back, zero GC allocations!
-        pointCountRef.current--;
-      }
-      stepsThisFrame++;
+      if (pointCountRef.current > 0) pointCountRef.current--;
     }
 
     // Tracing forwards (The heavy calculation)
     while (
       plotPosRef.current < posRef.current - traceStep &&
-      stepsThisFrame < MAX_STEPS_PER_FRAME
+      performance.now() - startTime < TIME_BUDGET_MS
     ) {
       plotPosRef.current += traceStep;
 
+      // Moving the shadow solar system
       movePlotModel(plotObjects, plotPosRef.current);
 
       const tracedObj = plotObjects.find((p) => p.name === name);
       if (tracedObj && tracedObj.pivotRef.current) {
+        // Force the shadow object to calculate its global matrix based on the new simulated time
+        tracedObj.pivotRef.current.updateMatrixWorld(true);
         tracedObj.pivotRef.current.getWorldPosition(objectPos);
 
         if (pointCountRef.current * 3 >= maxFloats) {
-          // Array is full. Use raw memory move (blazing fast) instead of array.splice()
           pointsArrRef.current.copyWithin(0, 3);
           const lastIdx = maxFloats - 3;
           pointsArrRef.current[lastIdx] = objectPos.x;
           pointsArrRef.current[lastIdx + 1] = objectPos.y;
           pointsArrRef.current[lastIdx + 2] = objectPos.z;
         } else {
-          // Fill next available slot
           const idx = pointCountRef.current * 3;
           pointsArrRef.current[idx] = objectPos.x;
           pointsArrRef.current[idx + 1] = objectPos.y;
@@ -109,14 +106,13 @@ const Trace = ({ name }) => {
           pointCountRef.current++;
         }
       }
-      stepsThisFrame++;
     }
   }, interval);
 
   return (
     <TraceLine
       pointsArrRef={pointsArrRef}
-      pointCountRef={pointCountRef} // Pass the pointer down so the line knows where to stop drawing
+      pointCountRef={pointCountRef}
       traceLength={traceLength}
       color={s.color}
       dots={dotted}
