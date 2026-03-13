@@ -98,19 +98,15 @@ export default function HighlightSelectedStar() {
     if (!selectedStarHR || !groupRef.current) return;
 
     if (targetObjectRef.current) {
-      // THE FIX: Instead of getWorldPosition, read the matrix cache
-      groupRef.current.position.setFromMatrixPosition(
-        targetObjectRef.current.matrixWorld
-      );
+      // Reverted to standard getWorldPosition to eliminate rubber-banding jitter
+      targetObjectRef.current.getWorldPosition(groupRef.current.position);
     } else if (selectedStarPosition) {
       groupRef.current.position.copy(selectedStarPosition);
     }
 
     if (canvasGroupRef.current) {
       if (canvasGroupRef.current.parent) {
-        parentQuat.setFromRotationMatrix(
-          canvasGroupRef.current.parent.matrixWorld
-        );
+        canvasGroupRef.current.parent.getWorldQuaternion(parentQuat);
         parentQuat.invert();
         canvasGroupRef.current.quaternion
           .copy(camera.quaternion)
@@ -119,7 +115,7 @@ export default function HighlightSelectedStar() {
         canvasGroupRef.current.quaternion.copy(camera.quaternion);
       }
 
-      worldPos.setFromMatrixPosition(canvasGroupRef.current.matrixWorld);
+      canvasGroupRef.current.getWorldPosition(worldPos);
 
       const distance = camera.position.distanceTo(worldPos);
       const vFov = (camera.fov * Math.PI) / 180;

@@ -12,7 +12,8 @@ const parentQuat = new THREE.Quaternion();
 
 const StarLabelCanvas = ({ name, position }) => {
   const groupRef = useRef();
-  const textRef = useRef();
+  const scaleGroupRef = useRef(); // Protects Troika Text
+
   const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
 
   const PIXEL_FONT_SIZE = 13;
@@ -25,11 +26,10 @@ const StarLabelCanvas = ({ name, position }) => {
   }, []);
 
   useFrame(({ camera, size }) => {
-    if (!groupRef.current || !textRef.current) return;
+    if (!groupRef.current || !scaleGroupRef.current) return;
 
     if (groupRef.current.parent) {
-      // 0 CPU cost rotation read
-      parentQuat.setFromRotationMatrix(groupRef.current.parent.matrixWorld);
+      groupRef.current.parent.getWorldQuaternion(parentQuat);
       parentQuat.invert();
       groupRef.current.quaternion
         .copy(camera.quaternion)
@@ -38,20 +38,19 @@ const StarLabelCanvas = ({ name, position }) => {
       groupRef.current.quaternion.copy(camera.quaternion);
     }
 
-    // 0 CPU cost position read
-    worldPos.setFromMatrixPosition(groupRef.current.matrixWorld);
+    groupRef.current.getWorldPosition(worldPos);
 
     const distance = camera.position.distanceTo(worldPos);
     const vFov = (camera.fov * Math.PI) / 180;
     const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
 
-    const scaleX = unitsPerPixel / (cachedParentScale.current.x || 1);
-    const scaleY = unitsPerPixel / (cachedParentScale.current.y || 1);
-    const scaleZ = unitsPerPixel / (cachedParentScale.current.z || 1);
+    scaleGroupRef.current.scale.set(
+      unitsPerPixel / (cachedParentScale.current.x || 1),
+      unitsPerPixel / (cachedParentScale.current.y || 1),
+      unitsPerPixel / (cachedParentScale.current.z || 1)
+    );
 
-    textRef.current.scale.set(scaleX, scaleY, scaleZ);
-
-    textRef.current.position.set(
+    scaleGroupRef.current.position.set(
       0,
       (PIXEL_PADDING * unitsPerPixel) / (cachedParentScale.current.y || 1),
       0
@@ -60,25 +59,26 @@ const StarLabelCanvas = ({ name, position }) => {
 
   return (
     <group ref={groupRef} position={position}>
-      <Text
-        ref={textRef}
-        raycast={() => null}
-        fontSize={PIXEL_FONT_SIZE}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="bottom"
-        transparent={true}
-        depthTest={false}
-        depthWrite={false}
-        material-depthTest={false}
-        material-depthWrite={false}
-        renderOrder={9999999}
-        outlineWidth={PIXEL_FONT_SIZE * 0.08}
-        outlineColor="#000000"
-        characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- /:"
-      >
-        {name}
-      </Text>
+      <group ref={scaleGroupRef}>
+        <Text
+          raycast={() => null}
+          fontSize={PIXEL_FONT_SIZE}
+          color="#ffffff"
+          anchorX="center"
+          anchorY="bottom"
+          transparent={true}
+          depthTest={false}
+          depthWrite={false}
+          material-depthTest={false}
+          material-depthWrite={false}
+          renderOrder={9999999}
+          outlineWidth={PIXEL_FONT_SIZE * 0.08}
+          outlineColor="#000000"
+          characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- /:"
+        >
+          {name}
+        </Text>
+      </group>
     </group>
   );
 };

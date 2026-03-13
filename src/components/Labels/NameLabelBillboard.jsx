@@ -15,7 +15,8 @@ const NameLabel = ({ s }) => {
   const planetScale = useStore((state) => state.planetScale);
 
   const groupRef = useRef();
-  const textRef = useRef();
+  const scaleGroupRef = useRef(); // Protects Troika Text from seeing the scale updates
+
   const cachedParentScale = useRef(new THREE.Vector3(1, 1, 1));
 
   const PIXEL_FONT_SIZE = planetCamera ? 11 : 13;
@@ -28,18 +29,16 @@ const NameLabel = ({ s }) => {
 
   useEffect(() => {
     if (groupRef.current && groupRef.current.parent) {
-      // It is okay to calculate scale once on mount/slider change
       groupRef.current.parent.getWorldScale(cachedParentScale.current);
     }
   }, [planetScale]);
 
   useFrame(({ camera, size }) => {
-    if (!groupRef.current || !textRef.current) return;
+    if (!groupRef.current || !scaleGroupRef.current) return;
 
-    // THE FIX: Read from the cached matrix memory instead of forcing recalculations
+    // Guaranteed current-frame rotation (fixes the 1-frame jitter)
     if (groupRef.current.parent) {
-      // 0 CPU cost rotation read
-      parentQuat.setFromRotationMatrix(groupRef.current.parent.matrixWorld);
+      groupRef.current.parent.getWorldQuaternion(parentQuat);
       parentQuat.invert();
       groupRef.current.quaternion
         .copy(camera.quaternion)
@@ -48,20 +47,21 @@ const NameLabel = ({ s }) => {
       groupRef.current.quaternion.copy(camera.quaternion);
     }
 
-    // 0 CPU cost position read
-    worldPos.setFromMatrixPosition(groupRef.current.matrixWorld);
+    // Guaranteed current-frame position (fixes the 1-frame jitter)
+    groupRef.current.getWorldPosition(worldPos);
 
     const distance = camera.position.distanceTo(worldPos);
     const vFov = (camera.fov * Math.PI) / 180;
     const unitsPerPixel = (2 * Math.tan(vFov / 2) * distance) / size.height;
 
-    const scaleX = unitsPerPixel / (cachedParentScale.current.x || 1);
-    const scaleY = unitsPerPixel / (cachedParentScale.current.y || 1);
-    const scaleZ = unitsPerPixel / (cachedParentScale.current.z || 1);
+    // Apply scaling strictly to the WRAPPER group, saving massive CPU overhead
+    scaleGroupRef.current.scale.set(
+      unitsPerPixel / (cachedParentScale.current.x || 1),
+      unitsPerPixel / (cachedParentScale.current.y || 1),
+      unitsPerPixel / (cachedParentScale.current.z || 1)
+    );
 
-    textRef.current.scale.set(scaleX, scaleY, scaleZ);
-
-    textRef.current.position.set(
+    scaleGroupRef.current.position.set(
       0,
       localRadius +
         (PIXEL_PADDING * unitsPerPixel) / (cachedParentScale.current.y || 1),
@@ -74,25 +74,26 @@ const NameLabel = ({ s }) => {
   return (
     <Suspense fallback={null}>
       <group ref={groupRef}>
-        <Text
-          ref={textRef}
-          raycast={() => null}
-          fontSize={PIXEL_FONT_SIZE}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="bottom"
-          transparent={true}
-          depthTest={false}
-          depthWrite={false}
-          material-depthTest={false}
-          material-depthWrite={false}
-          renderOrder={9999999}
-          outlineWidth={PIXEL_FONT_SIZE * 0.08}
-          outlineColor="#000000"
-          characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- "
-        >
-          {s.name}
-        </Text>
+        <group ref={scaleGroupRef}>
+          <Text
+            raycast={() => null}
+            fontSize={PIXEL_FONT_SIZE}
+            color="#ffffff"
+            anchorX="center"
+            anchorY="bottom"
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+            material-depthTest={false}
+            material-depthWrite={false}
+            renderOrder={9999999}
+            outlineWidth={PIXEL_FONT_SIZE * 0.08}
+            outlineColor="#000000"
+            characters="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- "
+          >
+            {s.name}
+          </Text>
+        </group>
       </group>
     </Suspense>
   );
