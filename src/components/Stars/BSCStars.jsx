@@ -16,6 +16,7 @@ import Star from "./Star";
 // Cache vectors outside the component to prevent garbage collection stutters
 const _v1 = new THREE.Vector3();
 const _worldPos = new THREE.Vector3();
+const _hoverWorldPos = new THREE.Vector3();
 
 const BSCStars = ({ onStarClick, onStarHover }) => {
   const pointsRef = useRef();
@@ -220,12 +221,12 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       currentHoverIndex.current = starIndex;
       const star = starData[starIndex];
 
-      const worldPosition = new THREE.Vector3(
+      _hoverWorldPos.set(
         positions[starIndex * 3],
         positions[starIndex * 3 + 1],
         positions[starIndex * 3 + 2]
       );
-      if (pointsRef.current) pointsRef.current.localToWorld(worldPosition);
+      if (pointsRef.current) pointsRef.current.localToWorld(_hoverWorldPos);
 
       const hoverData = { star, position: worldPosition, index: starIndex };
       currentHoverDataRef.current = hoverData;
