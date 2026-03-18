@@ -7,10 +7,16 @@ import { usePlanetCameraStore } from "./planetCameraStore";
 import { Ground } from "./Ground";
 import { kmToUnits, unitsToKm } from "../../utils/celestial-functions";
 
-const DUR = 12.0;
-const ORBIT_PCT = 0.4;
-const GLIDE_PCT = 0.85;
-const RUNWAY = 0.5;
+// const DUR = 12.0;
+// const ORBIT_PCT = 0.4;
+// const GLIDE_PCT = 0.85;
+// const RUNWAY = 0.5;
+
+// --- Updated Constants ---
+const DUR = 11.0; // Reduced from 12.0 to shorten the final rotation
+const ORBIT_PCT = 0.436; // ~4.8s / 11s (maintains original 4.8s orbit time)
+const GLIDE_PCT = 0.927; // ~10.2s / 11s (maintains original 5.4s glide time)
+const RUNWAY = 0.5; // Unchanged
 
 export default function TransitionCamera() {
   const { scene } = useThree();
