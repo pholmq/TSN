@@ -228,7 +228,7 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       );
       if (pointsRef.current) pointsRef.current.localToWorld(_hoverWorldPos);
 
-      const hoverData = { star, position: worldPosition, index: starIndex };
+      const hoverData = { star, position: _hoverWorldPos, index: starIndex };
       currentHoverDataRef.current = hoverData;
 
       if (onStarHover) onStarHover(hoverData, e);

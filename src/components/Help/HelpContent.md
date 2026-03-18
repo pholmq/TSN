@@ -1,17 +1,17 @@
 # Welcome to The TYCHOSIUM
 
-The Tychosium is an interactive 3D simulator of the TYCHOS model of our solar system. It allows you to visualize the intricate orbital mechanics of our nearby celestial bodies, trace their paths over time, generate Epemerides (lists of planetary positions), discover and examine astronomical events such as conjunctions and oppositions, elcipses, etc.
+The Tychosium is an interactive 3D simulator of the TYCHOS model of our Solar System. It allows you to visualize the intricate orbital mechanics of our nearby celestial bodies, trace their paths over time, generate Ephemerides (lists of planetary positions), and discover and examine astronomical events such as conjunctions, oppositions, eclipses, Venus & Mercury solar transits, etc.
 
 ## Features
 
-- **All planets of the Solar system** arranged in the TYCHOS model configuration in an actual Euclidian space. The simulation also includes Halleys comet and Eros.
-- **9000+ stars** with Right Ascension, Declination, Magnitude and Color temperature.
-- **Search** All stars, planets, comets and asteroids can be searched and tracked.
-- **Accurate scale and distances** Whith `Actual planet` sizes checked all celectial bodies are to scale and at correct relative distances. In the `Stars & Helpers` menu, the Star distances can be adjusted. Default is `42633` - the reduction factor suggested in the TYCHOS model, but if set to `1` the official star distances are used. When `Celstial sphere` is checked, the stars are projected at a uniform distance that can be adjusted with `Sphere & Zodiac size`
-- **Planet camera** When selecting `Planet camera` the camera is attched to Earth, with numerous location presets and its also possible to view the universe from other planets.
-- **Trace** Planetary motion and retogrades can be visualized.
-- **Constellations and Zodiac wheels** In the `Stars & Helpers` the H.A. Reys beatiful way to draw constellation can be turned on, plus the tropical and sidereal zodiac and the Equinoxes to study the Precession of the Equinoxes.
-- **Perpetual calendar** The simulation allows for pratically and date and accunts for the Julian calendar and supports Julian astronomical dates.
+- **All planets of the Solar system** in the TYCHOS model configuration are arranged in an actual Euclidean space. The simulation also includes **Halley’s comet** and asteroid **Eros**.
+- **9000+ stars** with Right Ascension, Declination, Magnitude, and Color temperature.
+- **Search:** All stars, planets, comets, and asteroids that are included in the simulator can be searched and tracked.
+- **Accurate scale and distances:** With **"Actual planet sizes"** checked, all celestial bodies are to scale and at correct relative distances. In the **Stars & Helpers** menu, the star distances can be adjusted. Default is `42633` (the TYCHOS model’s reduction factor for star distances), but if set to `1`, the official star distances are used. When **"Celestial sphere"** is checked, the stars are projected at a uniform distance that can be adjusted with **Sphere & Zodiac size**.
+- **Planet camera:** When selecting **"Planet camera"**, the view is attached to Earth, with numerous location presets. It is also possible to view the universe from other planets.
+- **Trace:** When activated, planetary motions and retrogrades can be visualized.
+- **Constellations and Zodiac wheels:** In the **Stars & Helpers** menu, H.A. Rey’s beautiful constellation patterns can be activated. So can the Tropical and Sidereal zodiacs, as well as the Equinoxes & Solstices lines to study the Precession of the Equinoxes.
+- **Perpetual calendar:** The simulation implements the astronomical year count (which includes the year "0"). It accounts for the Gregorian calendar reform and supports Julian astronomical dates.
 
 ---
 
@@ -19,8 +19,8 @@ The Tychosium is an interactive 3D simulator of the TYCHOS model of our solar sy
 
 - **Rotate Camera:** Left-Click + Drag
 - **Zoom:** Mouse Scroll Wheel
-- **Change camera target:** Double click on a planet
-- **Hoover any planet or star** to see its current position
+- **Change camera target:** Double-click on a planet
+- **Hover over any celestial body** to see its current position
 
 ---
 
@@ -28,10 +28,10 @@ The Tychosium is an interactive 3D simulator of the TYCHOS model of our solar sy
 
 The primary panel controls the flow of time in the simulator.
 
-- **Question mark** Shows this window.
-- **Stripes and X** Hides/Shows the main menu.
+- **Question mark (?):** Opens this window.
+- **Stripes and X:** Hides/Shows the main menu.
 - **Reset:** Restores the simulator to the default start date (2000-06-21).
-- **Today:** Sets todays date.
+- **Today:** Sets today’s date.
 - **Playback Controls:** - **Play/Pause (▶ / ⏸):** Starts or stops the progression of time.
   - **Step Back / Step Forward (⏮ / ⏭):** Click to step one unit of time, or click and hold to move through time continuously.
 - **Date, Time (UTC), & Julian Day:** Manually enter specific dates or times. Press `Enter` to instantly jump to that exact moment.
@@ -40,8 +40,10 @@ The primary panel controls the flow of time in the simulator.
 
 ## Speed Controls
 
-- **1 sec/step equals:** Sets the multiplier for time progression. You can use `Up/Down` on your keyboard to add/remove 1 increments. Negative numbers causes the simulation to move backwards.
+- **1 sec/step equals:** Sets the multiplier for time progression. You can use `Up/Down` on your keyboard to add/remove increments. Negative numbers cause the simulation to move backwards.
 - **Time Unit (Dropdown):** Choose the unit of time for each step/second (e.g., Seconds, Hours, Days, Solar Years, Sidereal Years).
+
+---
 
 ## Main Menu
 
@@ -53,24 +55,24 @@ Toggles for primary viewing modes and control panels.
 
 - **Actual planet sizes:** Toggles between visually scaled-up planets and their true, realistic scale.
 - **Planet camera:** Activates the Planet camera.
-- **Camera follow:** Locks the camera to follow the planet that is camera target.
+- **Camera follow:** Locks the camera to follow the planet that is currently the camera target.
 - **Labels:** Shows or hides the names of planets and stars.
 - **Orbits:** Toggles the visibility of planetary orbit lines.
 - **Search:** Opens the **Search** tool to find and track specific stars or planets.
 - **Positions:** Opens a live data panel showing the Right Ascension (RA), Declination (Dec), Distance, and Elongation of the planets.
-- **Ephemerides:** Opens the Ephemerides generator that calculate historical or future planetary data over custom date ranges.
+- **Ephemerides:** Opens the Ephemerides generator to calculate historical or future planetary data over custom date ranges.
 
 ### Trace
 
 Tool for drawing the paths that planets take through space over time.
 
-**Note:** To trace the Sun you need to set the 1 sec/step equals to 100 years or higher, since the trace shows the Suns motion during a great year
+> **Note:** To trace the Sun, you need to set the "1 sec/step equals" to 100 years or higher, since the trace shows the Sun's motion during a Great Year.
 
 - **Trace On/Off:** Enables tracing.
 - **Line width & Dotted line:** Customizes the appearance of the trace lines.
 - **Trace length:** Determines how far back in time the trace tail extends.
 - **Step length:** Adjusts the resolution/smoothness of the generated trace.
-- **Planets:** Select which planets that should be traced.
+- **Planets:** Select which planets should be traced.
 
 ### Planets & Orbits
 
@@ -82,16 +84,16 @@ Adjust the visual representation of the solar system.
 - **Polar lines:** Toggles the visibility of polar axis lines on the Earth and the Sun.
 - **Graticules:** Toggles a spherical coordinate grid over the Earth and the Sun.
 - **Edit settings:** Opens advanced developer options for modifying object parameters.
-- **Planets:** Select which planets, moons, comets and asteroids to view.
+- **Planets:** Select which planets, moons, comets, and asteroids to view.
 
 ### Stars & Helpers
 
-Controls the fixed stars, consellation visibility and Equinox and Zodiac markers.
+Controls the fixed stars, constellation visibility, and Equinox/Zodiac markers.
 
 - **Stars:** Toggles the visibility of the background starfield (Bright Star Catalogue).
 - **Divide distances by:** Pulls the stars closer/further without changing their coordinate positions.
 - **Celestial sphere:** Projects all stars onto a uniform sphere at an equidistant radius.
-- **Constellations:** Draws H.A. Reys classical constellations.
-- **Equinoxes & Solistices:** Marks the Equinoxes and Solistices.
+- **Constellations:** Draws H.A. Rey's classical constellations.
+- **Equinoxes & Solstices:** Marks the Equinoxes and Solstices.
 - **Sidereal Zodiac / Tropical Zodiac:** Displays the respective zodiacs around the solar system.
-- **Sphere & Zodiac size:** Scales the radius of the celestial sphere, the constellations and helpers..
+- **Sphere & Zodiac size:** Scales the radius of the celestial sphere, the constellations, and helpers.
