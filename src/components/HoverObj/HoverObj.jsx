@@ -7,6 +7,7 @@ import { useThree } from "@react-three/fiber";
 const HoverObj = ({ s, starColor = false }) => {
   const [hovered, setHover] = useState(false);
   const [contextMenu, setContextMenu] = useState(false);
+  const [pinned, setPinned] = useState(false); // Lifted state
 
   // OPTIMIZATION: Removed all reactive Zustand subscriptions.
   // We only grab the setter functions, which never trigger re-renders.
@@ -39,13 +40,12 @@ const HoverObj = ({ s, starColor = false }) => {
   }, [gl]);
 
   const handlePointerOver = () => {
-    // OPTIMIZATION: Read runIntro imperatively
     if (useStore.getState().runIntro || mouseDownRef.current) return;
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       if (!mouseDownRef.current && !useStore.getState().runIntro) {
-        setHover(true); // Rely entirely on local state
+        setHover(true);
         setHoveredObjectId(s.name);
       }
     }, 200);
@@ -55,8 +55,8 @@ const HoverObj = ({ s, starColor = false }) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setHover(false);
 
-    if (!contextMenu) {
-      // OPTIMIZATION: Read hoveredObjectId imperatively
+    if (!contextMenu && !pinned) {
+      // Only clear global state if not pinned/in menu
       if (useStore.getState().hoveredObjectId === s.name) {
         setHoveredObjectId(null);
       }
@@ -64,7 +64,6 @@ const HoverObj = ({ s, starColor = false }) => {
   };
 
   const handleDoubleClick = () => {
-    // OPTIMIZATION: Read planetCamera imperatively
     if (useStore.getState().planetCamera) {
       setSearchTarget(s.name);
     } else {
@@ -92,12 +91,14 @@ const HoverObj = ({ s, starColor = false }) => {
         sizeAttenuation={false}
       />
 
-      {/* Only render the panel if this specific instance is hovered locally */}
-      {hovered && (
+      {/* Keeps DOM mounted if mouse is on it, menu is open, OR it is pinned */}
+      {(hovered || contextMenu || pinned) && (
         <HoverPanel
           hovered={hovered}
           contextMenu={contextMenu}
           setContextMenu={setContextMenu}
+          pinned={pinned}
+          setPinned={setPinned}
           s={s}
         />
       )}

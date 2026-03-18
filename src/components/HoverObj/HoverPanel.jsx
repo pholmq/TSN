@@ -1,22 +1,29 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useStore } from "../../store";
-import { Vector3 } from "three";
 import ContextMenu from "./ContextMenu";
 import { getRaDecDistance } from "../../utils/celestial-functions";
 
-const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
-  const { scene, camera, viewport } = useThree();
+// Accept pinned and setPinned from parent
+const HoverPanel = ({
+  hovered,
+  contextMenu,
+  setContextMenu,
+  pinned,
+  setPinned,
+  s,
+}) => {
+  const { scene } = useThree();
   const raRef = useRef(null);
   const decRef = useRef(null);
   const distRef = useRef(null);
   const eloRef = useRef(null);
   const intervalRef = useRef(null);
-  const [pinned, setPinned] = useState(false);
+
   const setCameraTarget = useStore((state) => state.setCameraTarget);
   const setHoveredObjectId = useStore((state) => state.setHoveredObjectId);
-  const planetCamera = useStore((state) => state.planetCamera); // Get planetCamera state
+  const planetCamera = useStore((state) => state.planetCamera);
 
   const groupRef = useRef(null);
 
@@ -54,9 +61,7 @@ const HoverPanel = ({ hovered, contextMenu, setContextMenu, s }) => {
         />
       )}
       {showPanel && (
-        <Html
-          portal={{ current: portalRef.current }} // Explicitly target <body>. Solves the issue with the html being positioned wrong when scaled
-        >
+        <Html portal={{ current: portalRef.current }}>
           <div
             className="info-panel"
             style={{
