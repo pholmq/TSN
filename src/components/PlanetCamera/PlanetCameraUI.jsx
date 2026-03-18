@@ -5,6 +5,7 @@ import { useGesture } from "@use-gesture/react";
 import { useStore, useSettingsStore } from "../../store";
 import { usePlanetCameraStore } from "./planetCameraStore";
 import { unitsToKm } from "../../utils/celestial-functions";
+import PlanetCameraMapHUD from "./PlanetCameraMapHUD";
 
 const PlanetCameraUI = () => {
   const planetCamera = useStore((s) => s.planetCamera);
@@ -209,7 +210,7 @@ const PlanetCameraUI = () => {
         value: 0,
         hint: "Height above planet surface in km",
         max: 30000,
-        min: -6000,
+        min: 0,
         step: 1,
         onChange: (value) => setPlanCamHeight(value + planetRadiusKm),
       },
@@ -243,6 +244,13 @@ const PlanetCameraUI = () => {
     { store: plancamUIStore },
     [planetRadiusKm, surfaceHeight, planetCameraTarget]
   );
+
+  const handleMapUpdate = (newLat, newLong) => {
+    setPlanCamLat(newLat);
+    setPlanCamLong(newLong);
+    // Push the changes to Leva and blank the Location dropdown
+    set({ Latitude: newLat, Longitude: newLong, Location: "-" });
+  };
 
   const canvasRef = useRef(null);
   useEffect(() => {
@@ -289,14 +297,13 @@ const PlanetCameraUI = () => {
     }
   );
 
-  // --- FIX: Portal to document.body to escape the #root scaling context ---
   return createPortal(
     <>
       {planetCamera && (
         <div className="plancam-div">
           <Leva
             store={plancamUIStore}
-            titleBar={{ drag: true, title: "Planet camera", filter: false }}
+            titleBar={{ drag: true, title: "Planet camera", filter: false }} // Drag is back!
             fill={false}
             hideCopyButton
             theme={{
@@ -317,6 +324,7 @@ const PlanetCameraUI = () => {
           />
         </div>
       )}
+      <PlanetCameraMapHUD onPositionUpdate={handleMapUpdate} />
     </>,
     document.body
   );
