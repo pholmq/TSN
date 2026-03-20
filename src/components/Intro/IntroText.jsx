@@ -73,9 +73,9 @@ export default function IntroText() {
 
   if (isFinished) return null;
 
-  const titlePosition = [-140, 0, -150];
+  const titlePosition = isTouchDevice ? [-140, 0, -90] : [-140, 0, -150];
   const warningPos = [-180, 0, -100];
-  const logoPosition = [-125, 0, -185];
+  const logoPosition = isTouchDevice ? [-125, 0, -125] : [-125, 0, -185];
 
   return (
     <>
@@ -89,7 +89,7 @@ export default function IntroText() {
         font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
         position={titlePosition}
         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-        size={30}
+        size={isTouchDevice ? 20 : 30}
         height={8}
         curveSegments={12}
         bevelEnabled
@@ -114,7 +114,7 @@ export default function IntroText() {
           font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
           position={warningPos}
           rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-          size={20}
+          size={10}
           height={2}
           curveSegments={12}
           bevelEnabled
