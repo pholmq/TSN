@@ -62,10 +62,9 @@ const Trace = ({ name }) => {
       setTraceStart(posRef.current);
     }
 
-    // THE FIX: Time-slicing budget.
-    // We only allow this function to run for 2 milliseconds per frame.
+    // We only allow this function to run for 50 milliseconds per frame.
     const startTime = performance.now();
-    const TIME_BUDGET_MS = 2;
+    const TIME_BUDGET_MS = 50;
 
     // Rewinding backwards (Extremely fast, usually negligible)
     while (

@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef, useEffect, memo, useMemo } from "react";
+import { useRef, useEffect, memo } from "react";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { usePlanetCameraStore } from "./PlanetCamera/planetCameraStore";
@@ -12,12 +12,16 @@ import PlanetRings from "./PlanetRings";
 import NameLabel from "./Labels/NameLabelBillboard";
 import GeoSphere from "./Helpers/GeoSphere";
 
+// PERFORMANCE FIX: Define geometries globally to share across all planet instances
+const lowResSphere = new THREE.SphereGeometry(1, 64, 64);
+const highResSphere = new THREE.SphereGeometry(1, 128, 128); // Reserved for Earth
+
 // Define reusable vector outside to prevent GC pressure
 const worldPositionVec = new THREE.Vector3();
 
 const Planet = memo(function Planet({ s, actualMoon, name }) {
   const planetRef = useRef();
-  const transformRef = useRef(); // New ref for the scale group
+  const transformRef = useRef();
   const pivotRef = useRef();
   const materialRef = useRef();
 
@@ -77,13 +81,8 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     visible &&
     !(planetCamera && !cameraTransitioning && name === planetCameraTarget);
 
-  // Updated Geometry logic: 256 for Earth, 128 otherwise
-  const planetGeometry = useMemo(() => {
-    const segments = s.name === "Earth" ? 256 : 128;
-    return <sphereGeometry args={[size, segments, segments]} />;
-  }, [size, s.name]);
+  const planetGeometry = s.name === "Earth" ? highResSphere : lowResSphere;
 
-  // PERFORMANCE FIX: Dynamically set transparency to enable early-Z culling
   const planetOpacity = s.opacity !== undefined ? s.opacity : 1;
   const isTransparent = planetOpacity < 1;
 
@@ -103,8 +102,13 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
         {showLabel && <HoverObj s={s} />}
 
         <group ref={transformRef} scale={planetScale}>
-          <mesh name={name} visible={visible} ref={planetRef}>
-            {planetGeometry}
+          <mesh
+            name={name}
+            visible={visible}
+            ref={planetRef}
+            geometry={planetGeometry}
+            scale={size}
+          >
             <meshStandardMaterial
               ref={materialRef}
               color={

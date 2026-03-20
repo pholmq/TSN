@@ -1,11 +1,20 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback } from "react";
+import * as THREE from "three";
 import { useStore, usePlotStore, useSettingsStore } from "../store";
 
+// PERFORMANCE FIX: Define geometry globally outside component
+const pobjSphere = new THREE.SphereGeometry(1, 32, 32);
+
 const Pobj = ({ name, children }) => {
-  const settings = useSettingsStore((s) => s.settings);
-  const s = settings[settings.findIndex((p) => p.name === name)];
-  const addPlotObj = usePlotStore((s) => s.addPlotObj);
-  const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
+  // PERFORMANCE FIX: Targeted selection to avoid massive re-renders on any setting change
+  const s = useSettingsStore(
+    useCallback((state) => state.settings.find((p) => p.name === name), [name])
+  );
+
+  const addPlotObj = usePlotStore((state) => state.addPlotObj);
+  // Ensure you add a removePlotObj function to your usePlotStore!
+  const removePlotObj = usePlotStore((state) => state.removePlotObj);
+  const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
 
   const containerRef = useRef();
   const pivotRef = useRef();
@@ -13,10 +22,13 @@ const Pobj = ({ name, children }) => {
   const objRef = useRef();
   const cSphereRef = useRef();
 
+  if (!s) return null;
+
   let orbitRadius = s.orbitRadius;
   let orbitCentera = s.orbitCentera;
   let orbitCenterb = s.orbitCenterb;
   let orbitCenterc = s.orbitCenterc;
+
   if (!actualPlanetSizes) {
     if (
       s.name === "Moon" ||
@@ -40,10 +52,16 @@ const Pobj = ({ name, children }) => {
       cSphereRef: cSphereRef,
     };
     addPlotObj(plotObj);
-  }, []);
+
+    // PERFORMANCE FIX: Cleanup to prevent memory leaks / ghost trace objects
+    return () => {
+      if (removePlotObj) removePlotObj(s.name);
+    };
+  }, [s.name, s.speed, s.startPos, addPlotObj, removePlotObj]);
 
   const tilt = s.tilt || 0;
   const tiltb = s.tiltb || 0;
+
   return (
     <group
       visible={false}
@@ -61,8 +79,8 @@ const Pobj = ({ name, children }) => {
                 ref={cSphereRef}
                 rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}
               >
-                <mesh ref={objRef}>
-                  <sphereGeometry args={[s.size, 128, 128]} />
+                {/* PERFORMANCE FIX: Use shared geometry and scale it */}
+                <mesh ref={objRef} geometry={pobjSphere} scale={s.size}>
                   <meshStandardMaterial color={s.color} />
                 </mesh>
               </group>
@@ -74,4 +92,5 @@ const Pobj = ({ name, children }) => {
     </group>
   );
 };
+
 export default Pobj;
