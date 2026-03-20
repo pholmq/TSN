@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { useStore } from "../store";
 import { Line } from "@react-three/drei";
 
-// PERFORMANCE FIX: Shared GPU resources for all arrows
+// PERFORMANCE FIX: Define arrow assets globally to share GPU resources
 const arrowGeometry = new THREE.ConeGeometry(3, 8);
 const baseArrowMaterial = new THREE.MeshBasicMaterial({
   opacity: 0.8,
@@ -14,6 +14,7 @@ function Arrow({ rotation, radius, color, reverse = false }) {
   const arrowScale = useStore((s) => s.arrowScale);
   const arrowDirection = reverse ? Math.PI : 0;
 
+  // Clone base material dynamically per orbit color
   const mat = useMemo(() => {
     const m = baseArrowMaterial.clone();
     m.color.set(color);
@@ -44,7 +45,8 @@ export default function Orbit({ radius, visible, s }) {
 
   const { points } = useMemo(() => {
     const pts = [];
-    for (let i = 0; i <= 360; i += 0.1) {
+    // PERFORMANCE FIX: Changed increment from 0.1 to 1 to eliminate 3,240 unnecessary vertices per orbit
+    for (let i = 0; i <= 360; i += 1) {
       const rad = i * (Math.PI / 180);
       pts.push([Math.sin(rad) * radius, Math.cos(rad) * radius, 0]);
     }
