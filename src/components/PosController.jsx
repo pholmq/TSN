@@ -8,8 +8,8 @@ const PosController = () => {
   const { scene } = useThree();
   const trackedNames = useRef([]);
 
-  // OPTIMIZATION: Only parse the traceable settings once on mount (or when settings drastically change)
   useEffect(() => {
+    // Cache the traceable settings once on mount to avoid filtering on every frame interval
     const tracked = useSettingsStore
       .getState()
       .settings.filter((item) => item.traceable)
@@ -17,18 +17,19 @@ const PosController = () => {
 
     trackedNames.current = tracked;
 
-    // Move side-effects out of the render body and into a layout effect
+    // Push the initial layout out of the render phase
     usePosStore.setState({ trackedObjects: tracked });
   }, []);
 
   useFrameInterval(() => {
-    // OPTIMIZATION: Read imperatively to avoid component re-renders when toggling the UI
+    // Read imperatively; avoids hooking component to high-frequency state changes
     if (!useStore.getState().showPositions) return;
 
     let positions = {};
 
-    // Use the cached names array instead of filtering the settings store every 200ms
-    for (const item of trackedNames.current) {
+    // Iterate over the cached array
+    for (let i = 0; i < trackedNames.current.length; i++) {
+      const item = trackedNames.current[i];
       positions[item] = getRaDecDistance(item, scene);
     }
 
