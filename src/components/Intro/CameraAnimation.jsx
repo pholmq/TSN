@@ -1,37 +1,60 @@
-// Custom easing: gentle start + quintic out ending
-const gentleStartQuinticOut = (t) => {
-  // Apply a gentle ease-in to the first part, then quintic out
-  const modifiedT = t * t * t; // Square for gentler start
-  return 1 - Math.pow(1 - modifiedT, 5); // Then apply quintic out
-};
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import TWEEN from "@tweenjs/tween.js";
+
+// UPDATED EASING: The '8' at the end creates a massive deceleration tail.
+// It rushes the first 80% of the journey, then mathematically crawls to the finish.
+const gentleStartLongTailOut = (t) => {
+  const modifiedT = t * t * t;
+  return 1 - Math.pow(1 - modifiedT, 8);
+};
 
 export default function CameraAnimation({ controlsRef }) {
   const controls = controlsRef.current;
   const tweenRef = useRef(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const startPos = { x: -30000000, y: 10000000, z: 0 };
-  const endPos = { x: 0, y: 2200, z: 0 };
-  const duration = 8000;
+
+  const flightPath = useMemo(() => {
+    return new THREE.CubicBezierCurve3(
+      // P0: Start position (Deep Space)
+      new THREE.Vector3(-30000000, 10000000, 0),
+
+      // P1: Dive control point
+      new THREE.Vector3(-10000000, 2200, 0),
+
+      // P2: Horizontal slide control point
+      // Pulled way back to -25000 to stretch out the final top-down slide
+      new THREE.Vector3(-25000, 2200, 0),
+
+      // P3: End position
+      new THREE.Vector3(0, 2200, 0)
+    );
+  }, []);
+
+  // Increased total duration to 15 seconds to give the slow tail room to breathe
+  const duration = 15000;
 
   useEffect(() => {
     if (isInitialized) {
-      const coords = { ...startPos };
+      const startPos = flightPath.getPoint(0);
       controls.setPosition(startPos.x, startPos.y, startPos.z, false);
-      tweenRef.current = new TWEEN.Tween(coords)
-        .to(endPos, duration)
-        .easing(gentleStartQuinticOut)
+
+      const tweenObj = { t: 0 };
+
+      tweenRef.current = new TWEEN.Tween(tweenObj)
+        .to({ t: 1 }, duration)
+        .easing(gentleStartLongTailOut)
         .onUpdate(() => {
-          controls.setPosition(coords.x, coords.y, coords.z, true);
+          const currentPos = flightPath.getPoint(tweenObj.t);
+          controls.setPosition(currentPos.x, currentPos.y, currentPos.z, false);
         })
         .onComplete(() => {
           tweenRef.current = null;
         })
         .start();
     }
-  }, [isInitialized]);
+  }, [isInitialized, flightPath]);
 
   useFrame(() => {
     if (controls && !isInitialized) {
