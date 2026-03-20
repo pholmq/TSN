@@ -10,12 +10,18 @@ export default function IntroText() {
 
   const materialRef = useRef();
   const warningMaterialRef = useRef();
-  const logoMaterialRef = useRef(); // Ref for the 3D logo
+  const logoMaterialRef = useRef();
+
+  // NEW: Timer to hold the text at 100% opacity before fading
+  const holdTimer = useRef(0);
 
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-
-  // Decouple the banner's existence from runIntro so it can finish fading out
   const [isFinished, setIsFinished] = useState(!runIntro);
+
+  // --- ANIMATION CONTROLS ---
+  const holdDuration = 4.0; // Seconds to hold before fading begins
+  const normalFadeSpeed = 0.05; // Lower number = slower fade out
+  const skipFadeSpeed = 0.2; // Fast fade if user clicks to skip
 
   useEffect(() => {
     const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
@@ -26,10 +32,10 @@ export default function IntroText() {
     }
   }, []);
 
-  // If the intro is ever reset/replayed, reset the banner
   useEffect(() => {
     if (runIntro) {
       setIsFinished(false);
+      holdTimer.current = 0; // Reset timer on replay
       if (materialRef.current) materialRef.current.opacity = 1;
       if (warningMaterialRef.current) warningMaterialRef.current.opacity = 1;
       if (logoMaterialRef.current) logoMaterialRef.current.opacity = 1;
@@ -39,28 +45,26 @@ export default function IntroText() {
   useFrame((state, delta) => {
     if (isFinished) return;
 
-    // Only fade if opacity is significantly above 0
+    // Wait before fading, UNLESS the user clicked to skip (runIntro becomes false)
+    if (runIntro && holdTimer.current < holdDuration) {
+      holdTimer.current += delta;
+      return;
+    }
+
     if (materialRef.current && materialRef.current.opacity > 0.01) {
-      // Fade twice as fast if the user clicked to interrupt (runIntro === false)
-      const fadeSpeed = runIntro ? 0.07 : 0.14;
+      const fadeSpeed = runIntro ? normalFadeSpeed : skipFadeSpeed;
 
       const newOpacity = Math.max(
         materialRef.current.opacity - delta * fadeSpeed,
         0
       );
+
       materialRef.current.opacity = newOpacity;
-
-      if (warningMaterialRef.current) {
+      if (warningMaterialRef.current)
         warningMaterialRef.current.opacity = newOpacity;
-      }
-
-      if (logoMaterialRef.current) {
-        logoMaterialRef.current.opacity = newOpacity;
-      }
+      if (logoMaterialRef.current) logoMaterialRef.current.opacity = newOpacity;
     } else {
-      // Once faded out, turn off the flag and unmount
       setIsFinished(true);
-      // Only clear runIntro if it's still true (user might have already clicked through)
       if (runIntro) {
         setRunIntro(false);
       }
@@ -69,11 +73,9 @@ export default function IntroText() {
 
   if (isFinished) return null;
 
-  const titlePosition = [-140, 0, -150];
+  const titlePosition = isTouchDevice ? [-140, 0, -90] : [-140, 0, -150];
   const warningPos = [-180, 0, -100];
-
-  // Adjusted to sit much closer to the left of the title
-  const logoPosition = [-125, 0, -185];
+  const logoPosition = isTouchDevice ? [-125, 0, -125] : [-125, 0, -185];
 
   return (
     <>
@@ -87,7 +89,7 @@ export default function IntroText() {
         font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
         position={titlePosition}
         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-        size={30}
+        size={isTouchDevice ? 20 : 30}
         height={8}
         curveSegments={12}
         bevelEnabled
@@ -112,7 +114,7 @@ export default function IntroText() {
           font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
           position={warningPos}
           rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-          size={20}
+          size={10}
           height={2}
           curveSegments={12}
           bevelEnabled
