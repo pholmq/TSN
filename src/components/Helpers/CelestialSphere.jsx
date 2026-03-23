@@ -21,7 +21,7 @@ function CelestialSphere() {
 
   return (
     <group visible={celestialSphere}>
-      <mesh name="CelestialSphere" ref={meshRef}>
+      <mesh name="CelestialSphere" ref={meshRef} raycast={() => null}>
         {/* Main sphere */}
         <sphereGeometry args={[size, 40, 40]} />
         <meshNormalMaterial
@@ -32,7 +32,7 @@ function CelestialSphere() {
         />
 
         {/* Wireframe edges */}
-        <lineSegments ref={wireframeRef}>
+        <lineSegments ref={wireframeRef} raycast={() => null}>
           <edgesGeometry args={[new THREE.SphereGeometry(size, 40, 40)]} />
           <lineBasicMaterial color={0x666666} transparent opacity={0.3} />
         </lineSegments>
@@ -40,7 +40,7 @@ function CelestialSphere() {
         {/* Polar grid helper - will now scale with the sphere */}
         <primitive object={polarGrid} />
       </mesh>
-      <mesh name="CSLookAtObj"></mesh>
+      <mesh name="CSLookAtObj" raycast={() => null}></mesh>
     </group>
   );
 }
