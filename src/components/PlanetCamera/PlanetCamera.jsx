@@ -25,7 +25,7 @@ export default function PlanetCamera() {
   const targetObjRef = useRef(null);
   const groundFade = useRef(0);
 
-  const CAM_NEAR_UNITS = 0.00001;
+  const CAM_NEAR_UNITS = 0.0002;
 
   const { scene } = useThree();
   const planetCamera = useStore((s) => s.planetCamera);
