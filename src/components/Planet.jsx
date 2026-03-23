@@ -102,28 +102,26 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
         {showLabel && <HoverObj s={s} />}
 
         <group ref={transformRef} scale={planetScale}>
-          <mesh
-            name={name}
-            visible={visible}
-            ref={planetRef}
-            geometry={planetGeometry}
-            scale={size}
-          >
-            <meshStandardMaterial
-              ref={materialRef}
-              color={
-                isLoading || !texture ? s.color : s.textureTint || "#ffffff"
-              }
-              emissive={s.light && s.color}
-              emissiveIntensity={s.light && sunLight}
-              roughness={0.7}
-              metalness={0.2}
-              transparent={isTransparent}
-              opacity={planetOpacity}
-              depthWrite={!isTransparent}
-            />
-            {s.light && <pointLight intensity={sunLight * 100000} />}
-          </mesh>
+          {/* THE FIX: Unscaled wrapper group for the camera to safely mount to */}
+          <group name={name} ref={planetRef} visible={visible}>
+            <mesh geometry={planetGeometry} scale={size}>
+              <meshStandardMaterial
+                ref={materialRef}
+                color={
+                  isLoading || !texture ? s.color : s.textureTint || "#ffffff"
+                }
+                emissive={s.light && s.color}
+                emissiveIntensity={s.light && sunLight}
+                roughness={0.7}
+                metalness={0.2}
+                transparent={isTransparent}
+                opacity={planetOpacity}
+                depthWrite={!isTransparent}
+              />
+              {s.light && <pointLight intensity={sunLight * 100000} />}
+            </mesh>
+          </group>
+          {/* The Helpers remain as siblings so their internal scaling calculations hold true */}
           {s.geoSphere && geoSphere ? (
             <GeoSphere
               s={s}

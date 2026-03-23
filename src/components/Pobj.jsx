@@ -79,10 +79,12 @@ const Pobj = ({ name, children }) => {
                 ref={cSphereRef}
                 rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}
               >
-                {/* PERFORMANCE FIX: Use shared geometry and scale it */}
-                <mesh ref={objRef} geometry={pobjSphere} scale={s.size}>
-                  <meshStandardMaterial color={s.color} />
-                </mesh>
+                {/* THE FIX: Wrap the scaled mesh in an unscaled group */}
+                <group ref={objRef}>
+                  <mesh geometry={pobjSphere} scale={s.size}>
+                    <meshStandardMaterial color={s.color} />
+                  </mesh>
+                </group>
               </group>
             ) : null}
             {children}
