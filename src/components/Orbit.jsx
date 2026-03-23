@@ -45,11 +45,17 @@ export default function Orbit({ radius, visible, s }) {
 
   const { points } = useMemo(() => {
     const pts = [];
-    // PERFORMANCE FIX: Changed increment from 0.1 to 1 to eliminate 3,240 unnecessary vertices per orbit
-    for (let i = 0; i <= 360; i += 1) {
+
+    // THE FIX: Adaptive step size.
+    // Massive outer orbits get a finer resolution to stay perfectly round,
+    // while smaller inner orbits stay at 1 degree to save memory.
+    const stepSize = radius > 50000 ? 0.2 : radius > 10000 ? 0.5 : 1;
+
+    for (let i = 0; i <= 360; i += stepSize) {
       const rad = i * (Math.PI / 180);
       pts.push([Math.sin(rad) * radius, Math.cos(rad) * radius, 0]);
     }
+
     return { points: pts };
   }, [radius]);
 
