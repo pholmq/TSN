@@ -9,9 +9,6 @@ function GeoSphere({ s, size, visible, color = 0x00ffff }) {
   const latLongGrid = useMemo(() => {
     const grid = new THREE.Group();
 
-    // Use provided color or fallback to default cyan
-    // const color = 0x00ffff;
-
     // Regular grid material
     const gridMaterial = new THREE.LineBasicMaterial({
       color: color,
@@ -38,6 +35,7 @@ function GeoSphere({ s, size, visible, color = 0x00ffff }) {
     });
 
     const equator = new THREE.Mesh(equatorGeometry, equatorMaterial);
+    equator.raycast = () => null; // PERFORMANCE FIX
     grid.add(equator);
 
     // LATITUDE LINES (Parallels) --------------------------
@@ -54,7 +52,9 @@ function GeoSphere({ s, size, visible, color = 0x00ffff }) {
       }
 
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      grid.add(new THREE.Line(geometry, gridMaterial));
+      const latLine = new THREE.Line(geometry, gridMaterial);
+      latLine.raycast = () => null; // PERFORMANCE FIX
+      grid.add(latLine);
     });
 
     // LONGITUDE LINES (Meridians) ------------------------
@@ -77,15 +77,17 @@ function GeoSphere({ s, size, visible, color = 0x00ffff }) {
       }
 
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      grid.add(new THREE.Line(geometry, gridMaterial));
+      const lonLine = new THREE.Line(geometry, gridMaterial);
+      lonLine.raycast = () => null; // PERFORMANCE FIX
+      grid.add(lonLine);
     }
 
     return grid;
-  }, [geoSphereSize]);
+  }, [geoSphereSize, color]);
 
   return (
     <group visible={visible}>
-      <mesh name="GeoSphere" ref={meshRef}>
+      <mesh name="GeoSphere" ref={meshRef} raycast={() => null}>
         <primitive object={latLongGrid} />
       </mesh>
     </group>

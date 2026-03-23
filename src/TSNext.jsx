@@ -38,7 +38,7 @@ import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
 import TransitionCamera from "./components/PlanetCamera/TransitionCamera";
 import Constellations from "./components/Stars/Constellations";
 import PlanetCameraHelper from "./components/PlanetCamera/PlanetCameraHelper";
-import { VideoCanvas } from "./components/Recorder/r3f-video-recorder"; 
+import { VideoCanvas } from "./components/Recorder/r3f-video-recorder";
 import RecorderMenu from "./components/Menus/RecorderMenu";
 import RecorderController from "./components/Recorder/RecorderController";
 
@@ -126,10 +126,11 @@ const TSNext = () => {
       <VideoCanvas
         id="canvas"
         frameloop="always"
-        fps={60} 
-        gl={{ 
+        fps={60}
+        dpr={[1, 1.5]} // PERFORMANCE FIX: Cap DPR to 1.5 to save GPU on retina/mobile screens
+        gl={{
           logarithmicDepthBuffer: true,
-          preserveDrawingBuffer: true // Required for pixel extraction
+          preserveDrawingBuffer: true, // Required for pixel extraction
         }}
         style={getCanvasStyle()}
         raycaster={{

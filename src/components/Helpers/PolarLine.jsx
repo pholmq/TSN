@@ -6,10 +6,6 @@ export default function PolarLine({ visible }) {
   const polarLine = useStore((s) => s.polarLine);
   const southLine = useStore((s) => s.southLine);
   const polarLineSize = useStore((s) => s.polarLineSize);
-  const points = [
-    [0, -100, 0], // bottom point
-    [0, 100, 0], // top point
-  ];
 
   return (
     <>
@@ -21,6 +17,7 @@ export default function PolarLine({ visible }) {
           ]}
           color="red"
           lineWidth={1.5}
+          raycast={() => null}
         />
       ) : null}
       {southLine && visible ? (
@@ -31,6 +28,7 @@ export default function PolarLine({ visible }) {
           ]}
           color="white"
           lineWidth={1.5}
+          raycast={() => null}
         />
       ) : null}
     </>

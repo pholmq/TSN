@@ -13,8 +13,8 @@ export default function PlanetRings({
   const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
 
   // Create the correct path. In production Electron, this needs to be relative.
-  const texturePath = process.env.PUBLIC_URL 
-    ? process.env.PUBLIC_URL + '/' + texture 
+  const texturePath = process.env.PUBLIC_URL
+    ? process.env.PUBLIC_URL + "/" + texture
     : texture;
 
   const [ringTexture] = useTexture([texturePath]);
@@ -24,21 +24,13 @@ export default function PlanetRings({
   ringTexture.repeat.set(4, 1);
 
   // Validate radii
-  // const safeInnerRadius =
-  //   isNaN(innerRadius) || innerRadius <= 0 ? 1 : Number(innerRadius);
-  // const safeOuterRadius =
-  //   isNaN(outerRadius) || outerRadius <= safeInnerRadius
-  //     ? safeInnerRadius + 1
-  //     : Number(outerRadius);
-
-  // Validate radii
   const safeInnerRadius = actualPlanetSizes
     ? (innerRadius * actualSize) / 6
     : Number(innerRadius);
   const safeOuterRadius = actualPlanetSizes
     ? (outerRadius * actualSize) / 6
     : Number(outerRadius);
-  actualPlanetSizes;
+
   // Create ring geometry with UV mapping
   const ringGeometry = useMemo(() => {
     const geometry = new THREE.RingGeometry(
@@ -89,7 +81,7 @@ export default function PlanetRings({
   );
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
       <primitive object={ringGeometry} />
       <primitive object={ringMaterial} />
     </mesh>
