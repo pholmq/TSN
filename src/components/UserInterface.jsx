@@ -224,63 +224,64 @@ const UserInterface = () => {
 
   return createPortal(
     <>
-      {/* Container for the floating buttons when the menu is hidden */}
-      <div
-        hidden={showMenu}
-        style={{
-          position: "fixed",
-          top: "14px",
-          right: "12px",
-          zIndex: 2147483647,
-          display: "flex",
-          flexDirection: "row", // Changed to row to place them side-by-side
-          gap: "8px",
-        }}
-      >
-        {/* Floating Play/Pause Button (Placed first to be on the left) */}
-        <button
-          className="menu-toggle-button"
-          onClick={toggleRun}
+      {/* Conditionally render the floating buttons ONLY when the menu is hidden AND the intro is NOT running */}
+      {!(showMenu || runIntro) && (
+        <div
           style={{
-            background: "#374151",
-            border: "none",
-            borderRadius: "6px",
-            width: "24px",
-            height: "24px",
-            padding: "0",
-            color: "white",
-            cursor: "pointer",
+            position: "fixed",
+            top: "14px",
+            right: "12px",
+            zIndex: 2147483647,
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            flexDirection: "row", // Places them side-by-side
+            gap: "8px",
           }}
-          title={run ? "Pause" : "Play"}
         >
-          {run ? <FaPause size={10} /> : <FaPlay size={10} />}
-        </button>
+          {/* Floating Play/Pause Button (Placed first to be on the left) */}
+          <button
+            className="menu-toggle-button"
+            onClick={toggleRun}
+            style={{
+              background: "#374151",
+              border: "none",
+              borderRadius: "6px",
+              width: "24px",
+              height: "24px",
+              padding: "0",
+              color: "white",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            title={run ? "Pause" : "Play"}
+          >
+            {run ? <FaPause size={10} /> : <FaPlay size={10} />}
+          </button>
 
-        {/* Toggle Menu Button */}
-        <button
-          className="menu-toggle-button"
-          onClick={toggleShowMenu}
-          style={{
-            background: "#374151",
-            border: "none",
-            borderRadius: "6px",
-            width: "24px",
-            height: "24px",
-            padding: "0",
-            color: "white",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          title="Open Menu"
-        >
-          <FaBars size={10} />
-        </button>
-      </div>
+          {/* Toggle Menu Button */}
+          <button
+            className="menu-toggle-button"
+            onClick={toggleShowMenu}
+            style={{
+              background: "#374151",
+              border: "none",
+              borderRadius: "6px",
+              width: "24px",
+              height: "24px",
+              padding: "0",
+              color: "white",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            title="Open Menu"
+          >
+            <FaBars size={10} />
+          </button>
+        </div>
+      )}
 
       <div
         className="menu"
