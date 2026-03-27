@@ -44,7 +44,7 @@ const UserInterface = () => {
     speedMultiplier,
     showMenu,
     toggleShowMenu,
-    showLevaMenu, // Brought back Leva states
+    showLevaMenu,
     toggleShowLevaMenu,
     setResetClicked,
     setCameraTarget,
@@ -56,9 +56,26 @@ const UserInterface = () => {
   const timeRef = useRef();
   const julianRef = useRef();
   const intervalRef = useRef();
+  const menuRef = useRef(null); // NEW: Ref to track the menu container
 
   const steppingInterval = useRef(null);
   const steppingTimeout = useRef(null);
+
+  // NEW: Detect taps outside the menu to close it
+  useEffect(() => {
+    const handleOutsideTap = (e) => {
+      // Only trigger this logic for touch interactions
+      if (e.pointerType !== "touch") return;
+
+      // If the menu is open, and the tap target is NOT inside the menu container
+      if (showMenu && menuRef.current && !menuRef.current.contains(e.target)) {
+        handleToggleBothMenus();
+      }
+    };
+
+    document.addEventListener("pointerdown", handleOutsideTap);
+    return () => document.removeEventListener("pointerdown", handleOutsideTap);
+  }, [showMenu]); // Re-bind when showMenu state changes
 
   useEffect(() => {
     dateRef.current.value = posToDate(posRef.current);
@@ -198,7 +215,6 @@ const UserInterface = () => {
     setCameraTarget("Earth");
   };
 
-  // NEW: Ensure both Leva and Main Menu stay perfectly synced
   const handleToggleBothMenus = () => {
     toggleShowMenu();
     toggleShowLevaMenu();
@@ -241,7 +257,7 @@ const UserInterface = () => {
 
           <button
             className="menu-toggle-button"
-            onClick={handleToggleBothMenus} // Sync trigger
+            onClick={handleToggleBothMenus}
             style={{
               background: "#374151",
               border: "none",
@@ -263,6 +279,7 @@ const UserInterface = () => {
       )}
 
       <div
+        ref={menuRef} // NEW: Attached the ref to the menu wrapper
         className="menu"
         hidden={runIntro || !showMenu}
         style={{ zIndex: 2147483647 }}
@@ -292,7 +309,7 @@ const UserInterface = () => {
             <button
               className="menu-button menu-header-button"
               title="Close Menu"
-              onClick={handleToggleBothMenus} // Sync trigger
+              onClick={handleToggleBothMenus}
             >
               <FaTimes />
             </button>
