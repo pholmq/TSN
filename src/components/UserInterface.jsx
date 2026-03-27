@@ -224,30 +224,63 @@ const UserInterface = () => {
 
   return createPortal(
     <>
-      {/* Floating button shown when the menu is hidden */}
-      <button
+      {/* Container for the floating buttons when the menu is hidden */}
+      <div
         hidden={showMenu}
-        className="menu-toggle-button"
-        onClick={toggleShowMenu}
         style={{
           position: "fixed",
           top: "14px",
           right: "12px",
           zIndex: 2147483647,
-          background: "#374151",
-          border: "none",
-          borderRadius: "6px",
-          padding: "8px",
-          color: "white",
-          cursor: "pointer",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          flexDirection: "row", // Changed to row to place them side-by-side
+          gap: "8px",
         }}
-        title="Open Menu"
       >
-        <FaBars size={10} />
-      </button>
+        {/* Floating Play/Pause Button (Placed first to be on the left) */}
+        <button
+          className="menu-toggle-button"
+          onClick={toggleRun}
+          style={{
+            background: "#374151",
+            border: "none",
+            borderRadius: "6px",
+            width: "24px",
+            height: "24px",
+            padding: "0",
+            color: "white",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          title={run ? "Pause" : "Play"}
+        >
+          {run ? <FaPause size={10} /> : <FaPlay size={10} />}
+        </button>
+
+        {/* Toggle Menu Button */}
+        <button
+          className="menu-toggle-button"
+          onClick={toggleShowMenu}
+          style={{
+            background: "#374151",
+            border: "none",
+            borderRadius: "6px",
+            width: "24px",
+            height: "24px",
+            padding: "0",
+            color: "white",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          title="Open Menu"
+        >
+          <FaBars size={10} />
+        </button>
+      </div>
 
       <div
         className="menu"
