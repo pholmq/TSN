@@ -8,10 +8,6 @@ import {
   FaBars,
   FaTimes,
   FaQuestionCircle,
-  FaShareAlt,
-  FaExternalLinkAlt,
-  FaGithub,
-  FaInfoCircle,
 } from "react-icons/fa";
 
 import LevaUI from "./LevaUI";
@@ -46,15 +42,11 @@ const UserInterface = () => {
     posRef,
     speedFact,
     speedMultiplier,
-    showLevaMenu,
-    toggleShowLevaMenu,
     showMenu,
     toggleShowMenu,
     setResetClicked,
     setCameraTarget,
     runIntro,
-    setRunIntro,
-    showHelp,
     setShowHelp,
   } = useStore();
 
@@ -89,13 +81,11 @@ const UserInterface = () => {
     }
   }, [run]);
 
-  // Cleanup stepping timers on unmount
   useEffect(() => {
     return () => stopStepping();
   }, []);
 
   const performStep = (direction) => {
-    // direction: 1 for forward, -1 for backward
     if (speedFact === sYear) {
       posRef.current =
         dateToDays(
@@ -121,28 +111,23 @@ const UserInterface = () => {
   };
 
   const startStepping = (direction) => {
-    // 1. Perform immediate step for responsiveness
     performStep(direction);
 
-    // 2. Clear any existing timers to be safe
     if (steppingTimeout.current) clearTimeout(steppingTimeout.current);
     if (steppingInterval.current) clearInterval(steppingInterval.current);
 
-    // 3. Set a timeout: wait 500ms before starting the continuous loop
     steppingTimeout.current = setTimeout(() => {
       steppingInterval.current = setInterval(() => {
         performStep(direction);
-      }, 100); // Speed of continuous stepping
-    }, 500); // Delay before continuous stepping starts
+      }, 100);
+    }, 500);
   };
 
   const stopStepping = () => {
-    // Clear the timeout (if user released button before 500ms)
     if (steppingTimeout.current) {
       clearTimeout(steppingTimeout.current);
       steppingTimeout.current = null;
     }
-    // Clear the interval (if continuous stepping was running)
     if (steppingInterval.current) {
       clearInterval(steppingInterval.current);
       steppingInterval.current = null;
@@ -150,7 +135,6 @@ const UserInterface = () => {
   };
 
   function dateKeyDown(e) {
-    // Prevent planet camera from moving
     e.stopPropagation();
 
     if (e.key !== "Enter" && e.key !== "Tab") {
@@ -174,7 +158,6 @@ const UserInterface = () => {
     if (e.key === "Enter") {
       document.activeElement.blur();
     }
-    // For Tab key, let the default behavior occur (moving focus to next element)
   }
 
   function timeKeyDown(e) {
@@ -201,7 +184,6 @@ const UserInterface = () => {
     if (e.key === "Enter") {
       document.activeElement.blur();
     }
-    // For Tab key, let the default behavior occur
   }
 
   function julianKeyDown(e) {
@@ -228,7 +210,6 @@ const UserInterface = () => {
     if (e.key === "Enter") {
       document.activeElement.blur();
     }
-    // For Tab key, let the default behavior occur
   }
 
   const handleReset = () => {
@@ -241,25 +222,13 @@ const UserInterface = () => {
     setCameraTarget("Earth");
   };
 
-  const handleToggleMenu = () => {
-    if (showLevaMenu) {
-      toggleShowLevaMenu();
-      return;
-    }
-    if (showMenu) {
-      toggleShowMenu();
-      return;
-    }
-    toggleShowLevaMenu();
-    toggleShowMenu();
-  };
-
   return createPortal(
     <>
+      {/* Floating button shown when the menu is hidden */}
       <button
         hidden={showMenu}
         className="menu-toggle-button"
-        onClick={handleToggleMenu}
+        onClick={toggleShowMenu}
         style={{
           position: "fixed",
           top: "14px",
@@ -268,11 +237,18 @@ const UserInterface = () => {
           background: "#374151",
           border: "none",
           borderRadius: "6px",
-          padding: "12px",
+          padding: "8px",
           color: "white",
           cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
-      ></button>
+        title="Open Menu"
+      >
+        <FaBars size={10} />
+      </button>
+
       <div
         className="menu"
         hidden={runIntro || !showMenu}
@@ -286,15 +262,14 @@ const UserInterface = () => {
               gap: "5px",
             }}
           >
-            <TychosLogoIcon size={25} />{" "}
-            {/* Bumped size to match the 2rem font */}
+            <TychosLogoIcon size={25} />
             <span className="menu-header">The Tychosium</span>
           </div>
           <button
             className="menu-button menu-header-button"
             title="Help"
             onClick={() => setShowHelp(true)}
-            style={{ marginRight: "0.25rem", marginLeft: "0.5rem" }} // Add spacing
+            style={{ marginRight: "0.25rem", marginLeft: "0.5rem" }}
           >
             <FaQuestionCircle />
           </button>
@@ -303,10 +278,10 @@ const UserInterface = () => {
             <UIZoom />
             <button
               className="menu-button menu-header-button"
-              title="Hide/Show Menu"
-              onClick={handleToggleMenu}
+              title="Close Menu"
+              onClick={toggleShowMenu}
             >
-              {showLevaMenu ? <FaBars /> : <FaTimes />}
+              <FaTimes />
             </button>
           </div>
         </div>
@@ -337,7 +312,6 @@ const UserInterface = () => {
             Today
           </button>
 
-          {/* BACKWARD BUTTON */}
           <button
             className="menu-button"
             onMouseDown={() => startStepping(-1)}
@@ -351,7 +325,6 @@ const UserInterface = () => {
             {run ? <FaPause /> : <FaPlay />}
           </button>
 
-          {/* FORWARD BUTTON */}
           <button
             className="menu-button"
             onMouseDown={() => startStepping(1)}
