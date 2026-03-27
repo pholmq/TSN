@@ -5,19 +5,25 @@ import createCircleTexture from "../../utils/createCircleTexture";
 import { useThree } from "@react-three/fiber";
 
 const HoverObj = ({ s, starColor = false }) => {
-  const [hovered, setHover] = useState(false);
-  const [contextMenu, setContextMenu] = useState(false);
-  const [pinned, setPinned] = useState(false); // Lifted state
-
-  // OPTIMIZATION: Removed all reactive Zustand subscriptions.
-  // We only grab the setter functions, which never trigger re-renders.
+  // 1. Subscribe to the global store for visibility so only ONE panel can ever be open
+  const hoveredObjectId = useStore((state) => state.hoveredObjectId);
   const setHoveredObjectId = useStore((state) => state.setHoveredObjectId);
   const setCameraTarget = useStore((state) => state.setCameraTarget);
   const setSearchTarget = useStore((state) => state.setSearchTarget);
 
+  const [contextMenu, setContextMenu] = useState(false);
+  const [pinned, setPinned] = useState(false);
+
+  // Derived state: This object is active ONLY if its name matches the global store
+  const isHovered = hoveredObjectId === s.name;
+
   const { gl } = useThree();
   const mouseDownRef = useRef(false);
   const timeoutRef = useRef(null);
+
+  // Refs for custom double-tap logic
+  const singleTapTimeout = useRef(null);
+  const lastTap = useRef(0);
 
   const color = !starColor ? s.color : starColor;
 
@@ -39,24 +45,26 @@ const HoverObj = ({ s, starColor = false }) => {
     };
   }, [gl]);
 
-  const handlePointerOver = () => {
+  // --- DESKTOP HOVER LOGIC ---
+  const handlePointerOver = (e) => {
     if (useStore.getState().runIntro || mouseDownRef.current) return;
+
+    // Ignore automatic "hover" on mobile. Touch devices rely entirely on taps.
+    if (e.pointerType === "touch") return;
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       if (!mouseDownRef.current && !useStore.getState().runIntro) {
-        setHover(true);
         setHoveredObjectId(s.name);
       }
     }, 200);
   };
 
-  const handlePointerLeave = () => {
+  const handlePointerLeave = (e) => {
+    if (e.pointerType === "touch") return;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setHover(false);
 
     if (!contextMenu && !pinned) {
-      // Only clear global state if not pinned/in menu
       if (useStore.getState().hoveredObjectId === s.name) {
         setHoveredObjectId(null);
       }
@@ -71,6 +79,42 @@ const HoverObj = ({ s, starColor = false }) => {
     }
   };
 
+  // --- MOBILE TAP & DOUBLE-TAP LOGIC ---
+  const handleClick = (e) => {
+    if (useStore.getState().runIntro) return;
+    e.stopPropagation(); // Prevent the click from hitting the background
+
+    const now = Date.now();
+
+    // If tapped twice within 300ms, execute double tap
+    if (now - lastTap.current < 300) {
+      clearTimeout(singleTapTimeout.current); // CANCEL the single tap!
+      handleDoubleClick();
+    } else {
+      // Single tap (with a delay to ensure a second tap isn't coming)
+      singleTapTimeout.current = setTimeout(() => {
+        if (e.pointerType === "touch") {
+          setHoveredObjectId(s.name); // Sets global state, automatically closing any other panels
+        }
+      }, 300);
+    }
+
+    lastTap.current = now;
+  };
+
+  // --- BACKGROUND CLICK LOGIC ---
+  const handlePointerMissed = (e) => {
+    // If the user clicks on nothing (background canvas), and THIS object is the active one, close it.
+    if (
+      e.pointerType === "touch" &&
+      useStore.getState().hoveredObjectId === s.name
+    ) {
+      if (!pinned && !contextMenu) {
+        setHoveredObjectId(null);
+      }
+    }
+  };
+
   const size = 0.005;
 
   return (
@@ -78,23 +122,24 @@ const HoverObj = ({ s, starColor = false }) => {
       scale={[size, size, size]}
       onPointerOver={handlePointerOver}
       onPointerLeave={handlePointerLeave}
-      onDoubleClick={handleDoubleClick}
+      onClick={handleClick}
+      onPointerMissed={handlePointerMissed}
+      onDoubleClick={handleDoubleClick} // Retain native desktop double-click support
       onContextMenu={() => {
-        if (hovered) setContextMenu(true);
+        if (isHovered) setContextMenu(true);
       }}
       renderOrder={1}
     >
       <spriteMaterial
         map={circleTexture}
         transparent={true}
-        opacity={hovered ? 0.04 : 0.015}
+        opacity={isHovered ? 0.04 : 0.015}
         sizeAttenuation={false}
       />
 
-      {/* Keeps DOM mounted if mouse is on it, menu is open, OR it is pinned */}
-      {(hovered || contextMenu || pinned) && (
+      {(isHovered || contextMenu || pinned) && (
         <HoverPanel
-          hovered={hovered}
+          hovered={isHovered}
           contextMenu={contextMenu}
           setContextMenu={setContextMenu}
           pinned={pinned}

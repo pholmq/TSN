@@ -23,7 +23,6 @@ export default function OrbitCamera() {
 
   const targetObjRef = useRef(null);
 
-  // PERFORMANCE FIX: Persist Vector3 to prevent garbage collection micro-stutters
   const target = useMemo(() => new Vector3(), []);
 
   useEffect(() => {
@@ -52,14 +51,12 @@ export default function OrbitCamera() {
     targetObjRef.current = scene.getObjectByName(cameraTarget);
     if (targetObjRef.current) {
       targetObjRef.current.getWorldPosition(target);
-      // TRANSITION FIX: 'true' enables smooth interpolation to the new target
       controlsRef.current.setTarget(target.x, target.y, target.z, true);
     }
   }, [cameraTarget, cameraUpdate, camera, scene, target]);
 
   useEffect(() => {
     if (controlsRef.current && !runIntro) {
-      // TRANSITION FIX: 'true' enables smooth return to the default position
       controlsRef.current.setPosition(0, 2200, 0, true);
     }
   }, [resetClicked, runIntro]);
@@ -79,25 +76,11 @@ export default function OrbitCamera() {
     }
   }, [planetCamera, scene]);
 
-  // Safe way to disable pan (truck/offset)
-  useEffect(() => {
-    if (controlsRef.current) {
-      // 0 = ACTION.NONE, 4 = ACTION.TOUCH_DOLLY
-      controlsRef.current.mouseButtons.right = 0;
-      controlsRef.current.touches.two = 4; // Forces 2-finger touch to zoom instead of pan
-      controlsRef.current.touches.three = 0;
-    }
-  }, []);
-
   useFrame(() => {
     if (cameraFollow) {
       if (targetObjRef.current) {
-        // PERF/SYNC FIX: Force world matrix update to prevent 1-frame tracking lag
         targetObjRef.current.updateWorldMatrix(true, false);
-
         targetObjRef.current.getWorldPosition(target);
-
-        // Kept false: Interpolating every frame during tracking causes lag
         controlsRef.current.setTarget(target.x, target.y, target.z, false);
       }
     }
@@ -111,19 +94,17 @@ export default function OrbitCamera() {
         ref={cameraRef}
         position={[-30000000, 10000000, 0]}
         fov={15}
-        near={0.01} // PERFORMANCE FIX: Increased from 0.0001 to restore depth precision and fix z-fighting
+        near={0.01}
         far={10000000000000}
       />
       <CameraControls
         ref={controlsRef}
         camera={cameraRef.current}
         enabled={!planetCamera}
-        // --- CAMERA CONTROLS TWEAKS ---
-        // Adjusts how long the transition takes (default is ~0.25). Higher is slower/smoother.
         smoothTime={0.4}
-        // Increases the "weight" or inertia of the camera when the user manually drags it
         draggingSmoothTime={0.125}
         minDistance={actualPlanetSizes ? 0.01 : 5}
+        truckSpeed={0} // <--- THE FIX: Safely and completely disables all 2D panning/dragging
       />
       {runIntro && <CameraAnimation controlsRef={controlsRef} />}
     </>
