@@ -79,6 +79,16 @@ export default function OrbitCamera() {
     }
   }, [planetCamera, scene]);
 
+  // Safe way to disable pan (truck/offset)
+  useEffect(() => {
+    if (controlsRef.current) {
+      // 0 = ACTION.NONE, 4 = ACTION.TOUCH_DOLLY
+      controlsRef.current.mouseButtons.right = 0;
+      controlsRef.current.touches.two = 4; // Forces 2-finger touch to zoom instead of pan
+      controlsRef.current.touches.three = 0;
+    }
+  }, []);
+
   useFrame(() => {
     if (cameraFollow) {
       if (targetObjRef.current) {
@@ -108,21 +118,12 @@ export default function OrbitCamera() {
         ref={controlsRef}
         camera={cameraRef.current}
         enabled={!planetCamera}
+        // --- CAMERA CONTROLS TWEAKS ---
+        // Adjusts how long the transition takes (default is ~0.25). Higher is slower/smoother.
         smoothTime={0.4}
+        // Increases the "weight" or inertia of the camera when the user manually drags it
         draggingSmoothTime={0.125}
         minDistance={actualPlanetSizes ? 0.01 : 5}
-        // --- DISABLE ALL PANNING (TRUCK/OFFSET) ---
-        touches={{
-          one: 1, // ACTION.TOUCH_ROTATE
-          two: 4, // ACTION.TOUCH_DOLLY (Zoom only, completely removes 2-finger pan)
-          three: 0, // ACTION.NONE (Disables 3-finger offset)
-        }}
-        mouseButtons={{
-          left: 1, // ACTION.ROTATE
-          middle: 4, // ACTION.DOLLY
-          right: 0, // ACTION.NONE (Disables right-click pan)
-          wheel: 8, // ACTION.DOLLY
-        }}
       />
       {runIntro && <CameraAnimation controlsRef={controlsRef} />}
     </>
