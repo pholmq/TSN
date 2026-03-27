@@ -44,6 +44,8 @@ const UserInterface = () => {
     speedMultiplier,
     showMenu,
     toggleShowMenu,
+    showLevaMenu, // Brought back Leva states
+    toggleShowLevaMenu,
     setResetClicked,
     setCameraTarget,
     runIntro,
@@ -55,7 +57,6 @@ const UserInterface = () => {
   const julianRef = useRef();
   const intervalRef = useRef();
 
-  // Refs for stepping logic
   const steppingInterval = useRef(null);
   const steppingTimeout = useRef(null);
 
@@ -112,7 +113,6 @@ const UserInterface = () => {
 
   const startStepping = (direction) => {
     performStep(direction);
-
     if (steppingTimeout.current) clearTimeout(steppingTimeout.current);
     if (steppingInterval.current) clearInterval(steppingInterval.current);
 
@@ -136,16 +136,11 @@ const UserInterface = () => {
 
   function dateKeyDown(e) {
     e.stopPropagation();
-
-    if (e.key !== "Enter" && e.key !== "Tab") {
-      return;
-    }
-
+    if (e.key !== "Enter" && e.key !== "Tab") return;
     if (!isValidDate(dateRef.current.value)) {
       dateRef.current.value = posToDate(posRef.current);
       return;
     }
-
     posRef.current = dateTimeToPos(
       dateRef.current.value,
       posToTime(posRef.current)
@@ -154,24 +149,16 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
-
-    if (e.key === "Enter") {
-      document.activeElement.blur();
-    }
+    if (e.key === "Enter") document.activeElement.blur();
   }
 
   function timeKeyDown(e) {
     e.stopPropagation();
-
-    if (e.key !== "Enter" && e.key !== "Tab") {
-      return;
-    }
-
+    if (e.key !== "Enter" && e.key !== "Tab") return;
     if (!isValidTime(timeRef.current.value)) {
       timeRef.current.value = posToTime(posRef.current);
       return;
     }
-
     posRef.current = dateTimeToPos(
       posToDate(posRef.current),
       timeRef.current.value
@@ -180,24 +167,16 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
-
-    if (e.key === "Enter") {
-      document.activeElement.blur();
-    }
+    if (e.key === "Enter") document.activeElement.blur();
   }
 
   function julianKeyDown(e) {
     e.stopPropagation();
-
-    if (e.key !== "Enter" && e.key !== "Tab") {
-      return;
-    }
-
+    if (e.key !== "Enter" && e.key !== "Tab") return;
     if (!isNumeric(julianRef.current.value)) {
       julianRef.current.value = posToJulianDay(posRef.current);
       return;
     }
-
     posRef.current = julianDayTimeToPos(
       julianRef.current.value,
       posToTime(posRef.current)
@@ -206,10 +185,7 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
-
-    if (e.key === "Enter") {
-      document.activeElement.blur();
-    }
+    if (e.key === "Enter") document.activeElement.blur();
   }
 
   const handleReset = () => {
@@ -222,9 +198,14 @@ const UserInterface = () => {
     setCameraTarget("Earth");
   };
 
+  // NEW: Ensure both Leva and Main Menu stay perfectly synced
+  const handleToggleBothMenus = () => {
+    toggleShowMenu();
+    toggleShowLevaMenu();
+  };
+
   return createPortal(
     <>
-      {/* Conditionally render the floating buttons ONLY when the menu is hidden AND the intro is NOT running */}
       {!(showMenu || runIntro) && (
         <div
           style={{
@@ -233,11 +214,10 @@ const UserInterface = () => {
             right: "12px",
             zIndex: 2147483647,
             display: "flex",
-            flexDirection: "row", // Places them side-by-side
+            flexDirection: "row",
             gap: "8px",
           }}
         >
-          {/* Floating Play/Pause Button (Placed first to be on the left) */}
           <button
             className="menu-toggle-button"
             onClick={toggleRun}
@@ -259,10 +239,9 @@ const UserInterface = () => {
             {run ? <FaPause size={10} /> : <FaPlay size={10} />}
           </button>
 
-          {/* Toggle Menu Button */}
           <button
             className="menu-toggle-button"
-            onClick={toggleShowMenu}
+            onClick={handleToggleBothMenus} // Sync trigger
             style={{
               background: "#374151",
               border: "none",
@@ -313,7 +292,7 @@ const UserInterface = () => {
             <button
               className="menu-button menu-header-button"
               title="Close Menu"
-              onClick={toggleShowMenu}
+              onClick={handleToggleBothMenus} // Sync trigger
             >
               <FaTimes />
             </button>
@@ -345,7 +324,6 @@ const UserInterface = () => {
           >
             Today
           </button>
-
           <button
             className="menu-button"
             onMouseDown={() => startStepping(-1)}
@@ -354,11 +332,9 @@ const UserInterface = () => {
           >
             <FaStepBackward />
           </button>
-
           <button className="menu-button" onClick={toggleRun}>
             {run ? <FaPause /> : <FaPlay />}
           </button>
-
           <button
             className="menu-button"
             onMouseDown={() => startStepping(1)}
@@ -368,6 +344,7 @@ const UserInterface = () => {
             <FaStepForward />
           </button>
         </div>
+
         <div className="menu-item">
           <label className="menu-label">Date:</label>
           <input
@@ -375,9 +352,8 @@ const UserInterface = () => {
             ref={dateRef}
             onKeyDown={dateKeyDown}
             onBlur={(e) => {
-              if (!isValidDate(e.target.value)) {
+              if (!isValidDate(e.target.value))
                 dateRef.current.value = posToDate(posRef.current);
-              }
             }}
           />
         </div>
@@ -388,9 +364,8 @@ const UserInterface = () => {
             ref={timeRef}
             onKeyDown={timeKeyDown}
             onBlur={(e) => {
-              if (!isValidTime(e.target.value)) {
+              if (!isValidTime(e.target.value))
                 timeRef.current.value = posToTime(posRef.current);
-              }
             }}
           />
         </div>
@@ -401,13 +376,12 @@ const UserInterface = () => {
             ref={julianRef}
             onKeyDown={julianKeyDown}
             onBlur={(e) => {
-              if (!isNumeric(e.target.value)) {
+              if (!isNumeric(e.target.value))
                 julianRef.current.value = posToJulianDay(posRef.current);
-              }
             }}
           />
         </div>
-        <div className="menu-item">
+        <div className="menu-item" hidden={!showLevaMenu}>
           <div className="leva-container">
             <LevaUI />
           </div>
