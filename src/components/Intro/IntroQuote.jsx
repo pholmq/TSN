@@ -4,7 +4,6 @@ import { useRef, useState, useEffect } from "react";
 
 const IntroQuote = ({ duration = 10000, fade = 2000 }) => {
   const runIntro = useStore((s) => s.runIntro);
-  const showMenu = useStore((s) => s.showMenu);
   const portalRef = useRef(document.body);
   const [currentQuote, setCurrentQuote] = useState("");
   const [isVisible, setIsVisible] = useState(false);
@@ -72,12 +71,15 @@ const IntroQuote = ({ duration = 10000, fade = 2000 }) => {
           opacity: isVisible ? 1 : 0,
           transition: `opacity ${fade}ms ease-in-out`,
           fontFamily: "'Times New Roman', serif",
-          fontSize: "clamp(2.5rem, 3.5vw, 3rem)",
+          // Lowered the min font size from 2.5rem to 1.5rem for better narrow mobile fit
+          fontSize: "clamp(1.5rem, 6vw, 3rem)",
           fontWeight: "400",
           textAlign: "center",
           color: "grey",
           textShadow: "2px 2px 6px rgba(0,0,0,0.7)",
-          width: `min(900px, 90vw)`,
+          width: "90vw",
+          maxWidth: "900px",
+          boxSizing: "border-box", // Prevents padding from blowing out the viewport width
           padding: "0 20px",
           whiteSpace: "normal",
           wordWrap: "break-word",
