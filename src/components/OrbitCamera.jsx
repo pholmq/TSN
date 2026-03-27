@@ -79,6 +79,16 @@ export default function OrbitCamera() {
     }
   }, [planetCamera, scene]);
 
+  // Safe way to disable pan (truck/offset)
+  useEffect(() => {
+    if (controlsRef.current) {
+      // 0 = ACTION.NONE, 4 = ACTION.TOUCH_DOLLY
+      controlsRef.current.mouseButtons.right = 0;
+      controlsRef.current.touches.two = 4; // Forces 2-finger touch to zoom instead of pan
+      controlsRef.current.touches.three = 0;
+    }
+  }, []);
+
   useFrame(() => {
     if (cameraFollow) {
       if (targetObjRef.current) {

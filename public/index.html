@@ -5,6 +5,21 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
+    <style>
+      /* Hard-lock the viewport before React even loads to prevent scrollbar flashing */
+      html,
+      body,
+      #root {
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        background: #000000;
+        overflow: hidden;
+        touch-action: none;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
