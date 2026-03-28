@@ -56,18 +56,22 @@ const UserInterface = () => {
   const timeRef = useRef();
   const julianRef = useRef();
   const intervalRef = useRef();
-  const menuRef = useRef(null); // NEW: Ref to track the menu container
+  const menuRef = useRef(null);
+  const dateTimeDisplayRef = useRef(null);
 
   const steppingInterval = useRef(null);
   const steppingTimeout = useRef(null);
 
-  // NEW: Detect taps outside the menu to close it
+  // Updated to only show the date
+  const updateDateTimeDisplay = () => {
+    if (dateTimeDisplayRef.current) {
+      dateTimeDisplayRef.current.textContent = posToDate(posRef.current);
+    }
+  };
+
   useEffect(() => {
     const handleOutsideTap = (e) => {
-      // Only trigger this logic for touch interactions
       if (e.pointerType !== "touch") return;
-
-      // If the menu is open, and the tap target is NOT inside the menu container
       if (showMenu && menuRef.current && !menuRef.current.contains(e.target)) {
         handleToggleBothMenus();
       }
@@ -75,12 +79,13 @@ const UserInterface = () => {
 
     document.addEventListener("pointerdown", handleOutsideTap);
     return () => document.removeEventListener("pointerdown", handleOutsideTap);
-  }, [showMenu]); // Re-bind when showMenu state changes
+  }, [showMenu]);
 
   useEffect(() => {
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
+    updateDateTimeDisplay();
 
     if (run) {
       intervalRef.current = setInterval(() => {
@@ -93,6 +98,7 @@ const UserInterface = () => {
         if (document.activeElement !== julianRef.current) {
           julianRef.current.value = posToJulianDay(posRef.current);
         }
+        updateDateTimeDisplay();
       }, 100);
     } else {
       clearInterval(intervalRef.current);
@@ -126,6 +132,7 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
+    updateDateTimeDisplay();
   };
 
   const startStepping = (direction) => {
@@ -166,6 +173,7 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
+    updateDateTimeDisplay();
     if (e.key === "Enter") document.activeElement.blur();
   }
 
@@ -184,6 +192,7 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
+    updateDateTimeDisplay();
     if (e.key === "Enter") document.activeElement.blur();
   }
 
@@ -202,6 +211,7 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
+    updateDateTimeDisplay();
     if (e.key === "Enter") document.activeElement.blur();
   }
 
@@ -211,6 +221,7 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
+    updateDateTimeDisplay();
     setResetClicked();
     setCameraTarget("Earth");
   };
@@ -231,9 +242,27 @@ const UserInterface = () => {
             zIndex: 2147483647,
             display: "flex",
             flexDirection: "row",
+            alignItems: "center",
             gap: "8px",
           }}
         >
+          {/* Floating Date Text */}
+          <div
+            ref={dateTimeDisplayRef}
+            style={{
+              color: "#9ca3af",
+              fontFamily: "monospace",
+              fontSize: "14px",
+              fontVariantNumeric: "tabular-nums",
+              textShadow: "1px 1px 2px rgba(0,0,0,0.6)",
+              pointerEvents: "none",
+              marginRight: "4px",
+            }}
+          >
+            {/* Initial render fallback updated to only date */}
+            {posToDate(posRef.current)}
+          </div>
+
           <button
             className="menu-toggle-button"
             onClick={toggleRun}
@@ -279,7 +308,7 @@ const UserInterface = () => {
       )}
 
       <div
-        ref={menuRef} // NEW: Attached the ref to the menu wrapper
+        ref={menuRef}
         className="menu"
         hidden={runIntro || !showMenu}
         style={{ zIndex: 2147483647 }}
@@ -337,6 +366,7 @@ const UserInterface = () => {
               timeRef.current.value = posToTime(posRef.current);
               julianRef.current.value = posToJulianDay(posRef.current);
               updateAC();
+              updateDateTimeDisplay();
             }}
           >
             Today
@@ -371,6 +401,7 @@ const UserInterface = () => {
             onBlur={(e) => {
               if (!isValidDate(e.target.value))
                 dateRef.current.value = posToDate(posRef.current);
+              updateDateTimeDisplay();
             }}
           />
         </div>
@@ -383,6 +414,7 @@ const UserInterface = () => {
             onBlur={(e) => {
               if (!isValidTime(e.target.value))
                 timeRef.current.value = posToTime(posRef.current);
+              updateDateTimeDisplay();
             }}
           />
         </div>
@@ -395,6 +427,7 @@ const UserInterface = () => {
             onBlur={(e) => {
               if (!isNumeric(e.target.value))
                 julianRef.current.value = posToJulianDay(posRef.current);
+              updateDateTimeDisplay();
             }}
           />
         </div>
