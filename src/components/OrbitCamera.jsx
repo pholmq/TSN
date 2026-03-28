@@ -1,4 +1,4 @@
-import { useRef, useLayoutEffect, useEffect, useMemo } from "react";
+import { useRef, useLayoutEffect, useEffect, useMemo, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import { PerspectiveCamera, CameraControls } from "@react-three/drei";
@@ -22,8 +22,19 @@ export default function OrbitCamera() {
   const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
 
   const targetObjRef = useRef(null);
-
   const target = useMemo(() => new Vector3(), []);
+
+  // --- TOUCH DETECTION ---
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+    const hasTouchEvents = "ontouchstart" in window;
+
+    if (isCoarsePointer || hasTouchEvents) {
+      setIsTouchDevice(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -104,7 +115,8 @@ export default function OrbitCamera() {
         smoothTime={0.4}
         draggingSmoothTime={0.125}
         minDistance={actualPlanetSizes ? 0.01 : 5}
-        truckSpeed={0} // <--- THE FIX: Safely and completely disables all 2D panning/dragging
+        // Conditional pan disabling: 0 on mobile, 2.0 (default) on desktop
+        truckSpeed={isTouchDevice ? 0 : 2.0}
       />
       {runIntro && <CameraAnimation controlsRef={controlsRef} />}
     </>
