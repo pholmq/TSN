@@ -86,9 +86,9 @@ export default function IntroText() {
 
   if (isFinished) return null;
 
-  const titlePosition = isTouchDevice ? [-140, 0, -90] : [-140, 0, -150];
-  const warningPos = [-180, 0, -110];
-  const logoPosition = isTouchDevice ? [-125, 0, -125] : [-125, 0, -185];
+  const titlePosition = isTouchDevice ? [-140, 0, -80] : [-140, 0, -150];
+  const warningPos = [-180, 0, -130];
+  const logoPosition = isTouchDevice ? [-125, 0, -115] : [-125, 0, -185];
 
   return (
     <>
@@ -138,7 +138,7 @@ export default function IntroText() {
           bevelOffset={0}
           bevelSegments={4}
         >
-          Keyboard and mouse required
+          Keyboard and mouse recommended
           <meshStandardMaterial
             ref={warningMaterialRef}
             color="white"
