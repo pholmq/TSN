@@ -11,12 +11,16 @@ import TychosLogoIcon from "../../utils/TychosLogoIcon";
 const Help = () => {
   const showHelp = useStore((s) => s.showHelp);
   const setShowHelp = useStore((s) => s.setShowHelp);
+  const showHelpOnStartup = useStore((s) => s.showHelpOnStartup);
+  const setShowHelpOnStartup = useStore((s) => s.setShowHelpOnStartup);
+  const runIntro = useStore((s) => s.runIntro);
 
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [markdownContent, setMarkdownContent] = useState("");
   const helpRef = useRef(null);
+  const timerStarted = useRef(false);
 
   // Load markdown content
   useEffect(() => {
@@ -25,6 +29,18 @@ const Help = () => {
       .then((text) => setMarkdownContent(text))
       .catch((error) => console.error("Error loading help content:", error));
   }, []);
+
+  // 15-second startup timer
+  useEffect(() => {
+    if (showHelpOnStartup && !timerStarted.current) {
+      timerStarted.current = true;
+      const timer = setTimeout(() => {
+        setShowHelp(true);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showHelpOnStartup, setShowHelp]);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -64,7 +80,7 @@ const Help = () => {
     }
   };
 
-  if (!showHelp) return null;
+  if (!showHelp || runIntro) return null;
 
   return createPortal(
     <div
@@ -120,7 +136,6 @@ const Help = () => {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          {/* Replaced <h2> with standard matching wrapper and added binary star symbol */}
           <div
             style={{
               display: "flex",
@@ -174,24 +189,50 @@ const Help = () => {
           </div>
         </div>
 
-        <div
-          onClick={() => setShowHelp(false)}
-          style={{
-            cursor: "pointer",
-            color: "#8C92A4",
-            fontSize: "14px",
-            fontWeight: "bold",
-            padding: "4px",
-            marginRight: "-2px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#FFFFFF")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#8C92A4")}
-          title="Close Help"
-        >
-          ✕
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              fontSize: "11px",
+              color: "#8C92A4",
+              cursor: "pointer",
+            }}
+            onMouseDown={(e) => e.stopPropagation()} // Stop drag initiation
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#FFFFFF")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#8C92A4")}
+            title="Automatically show help 15 seconds after app loads"
+          >
+            <input
+              type="checkbox"
+              style={{ cursor: "pointer", margin: 0 }}
+              checked={showHelpOnStartup}
+              onChange={(e) => setShowHelpOnStartup(e.target.checked)}
+            />
+            Show on startup
+          </label>
+
+          <div
+            onClick={() => setShowHelp(false)}
+            style={{
+              cursor: "pointer",
+              color: "#8C92A4",
+              fontSize: "14px",
+              fontWeight: "bold",
+              padding: "4px",
+              marginRight: "-2px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onMouseDown={(e) => e.stopPropagation()} // Prevent accidental drag
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#FFFFFF")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#8C92A4")}
+            title="Close Help"
+          >
+            ✕
+          </div>
         </div>
       </div>
 

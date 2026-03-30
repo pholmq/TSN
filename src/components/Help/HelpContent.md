@@ -1,6 +1,6 @@
-# Welcome to The TYCHOSIUM
+# Welcome to The Tychosium
 
-The Tychosium is an interactive 3D simulator of the TYCHOS model of our Solar System. It allows you to visualize the intricate orbital mechanics of our nearby celestial bodies, trace their paths over time, generate Ephemerides (lists of planetary positions), and discover and examine astronomical events such as conjunctions, oppositions, eclipses, Venus & Mercury solar transits, etc.
+The Tychosium is an interactive 3D simulator of the TYCHOS model. It allows you to visualize the motions of the planets, trace their paths over time, generate Ephemerides (lists of planetary positions), and discover and examine astronomical events such as conjunctions, oppositions, eclipses, Venus & Mercury solar transits, etc.
 
 ## Features
 
