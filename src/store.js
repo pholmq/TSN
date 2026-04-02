@@ -108,6 +108,10 @@ export const useStore = create(
       BSCStars: true,
       setBSCStars: (v) => set({ BSCStars: v }),
 
+      // State for Reference Stars
+      refStars: false,
+      setRefStars: (v) => set({ refStars: v }),
+
       resetClicked: false,
       setResetClicked: () =>
         set((state) => ({ resetClicked: !state.resetClicked })),

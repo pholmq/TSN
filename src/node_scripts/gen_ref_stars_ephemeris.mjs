@@ -11,12 +11,12 @@ const query = `
 
 // Helper: Convert degrees to radians
 const degToRad = (deg) => deg * (Math.PI / 180);
+const radToDeg = (rad) => rad * (180 / Math.PI);
 
 // Helper: Convert spherical RA/Dec to Cartesian Vector3
 function sphericalToCartesian(raDeg, decDeg) {
   const raRad = degToRad(raDeg);
   const decRad = degToRad(decDeg);
-  // Standard astronomical Cartesian (X points to RA=0, Dec=0; Z points to North Pole)
   return new THREE.Vector3(
     Math.cos(decRad) * Math.cos(raRad),
     Math.cos(decRad) * Math.sin(raRad),
@@ -24,23 +24,65 @@ function sphericalToCartesian(raDeg, decDeg) {
   );
 }
 
+// Helper: Convert Cartesian Vector3 back to Spherical RA/Dec (Degrees)
+function cartesianToSpherical(vector) {
+  const decRad = Math.asin(vector.z);
+  const raRad = Math.atan2(vector.y, vector.x);
+
+  let raDeg = radToDeg(raRad);
+  let decDeg = radToDeg(decRad);
+
+  // Ensure RA is 0-360
+  if (raDeg < 0) raDeg += 360;
+
+  return { raDeg, decDeg };
+}
+
+// Helper: Format RA (Degrees) to BSC String format ("HHh MMm SS.Ss")
+function formatRA(raDeg) {
+  const raHours = raDeg / 15;
+  const h = Math.floor(raHours);
+  const m = Math.floor((raHours - h) * 60);
+  const s = (raHours - h - m / 60) * 3600;
+
+  const hh = String(h).padStart(2, "0");
+  const mm = String(m).padStart(2, "0");
+  // toFixed(1) gives one decimal place, padStart(4, '0') ensures leading zero e.g. "03.8"
+  const ss = s.toFixed(1).padStart(4, "0");
+
+  return `${hh}h ${mm}m ${ss}s`;
+}
+
+// Helper: Format Dec (Degrees) to BSC String format ("±DD° MM′ SS″")
+function formatDec(decDeg) {
+  const isNegative = decDeg < 0;
+  const absDec = Math.abs(decDeg);
+
+  const d = Math.floor(absDec);
+  const m = Math.floor((absDec - d) * 60);
+  const s = (absDec - d - m / 60) * 3600;
+
+  const signStr = isNegative ? "-" : "+";
+  const dd = String(d).padStart(2, "0");
+  const mm = String(m).padStart(2, "0");
+  const ss = String(Math.round(s)).padStart(2, "0");
+
+  return `${signStr}${dd}° ${mm}′ ${ss}″`;
+}
+
 // Rigorous IAU Precession Matrix Generator (J2000 to Target Epoch)
 function getPrecessionMatrix(targetYear) {
-  // Centuries since J2000
   const T = (targetYear - 2000.0) / 100.0;
 
-  // IAU 1976 Precession angles (in arcseconds)
   const zeta_A = 2306.2181 * T + 0.30188 * T * T + 0.017998 * T * T * T;
   const z_A = 2306.2181 * T + 1.09468 * T * T + 0.018203 * T * T * T;
   const theta_A = 2004.3109 * T - 0.42665 * T * T - 0.041833 * T * T * T;
 
-  // Convert arcseconds to radians
   const arcsecToRad = Math.PI / (180 * 3600);
   const zeta = zeta_A * arcsecToRad;
   const z = z_A * arcsecToRad;
   const theta = theta_A * arcsecToRad;
 
-  // Apply sequential rotations: Rz(-z) * Ry(theta) * Rz(-zeta)
   const matrix = new THREE.Matrix4();
   const m1 = new THREE.Matrix4().makeRotationZ(-z);
   const m2 = new THREE.Matrix4().makeRotationY(theta);
@@ -66,7 +108,6 @@ async function generateEphemeris() {
 
   const simbadData = await response.json();
   const stars = simbadData.data;
-  // columns map to: [0]: ID, [1]: RA, [2]: DEC, [3]: PMRA, [4]: PMDEC, [5]: PLX
 
   const years = [];
   for (let y = 1900; y <= 2100; y += 10) years.push(y);
@@ -81,6 +122,7 @@ async function generateEphemeris() {
     // Proper motion is in milliarcseconds per year. Convert to degrees per year.
     const pmRaDegPerYr = star[3] / 3600000 / Math.cos(degToRad(decJ2000));
     const pmDecDegPerYr = star[4] / 3600000;
+    const parallax = star[5]; // Extracted for 'P'
 
     years.forEach((year) => {
       const deltaYears = year - 2000.0;
@@ -96,10 +138,15 @@ async function generateEphemeris() {
       const precessionMatrix = getPrecessionMatrix(year);
       vector.applyMatrix4(precessionMatrix).normalize();
 
+      // 4. Convert back to Spherical and format
+      const { raDeg, decDeg } = cartesianToSpherical(vector);
+
       outputData.push({
-        name: name.replace("* ", ""), // Clean up SIMBAD formatting
+        name: name.replace("* ", ""),
         epoch: year,
-        vector: { x: vector.x, y: vector.y, z: vector.z },
+        RA: formatRA(raDeg),
+        Dec: formatDec(decDeg),
+        P: parallax,
       });
     });
   });
