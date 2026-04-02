@@ -1,5 +1,6 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import * as THREE from "three";
+import { useThree } from "@react-three/fiber";
 import { usePlotStore, useStore } from "../../store";
 import refStarsData from "../../settings/reference_stars.json";
 import {
@@ -10,21 +11,20 @@ import {
 import { dateTimeToPos } from "../../utils/time-date-functions";
 import { movePlotModel } from "../../utils/plotModelFunctions";
 
-// Distinct colors for the 4 reference stars
 const STAR_COLORS = {
-  "alf UMi": "#ff0055", // Polaris (Red/Pink)
-  "alf CMa": "#00ffcc", // Sirius (Cyan)
-  "alf Lyr": "#ffaa00", // Vega (Orange)
-  "del Ori": "#ffff00", // Mintaka (Yellow)
+  "alf UMi": "#ff0055", // Polaris
+  "alf CMa": "#00ffcc", // Sirius
+  "alf Lyr": "#ffaa00", // Vega
+  "del Ori": "#ffff00", // Mintaka
 };
 
 const FALLBACK_COLORS = ["#ff00ff", "#00ffff", "#ffffff", "#00ff00"];
 
 export default function ReferenceStars() {
   const pointsRef = useRef();
+  const getThreeState = useThree((state) => state.get);
   const plotObjects = usePlotStore((s) => s.plotObjects);
 
-  // Validated from src/store.js
   const hScale = useStore((s) => s.hScale);
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
@@ -33,6 +33,7 @@ export default function ReferenceStars() {
     positions: null,
     colors: null,
   });
+  const [hoveredData, setHoveredData] = useState(null);
 
   useEffect(() => {
     if (!plotObjects || plotObjects.length === 0 || !pointsRef.current) return;
@@ -40,8 +41,6 @@ export default function ReferenceStars() {
     const earthObj = plotObjects.find((p) => p.name === "Earth");
     if (!earthObj || !earthObj.cSphereRef?.current) return;
 
-    // 1. Cache the live rotation of every plot object before altering the timeline
-    // (This avoids parsing date/time strings entirely)
     const originalRotations = new Map();
     plotObjects.forEach((pObj) => {
       if (pObj.orbitRef && pObj.orbitRef.current) {
@@ -54,22 +53,17 @@ export default function ReferenceStars() {
     const uniqueNames = [...new Set(refStarsData.map((d) => d.name))];
 
     refStarsData.forEach((data) => {
-      // --- A. Move Simulation to the Star's Historical Epoch ---
       const year = Math.floor(data.epoch);
-      const dateStr = `${year}-01-01`;
-      const plotPos = dateTimeToPos(dateStr, "12:00:00");
+      const plotPos = dateTimeToPos(`${year}-01-01`, "12:00:00");
 
-      // Validated from src/utils/plotModelFunctions.js
       movePlotModel(plotObjects, plotPos);
       earthObj.cSphereRef.current.updateMatrixWorld(true);
 
-      // --- B. Calculate Local Coordinates ---
       const raRad = rightAscensionToRadians(data.RA);
       const decRad = declinationToRadians(data.Dec);
-
       const distLy = parseFloat(data.P) * 3.26156378;
-      let dist;
 
+      let dist;
       if (!officialStarDistances) {
         dist = (20000 * hScale) / 100;
       } else {
@@ -80,13 +74,10 @@ export default function ReferenceStars() {
 
       const localPos = sphericalToCartesian(raRad, decRad, dist);
       const localVec = new THREE.Vector3(localPos.x, localPos.y, localPos.z);
-
-      // --- C. Transform to World Space ---
       localVec.applyMatrix4(earthObj.cSphereRef.current.matrixWorld);
 
       positions.push(localVec.x, localVec.y, localVec.z);
 
-      // --- D. Assign Colors ---
       const hexColor =
         STAR_COLORS[data.name] ||
         FALLBACK_COLORS[
@@ -96,7 +87,6 @@ export default function ReferenceStars() {
       colors.push(color.r, color.g, color.b);
     });
 
-    // 2. Safely restore the exact scene state back to the present moment
     plotObjects.forEach((pObj) => {
       if (
         pObj.orbitRef &&
@@ -114,7 +104,6 @@ export default function ReferenceStars() {
     });
   }, [plotObjects, hScale, starDistanceModifier, officialStarDistances]);
 
-  // Apply geometry
   useEffect(() => {
     if (pointsRef.current && geometryData.positions) {
       const geo = pointsRef.current.geometry;
@@ -126,21 +115,133 @@ export default function ReferenceStars() {
         "color",
         new THREE.BufferAttribute(geometryData.colors, 3)
       );
-
       geo.computeBoundingBox();
       geo.computeBoundingSphere();
     }
   }, [geometryData]);
 
+  const customRaycast = useCallback(
+    (raycaster, intersects) => {
+      if (!pointsRef.current || !geometryData.positions) return;
+
+      const { camera, size, pointer } = getThreeState();
+      const posArray = geometryData.positions;
+      const matrixWorld = pointsRef.current.matrixWorld;
+
+      const HOVER_RADIUS_PX = 8;
+      const thresholdSqPx = HOVER_RADIUS_PX * HOVER_RADIUS_PX;
+
+      const pointerPxX = ((pointer.x + 1) / 2) * size.width;
+      const pointerPxY = ((-pointer.y + 1) / 2) * size.height;
+
+      const _v1 = new THREE.Vector3();
+      const _worldPos = new THREE.Vector3();
+
+      for (let i = 0; i < posArray.length / 3; i++) {
+        _v1.set(posArray[i * 3], posArray[i * 3 + 1], posArray[i * 3 + 2]);
+        _v1.applyMatrix4(matrixWorld);
+        _worldPos.copy(_v1);
+        _v1.project(camera);
+
+        if (_v1.z > 1 || _v1.z < -1) continue;
+
+        const starPxX = ((_v1.x + 1) / 2) * size.width;
+        const starPxY = ((-_v1.y + 1) / 2) * size.height;
+
+        const distSq =
+          (starPxX - pointerPxX) ** 2 + (starPxY - pointerPxY) ** 2;
+
+        if (distSq < thresholdSqPx) {
+          intersects.push({
+            distance: raycaster.ray.origin.distanceTo(_worldPos),
+            distanceToRay: Math.sqrt(distSq),
+            point: _worldPos.clone(),
+            index: i,
+            object: pointsRef.current,
+          });
+        }
+      }
+    },
+    [getThreeState, geometryData]
+  );
+
+  // --- HOVER TRACKING ---
+  const handlePointerMove = (e) => {
+    e.stopPropagation();
+    if (e.index !== undefined && geometryData.positions) {
+      const starInfo = refStarsData[e.index];
+
+      setHoveredData({
+        name: starInfo.name,
+        epoch: starInfo.epoch,
+        x: e.clientX,
+        y: e.clientY,
+        color: STAR_COLORS[starInfo.name] || "#ffffff",
+      });
+    }
+  };
+
+  const handlePointerOut = (e) => {
+    e.stopPropagation();
+    setHoveredData(null);
+  };
+
+  // --- RAW DOM TOOLTIP GENERATION ---
+  useEffect(() => {
+    if (!hoveredData) return;
+
+    // Create the tooltip container manually
+    const el = document.createElement("div");
+    el.style.position = "fixed";
+    el.style.top = `${hoveredData.y - 50}px`; // Moved slightly closer to cursor
+    el.style.left = `${hoveredData.x + 15}px`; // Moved slightly closer to cursor
+    el.style.background = "rgba(10, 15, 25, 0.95)";
+    el.style.color = "#e2e8f0";
+    el.style.padding = "6px 10px"; // Reduced padding
+    el.style.borderRadius = "4px"; // Tighter radius
+    el.style.border = `1px solid ${hoveredData.color}`; // Thinner border
+    el.style.boxShadow = "0px 4px 12px rgba(0,0,0,0.6)"; // Softer shadow
+    el.style.fontSize = "12px"; // Smaller base font
+    el.style.whiteSpace = "nowrap";
+    el.style.fontFamily = "monospace";
+    el.style.pointerEvents = "none";
+    el.style.userSelect = "none";
+    el.style.zIndex = "2147483647";
+
+    // Inject the HTML content with smaller font sizes
+    el.innerHTML = `
+      <strong style="color: ${hoveredData.color}; font-size: 13px;">${hoveredData.name}</strong>
+      <br />
+      <span style="font-size: 11px; opacity: 0.8;">Epoch: </span>
+      <span style="color: #fff; font-weight: bold; font-size: 12px;">${hoveredData.epoch}</span>
+    `;
+
+    document.body.appendChild(el);
+
+    // Cleanup on unmount or when hover data changes
+    return () => {
+      if (document.body.contains(el)) {
+        document.body.removeChild(el);
+      }
+    };
+  }, [hoveredData]);
+
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry />
-      <pointsMaterial
-        size={8}
-        vertexColors
-        sizeAttenuation={false}
-        depthTest={true}
-      />
-    </points>
+    <group>
+      <points
+        ref={pointsRef}
+        raycast={customRaycast}
+        onPointerMove={handlePointerMove}
+        onPointerOut={handlePointerOut}
+      >
+        <bufferGeometry />
+        <pointsMaterial
+          size={12}
+          vertexColors
+          sizeAttenuation={false}
+          depthTest={true}
+        />
+      </points>
+    </group>
   );
 }
