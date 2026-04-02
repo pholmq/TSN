@@ -11,17 +11,24 @@ import {
 import { dateTimeToPos } from "../../utils/time-date-functions";
 import { movePlotModel } from "../../utils/plotModelFunctions";
 
-// High-contrast color palette for dynamic star assignment
+// High-contrast cycling palette for the 48+ stars
 const PALETTE = [
-  "#ff0055", // Neon Pink
-  "#00ffcc", // Cyan
-  "#ffaa00", // Orange
-  "#ffff00", // Yellow
-  "#cc00ff", // Purple
-  "#00ff00", // Lime Green
-  "#0088ff", // Bright Blue
-  "#ff0000", // Red
-  "#ffffff", // White
+  "#ff0055",
+  "#00ffcc",
+  "#ffaa00",
+  "#ffff00",
+  "#cc00ff",
+  "#00ff00",
+  "#0088ff",
+  "#ff0000",
+  "#ffffff",
+  "#ff00ff",
+  "#00ffff",
+  "#ffaa88",
+  "#88ff00",
+  "#ff88ff",
+  "#88ccff",
+  "#ffcc00",
 ];
 
 export default function ReferenceStars() {
@@ -39,7 +46,7 @@ export default function ReferenceStars() {
   });
   const [hoveredData, setHoveredData] = useState(null);
 
-  // Dynamically map unique stars in the JSON to colors from the PALETTE
+  // Dynamically map every unique star in the JSON to a color from the PALETTE
   const starColorMap = useMemo(() => {
     const uniqueNames = [...new Set(refStarsData.map((d) => d.name))];
     const map = new Map();
@@ -91,7 +98,7 @@ export default function ReferenceStars() {
 
       positions.push(localVec.x, localVec.y, localVec.z);
 
-      // Get dynamically assigned color
+      // Extract the dynamic color for this specific star
       const hexColor = starColorMap.get(data.name);
       const color = new THREE.Color(hexColor);
       colors.push(color.r, color.g, color.b);
@@ -181,7 +188,6 @@ export default function ReferenceStars() {
     [getThreeState, geometryData]
   );
 
-  // --- HOVER TRACKING ---
   const handlePointerMove = (e) => {
     e.stopPropagation();
     if (e.index !== undefined && geometryData.positions) {
@@ -192,7 +198,7 @@ export default function ReferenceStars() {
         epoch: starInfo.epoch,
         x: e.clientX,
         y: e.clientY,
-        color: starColorMap.get(starInfo.name), // Use dynamic map
+        color: starColorMap.get(starInfo.name),
       });
     }
   };
@@ -202,7 +208,7 @@ export default function ReferenceStars() {
     setHoveredData(null);
   };
 
-  // --- RAW DOM TOOLTIP GENERATION ---
+  // Raw DOM Tooltip
   useEffect(() => {
     if (!hoveredData) return;
 

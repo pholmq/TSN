@@ -1,27 +1,40 @@
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import * as THREE from "three";
 
-// 1. SIMBAD TAP REST API Query (ADQL format)
+// Setup paths to dynamically read from/write to your settings folder
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 1. Load your local BSC.json to map HIP numbers to Common Names
+const bscPath = path.join(__dirname, "../settings/BSC.json");
+const bscData = JSON.parse(fs.readFileSync(bscPath, "utf-8"));
+
+const bscMap = {};
+bscData.forEach((star) => {
+  if (star.HIP) {
+    bscMap[`HIP ${star.HIP}`] = star.N; // Example: "HIP 11767" -> "Polaris"
+  }
+});
+
+// 2. SIMBAD TAP REST API Query (ADQL format)
 const SIMBAD_TAP_URL = "https://simbad.cds.unistra.fr/simbad/sim-tap/sync";
+
+// Query all Bayer designated stars and join their HIP number
 const query = `
-  SELECT basic.MAIN_ID, ra, dec, pmra, pmdec, plx_value
+  SELECT basic.MAIN_ID, basic.ra, basic.dec, basic.pmra, basic.pmdec, basic.plx_value, ident.id
   FROM basic
-  WHERE basic.MAIN_ID IN ('* alf UMi', '* alf CMa', '* alf Lyr', '* del Ori')
+  JOIN ident ON basic.oid = ident.oidref
+  WHERE basic.MAIN_ID LIKE '* %'
+    AND ident.id LIKE 'HIP %'
+    AND basic.plx_value > 0
 `;
 
-// Map SIMBAD IDs to BSC Common Names and HIP Numbers
-const NAME_MAP = {
-  "* alf UMi": "Polaris HIP 11767",
-  "* alf CMa": "Sirius HIP 32349",
-  "* alf Lyr": "Vega HIP 91262",
-  "* del Ori": "Mintaka HIP 25930",
-};
-
-// Helper: Convert degrees to radians
+// Helpers
 const degToRad = (deg) => deg * (Math.PI / 180);
 const radToDeg = (rad) => rad * (180 / Math.PI);
 
-// Helper: Convert spherical RA/Dec to Cartesian Vector3
 function sphericalToCartesian(raDeg, decDeg) {
   const raRad = degToRad(raDeg);
   const decRad = degToRad(decDeg);
@@ -32,20 +45,15 @@ function sphericalToCartesian(raDeg, decDeg) {
   );
 }
 
-// Helper: Convert Cartesian Vector3 back to Spherical RA/Dec (Degrees)
 function cartesianToSpherical(vector) {
   const decRad = Math.asin(vector.z);
   const raRad = Math.atan2(vector.y, vector.x);
-
   let raDeg = radToDeg(raRad);
   let decDeg = radToDeg(decRad);
-
   if (raDeg < 0) raDeg += 360;
-
   return { raDeg, decDeg };
 }
 
-// Helper: Format RA (Degrees) to BSC String format ("HHh MMm SS.Ss")
 function formatRA(raDeg) {
   const raHours = raDeg / 15;
   const h = Math.floor(raHours);
@@ -55,11 +63,9 @@ function formatRA(raDeg) {
   const hh = String(h).padStart(2, "0");
   const mm = String(m).padStart(2, "0");
   const ss = s.toFixed(1).padStart(4, "0");
-
   return `${hh}h ${mm}m ${ss}s`;
 }
 
-// Helper: Format Dec (Degrees) to BSC String format ("±DD° MM′ SS″")
 function formatDec(decDeg) {
   const isNegative = decDeg < 0;
   const absDec = Math.abs(decDeg);
@@ -72,14 +78,11 @@ function formatDec(decDeg) {
   const dd = String(d).padStart(2, "0");
   const mm = String(m).padStart(2, "0");
   const ss = String(Math.round(s)).padStart(2, "0");
-
   return `${signStr}${dd}° ${mm}′ ${ss}″`;
 }
 
-// Rigorous IAU Precession Matrix Generator (J2000 to Target Epoch)
 function getPrecessionMatrix(targetYear) {
   const T = (targetYear - 2000.0) / 100.0;
-
   const zeta_A = 2306.2181 * T + 0.30188 * T * T + 0.017998 * T * T * T;
   const z_A = 2306.2181 * T + 1.09468 * T * T + 0.018203 * T * T * T;
   const theta_A = 2004.3109 * T - 0.42665 * T * T - 0.041833 * T * T * T;
@@ -99,7 +102,7 @@ function getPrecessionMatrix(targetYear) {
 }
 
 async function generateEphemeris() {
-  console.log("Querying SIMBAD database...");
+  console.log("Querying SIMBAD database for bright stars...");
 
   const response = await fetch(SIMBAD_TAP_URL, {
     method: "POST",
@@ -113,17 +116,57 @@ async function generateEphemeris() {
   });
 
   const simbadData = await response.json();
-  const stars = simbadData.data;
+  const allStars = simbadData.data;
+
+  // 3. Grid the sky into 48 sectors (24h RA x North/South Dec)
+  const bins = {};
+  allStars.forEach((star) => {
+    const ra = star[1];
+    const dec = star[2];
+    const pmra = star[3];
+    const pmdec = star[4];
+    const plx = star[5];
+
+    if (pmra === null || pmdec === null || plx === null || plx <= 0) return;
+
+    const raHour = Math.floor(ra / 15);
+    const hemisphere = dec >= 0 ? "N" : "S";
+    const binKey = `${raHour}-${hemisphere}`;
+
+    if (!bins[binKey]) bins[binKey] = [];
+    bins[binKey].push(star);
+  });
+
+  const targetStars = [];
+
+  // 4. Find the single star with the LOWEST proper motion in each sector
+  Object.keys(bins).forEach((key) => {
+    bins[key].sort((a, b) => {
+      const pmA = Math.sqrt(a[3] * a[3] + a[4] * a[4]);
+      const pmB = Math.sqrt(b[3] * b[3] + b[4] * b[4]);
+      return pmA - pmB;
+    });
+    targetStars.push(bins[key][0]);
+  });
+
+  console.log(
+    `Isolated ${targetStars.length} spread-out anchor stars with minimal proper motion.`
+  );
 
   const years = [];
   for (let y = 1900; y <= 2100; y += 10) years.push(y);
 
   const outputData = [];
 
-  stars.forEach((star) => {
+  targetStars.forEach((star) => {
     const rawName = star[0].trim();
-    // Apply mapping or fallback to clean raw name
-    const formattedName = NAME_MAP[rawName] || rawName.replace("* ", "");
+    const hipId = star[6].trim();
+
+    // Cross-reference with your BSC.json for identical naming
+    const commonName = bscMap[hipId];
+    const formattedName = commonName
+      ? `${commonName} / ${hipId}`
+      : `${rawName.replace("* ", "")} / ${hipId}`;
 
     const raJ2000 = star[1];
     const decJ2000 = star[2];
@@ -131,9 +174,8 @@ async function generateEphemeris() {
     const pmRaDegPerYr = star[3] / 3600000 / Math.cos(degToRad(decJ2000));
     const pmDecDegPerYr = star[4] / 3600000;
 
-    // THE FIX: Convert SIMBAD parallax (mas) to Distance (Parsecs)
     const parallaxMas = star[5];
-    const distanceParsecs = 1000 / parallaxMas;
+    const distanceParsecs = 1000 / parallaxMas; // Convert Parallax to Parsecs
 
     years.forEach((year) => {
       const deltaYears = year - 2000.0;
@@ -153,16 +195,16 @@ async function generateEphemeris() {
         epoch: year,
         RA: formatRA(raDeg),
         Dec: formatDec(decDeg),
-        P: distanceParsecs, // Now matches BSC.json standard
+        P: distanceParsecs,
       });
     });
   });
 
-  fs.writeFileSync(
-    "./reference_stars.json",
-    JSON.stringify(outputData, null, 2)
+  const outputPath = path.join(__dirname, "../settings/reference_stars.json");
+  fs.writeFileSync(outputPath, JSON.stringify(outputData, null, 2));
+  console.log(
+    `Saved ${outputData.length} total epoch points to reference_stars.json`
   );
-  console.log(`Saved ${outputData.length} data points to reference_stars.json`);
 }
 
 generateEphemeris();
