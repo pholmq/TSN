@@ -23,6 +23,9 @@ const LightEffectsMenu = () => {
   const refStars = useStore((s) => s.refStars);
   const setRefStars = useStore((s) => s.setRefStars);
 
+  const editSettings = useStore((s) => s.editSettings);
+  const setEditSettings = useStore((s) => s.setEditSettings);
+
   const { ambientLight, glow, glowIntensity, antialiasing, stats } =
     useControls("Settings", {
       "UI & Labels size": {
@@ -131,6 +134,10 @@ const LightEffectsMenu = () => {
           "Reference Stars": {
             value: refStars,
             onChange: setRefStars,
+          },
+          "Edit settings": {
+            value: editSettings,
+            onChange: setEditSettings,
           },
         },
         { collapsed: false }
