@@ -17,7 +17,11 @@ import { usePlanetCameraStore } from "../PlanetCamera/planetCameraStore";
 const LightEffectsMenu = () => {
   const zoomLevel = useStore((state) => state.zoomLevel);
   const setZoom = useStore((state) => state.setZoom);
-  const { runIntro, setRunIntro } = useStore();
+  const runIntro = useStore((s) => s.runIntro);
+  const setRunIntro = useStore((s) => s.setRunIntro);
+
+  const refStars = useStore((s) => s.refStars);
+  const setRefStars = useStore((s) => s.setRefStars);
 
   const { ambientLight, glow, glowIntensity, antialiasing, stats } =
     useControls("Settings", {
@@ -123,6 +127,10 @@ const LightEffectsMenu = () => {
           "Video Recorder": {
             value: useStore.getState().showRecorder,
             onChange: (v) => useStore.setState({ showRecorder: v }),
+          },
+          "Reference Stars": {
+            value: refStars,
+            onChange: setRefStars,
           },
         },
         { collapsed: false }

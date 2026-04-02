@@ -23,6 +23,7 @@ import Stars from "./components/Stars/Stars";
 import LabeledStars from "./components/Stars/LabeledStars";
 // import BSCStars from "./components/Stars/BSCStars";
 import BSCStarsH from "./components/Stars/BSCStarsHandler";
+import ReferenceStars from "./components/Stars/ReferenceStars";
 import Zodiac from "./components/Helpers/Zodiac";
 import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
@@ -72,6 +73,7 @@ const TSNext = () => {
   const toggleShowMenu = useStore((s) => s.toggleShowMenu);
   const toggleShowLevaMenu = useStore((s) => s.toggleShowLevaMenu);
   const BSCStarsOn = useStore((s) => s.BSCStars);
+  const refStarsOn = useStore((s) => s.refStars);
   const searchStars = useStore((s) => s.searchStars);
   const planetCamera = useStore((s) => s.planetCamera);
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
@@ -162,6 +164,7 @@ const TSNext = () => {
           <LabeledStars />
           {BSCStarsOn && <BSCStarsH />}
           {BSCStarsOn && !isTouchDev && <HighlightSelectedStar />}
+          {refStarsOn && <ReferenceStars />}
           <Zodiac />
           <Constellations />
           <PlanetCameraHelper />
