@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
-import { usePlotStore, useStore } from "../../store";
+import { usePlotStore, useStore, useSettingsStore } from "../../store";
 import refStarsData from "../../settings/reference_stars.json";
 import {
   declinationToRadians,
@@ -10,6 +10,7 @@ import {
 } from "../../utils/celestial-functions";
 import { dateTimeToPos } from "../../utils/time-date-functions";
 import { movePlotModel } from "../../utils/plotModelFunctions";
+import createCircleTexture from "../../utils/createCircleTexture";
 
 // High-contrast cycling palette for the 48+ stars
 const PALETTE = [
@@ -40,11 +41,26 @@ export default function ReferenceStars() {
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
 
+  // --- LIVE SETTINGS SUBSCRIPTION ---
+  const settings = useSettingsStore((s) => s.settings);
+  const earthSettings = useMemo(
+    () => settings.find((s) => s.name === "Earth"),
+    [settings]
+  );
+
+  // Create a strict dependency string so the effect fires exactly when an orbital parameter changes
+  const earthDeps = earthSettings
+    ? `${earthSettings.speed}-${earthSettings.orbitRadius}-${earthSettings.tilt}-${earthSettings.tiltb}-${earthSettings.orbitCentera}-${earthSettings.orbitCenterb}-${earthSettings.startPos}`
+    : "0";
+
   const [geometryData, setGeometryData] = useState({
     positions: null,
     colors: null,
   });
   const [hoveredData, setHoveredData] = useState(null);
+
+  // Circular Mask Texture
+  const circleTexture = useMemo(() => createCircleTexture("#ffffff"), []);
 
   // Dynamically map every unique star in the JSON to a color from the PALETTE
   const starColorMap = useMemo(() => {
@@ -62,6 +78,18 @@ export default function ReferenceStars() {
     const earthObj = plotObjects.find((p) => p.name === "Earth");
     if (!earthObj || !earthObj.cSphereRef?.current) return;
 
+    // --- CRITICAL FIX: SAFELY INJECT LIVE MATH ---
+    // Update the mathematical variables directly without destroying React refs
+    if (earthSettings) {
+      earthObj.speed = earthSettings.speed;
+      earthObj.orbitRadius = earthSettings.orbitRadius;
+      earthObj.tilt = earthSettings.tilt;
+      earthObj.tiltb = earthSettings.tiltb;
+      earthObj.orbitCentera = earthSettings.orbitCentera;
+      earthObj.orbitCenterb = earthSettings.orbitCenterb;
+      earthObj.startPos = earthSettings.startPos;
+    }
+
     const originalRotations = new Map();
     plotObjects.forEach((pObj) => {
       if (pObj.orbitRef && pObj.orbitRef.current) {
@@ -77,6 +105,11 @@ export default function ReferenceStars() {
       const plotPos = dateTimeToPos(`${year}-01-01`, "12:00:00");
 
       movePlotModel(plotObjects, plotPos);
+
+      // Force Three.js to cascade the updated matrix math from the orbit root down to the sphere
+      if (earthObj.orbitRef?.current) {
+        earthObj.orbitRef.current.updateMatrixWorld(true);
+      }
       earthObj.cSphereRef.current.updateMatrixWorld(true);
 
       const raRad = rightAscensionToRadians(data.RA);
@@ -98,7 +131,6 @@ export default function ReferenceStars() {
 
       positions.push(localVec.x, localVec.y, localVec.z);
 
-      // Extract the dynamic color for this specific star
       const hexColor = starColorMap.get(data.name);
       const color = new THREE.Color(hexColor);
       colors.push(color.r, color.g, color.b);
@@ -119,12 +151,15 @@ export default function ReferenceStars() {
       positions: new Float32Array(positions),
       colors: new Float32Array(colors),
     });
+
+    // We depend on earthDeps so it recalculates the moment Leva registers a change
   }, [
     plotObjects,
     hScale,
     starDistanceModifier,
     officialStarDistances,
     starColorMap,
+    earthDeps,
   ]);
 
   useEffect(() => {
@@ -138,6 +173,11 @@ export default function ReferenceStars() {
         "color",
         new THREE.BufferAttribute(geometryData.colors, 3)
       );
+
+      // Force WebGL to write the new data to the GPU buffer
+      geo.attributes.position.needsUpdate = true;
+      geo.attributes.color.needsUpdate = true;
+
       geo.computeBoundingBox();
       geo.computeBoundingSphere();
     }
@@ -259,6 +299,9 @@ export default function ReferenceStars() {
           vertexColors
           sizeAttenuation={false}
           depthTest={true}
+          map={circleTexture} // Clips squares into circles
+          transparent={true}
+          alphaTest={0.5} // Prevents depth sorting bugs
         />
       </points>
     </group>

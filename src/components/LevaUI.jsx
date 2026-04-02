@@ -2,6 +2,7 @@ import { useRef, useEffect } from "react";
 import { useControls, useCreateStore, Leva, folder, levaStore } from "leva";
 import { useStore, useTraceStore, useSettingsStore } from "../store";
 import { speedFactOpts } from "../utils/time-date-functions";
+
 const LevaUI = () => {
   const levaStore = useCreateStore();
   const {
@@ -52,8 +53,6 @@ const LevaUI = () => {
     setOfficialStarDistances,
     starScale,
     setStarScale,
-    editSettings,
-    setEditSettings,
     showLabels,
     setShowLables,
     geoSphere,
@@ -125,7 +124,7 @@ const LevaUI = () => {
           value: planetCamera,
           onChange: setPlanetCamera,
         },
-       
+
         "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
         Labels: {
           value: showLabels,
@@ -223,10 +222,6 @@ const LevaUI = () => {
         Graticules: {
           value: geoSphere,
           onChange: setGeoSphere,
-        },
-        "Edit settings": {
-          value: editSettings,
-          onChange: setEditSettings,
         },
       },
       { collapsed: true }
