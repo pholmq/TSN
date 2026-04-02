@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { usePlotStore, useStore } from "../../store";
@@ -11,14 +11,18 @@ import {
 import { dateTimeToPos } from "../../utils/time-date-functions";
 import { movePlotModel } from "../../utils/plotModelFunctions";
 
-const STAR_COLORS = {
-  "alf UMi": "#ff0055", // Polaris
-  "alf CMa": "#00ffcc", // Sirius
-  "alf Lyr": "#ffaa00", // Vega
-  "del Ori": "#ffff00", // Mintaka
-};
-
-const FALLBACK_COLORS = ["#ff00ff", "#00ffff", "#ffffff", "#00ff00"];
+// High-contrast color palette for dynamic star assignment
+const PALETTE = [
+  "#ff0055", // Neon Pink
+  "#00ffcc", // Cyan
+  "#ffaa00", // Orange
+  "#ffff00", // Yellow
+  "#cc00ff", // Purple
+  "#00ff00", // Lime Green
+  "#0088ff", // Bright Blue
+  "#ff0000", // Red
+  "#ffffff", // White
+];
 
 export default function ReferenceStars() {
   const pointsRef = useRef();
@@ -35,6 +39,16 @@ export default function ReferenceStars() {
   });
   const [hoveredData, setHoveredData] = useState(null);
 
+  // Dynamically map unique stars in the JSON to colors from the PALETTE
+  const starColorMap = useMemo(() => {
+    const uniqueNames = [...new Set(refStarsData.map((d) => d.name))];
+    const map = new Map();
+    uniqueNames.forEach((name, index) => {
+      map.set(name, PALETTE[index % PALETTE.length]);
+    });
+    return map;
+  }, []);
+
   useEffect(() => {
     if (!plotObjects || plotObjects.length === 0 || !pointsRef.current) return;
 
@@ -50,7 +64,6 @@ export default function ReferenceStars() {
 
     const positions = [];
     const colors = [];
-    const uniqueNames = [...new Set(refStarsData.map((d) => d.name))];
 
     refStarsData.forEach((data) => {
       const year = Math.floor(data.epoch);
@@ -78,11 +91,8 @@ export default function ReferenceStars() {
 
       positions.push(localVec.x, localVec.y, localVec.z);
 
-      const hexColor =
-        STAR_COLORS[data.name] ||
-        FALLBACK_COLORS[
-          uniqueNames.indexOf(data.name) % FALLBACK_COLORS.length
-        ];
+      // Get dynamically assigned color
+      const hexColor = starColorMap.get(data.name);
       const color = new THREE.Color(hexColor);
       colors.push(color.r, color.g, color.b);
     });
@@ -102,7 +112,13 @@ export default function ReferenceStars() {
       positions: new Float32Array(positions),
       colors: new Float32Array(colors),
     });
-  }, [plotObjects, hScale, starDistanceModifier, officialStarDistances]);
+  }, [
+    plotObjects,
+    hScale,
+    starDistanceModifier,
+    officialStarDistances,
+    starColorMap,
+  ]);
 
   useEffect(() => {
     if (pointsRef.current && geometryData.positions) {
@@ -176,7 +192,7 @@ export default function ReferenceStars() {
         epoch: starInfo.epoch,
         x: e.clientX,
         y: e.clientY,
-        color: STAR_COLORS[starInfo.name] || "#ffffff",
+        color: starColorMap.get(starInfo.name), // Use dynamic map
       });
     }
   };
@@ -190,25 +206,23 @@ export default function ReferenceStars() {
   useEffect(() => {
     if (!hoveredData) return;
 
-    // Create the tooltip container manually
     const el = document.createElement("div");
     el.style.position = "fixed";
-    el.style.top = `${hoveredData.y - 50}px`; // Moved slightly closer to cursor
-    el.style.left = `${hoveredData.x + 15}px`; // Moved slightly closer to cursor
+    el.style.top = `${hoveredData.y - 50}px`;
+    el.style.left = `${hoveredData.x + 15}px`;
     el.style.background = "rgba(10, 15, 25, 0.95)";
     el.style.color = "#e2e8f0";
-    el.style.padding = "6px 10px"; // Reduced padding
-    el.style.borderRadius = "4px"; // Tighter radius
-    el.style.border = `1px solid ${hoveredData.color}`; // Thinner border
-    el.style.boxShadow = "0px 4px 12px rgba(0,0,0,0.6)"; // Softer shadow
-    el.style.fontSize = "12px"; // Smaller base font
+    el.style.padding = "6px 10px";
+    el.style.borderRadius = "4px";
+    el.style.border = `1px solid ${hoveredData.color}`;
+    el.style.boxShadow = "0px 4px 12px rgba(0,0,0,0.6)";
+    el.style.fontSize = "12px";
     el.style.whiteSpace = "nowrap";
     el.style.fontFamily = "monospace";
     el.style.pointerEvents = "none";
     el.style.userSelect = "none";
     el.style.zIndex = "2147483647";
 
-    // Inject the HTML content with smaller font sizes
     el.innerHTML = `
       <strong style="color: ${hoveredData.color}; font-size: 13px;">${hoveredData.name}</strong>
       <br />
@@ -218,7 +232,6 @@ export default function ReferenceStars() {
 
     document.body.appendChild(el);
 
-    // Cleanup on unmount or when hover data changes
     return () => {
       if (document.body.contains(el)) {
         document.body.removeChild(el);

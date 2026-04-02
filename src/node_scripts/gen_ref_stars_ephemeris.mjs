@@ -9,6 +9,14 @@ const query = `
   WHERE basic.MAIN_ID IN ('* alf UMi', '* alf CMa', '* alf Lyr', '* del Ori')
 `;
 
+// Map SIMBAD IDs to BSC Common Names and HIP Numbers
+const NAME_MAP = {
+  "* alf UMi": "Polaris HIP 11767",
+  "* alf CMa": "Sirius HIP 32349",
+  "* alf Lyr": "Vega HIP 91262",
+  "* del Ori": "Mintaka HIP 25930",
+};
+
 // Helper: Convert degrees to radians
 const degToRad = (deg) => deg * (Math.PI / 180);
 const radToDeg = (rad) => rad * (180 / Math.PI);
@@ -32,7 +40,6 @@ function cartesianToSpherical(vector) {
   let raDeg = radToDeg(raRad);
   let decDeg = radToDeg(decRad);
 
-  // Ensure RA is 0-360
   if (raDeg < 0) raDeg += 360;
 
   return { raDeg, decDeg };
@@ -47,7 +54,6 @@ function formatRA(raDeg) {
 
   const hh = String(h).padStart(2, "0");
   const mm = String(m).padStart(2, "0");
-  // toFixed(1) gives one decimal place, padStart(4, '0') ensures leading zero e.g. "03.8"
   const ss = s.toFixed(1).padStart(4, "0");
 
   return `${hh}h ${mm}m ${ss}s`;
@@ -115,34 +121,33 @@ async function generateEphemeris() {
   const outputData = [];
 
   stars.forEach((star) => {
-    const name = star[0].trim();
+    const rawName = star[0].trim();
+    // Apply mapping or fallback to clean raw name
+    const formattedName = NAME_MAP[rawName] || rawName.replace("* ", "");
+
     const raJ2000 = star[1];
     const decJ2000 = star[2];
 
-    // Proper motion is in milliarcseconds per year. Convert to degrees per year.
     const pmRaDegPerYr = star[3] / 3600000 / Math.cos(degToRad(decJ2000));
     const pmDecDegPerYr = star[4] / 3600000;
-    const parallax = star[5]; // Extracted for 'P'
+
+    const parallax = star[5];
 
     years.forEach((year) => {
       const deltaYears = year - 2000.0;
 
-      // 1. Apply Proper Motion (Linear drift over time)
       const currentRa = raJ2000 + pmRaDegPerYr * deltaYears;
       const currentDec = decJ2000 + pmDecDegPerYr * deltaYears;
 
-      // 2. Convert to Cartesian
       const vector = sphericalToCartesian(currentRa, currentDec);
 
-      // 3. Apply IAU Precession Rotation
       const precessionMatrix = getPrecessionMatrix(year);
       vector.applyMatrix4(precessionMatrix).normalize();
 
-      // 4. Convert back to Spherical and format
       const { raDeg, decDeg } = cartesianToSpherical(vector);
 
       outputData.push({
-        name: name.replace("* ", ""),
+        name: formattedName,
         epoch: year,
         RA: formatRA(raDeg),
         Dec: formatDec(decDeg),
