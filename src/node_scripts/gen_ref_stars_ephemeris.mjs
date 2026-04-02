@@ -131,7 +131,9 @@ async function generateEphemeris() {
     const pmRaDegPerYr = star[3] / 3600000 / Math.cos(degToRad(decJ2000));
     const pmDecDegPerYr = star[4] / 3600000;
 
-    const parallax = star[5];
+    // THE FIX: Convert SIMBAD parallax (mas) to Distance (Parsecs)
+    const parallaxMas = star[5];
+    const distanceParsecs = 1000 / parallaxMas;
 
     years.forEach((year) => {
       const deltaYears = year - 2000.0;
@@ -151,7 +153,7 @@ async function generateEphemeris() {
         epoch: year,
         RA: formatRA(raDeg),
         Dec: formatDec(decDeg),
-        P: parallax,
+        P: distanceParsecs, // Now matches BSC.json standard
       });
     });
   });
