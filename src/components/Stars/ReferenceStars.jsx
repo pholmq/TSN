@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { usePlotStore, useStore, useSettingsStore } from "../../store";
 import refStarsData from "../../settings/reference_stars.json";
+import bscSettings from "../../settings/BSC.json";
 import {
   declinationToRadians,
   rightAscensionToRadians,
@@ -12,7 +13,6 @@ import { dateTimeToPos } from "../../utils/time-date-functions";
 import { movePlotModel } from "../../utils/plotModelFunctions";
 import createCircleTexture from "../../utils/createCircleTexture";
 
-// High-contrast cycling palette for the 48+ stars
 const PALETTE = [
   "#ff0055",
   "#00ffcc",
@@ -41,14 +41,12 @@ export default function ReferenceStars() {
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
 
-  // --- LIVE SETTINGS SUBSCRIPTION ---
   const settings = useSettingsStore((s) => s.settings);
   const earthSettings = useMemo(
     () => settings.find((s) => s.name === "Earth"),
     [settings]
   );
 
-  // Create a strict dependency string so the effect fires exactly when an orbital parameter changes
   const earthDeps = earthSettings
     ? `${earthSettings.speed}-${earthSettings.orbitRadius}-${earthSettings.tilt}-${earthSettings.tiltb}-${earthSettings.orbitCentera}-${earthSettings.orbitCenterb}-${earthSettings.startPos}`
     : "0";
@@ -59,15 +57,23 @@ export default function ReferenceStars() {
   });
   const [hoveredData, setHoveredData] = useState(null);
 
-  // Circular Mask Texture
   const circleTexture = useMemo(() => createCircleTexture("#ffffff"), []);
 
-  // Dynamically map every unique star in the JSON to a color from the PALETTE
   const starColorMap = useMemo(() => {
     const uniqueNames = [...new Set(refStarsData.map((d) => d.name))];
     const map = new Map();
     uniqueNames.forEach((name, index) => {
       map.set(name, PALETTE[index % PALETTE.length]);
+    });
+    return map;
+  }, []);
+
+  const hipToDistMap = useMemo(() => {
+    const map = new Map();
+    bscSettings.forEach((star) => {
+      if (star.HIP && star.P) {
+        map.set(String(star.HIP), parseFloat(star.P) * 3.26156378);
+      }
     });
     return map;
   }, []);
@@ -78,8 +84,6 @@ export default function ReferenceStars() {
     const earthObj = plotObjects.find((p) => p.name === "Earth");
     if (!earthObj || !earthObj.cSphereRef?.current) return;
 
-    // --- CRITICAL FIX: SAFELY INJECT LIVE MATH ---
-    // Update the mathematical variables directly without destroying React refs
     if (earthSettings) {
       earthObj.speed = earthSettings.speed;
       earthObj.orbitRadius = earthSettings.orbitRadius;
@@ -104,17 +108,33 @@ export default function ReferenceStars() {
       const year = Math.floor(data.epoch);
       const plotPos = dateTimeToPos(`${year}-01-01`, "12:00:00");
 
+      // Temporarily flip the speed to simulate the perfect-stack condition
+      const originalSpeed = earthObj.speed;
+      if (originalSpeed !== 0) {
+        earthObj.speed = -originalSpeed;
+      }
+
       movePlotModel(plotObjects, plotPos);
 
-      // Force Three.js to cascade the updated matrix math from the orbit root down to the sphere
-      if (earthObj.orbitRef?.current) {
-        earthObj.orbitRef.current.updateMatrixWorld(true);
+      let root = earthObj.cSphereRef.current;
+      while (root.parent) {
+        root = root.parent;
       }
-      earthObj.cSphereRef.current.updateMatrixWorld(true);
+      root.updateMatrixWorld(true);
+
+      const epochPos = new THREE.Vector3();
+      const epochQuat = new THREE.Quaternion();
+      earthObj.cSphereRef.current.getWorldPosition(epochPos);
+      earthObj.cSphereRef.current.getWorldQuaternion(epochQuat);
+
+      earthObj.speed = originalSpeed;
 
       const raRad = rightAscensionToRadians(data.RA);
       const decRad = declinationToRadians(data.Dec);
-      const distLy = parseFloat(data.P) * 3.26156378;
+
+      const hipMatch = data.name.match(/\d+/);
+      const hipNum = hipMatch ? String(hipMatch[0]) : null;
+      const distLy = hipToDistMap.get(hipNum) || 100;
 
       let dist;
       if (!officialStarDistances) {
@@ -127,7 +147,9 @@ export default function ReferenceStars() {
 
       const localPos = sphericalToCartesian(raRad, decRad, dist);
       const localVec = new THREE.Vector3(localPos.x, localPos.y, localPos.z);
-      localVec.applyMatrix4(earthObj.cSphereRef.current.matrixWorld);
+
+      localVec.applyQuaternion(epochQuat);
+      localVec.add(epochPos);
 
       positions.push(localVec.x, localVec.y, localVec.z);
 
@@ -151,14 +173,13 @@ export default function ReferenceStars() {
       positions: new Float32Array(positions),
       colors: new Float32Array(colors),
     });
-
-    // We depend on earthDeps so it recalculates the moment Leva registers a change
   }, [
     plotObjects,
     hScale,
     starDistanceModifier,
     officialStarDistances,
     starColorMap,
+    hipToDistMap,
     earthDeps,
   ]);
 
@@ -174,10 +195,8 @@ export default function ReferenceStars() {
         new THREE.BufferAttribute(geometryData.colors, 3)
       );
 
-      // Force WebGL to write the new data to the GPU buffer
       geo.attributes.position.needsUpdate = true;
       geo.attributes.color.needsUpdate = true;
-
       geo.computeBoundingBox();
       geo.computeBoundingSphere();
     }
@@ -191,7 +210,8 @@ export default function ReferenceStars() {
       const posArray = geometryData.positions;
       const matrixWorld = pointsRef.current.matrixWorld;
 
-      const HOVER_RADIUS_PX = 8;
+      // Slightly increased hover radius to match the new size 9 dots
+      const HOVER_RADIUS_PX = 6;
       const thresholdSqPx = HOVER_RADIUS_PX * HOVER_RADIUS_PX;
 
       const pointerPxX = ((pointer.x + 1) / 2) * size.width;
@@ -216,10 +236,12 @@ export default function ReferenceStars() {
 
         if (distSq < thresholdSqPx) {
           intersects.push({
-            distance: raycaster.ray.origin.distanceTo(_worldPos),
+            // HACK: multiply distance by 1.0001 so R3F sorts this dot BEHIND the real star
+            distance: raycaster.ray.origin.distanceTo(_worldPos) * 1.0001,
             distanceToRay: Math.sqrt(distSq),
             point: _worldPos.clone(),
             index: i,
+            face: null,
             object: pointsRef.current,
           });
         }
@@ -229,13 +251,14 @@ export default function ReferenceStars() {
   );
 
   const handlePointerMove = (e) => {
-    e.stopPropagation();
     if (e.index !== undefined && geometryData.positions) {
       const starInfo = refStarsData[e.index];
 
       setHoveredData({
         name: starInfo.name,
         epoch: starInfo.epoch,
+        RA: starInfo.RA,
+        Dec: starInfo.Dec,
         x: e.clientX,
         y: e.clientY,
         color: starColorMap.get(starInfo.name),
@@ -243,22 +266,20 @@ export default function ReferenceStars() {
     }
   };
 
-  const handlePointerOut = (e) => {
-    e.stopPropagation();
+  const handlePointerOut = () => {
     setHoveredData(null);
   };
 
-  // Raw DOM Tooltip
   useEffect(() => {
     if (!hoveredData) return;
 
     const el = document.createElement("div");
     el.style.position = "fixed";
-    el.style.top = `${hoveredData.y - 50}px`;
+    el.style.top = `${hoveredData.y - 80}px`;
     el.style.left = `${hoveredData.x + 15}px`;
     el.style.background = "rgba(10, 15, 25, 0.95)";
     el.style.color = "#e2e8f0";
-    el.style.padding = "6px 10px";
+    el.style.padding = "8px 12px";
     el.style.borderRadius = "4px";
     el.style.border = `1px solid ${hoveredData.color}`;
     el.style.boxShadow = "0px 4px 12px rgba(0,0,0,0.6)";
@@ -270,10 +291,13 @@ export default function ReferenceStars() {
     el.style.zIndex = "2147483647";
 
     el.innerHTML = `
-      <strong style="color: ${hoveredData.color}; font-size: 13px;">${hoveredData.name}</strong>
+      <strong style="color: ${hoveredData.color}; font-size: 14px;">${hoveredData.name}</strong>
       <br />
-      <span style="font-size: 11px; opacity: 0.8;">Epoch: </span>
-      <span style="color: #fff; font-weight: bold; font-size: 12px;">${hoveredData.epoch}</span>
+      <span style="color: #aaa;">Epoch:</span> <span style="color: #fff; font-weight: bold;">${hoveredData.epoch}</span>
+      <br />
+      <span style="color: #aaa;">RA:</span> <span style="color: #fff;">${hoveredData.RA}</span>
+      <br />
+      <span style="color: #aaa;">Dec:</span> <span style="color: #fff;">${hoveredData.Dec}</span>
     `;
 
     document.body.appendChild(el);
@@ -295,13 +319,13 @@ export default function ReferenceStars() {
       >
         <bufferGeometry />
         <pointsMaterial
-          size={12}
+          size={9} // Increased from 6 to 9 to make them easier to see
           vertexColors
           sizeAttenuation={false}
           depthTest={true}
-          map={circleTexture} // Clips squares into circles
+          map={circleTexture}
           transparent={true}
-          alphaTest={0.5} // Prevents depth sorting bugs
+          alphaTest={0.5}
         />
       </points>
     </group>

@@ -7,21 +7,50 @@ import * as THREE from "three";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 1. Load your local BSC.json to map HIP numbers to Common Names
+// 1. VERIFY WITH APP CATALOG (BSC.json)
 const bscPath = path.join(__dirname, "../settings/BSC.json");
 const bscData = JSON.parse(fs.readFileSync(bscPath, "utf-8"));
 
-const bscMap = {};
+// Create a fast lookup Set of all HIP numbers currently used in your 3D app
+const appValidHips = new Set();
 bscData.forEach((star) => {
   if (star.HIP) {
-    bscMap[`HIP ${star.HIP}`] = star.N; // Example: "HIP 11767" -> "Polaris"
+    appValidHips.add(`HIP ${star.HIP}`);
   }
 });
+
+// The 20 brightest/most common stars in the sky
+const top20BrightStars = [
+  "HIP 32349", // Sirius
+  "HIP 30438", // Canopus
+  "HIP 71683", // Alpha Centauri A
+  "HIP 69673", // Arcturus
+  "HIP 91262", // Vega
+  "HIP 24608", // Capella
+  "HIP 24436", // Rigel
+  "HIP 37279", // Procyon
+  "HIP 7588", // Achernar
+  "HIP 27989", // Betelgeuse
+  "HIP 68702", // Hadar
+  "HIP 97649", // Altair
+  "HIP 60718", // Acrux
+  "HIP 21421", // Aldebaran
+  "HIP 80763", // Antares
+  "HIP 65474", // Spica
+  "HIP 37826", // Pollux
+  "HIP 113368", // Fomalhaut
+  "HIP 102098", // Deneb
+  "HIP 62434", // Mimosa
+];
+
+// Ensure our requested bright stars actually exist in the app's catalog
+const verifiedBrightStars = new Set(
+  top20BrightStars.filter((hip) => appValidHips.has(hip))
+);
 
 // 2. SIMBAD TAP REST API Query (ADQL format)
 const SIMBAD_TAP_URL = "https://simbad.cds.unistra.fr/simbad/sim-tap/sync";
 
-// Query all Bayer designated stars and join their HIP number
 const query = `
   SELECT basic.MAIN_ID, basic.ra, basic.dec, basic.pmra, basic.pmdec, basic.plx_value, ident.id
   FROM basic
@@ -118,17 +147,33 @@ async function generateEphemeris() {
   const simbadData = await response.json();
   const allStars = simbadData.data;
 
-  // 3. Grid the sky into 48 sectors (24h RA x North/South Dec)
+  // 3. Grid the sky into 48 sectors and extract the 20 bright stars
   const bins = {};
+  const brightStarsFound = new Map();
+
+  let validStarsCount = 0;
+
   allStars.forEach((star) => {
     const ra = star[1];
     const dec = star[2];
     const pmra = star[3];
     const pmdec = star[4];
     const plx = star[5];
+    const hipId = star[6].trim();
+
+    // STRICT CHECK: Completely ignore any star not existing in BSC.json
+    if (!appValidHips.has(hipId)) return;
 
     if (pmra === null || pmdec === null || plx === null || plx <= 0) return;
 
+    validStarsCount++;
+
+    // Pluck out our verified bright stars
+    if (verifiedBrightStars.has(hipId)) {
+      brightStarsFound.set(hipId, star);
+    }
+
+    // Grid logic for low proper motion anchors
     const raHour = Math.floor(ra / 15);
     const hemisphere = dec >= 0 ? "N" : "S";
     const binKey = `${raHour}-${hemisphere}`;
@@ -137,20 +182,36 @@ async function generateEphemeris() {
     bins[binKey].push(star);
   });
 
-  const targetStars = [];
+  console.log(
+    `Filtered SIMBAD results down to ${validStarsCount} stars matching BSC.json.`
+  );
 
-  // 4. Find the single star with the LOWEST proper motion in each sector
+  // Use a map to build targetStars so we automatically avoid duplicates
+  // (in case a bright star happens to be the lowest PM star in its sector)
+  const finalTargetsMap = new Map();
+
+  // 4. Find the single valid star with the LOWEST proper motion in each sector
   Object.keys(bins).forEach((key) => {
     bins[key].sort((a, b) => {
       const pmA = Math.sqrt(a[3] * a[3] + a[4] * a[4]);
       const pmB = Math.sqrt(b[3] * b[3] + b[4] * b[4]);
       return pmA - pmB;
     });
-    targetStars.push(bins[key][0]);
+    const anchorStar = bins[key][0];
+    finalTargetsMap.set(anchorStar[6].trim(), anchorStar);
   });
 
+  // 5. Merge the bright stars into the final target map
+  brightStarsFound.forEach((starData, hipId) => {
+    if (!finalTargetsMap.has(hipId)) {
+      finalTargetsMap.set(hipId, starData);
+    }
+  });
+
+  const targetStars = Array.from(finalTargetsMap.values());
+
   console.log(
-    `Isolated ${targetStars.length} spread-out anchor stars with minimal proper motion.`
+    `Isolated ${targetStars.length} anchor stars (Sector targets + Bright stars). ALL verified in BSC.json.`
   );
 
   const years = [];
@@ -159,23 +220,13 @@ async function generateEphemeris() {
   const outputData = [];
 
   targetStars.forEach((star) => {
-    const rawName = star[0].trim();
     const hipId = star[6].trim();
-
-    // Cross-reference with your BSC.json for identical naming
-    const commonName = bscMap[hipId];
-    const formattedName = commonName
-      ? `${commonName} / ${hipId}`
-      : `${rawName.replace("* ", "")} / ${hipId}`;
 
     const raJ2000 = star[1];
     const decJ2000 = star[2];
 
     const pmRaDegPerYr = star[3] / 3600000 / Math.cos(degToRad(decJ2000));
     const pmDecDegPerYr = star[4] / 3600000;
-
-    const parallaxMas = star[5];
-    const distanceParsecs = 1000 / parallaxMas; // Convert Parallax to Parsecs
 
     years.forEach((year) => {
       const deltaYears = year - 2000.0;
@@ -191,11 +242,10 @@ async function generateEphemeris() {
       const { raDeg, decDeg } = cartesianToSpherical(vector);
 
       outputData.push({
-        name: formattedName,
+        name: hipId,
         epoch: year,
         RA: formatRA(raDeg),
         Dec: formatDec(decDeg),
-        P: distanceParsecs,
       });
     });
   });
