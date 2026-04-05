@@ -108,31 +108,25 @@ export default function ReferenceStars() {
       const year = Math.floor(data.epoch);
       const plotPos = dateTimeToPos(`${year}-01-01`, "12:00:00");
 
-      // --- 1. THE LOGIC REVERSAL ---
-      // Temporarily flip the speed to simulate the perfect-stack condition you discovered.
-      // This forces the visualizer to show zero deviation when tuned to your correct speed (-0.00024)
+      // Temporarily flip the speed to simulate the perfect-stack condition
       const originalSpeed = earthObj.speed;
       if (originalSpeed !== 0) {
         earthObj.speed = -originalSpeed;
       }
 
-      // 2. Move the model to the historical epoch
       movePlotModel(plotObjects, plotPos);
 
-      // 3. Force matrix update
       let root = earthObj.cSphereRef.current;
       while (root.parent) {
         root = root.parent;
       }
       root.updateMatrixWorld(true);
 
-      // 4. Extract the cleanly inverted Position and Quaternion
       const epochPos = new THREE.Vector3();
       const epochQuat = new THREE.Quaternion();
       earthObj.cSphereRef.current.getWorldPosition(epochPos);
       earthObj.cSphereRef.current.getWorldQuaternion(epochQuat);
 
-      // 5. Instantly restore your actual app speed so nothing breaks
       earthObj.speed = originalSpeed;
 
       const raRad = rightAscensionToRadians(data.RA);
@@ -151,13 +145,10 @@ export default function ReferenceStars() {
           worldDist / (starDistanceModifier >= 1 ? starDistanceModifier : 1);
       }
 
-      // 6. Calculate Local Vector and apply the reversed matrices
       const localPos = sphericalToCartesian(raRad, decRad, dist);
       const localVec = new THREE.Vector3(localPos.x, localPos.y, localPos.z);
 
       localVec.applyQuaternion(epochQuat);
-
-      // We restore standard addition. The position is now correctly inverted because of the speed flip.
       localVec.add(epochPos);
 
       positions.push(localVec.x, localVec.y, localVec.z);
@@ -167,7 +158,6 @@ export default function ReferenceStars() {
       colors.push(color.r, color.g, color.b);
     });
 
-    // Final Restoration
     plotObjects.forEach((pObj) => {
       if (
         pObj.orbitRef &&
@@ -220,7 +210,8 @@ export default function ReferenceStars() {
       const posArray = geometryData.positions;
       const matrixWorld = pointsRef.current.matrixWorld;
 
-      const HOVER_RADIUS_PX = 8;
+      // Slightly increased hover radius to match the new size 9 dots
+      const HOVER_RADIUS_PX = 6;
       const thresholdSqPx = HOVER_RADIUS_PX * HOVER_RADIUS_PX;
 
       const pointerPxX = ((pointer.x + 1) / 2) * size.width;
@@ -245,7 +236,8 @@ export default function ReferenceStars() {
 
         if (distSq < thresholdSqPx) {
           intersects.push({
-            distance: raycaster.ray.origin.distanceTo(_worldPos),
+            // HACK: multiply distance by 1.0001 so R3F sorts this dot BEHIND the real star
+            distance: raycaster.ray.origin.distanceTo(_worldPos) * 1.0001,
             distanceToRay: Math.sqrt(distSq),
             point: _worldPos.clone(),
             index: i,
@@ -259,7 +251,6 @@ export default function ReferenceStars() {
   );
 
   const handlePointerMove = (e) => {
-    e.stopPropagation();
     if (e.index !== undefined && geometryData.positions) {
       const starInfo = refStarsData[e.index];
 
@@ -275,8 +266,7 @@ export default function ReferenceStars() {
     }
   };
 
-  const handlePointerOut = (e) => {
-    e.stopPropagation();
+  const handlePointerOut = () => {
     setHoveredData(null);
   };
 
@@ -301,7 +291,7 @@ export default function ReferenceStars() {
     el.style.zIndex = "2147483647";
 
     el.innerHTML = `
-      <strong style="color: ${hoveredData.color}; font-size: 14px;">HIP ${hoveredData.name}</strong>
+      <strong style="color: ${hoveredData.color}; font-size: 14px;">${hoveredData.name}</strong>
       <br />
       <span style="color: #aaa;">Epoch:</span> <span style="color: #fff; font-weight: bold;">${hoveredData.epoch}</span>
       <br />
@@ -329,7 +319,7 @@ export default function ReferenceStars() {
       >
         <bufferGeometry />
         <pointsMaterial
-          size={12}
+          size={9} // Increased from 6 to 9 to make them easier to see
           vertexColors
           sizeAttenuation={false}
           depthTest={true}
