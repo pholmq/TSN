@@ -7,18 +7,7 @@ import * as THREE from "three";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 1. Load your local BSC.json to map HIP numbers to Common Names
-const bscPath = path.join(__dirname, "../settings/BSC.json");
-const bscData = JSON.parse(fs.readFileSync(bscPath, "utf-8"));
-
-const bscMap = {};
-bscData.forEach((star) => {
-  if (star.HIP) {
-    bscMap[`HIP ${star.HIP}`] = star.N; // Example: "HIP 11767" -> "Polaris"
-  }
-});
-
-// 2. SIMBAD TAP REST API Query (ADQL format)
+// 1. SIMBAD TAP REST API Query (ADQL format)
 const SIMBAD_TAP_URL = "https://simbad.cds.unistra.fr/simbad/sim-tap/sync";
 
 // Query all Bayer designated stars and join their HIP number
@@ -118,7 +107,7 @@ async function generateEphemeris() {
   const simbadData = await response.json();
   const allStars = simbadData.data;
 
-  // 3. Grid the sky into 48 sectors (24h RA x North/South Dec)
+  // 2. Grid the sky into 48 sectors (24h RA x North/South Dec)
   const bins = {};
   allStars.forEach((star) => {
     const ra = star[1];
@@ -139,7 +128,7 @@ async function generateEphemeris() {
 
   const targetStars = [];
 
-  // 4. Find the single star with the LOWEST proper motion in each sector
+  // 3. Find the single star with the LOWEST proper motion in each sector
   Object.keys(bins).forEach((key) => {
     bins[key].sort((a, b) => {
       const pmA = Math.sqrt(a[3] * a[3] + a[4] * a[4]);
@@ -159,23 +148,13 @@ async function generateEphemeris() {
   const outputData = [];
 
   targetStars.forEach((star) => {
-    const rawName = star[0].trim();
     const hipId = star[6].trim();
-
-    // Cross-reference with your BSC.json for identical naming
-    const commonName = bscMap[hipId];
-    const formattedName = commonName
-      ? `${commonName} / ${hipId}`
-      : `${rawName.replace("* ", "")} / ${hipId}`;
 
     const raJ2000 = star[1];
     const decJ2000 = star[2];
 
     const pmRaDegPerYr = star[3] / 3600000 / Math.cos(degToRad(decJ2000));
     const pmDecDegPerYr = star[4] / 3600000;
-
-    const parallaxMas = star[5];
-    const distanceParsecs = 1000 / parallaxMas; // Convert Parallax to Parsecs
 
     years.forEach((year) => {
       const deltaYears = year - 2000.0;
@@ -191,11 +170,10 @@ async function generateEphemeris() {
       const { raDeg, decDeg } = cartesianToSpherical(vector);
 
       outputData.push({
-        name: formattedName,
+        name: hipId,
         epoch: year,
         RA: formatRA(raDeg),
         Dec: formatDec(decDeg),
-        P: distanceParsecs,
       });
     });
   });
