@@ -62,15 +62,15 @@ const Cobj = ({ name, children }) => {
         rotation-z={s.orbitTiltb * (Math.PI / 180)}
       >
         <group name="Orbit" ref={orbitRef}>
-        {orbitRadius ? (
-          <group rotation-x={-Math.PI / 2}>
-            {s.type === "deferent" ? (
-              <Deferent radius={orbitRadius} visible={visible} s={s} />
-            ) : (
-              <Orbit radius={orbitRadius} visible={visible} s={s} />
-            )}
-          </group>
-        ) : null}
+          {orbitRadius !== undefined && orbitRadius !== null ? (
+            <group rotation-x={-Math.PI / 2}>
+              {s.type === "deferent" ? (
+                <Deferent radius={orbitRadius} visible={visible} s={s} />
+              ) : (
+                <Orbit radius={orbitRadius} visible={visible} s={s} />
+              )}
+            </group>
+          ) : null}
           <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
             {s.axesHelper && visible ? <axesHelper args={[10]} /> : null}
             {s.type === "planet" ? (
