@@ -58,7 +58,8 @@ export default function Orbit({ radius, visible, s }) {
   // BUG FIX: Prevent NaN mathematical collapse for planets at center (radius 0)
   const safeRadius = radius === 0 ? 0.000001 : radius;
 
-  const { points, centerToEdgePoints } = useMemo(() => {
+  // Export the edge position so we can use it for the second red dot
+  const { points, centerToEdgePoints, edgePosition } = useMemo(() => {
     const pts = [];
     const stepSize = safeRadius > 50000 ? 0.2 : safeRadius > 10000 ? 0.5 : 1;
 
@@ -68,14 +69,18 @@ export default function Orbit({ radius, visible, s }) {
     }
 
     // Calculate center-to-edge pointer
-    const edgePosition = [
+    const edgePos = [
       Math.sin(Math.PI / 2) * safeRadius,
       Math.cos(Math.PI / 2) * safeRadius,
       0,
     ];
-    const centerEdge = [[0, 0, 0], edgePosition];
+    const centerEdge = [[0, 0, 0], edgePos];
 
-    return { points: pts, centerToEdgePoints: centerEdge };
+    return {
+      points: pts,
+      centerToEdgePoints: centerEdge,
+      edgePosition: edgePos,
+    };
   }, [safeRadius]);
 
   return (
@@ -116,7 +121,7 @@ export default function Orbit({ radius, visible, s }) {
           raycast={() => null}
         />
 
-        {/* 2. Conditionally render the center red dot and radius line */}
+        {/* 2. Conditionally render the center red dot, radius line, and edge red dot */}
         {editSettings && (
           <>
             <Line
@@ -125,7 +130,14 @@ export default function Orbit({ radius, visible, s }) {
               lineWidth={orbitsLineWidth}
               dashed={false}
             />
+            {/* Center dot */}
             <sprite material={spriteMaterial} scale={[0.002, 0.002, 0.002]} />
+            {/* Edge dot */}
+            <sprite
+              material={spriteMaterial}
+              position={edgePosition}
+              scale={[0.002, 0.002, 0.002]}
+            />
           </>
         )}
       </group>
