@@ -76,13 +76,13 @@
     "traceSettings": { "length": 5000, "step": 10, "stepFact": "sYear" }
   },
   {
-    "name": "Mercury def A",
+    "name": "Mercury deferent A",
     "color": "gray",
     "type": "deferent",
     "visible": false
   },
   {
-    "name": "Mercury def B",
+    "name": "Mercury deferent B",
     "color": "gray",
     "type": "deferent",
     "visible": false
