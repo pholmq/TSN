@@ -35,6 +35,7 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     (state) => state.planetCameraTarget
   );
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+  const editSettings = useStore((state) => state.editSettings); // <-- Add this
 
   const { texture, isLoading } = s.texture
     ? useTextureLoader(s.texture)
@@ -107,6 +108,7 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
             <mesh geometry={planetGeometry} scale={size}>
               <meshStandardMaterial
                 ref={materialRef}
+                visible={!editSettings}
                 color={
                   isLoading || !texture ? s.color : s.textureTint || "#ffffff"
                 }
