@@ -17,7 +17,6 @@ const EphemerisChecker = () => {
   const levaStore = useCreateStore();
   const fileInputRef = useRef(null);
 
-  // File Upload Handler
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -26,20 +25,17 @@ const EphemerisChecker = () => {
     reader.onload = (evt) => {
       const data = parseEphemerisText(evt.target.result);
       setParsedData(data);
-      // Reset input so the same file can be uploaded again if needed
       e.target.value = null;
     };
     reader.readAsText(file);
   };
 
-  // Build the schema ONCE per file upload to prevent Leva from crashing the DOM
   const resultFolders = useMemo(() => {
     const folders = {
       "Upload Ephemerides": button(() => fileInputRef.current?.click()),
       Status: {
         value: "Idle",
         editable: false,
-        // Dynamically hide the status text when idle without removing it from the schema
         render: (get) => get("Status") !== "Idle",
       },
     };
@@ -47,7 +43,6 @@ const EphemerisChecker = () => {
     if (parsedData) {
       Object.keys(parsedData).forEach((planet) => {
         folders[planet] = folder({
-          // Prefix keys globally, use labels for clean UI
           [`${planet}_ra`]: {
             label: "Max RA Error",
             value: "Pending...",
@@ -58,18 +53,27 @@ const EphemerisChecker = () => {
             value: "Pending...",
             editable: false,
           },
+          [`${planet}_dist`]: {
+            label: "Max Dist Error",
+            value: "Pending...",
+            editable: false,
+          },
+          [`${planet}_elong`]: {
+            label: "Max Elong Error",
+            value: "Pending...",
+            editable: false,
+          },
         });
       });
     }
 
     return folders;
-  }, [parsedData]); // ONLY rebuild when the loaded planets change!
+  }, [parsedData]);
 
   const [, set] = useControls(() => resultFolders, { store: levaStore }, [
     resultFolders,
   ]);
 
-  // Dynamically update values without rebuilding the UI
   useEffect(() => {
     if (!parsedData) return;
 
@@ -78,23 +82,35 @@ const EphemerisChecker = () => {
     if (isChecking) {
       updates.Status = `Checking... ${progress}%`;
     } else {
-      updates.Status = "Idle"; // Hides it via the render function above
+      updates.Status = "Idle";
     }
 
     Object.keys(parsedData).forEach((planet) => {
       const res = results && results[planet];
+      const hasDist = parsedData[planet][0]?.distAU !== null;
+      const hasElong = parsedData[planet][0]?.elongDeg !== null;
+
       updates[`${planet}_ra`] = res
         ? `${res.maxRaDev.toFixed(4)}°`
         : "Pending...";
       updates[`${planet}_dec`] = res
         ? `${res.maxDecDev.toFixed(4)}°`
         : "Pending...";
+      updates[`${planet}_dist`] = res
+        ? hasDist
+          ? `${res.maxDistDev.toFixed(6)} AU`
+          : "N/A"
+        : "Pending...";
+      updates[`${planet}_elong`] = res
+        ? hasElong
+          ? `${res.maxElongDev.toFixed(4)}°`
+          : "N/A"
+        : "Pending...";
     });
 
-    set(updates); // Push updates cleanly to Leva
+    set(updates);
   }, [isChecking, progress, results, parsedData, set]);
 
-  // Inject the close "X" identical to Ephemerides / EditSettings
   useEffect(() => {
     if (!showChecker) return;
 
