@@ -1,11 +1,12 @@
 import { useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
-import { useStore, usePlotStore, useSettingsStore } from "../store";
+import { usePlotStore, useSettingsStore } from "../store";
 
+// PERFORMANCE FIX: Define geometry globally outside component
 const pobjSphere = new THREE.SphereGeometry(1, 32, 32);
 
 const Pobj = ({ name, children }) => {
-  // Back to normal: Watch the live settings store
+  // PERFORMANCE FIX: Targeted selection to avoid massive re-renders on any setting change
   const s = useSettingsStore(
     useCallback((state) => state.settings.find((p) => p.name === name), [name])
   );
@@ -13,9 +14,8 @@ const Pobj = ({ name, children }) => {
   const addPlotObj = usePlotStore((state) => state.addPlotObj);
   const removePlotObj = usePlotStore((state) => state.removePlotObj);
 
-  // Notice: We don't pull actualPlanetSizes here anymore.
-  // The backend plot models MUST ALWAYS use mathematically exact distances.
-  // If we spoof the Moon's distance for visual scale, the Ephemeris check will be wildly incorrect!
+  // NOTICE: actualPlanetSizes is completely removed.
+  // The invisible plot models must ALWAYS use strict mathematical distances!
 
   const containerRef = useRef();
   const pivotRef = useRef();
@@ -25,6 +25,7 @@ const Pobj = ({ name, children }) => {
 
   if (!s) return null;
 
+  // Use exact coordinates directly from the settings store
   const orbitRadius = s.orbitRadius;
   const orbitCentera = s.orbitCentera;
   const orbitCenterb = s.orbitCenterb;
@@ -61,6 +62,7 @@ const Pobj = ({ name, children }) => {
       <group name="Orbit" ref={orbitRef}>
         <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
           <mesh scale={1}>
+            {/* THE FIX: Removed s.type check so cSphereRef always mounts for RA/Dec math */}
             <group
               ref={cSphereRef}
               rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}

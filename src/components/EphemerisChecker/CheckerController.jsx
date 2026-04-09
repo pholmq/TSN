@@ -1,20 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { usePlotStore, useSettingsStore } from "../../store";
-import { useCheckerStore } from "./checkerStore";
+import {
+  useCheckerStore,
+  raToDeg,
+  decToDeg,
+  parseDistanceToAU,
+} from "./checkerStore";
 import { dateTimeToPos } from "../../utils/time-date-functions";
 import {
   movePlotModel,
   getPlotModelRaDecDistance,
 } from "../../utils/plotModelFunctions";
-import { raToDeg, decToDeg } from "./checkerStore";
 
 const CheckerController = () => {
-  const { invalidate } = useThree();
+  const { invalidate, scene } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
   const settings = useSettingsStore((s) => s.settings);
 
   const {
+    showChecker,
     parsedData,
     triggerCheck,
     setTriggerCheck,
@@ -34,27 +39,30 @@ const CheckerController = () => {
     processedRows: 0,
   });
 
-  // 1. Debounced Trigger: Watch settings for live edits
+  // 1. Debounced Trigger: Watch settings, but ONLY if the menu is open
   useEffect(() => {
+    if (!showChecker) {
+      setChecking(false);
+      setIsChecking(false);
+      return;
+    }
+
     if (parsedData) {
-      // Immediately suspend any active checking to prevent lag while dragging sliders
       setChecking(false);
       setIsChecking(false);
 
       const timer = setTimeout(() => {
         setTriggerCheck(true);
-      }, 300); // Wait 300ms after you stop dragging to start the calculation
+      }, 300);
       return () => clearTimeout(timer);
     }
-  }, [settings, parsedData, setTriggerCheck, setIsChecking]);
+  }, [settings, parsedData, setTriggerCheck, setIsChecking, showChecker]);
 
   // 2. Setup checking job
   useEffect(() => {
-    if (triggerCheck && parsedData) {
+    if (triggerCheck && parsedData && showChecker) {
       setIsChecking(true);
       setProgress(0);
-      // Notice: We do NOT setResults(null) here. This keeps the old numbers visible
-      // in the Leva menu while the new ones calculate, preventing annoying UI flickering.
 
       const planets = Object.keys(parsedData);
       let totalRows = 0;
@@ -62,7 +70,12 @@ const CheckerController = () => {
 
       planets.forEach((p) => {
         totalRows += parsedData[p].length;
-        initialDeviations[p] = { maxRaDev: 0, maxDecDev: 0 };
+        initialDeviations[p] = {
+          maxRaDev: 0,
+          maxDecDev: 0,
+          maxDistDev: 0,
+          maxElongDev: 0,
+        };
       });
 
       jobRef.current = {
@@ -77,16 +90,23 @@ const CheckerController = () => {
       setChecking(true);
       setTriggerCheck(false);
     }
-  }, [triggerCheck, parsedData, setIsChecking, setProgress, setTriggerCheck]);
+  }, [
+    triggerCheck,
+    parsedData,
+    setIsChecking,
+    setProgress,
+    setTriggerCheck,
+    showChecker,
+  ]);
 
   // 3. Process loop
   useFrame(() => {
-    if (!checking || !parsedData) return;
+    if (!checking || !parsedData || !showChecker) return;
 
-    invalidate(); // Keep canvas rendering during heavy loop
+    invalidate();
 
     const job = jobRef.current;
-    const BATCH_SIZE = 50; // Calculate 50 dates per frame
+    const BATCH_SIZE = 50;
     let batchCount = 0;
 
     while (
@@ -101,27 +121,39 @@ const CheckerController = () => {
         const pos = dateTimeToPos(row.date, row.time);
 
         movePlotModel(plotObjects, pos);
-        const data = getPlotModelRaDecDistance(planetName, plotObjects);
+        // Ensure scene is passed correctly to match your getPlotModelRaDecDistance signature if needed
+        const data = getPlotModelRaDecDistance(planetName, plotObjects, scene);
 
-        // SAFEGUARD: If you just changed a setting, React might be mid-remount for this planet.
-        // If data is null, we exit the useFrame early WITHOUT incrementing the row index.
-        // It will safely retry this exact date on the next frame.
         if (!data) return;
 
         const modelRaDeg = raToDeg(data.ra);
         const modelDecDeg = decToDeg(data.dec);
+        const modelDistAU = parseDistanceToAU(data.dist);
+        const modelElongDeg = parseFloat(data.elongation) || 0;
 
-        // Compute shortest distance on circle for RA (0-360)
+        // 1. RA
         let raDiff = Math.abs(row.raDeg - modelRaDeg);
         if (raDiff > 180) raDiff = 360 - raDiff;
-
-        const decDiff = Math.abs(row.decDeg - modelDecDeg);
-
-        if (raDiff > job.deviations[planetName].maxRaDev) {
+        if (raDiff > job.deviations[planetName].maxRaDev)
           job.deviations[planetName].maxRaDev = raDiff;
-        }
-        if (decDiff > job.deviations[planetName].maxDecDev) {
+
+        // 2. Dec
+        const decDiff = Math.abs(row.decDeg - modelDecDeg);
+        if (decDiff > job.deviations[planetName].maxDecDev)
           job.deviations[planetName].maxDecDev = decDiff;
+
+        // 3. Distance
+        if (row.distAU !== null) {
+          const distDiff = Math.abs(row.distAU - modelDistAU);
+          if (distDiff > job.deviations[planetName].maxDistDev)
+            job.deviations[planetName].maxDistDev = distDiff;
+        }
+
+        // 4. Elongation
+        if (row.elongDeg !== null) {
+          const elongDiff = Math.abs(row.elongDeg - modelElongDeg);
+          if (elongDiff > job.deviations[planetName].maxElongDev)
+            job.deviations[planetName].maxElongDev = elongDiff;
         }
 
         job.currentRowIdx++;
@@ -138,7 +170,7 @@ const CheckerController = () => {
     );
 
     if (job.currentPlanetIdx >= job.planets.length) {
-      setResults({ ...job.deviations }); // Push fresh numbers to Leva
+      setResults({ ...job.deviations });
       setChecking(false);
       setIsChecking(false);
     }

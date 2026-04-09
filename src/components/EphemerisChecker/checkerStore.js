@@ -20,7 +20,6 @@ export const useCheckerStore = create((set) => ({
   setResults: (res) => set({ results: res }),
 }));
 
-// Utility functions to convert string RA/Dec back to degrees for comparison
 export function raToDeg(raStr) {
   const match = raStr.match(/(\d+)h\s*(\d+)m\s*([\d.]+)s/);
   if (!match) return 0;
@@ -42,13 +41,22 @@ export function decToDeg(decStr) {
   return sign * (Math.abs(d) + m / 60 + s / 3600);
 }
 
+// Convert mixed units (km, ly, AU) back to pure AU for distance comparison
+export function parseDistanceToAU(distStr) {
+  if (!distStr || distStr.trim() === "-" || distStr.trim() === "") return 0;
+  const val = parseFloat(distStr);
+  if (isNaN(val)) return 0;
+  if (distStr.includes("km")) return val / 149597871;
+  if (distStr.includes("ly")) return val / 0.0000158125;
+  return val; // Default AU
+}
+
 export function parseEphemerisText(text) {
   const lines = text.split("\n");
   const data = {};
   let currentPlanet = null;
 
   for (let line of lines) {
-    // Strip \r in case of windows line endings
     const cleanLine = line.trim();
 
     if (cleanLine.startsWith("PLANET:")) {
@@ -71,6 +79,9 @@ export function parseEphemerisText(text) {
           decStr: parts[3],
           raDeg: raToDeg(parts[2]),
           decDeg: decToDeg(parts[3]),
+          // Gracefully handle older files that might only have RA/Dec
+          distAU: parts.length > 4 ? parseDistanceToAU(parts[4]) : null,
+          elongDeg: parts.length > 5 ? parseFloat(parts[5]) || 0 : null,
         });
       }
     }
