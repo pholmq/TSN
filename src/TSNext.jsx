@@ -17,11 +17,11 @@ import Ephemerides from "./components/Ephemerides/Ephemerides";
 import EphController from "./components/Ephemerides/EphController";
 import EphemeridesResult from "./components/Ephemerides/EphemeridesResult";
 import EphemeridesProgress from "./components/Ephemerides/EphemeridesProgress";
+import EphemerisChecker from "./components/EphemerisChecker/EphemerisChecker";
+import CheckerController from "./components/EphemerisChecker/CheckerController";
 import Plot from "./components/Plot/Plot";
-// import PlotController from "./components/Plot/PlotController";
 import Stars from "./components/Stars/Stars";
 import LabeledStars from "./components/Stars/LabeledStars";
-// import BSCStars from "./components/Stars/BSCStars";
 import BSCStarsH from "./components/Stars/BSCStarsHandler";
 import ReferenceStars from "./components/Stars/ReferenceStars";
 import Zodiac from "./components/Helpers/Zodiac";
@@ -51,10 +51,8 @@ const isTouchDevice = () => {
   );
 };
 
-// Component that signals when Suspense is complete
 const SuspenseCompleteSignal = ({ onComplete }) => {
   useEffect(() => {
-    // Small delay to ensure all components are fully mounted
     const timer = setTimeout(() => {
       onComplete();
     }, 100);
@@ -67,9 +65,7 @@ const SuspenseCompleteSignal = ({ onComplete }) => {
 const TSNext = () => {
   const [canvasVisible, setCanvasVisible] = useState(false);
 
-  // Get runIntro state from store
   const runIntro = useStore((s) => s.runIntro);
-
   const toggleShowMenu = useStore((s) => s.toggleShowMenu);
   const toggleShowLevaMenu = useStore((s) => s.toggleShowLevaMenu);
   const BSCStarsOn = useStore((s) => s.BSCStars);
@@ -92,16 +88,13 @@ const TSNext = () => {
     setCanvasVisible(true);
   };
 
-  // Calculate canvas opacity and transition based on runIntro state
   const getCanvasStyle = () => {
     if (!runIntro) {
-      // If intro is interrupted, immediately show canvas with no transition
       return {
         opacity: 1,
         transition: "none",
       };
     }
-    // Otherwise, use the canvasVisible state for the fade-in effect
     return {
       opacity: canvasVisible ? 1 : 0,
       transition: "opacity 5s ease-in-out",
@@ -116,6 +109,7 @@ const TSNext = () => {
         <Ephemerides />
         <EphemeridesResult />
         <EphemeridesProgress />
+        <EphemerisChecker />
         <Plot />
         <EditSettings />
         <PlanetCameraUI />
@@ -129,10 +123,10 @@ const TSNext = () => {
         id="canvas"
         frameloop="always"
         fps={60}
-        dpr={[1, 1.5]} // PERFORMANCE FIX: Cap DPR to 1.5 to save GPU on retina/mobile screens
+        dpr={[1, 1.5]}
         gl={{
           logarithmicDepthBuffer: true,
-          preserveDrawingBuffer: true, // Required for pixel extraction
+          preserveDrawingBuffer: true,
         }}
         style={getCanvasStyle()}
         raycaster={{
@@ -142,7 +136,6 @@ const TSNext = () => {
         <RecorderController />
         <IntroQuote />
 
-        {/* Other components wrapped in Suspense */}
         <Suspense fallback={null}>
           <SuspenseCompleteSignal onComplete={handleSuspenseComplete} />
           <OrbitCamera />
@@ -155,7 +148,7 @@ const TSNext = () => {
           <PosController />
           <TraceController />
           <EphController />
-          {/* <PlotController /> */}
+          <CheckerController />
           <PlanetsPositionsMenu />
           <LightEffectsMenu />
           <SolarSystem />
