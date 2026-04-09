@@ -215,6 +215,16 @@ body {
   opacity: 0.8;
 }
 
+/* --- NEW CHECKER BLOCK --- */
+.checker-div > div {
+  position: fixed;
+  top: 290px !important; /* Stacks below Recorder */
+  left: 10px !important;
+  right: auto !important;
+  width: 300px;
+  opacity: 0.8;
+}
+
 .settings-div > div {
   position: fixed;
   top: 60px !important;

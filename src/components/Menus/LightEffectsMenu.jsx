@@ -13,6 +13,7 @@ import {
 import { useControls, folder } from "leva";
 import { useStore } from "../../store";
 import { usePlanetCameraStore } from "../PlanetCamera/planetCameraStore";
+import { useCheckerStore } from "../EphemerisChecker/checkerStore";
 
 const LightEffectsMenu = () => {
   const zoomLevel = useStore((state) => state.zoomLevel);
@@ -25,6 +26,9 @@ const LightEffectsMenu = () => {
 
   const editSettings = useStore((s) => s.editSettings);
   const setEditSettings = useStore((s) => s.setEditSettings);
+
+  const showChecker = useCheckerStore((s) => s.showChecker);
+  const setShowChecker = useCheckerStore((s) => s.setShowChecker);
 
   // Separate controls and the set function so we can update Leva externally
   const [controls, setControls] = useControls("Settings", () => ({
@@ -135,6 +139,13 @@ const LightEffectsMenu = () => {
           value: refStars,
           onChange: setRefStars,
         },
+        "Ephemeris Checker": {
+          value: showChecker,
+          onChange: (v, path, context) => {
+            if (context?.initial) return;
+            setShowChecker(v);
+          },
+        },
         "Edit settings": {
           value: editSettings,
           onChange: (v, path, context) => {
@@ -151,10 +162,13 @@ const LightEffectsMenu = () => {
   // Keep the destructured variables working for the return block
   const { ambientLight, glow, glowIntensity, antialiasing, stats } = controls;
 
-  // FIX: Sync Leva visually if "editSettings" is turned off externally (like clicking the "✕" button)
+  // FIX: Sync Leva visually if components are turned off externally (like clicking the "✕" button)
   useEffect(() => {
-    setControls({ "Edit settings": editSettings });
-  }, [editSettings, setControls]);
+    setControls({
+      "Edit settings": editSettings,
+      "Ephemeris Checker": showChecker,
+    });
+  }, [editSettings, showChecker, setControls]);
 
   return (
     <>
