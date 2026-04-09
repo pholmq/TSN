@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useControls, useCreateStore, Leva, folder, button } from "leva";
 import { useStore, useSettingsStore, usePosStore } from "../../store";
@@ -172,6 +172,39 @@ const EditSettingsPanel = () => {
   const setShowPlanets = useStore((s) => s.setShowPlanets);
   const positions = usePosStore((s) => s.positions);
   const { settings, updateSetting, resetSettings } = useSettingsStore();
+
+  // FIX: Ref to remember what state the deferents were in BEFORE the menu opened
+  const initialDeferentStates = useRef({});
+
+  useEffect(() => {
+    // 1. Capture original visibility of all deferents on mount
+    settings.forEach((s) => {
+      if (
+        s.name.includes("deferent") &&
+        initialDeferentStates.current[s.name] === undefined
+      ) {
+        initialDeferentStates.current[s.name] = s.visible;
+      }
+    });
+
+    // 2. Restore them back to that state when the menu unmounts/closes
+    return () => {
+      const currentStoreSettings = useSettingsStore.getState().settings;
+      currentStoreSettings.forEach((s) => {
+        if (s.name.includes("deferent")) {
+          const originalVisibility = initialDeferentStates.current[s.name];
+          if (
+            originalVisibility !== undefined &&
+            s.visible !== originalVisibility
+          ) {
+            useSettingsStore
+              .getState()
+              .updateSetting({ ...s, visible: originalVisibility });
+          }
+        }
+      });
+    };
+  }, []);
 
   const settingsFolders = useMemo(() => {
     const groups = {};
