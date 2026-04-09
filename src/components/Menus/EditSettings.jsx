@@ -170,11 +170,68 @@ const getControls = (s, updateSetting) => ({
 const EditSettingsPanel = () => {
   const showPlanets = useStore((s) => s.showPlanets);
   const setShowPlanets = useStore((s) => s.setShowPlanets);
+  const setEditSettings = useStore((s) => s.setEditSettings); // NEW
   const positions = usePosStore((s) => s.positions);
   const { settings, updateSetting, resetSettings } = useSettingsStore();
 
-  // FIX: Ref to remember what state the deferents were in BEFORE the menu opened
   const initialDeferentStates = useRef({});
+
+  // Highly targeted DOM injection for the X button
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Find the deepest div containing ONLY the exact title text
+      const textDiv = Array.from(document.querySelectorAll("div")).find(
+        (el) =>
+          el.textContent.trim() === "Edit Settings" && el.children.length === 0
+      );
+
+      if (textDiv) {
+        // Leva's title bar is the immediate flex container wrapping this text
+        const titleBar = textDiv.parentElement;
+
+        if (titleBar && !titleBar.querySelector(".leva-close-x")) {
+          // Allow the title bar to anchor our absolutely positioned button
+          titleBar.style.position = "relative";
+
+          const closeBtn = document.createElement("div");
+          closeBtn.className = "leva-close-x";
+          closeBtn.innerHTML = "✕";
+
+          // Style it seamlessly into the top right corner
+          Object.assign(closeBtn.style, {
+            position: "absolute",
+            right: "12px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer",
+            color: "#8C92A4",
+            fontSize: "14px",
+            fontWeight: "bold",
+            padding: "4px",
+            zIndex: "9999",
+          });
+
+          // Native hover colors
+          closeBtn.onmouseenter = () => (closeBtn.style.color = "#FFFFFF");
+          closeBtn.onmouseleave = () => (closeBtn.style.color = "#8C92A4");
+
+          // CRITICAL: Stop the click from passing through and triggering Leva's drag feature
+          closeBtn.onmousedown = (e) => e.stopPropagation();
+
+          // Close action
+          closeBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setEditSettings(false);
+          };
+
+          titleBar.appendChild(closeBtn);
+        }
+      }
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [setEditSettings]);
 
   useEffect(() => {
     // 1. Capture original visibility of all deferents on mount
@@ -187,7 +244,7 @@ const EditSettingsPanel = () => {
       }
     });
 
-    // 2. Restore them back to that state when the menu unmounts/closes
+    // 2. Restore them back when menu closes - UNLESS the user explicitly changed them
     return () => {
       const currentStoreSettings = useSettingsStore.getState().settings;
       currentStoreSettings.forEach((s) => {
@@ -211,7 +268,6 @@ const EditSettingsPanel = () => {
     const showHideMenu = {};
     const settingsMenu = {};
 
-    // 1. Group settings into main planets and their deferents
     settings.forEach((s) => {
       let parent = s.name;
       if (s.name.includes("deferent")) {
@@ -229,16 +285,21 @@ const EditSettingsPanel = () => {
       }
     });
 
-    // 2. Build the structured objects for the two main menus
     Object.keys(groups).forEach((parentName) => {
       const group = groups[parentName];
 
-      // A. Populate "Show/Hide settings" section
       showHideMenu[`${parentName}visible`] = {
         label: parentName,
         value: group.main ? group.main.visible : true,
         editable: true,
-        onChange: (value) => {
+        onChange: (value, path, context) => {
+          // Detect if this is Leva's automatic sync, or a real click from the user
+          const isInitialSync = context
+            ? context.initial
+            : group.main
+            ? group.main.visible === value
+            : group.deferents[0]?.visible === value;
+
           if (group.main) {
             group.main.visible = value;
             updateSetting({ ...group.main, visible: value });
@@ -246,11 +307,16 @@ const EditSettingsPanel = () => {
           group.deferents.forEach((def) => {
             def.visible = value;
             updateSetting({ ...def, visible: value });
+
+            // FIX: If the user explicitly clicked the toggle, save it as the new "initial state"
+            // so the cleanup effect doesn't erase their action!
+            if (!isInitialSync) {
+              initialDeferentStates.current[def.name] = value;
+            }
           });
         },
       };
 
-      // B. Populate "Settings" section
       const planetSubmenus = {};
 
       if (group.main) {
@@ -349,7 +415,6 @@ const EditSettingsPanel = () => {
   );
 };
 
-// The wrapper ensures the hooks inside EditSettingsPanel are completely destroyed when hidden
 const EditSettings = () => {
   const editSettings = useStore((s) => s.editSettings);
 
