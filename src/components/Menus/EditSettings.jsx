@@ -7,17 +7,7 @@ import {
   loadSettingsFromFile,
 } from "../../utils/saveAndLoadSettings";
 
-// Helper function to build the Leva controls for a single setting
 const getControls = (s, updateSetting) => ({
-  [`${s.name}visible`]: {
-    label: "Show / Hide",
-    value: s.visible,
-    editable: true,
-    onChange: (value) => {
-      s.visible = value;
-      updateSetting({ ...s, visible: value });
-    },
-  },
   [`${s.name}size`]: {
     label: "size",
     value: "\u200B" + s.size,
@@ -182,13 +172,13 @@ const EditSettings = () => {
   const { settings, updateSetting, resetSettings } = useSettingsStore();
 
   const settingsFolders = useMemo(() => {
-    const folders = {};
     const groups = {};
+    const showHideMenu = {};
+    const settingsMenu = {};
 
     // 1. Group settings into main planets and their deferents
     settings.forEach((s) => {
       let parent = s.name;
-      // If it's a deferent, extract the parent name (e.g., "Moon deferent A" -> "Moon")
       if (s.name.includes("deferent")) {
         parent = s.name.split(" deferent")[0];
       }
@@ -204,47 +194,64 @@ const EditSettings = () => {
       }
     });
 
-    // 2. Build the nested folder structure
+    // 2. Build the structured objects for the two main menus
     Object.keys(groups).forEach((parentName) => {
       const group = groups[parentName];
-      const folderContent = {};
 
-      // Insert main planet controls
+      // A. Populate "Show/Hide planets" section
+      showHideMenu[`${parentName}visible`] = {
+        label: parentName,
+        value: group.main ? group.main.visible : true,
+        editable: true,
+        onChange: (value) => {
+          if (group.main) {
+            group.main.visible = value;
+            updateSetting({ ...group.main, visible: value });
+          }
+          group.deferents.forEach((def) => {
+            def.visible = value;
+            updateSetting({ ...def, visible: value });
+          });
+        },
+      };
+
+      // B. Populate "Settings" section
+      const planetSubmenus = {};
+
       if (group.main) {
-        Object.assign(folderContent, getControls(group.main, updateSetting));
+        planetSubmenus["Main Orbit"] = folder(
+          getControls(group.main, updateSetting)
+        );
       }
 
-      // Insert deferent sub-folders
       group.deferents.forEach((def) => {
-        folderContent[def.name] = folder(getControls(def, updateSetting), {
-          collapsed: false, // Expand deferents by default
-        });
+        planetSubmenus[def.name] = folder(getControls(def, updateSetting));
       });
 
-      // Wrap the whole group in the parent planet's folder
-      folders[parentName] = folder(folderContent, { collapsed: true });
+      settingsMenu[parentName] = folder(planetSubmenus, { collapsed: true });
     });
 
     return {
       "Load settings": button(() => loadSettingsFromFile()),
       "Save settings": button(() => saveSettingsAsJson(settings)),
       "Reset settings": button(() => resetSettings()),
-      ...folders,
+      "Show / Hide planets": folder(showHideMenu, { collapsed: false }),
+      Settings: folder(settingsMenu, { collapsed: false }),
     };
   }, [settings, updateSetting]);
 
-  // Create a custom Leva store
   const levaSettingsStore = useCreateStore();
 
-  // Set up Leva controls (only runs once)
   const [, set] = useControls(() => settingsFolders, {
     store: levaSettingsStore,
   });
 
-  // Synchronize Leva controls with store changes
   useEffect(() => {
     const updatedValues = {};
     settings.forEach((s) => {
+      if (!s.name.includes("deferent")) {
+        updatedValues[`${s.name}visible`] = s.visible;
+      }
       updatedValues[`${s.name}size`] = "\u200B" + s.size;
       if (s.actualSize !== undefined) {
         updatedValues[`${s.name}actualSize`] = "\u200B" + s.actualSize;
@@ -282,7 +289,7 @@ const EditSettings = () => {
     >
       <Leva
         store={levaSettingsStore}
-        titleBar={{ drag: true, title: "Settings", filter: false }}
+        titleBar={{ drag: true, title: "Edit Settings", filter: false }}
         fill={false}
         hideCopyButton
         theme={{
