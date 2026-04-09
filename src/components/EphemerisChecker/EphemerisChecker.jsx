@@ -10,6 +10,7 @@ const EphemerisChecker = () => {
     isChecking,
     progress,
     results,
+    parsedData,
     setParsedData,
   } = useCheckerStore();
 
@@ -31,25 +32,30 @@ const EphemerisChecker = () => {
     reader.readAsText(file);
   };
 
-  // Build dynamic folders based on results
+  // Build the schema ONCE per file upload to prevent Leva from crashing the DOM
   const resultFolders = useMemo(() => {
     const folders = {
       "Upload Ephemerides": button(() => fileInputRef.current?.click()),
       Status: {
-        value: isChecking ? `Checking... ${progress}%` : "Idle",
+        value: "Idle",
         editable: false,
+        // Dynamically hide the status text when idle without removing it from the schema
+        render: (get) => get("Status") !== "Idle",
       },
     };
 
-    if (results) {
-      Object.keys(results).forEach((planet) => {
+    if (parsedData) {
+      Object.keys(parsedData).forEach((planet) => {
         folders[planet] = folder({
-          "Max RA Error": {
-            value: `${results[planet].maxRaDev.toFixed(4)}°`,
+          // Prefix keys globally, use labels for clean UI
+          [`${planet}_ra`]: {
+            label: "Max RA Error",
+            value: "Pending...",
             editable: false,
           },
-          "Max Dec Error": {
-            value: `${results[planet].maxDecDev.toFixed(4)}°`,
+          [`${planet}_dec`]: {
+            label: "Max Dec Error",
+            value: "Pending...",
             editable: false,
           },
         });
@@ -57,9 +63,36 @@ const EphemerisChecker = () => {
     }
 
     return folders;
-  }, [isChecking, progress, results]);
+  }, [parsedData]); // ONLY rebuild when the loaded planets change!
 
-  useControls(() => resultFolders, { store: levaStore }, [resultFolders]);
+  const [, set] = useControls(() => resultFolders, { store: levaStore }, [
+    resultFolders,
+  ]);
+
+  // Dynamically update values without rebuilding the UI
+  useEffect(() => {
+    if (!parsedData) return;
+
+    const updates = {};
+
+    if (isChecking) {
+      updates.Status = `Checking... ${progress}%`;
+    } else {
+      updates.Status = "Idle"; // Hides it via the render function above
+    }
+
+    Object.keys(parsedData).forEach((planet) => {
+      const res = results && results[planet];
+      updates[`${planet}_ra`] = res
+        ? `${res.maxRaDev.toFixed(4)}°`
+        : "Pending...";
+      updates[`${planet}_dec`] = res
+        ? `${res.maxDecDev.toFixed(4)}°`
+        : "Pending...";
+    });
+
+    set(updates); // Push updates cleanly to Leva
+  }, [isChecking, progress, results, parsedData, set]);
 
   // Inject the close "X" identical to Ephemerides / EditSettings
   useEffect(() => {
@@ -111,7 +144,6 @@ const EphemerisChecker = () => {
 
   return createPortal(
     <>
-      {/* Hidden file input strictly for parsing standard system dialogs */}
       <input
         type="file"
         accept=".txt"
@@ -123,7 +155,7 @@ const EphemerisChecker = () => {
         className="checker-div"
         style={{
           position: "fixed",
-          top: "80px", // Fallback if CSS fails to load
+          top: "80px",
           right: "10px",
           zIndex: 2147483647,
         }}

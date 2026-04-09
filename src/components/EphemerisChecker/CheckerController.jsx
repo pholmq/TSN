@@ -34,17 +34,27 @@ const CheckerController = () => {
     processedRows: 0,
   });
 
-  // Re-trigger check automatically if settings change while data is loaded
+  // 1. Debounced Trigger: Watch settings for live edits
   useEffect(() => {
     if (parsedData) {
-      setTriggerCheck(true);
-    }
-  }, [settings, parsedData, setTriggerCheck]);
+      // Immediately suspend any active checking to prevent lag while dragging sliders
+      setChecking(false);
+      setIsChecking(false);
 
+      const timer = setTimeout(() => {
+        setTriggerCheck(true);
+      }, 300); // Wait 300ms after you stop dragging to start the calculation
+      return () => clearTimeout(timer);
+    }
+  }, [settings, parsedData, setTriggerCheck, setIsChecking]);
+
+  // 2. Setup checking job
   useEffect(() => {
     if (triggerCheck && parsedData) {
       setIsChecking(true);
       setProgress(0);
+      // Notice: We do NOT setResults(null) here. This keeps the old numbers visible
+      // in the Leva menu while the new ones calculate, preventing annoying UI flickering.
 
       const planets = Object.keys(parsedData);
       let totalRows = 0;
@@ -69,14 +79,14 @@ const CheckerController = () => {
     }
   }, [triggerCheck, parsedData, setIsChecking, setProgress, setTriggerCheck]);
 
+  // 3. Process loop
   useFrame(() => {
-    if (!checking) return;
+    if (!checking || !parsedData) return;
 
-    // Force render while processing
-    invalidate();
+    invalidate(); // Keep canvas rendering during heavy loop
 
     const job = jobRef.current;
-    const BATCH_SIZE = 30; // Performant chunk size
+    const BATCH_SIZE = 50; // Calculate 50 dates per frame
     let batchCount = 0;
 
     while (
@@ -90,33 +100,34 @@ const CheckerController = () => {
         const row = rows[job.currentRowIdx];
         const pos = dateTimeToPos(row.date, row.time);
 
-        // Move model and measure
         movePlotModel(plotObjects, pos);
         const data = getPlotModelRaDecDistance(planetName, plotObjects);
 
-        if (data) {
-          const modelRaDeg = raToDeg(data.ra);
-          const modelDecDeg = decToDeg(data.dec);
+        // SAFEGUARD: If you just changed a setting, React might be mid-remount for this planet.
+        // If data is null, we exit the useFrame early WITHOUT incrementing the row index.
+        // It will safely retry this exact date on the next frame.
+        if (!data) return;
 
-          // Compute shortest distance on circle for RA (0-360)
-          let raDiff = Math.abs(row.raDeg - modelRaDeg);
-          if (raDiff > 180) raDiff = 360 - raDiff;
+        const modelRaDeg = raToDeg(data.ra);
+        const modelDecDeg = decToDeg(data.dec);
 
-          const decDiff = Math.abs(row.decDeg - modelDecDeg);
+        // Compute shortest distance on circle for RA (0-360)
+        let raDiff = Math.abs(row.raDeg - modelRaDeg);
+        if (raDiff > 180) raDiff = 360 - raDiff;
 
-          if (raDiff > job.deviations[planetName].maxRaDev) {
-            job.deviations[planetName].maxRaDev = raDiff;
-          }
-          if (decDiff > job.deviations[planetName].maxDecDev) {
-            job.deviations[planetName].maxDecDev = decDiff;
-          }
+        const decDiff = Math.abs(row.decDeg - modelDecDeg);
+
+        if (raDiff > job.deviations[planetName].maxRaDev) {
+          job.deviations[planetName].maxRaDev = raDiff;
+        }
+        if (decDiff > job.deviations[planetName].maxDecDev) {
+          job.deviations[planetName].maxDecDev = decDiff;
         }
 
         job.currentRowIdx++;
         job.processedRows++;
         batchCount++;
       } else {
-        // Move to next planet
         job.currentPlanetIdx++;
         job.currentRowIdx = 0;
       }
@@ -127,7 +138,7 @@ const CheckerController = () => {
     );
 
     if (job.currentPlanetIdx >= job.planets.length) {
-      setResults(job.deviations);
+      setResults({ ...job.deviations }); // Push fresh numbers to Leva
       setChecking(false);
       setIsChecking(false);
     }

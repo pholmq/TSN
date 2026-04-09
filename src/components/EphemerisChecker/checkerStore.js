@@ -48,14 +48,21 @@ export function parseEphemerisText(text) {
   let currentPlanet = null;
 
   for (let line of lines) {
-    if (line.startsWith("PLANET:")) {
-      currentPlanet = line.replace("PLANET:", "").trim();
+    // Strip \r in case of windows line endings
+    const cleanLine = line.trim();
+
+    if (cleanLine.startsWith("PLANET:")) {
+      currentPlanet = cleanLine.replace("PLANET:", "").trim();
       currentPlanet =
         currentPlanet.charAt(0).toUpperCase() +
         currentPlanet.slice(1).toLowerCase();
       data[currentPlanet] = [];
-    } else if (currentPlanet && line.includes("|") && !line.includes("Date")) {
-      const parts = line.split("|").map((s) => s.trim());
+    } else if (
+      currentPlanet &&
+      cleanLine.includes("|") &&
+      !cleanLine.includes("Date")
+    ) {
+      const parts = cleanLine.split("|").map((s) => s.trim());
       if (parts.length >= 4) {
         data[currentPlanet].push({
           date: parts[0],

@@ -2,19 +2,20 @@ import { useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
 import { useStore, usePlotStore, useSettingsStore } from "../store";
 
-// PERFORMANCE FIX: Define geometry globally outside component
 const pobjSphere = new THREE.SphereGeometry(1, 32, 32);
 
 const Pobj = ({ name, children }) => {
-  // PERFORMANCE FIX: Targeted selection to avoid massive re-renders on any setting change
+  // Back to normal: Watch the live settings store
   const s = useSettingsStore(
     useCallback((state) => state.settings.find((p) => p.name === name), [name])
   );
 
   const addPlotObj = usePlotStore((state) => state.addPlotObj);
-  // Ensure you add a removePlotObj function to your usePlotStore!
   const removePlotObj = usePlotStore((state) => state.removePlotObj);
-  const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
+
+  // Notice: We don't pull actualPlanetSizes here anymore.
+  // The backend plot models MUST ALWAYS use mathematically exact distances.
+  // If we spoof the Moon's distance for visual scale, the Ephemeris check will be wildly incorrect!
 
   const containerRef = useRef();
   const pivotRef = useRef();
@@ -24,23 +25,10 @@ const Pobj = ({ name, children }) => {
 
   if (!s) return null;
 
-  let orbitRadius = s.orbitRadius;
-  let orbitCentera = s.orbitCentera;
-  let orbitCenterb = s.orbitCenterb;
-  let orbitCenterc = s.orbitCenterc;
-
-  if (!actualPlanetSizes) {
-    if (
-      s.name === "Moon" ||
-      s.name === "Moon deferent A" ||
-      s.name === "Moon deferent B"
-    ) {
-      orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * 39.2078;
-      orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * 39.2078;
-      orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * 39.2078;
-      orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc * 39.2078;
-    }
-  }
+  const orbitRadius = s.orbitRadius;
+  const orbitCentera = s.orbitCentera;
+  const orbitCenterb = s.orbitCenterb;
+  const orbitCenterc = s.orbitCenterc;
 
   useEffect(() => {
     const plotObj = {
@@ -53,7 +41,6 @@ const Pobj = ({ name, children }) => {
     };
     addPlotObj(plotObj);
 
-    // PERFORMANCE FIX: Cleanup to prevent memory leaks / ghost trace objects
     return () => {
       if (removePlotObj) removePlotObj(s.name);
     };
@@ -64,29 +51,26 @@ const Pobj = ({ name, children }) => {
 
   return (
     <group
-      visible={false}
+      visible={false} // Always hidden, this is the math model
       name="Container"
       ref={containerRef}
       position={[orbitCentera, orbitCenterc, orbitCenterb]}
-      rotation-x={s.orbitTilta * (Math.PI / 180)}
-      rotation-z={s.orbitTiltb * (Math.PI / 180)}
+      rotation-x={(s.orbitTilta || 0) * (Math.PI / 180)}
+      rotation-z={(s.orbitTiltb || 0) * (Math.PI / 180)}
     >
       <group name="Orbit" ref={orbitRef}>
         <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
           <mesh scale={1}>
-            {s.type === "planet" ? (
-              <group
-                ref={cSphereRef}
-                rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}
-              >
-                {/* THE FIX: Wrap the scaled mesh in an unscaled group */}
-                <group ref={objRef}>
-                  <mesh geometry={pobjSphere} scale={s.size}>
-                    <meshStandardMaterial color={s.color} />
-                  </mesh>
-                </group>
+            <group
+              ref={cSphereRef}
+              rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}
+            >
+              <group ref={objRef}>
+                <mesh geometry={pobjSphere} scale={s.size || 1}>
+                  <meshStandardMaterial color={s.color || "white"} />
+                </mesh>
               </group>
-            ) : null}
+            </group>
             {children}
           </mesh>
         </group>

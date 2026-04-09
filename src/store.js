@@ -208,14 +208,28 @@ export const usePlotStore = create((set, get) => ({
 
   addPlotObj: (newObj) =>
     set((state) => {
-      const exists = state.plotObjects.some((obj) => obj.name === newObj.name);
-      if (!exists) {
-        return { plotObjects: [...state.plotObjects, newObj] };
+      const index = state.plotObjects.findIndex(
+        (obj) => obj.name === newObj.name
+      );
+
+      if (index !== -1) {
+        // Replace existing object so speed and startPos updates are respected
+        const newPlotObjects = [...state.plotObjects];
+        newPlotObjects[index] = newObj;
+        return { plotObjects: newPlotObjects };
       }
-      return state;
+
+      // Add new object if it doesn't exist
+      return { plotObjects: [...state.plotObjects, newObj] };
     }),
 
   getPlotObj: (name) => get().plotObjects.find((p) => p.name === name),
+
+  // Added to fulfill the cleanup requirement in Pobj.jsx
+  removePlotObj: (name) =>
+    set((state) => ({
+      plotObjects: state.plotObjects.filter((obj) => obj.name !== name),
+    })),
 }));
 
 export const useTraceStore = create((set) => ({
