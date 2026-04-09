@@ -2,19 +2,28 @@ import { useRef, useMemo } from "react";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { Line } from "@react-three/drei";
+import createCircleTexture from "../utils/createCircleTexture";
 
-// PERFORMANCE FIX: Define arrow assets globally to share GPU resources
+// PERFORMANCE FIX: Shared arrow materials
 const arrowGeometry = new THREE.ConeGeometry(3, 8);
 const baseArrowMaterial = new THREE.MeshBasicMaterial({
   opacity: 0.8,
   transparent: true,
 });
 
+// PERFORMANCE FIX: Hoist red dot sprite materials
+const circleTexture = createCircleTexture("red");
+const spriteMaterial = new THREE.SpriteMaterial({
+  map: circleTexture,
+  transparent: true,
+  opacity: 1,
+  sizeAttenuation: false,
+});
+
 function Arrow({ rotation, radius, color, reverse = false }) {
   const arrowScale = useStore((s) => s.arrowScale);
   const arrowDirection = reverse ? Math.PI : 0;
 
-  // Clone base material dynamically per orbit color
   const mat = useMemo(() => {
     const m = baseArrowMaterial.clone();
     m.color.set(color);
@@ -43,21 +52,36 @@ export default function Orbit({ radius, visible, s }) {
   const showOrbits = useStore((s) => s.orbits);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
 
-  const { points } = useMemo(() => {
-    const pts = [];
+  // 1. Pull editSettings from the store
+  const editSettings = useStore((s) => s.editSettings);
 
-    // THE FIX: Adaptive step size.
-    // Massive outer orbits get a finer resolution to stay perfectly round,
-    // while smaller inner orbits stay at 1 degree to save memory.
-    const stepSize = radius > 50000 ? 0.2 : radius > 10000 ? 0.5 : 1;
+  // BUG FIX: Prevent NaN mathematical collapse for planets at center (radius 0)
+  const safeRadius = radius === 0 ? 0.000001 : radius;
+
+  // Export the edge position so we can use it for the second red dot
+  const { points, centerToEdgePoints, edgePosition } = useMemo(() => {
+    const pts = [];
+    const stepSize = safeRadius > 50000 ? 0.2 : safeRadius > 10000 ? 0.5 : 1;
 
     for (let i = 0; i <= 360; i += stepSize) {
       const rad = i * (Math.PI / 180);
-      pts.push([Math.sin(rad) * radius, Math.cos(rad) * radius, 0]);
+      pts.push([Math.sin(rad) * safeRadius, Math.cos(rad) * safeRadius, 0]);
     }
 
-    return { points: pts };
-  }, [radius]);
+    // Calculate center-to-edge pointer
+    const edgePos = [
+      Math.sin(Math.PI / 2) * safeRadius,
+      Math.cos(Math.PI / 2) * safeRadius,
+      0,
+    ];
+    const centerEdge = [[0, 0, 0], edgePos];
+
+    return {
+      points: pts,
+      centerToEdgePoints: centerEdge,
+      edgePosition: edgePos,
+    };
+  }, [safeRadius]);
 
   return (
     <>
@@ -65,25 +89,25 @@ export default function Orbit({ radius, visible, s }) {
         <group visible={arrows && showArrows}>
           <Arrow
             rotation={Math.PI / 4}
-            radius={radius}
+            radius={safeRadius}
             color={color}
             reverse={reverse}
           />
           <Arrow
             rotation={(Math.PI / 4) * 3}
-            radius={radius}
+            radius={safeRadius}
             color={color}
             reverse={reverse}
           />
           <Arrow
             rotation={(Math.PI / 4) * 5}
-            radius={radius}
+            radius={safeRadius}
             color={color}
             reverse={reverse}
           />
           <Arrow
             rotation={(Math.PI / 4) * 7}
-            radius={radius}
+            radius={safeRadius}
             color={color}
             reverse={reverse}
           />
@@ -96,6 +120,26 @@ export default function Orbit({ radius, visible, s }) {
           dashed={false}
           raycast={() => null}
         />
+
+        {/* 2. Conditionally render the center red dot, radius line, and edge red dot */}
+        {editSettings && (
+          <>
+            <Line
+              points={centerToEdgePoints}
+              color={color}
+              lineWidth={orbitsLineWidth}
+              dashed={false}
+            />
+            {/* Center dot */}
+            <sprite material={spriteMaterial} scale={[0.002, 0.002, 0.002]} />
+            {/* Edge dot */}
+            <sprite
+              material={spriteMaterial}
+              position={edgePosition}
+              scale={[0.002, 0.002, 0.002]}
+            />
+          </>
+        )}
       </group>
     </>
   );

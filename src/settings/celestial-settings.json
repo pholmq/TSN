@@ -104,7 +104,7 @@
     "orbitTiltb": 0
   },
   {
-    "name": "Mercury def A",
+    "name": "Mercury deferent A",
     "size": 0.7,
     "startPos": 0,
     "speed": 6.283185307179586,
@@ -117,7 +117,7 @@
     "orbitTiltb": 0
   },
   {
-    "name": "Mercury def B",
+    "name": "Mercury deferent B",
     "size": 0.7,
     "startPos": 33,
     "speed": -6.283185307179586,
@@ -188,7 +188,7 @@
     "orbitTiltb": -0.05
   },
   {
-    "name": "Mars E deferent",
+    "name": "Mars deferent E",
     "size": 2,
     "startPos": 0,
     "speed": 6.283185307179586,
@@ -201,7 +201,7 @@
     "orbitTiltb": 0
   },
   {
-    "name": "Mars S deferent",
+    "name": "Mars deferent S",
     "size": 2,
     "startPos": -115,
     "speed": 0.3974599,

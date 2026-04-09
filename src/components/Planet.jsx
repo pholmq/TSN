@@ -35,6 +35,8 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     (state) => state.planetCameraTarget
   );
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+  const editSettings = useStore((state) => state.editSettings);
+  const showPlanets = useStore((state) => state.showPlanets); // <-- Get new global boolean
 
   const { texture, isLoading } = s.texture
     ? useTextureLoader(s.texture)
@@ -102,11 +104,11 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
         {showLabel && <HoverObj s={s} />}
 
         <group ref={transformRef} scale={planetScale}>
-          {/* THE FIX: Unscaled wrapper group for the camera to safely mount to */}
           <group name={name} ref={planetRef} visible={visible}>
             <mesh geometry={planetGeometry} scale={size}>
               <meshStandardMaterial
                 ref={materialRef}
+                visible={!editSettings || showPlanets} // <-- Uses the new boolean override
                 color={
                   isLoading || !texture ? s.color : s.textureTint || "#ffffff"
                 }
@@ -121,7 +123,6 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
               {s.light && <pointLight intensity={sunLight * 100000} />}
             </mesh>
           </group>
-          {/* The Helpers remain as siblings so their internal scaling calculations hold true */}
           {s.geoSphere && geoSphere ? (
             <GeoSphere
               s={s}
