@@ -140,6 +140,9 @@ export const useStore = create(
       editSettings: false,
       setEditSettings: (v) => set({ editSettings: v }),
 
+      showPlanets: false,
+      setShowPlanets: (v) => set({ showPlanets: v }),
+
       showLabels: true,
       setShowLables: (v) => set({ showLabels: v }),
 
