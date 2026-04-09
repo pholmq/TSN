@@ -168,6 +168,8 @@ const getControls = (s, updateSetting) => ({
 
 const EditSettings = () => {
   const editSettings = useStore((s) => s.editSettings);
+  const showPlanets = useStore((s) => s.showPlanets);
+  const setShowPlanets = useStore((s) => s.setShowPlanets);
   const positions = usePosStore((s) => s.positions);
   const { settings, updateSetting, resetSettings } = useSettingsStore();
 
@@ -198,7 +200,7 @@ const EditSettings = () => {
     Object.keys(groups).forEach((parentName) => {
       const group = groups[parentName];
 
-      // A. Populate "Show/Hide planets" section
+      // A. Populate "Show/Hide settings" section
       showHideMenu[`${parentName}visible`] = {
         label: parentName,
         value: group.main ? group.main.visible : true,
@@ -235,10 +237,14 @@ const EditSettings = () => {
       "Load settings": button(() => loadSettingsFromFile()),
       "Save settings": button(() => saveSettingsAsJson(settings)),
       "Reset settings": button(() => resetSettings()),
-      "Show / Hide planets": folder(showHideMenu, { collapsed: false }),
+      "Show / Hide Planets": {
+        value: showPlanets,
+        onChange: (v) => setShowPlanets(v),
+      },
+      "Show / Hide settings": folder(showHideMenu, { collapsed: false }),
       Settings: folder(settingsMenu, { collapsed: false }),
     };
-  }, [settings, updateSetting]);
+  }, [settings, updateSetting, showPlanets, setShowPlanets]);
 
   const levaSettingsStore = useCreateStore();
 
@@ -247,7 +253,9 @@ const EditSettings = () => {
   });
 
   useEffect(() => {
-    const updatedValues = {};
+    const updatedValues = {
+      "Show / Hide Planets": showPlanets,
+    };
     settings.forEach((s) => {
       if (!s.name.includes("deferent")) {
         updatedValues[`${s.name}visible`] = s.visible;
@@ -273,7 +281,7 @@ const EditSettings = () => {
       updatedValues[`${s.name}orbitTiltb`] = "\u200B" + s.orbitTiltb;
     });
     set(updatedValues);
-  }, [settings, set]);
+  }, [settings, set, showPlanets]);
 
   if (!editSettings) return null;
 
