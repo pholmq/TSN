@@ -166,8 +166,8 @@ const getControls = (s, updateSetting) => ({
   },
 });
 
-const EditSettings = () => {
-  const editSettings = useStore((s) => s.editSettings);
+// The inner component containing the hooks only mounts when the menu is active
+const EditSettingsPanel = () => {
   const showPlanets = useStore((s) => s.showPlanets);
   const setShowPlanets = useStore((s) => s.setShowPlanets);
   const positions = usePosStore((s) => s.positions);
@@ -283,8 +283,6 @@ const EditSettings = () => {
     set(updatedValues);
   }, [settings, set, showPlanets]);
 
-  if (!editSettings) return null;
-
   return createPortal(
     <div
       className="settings-div"
@@ -316,6 +314,15 @@ const EditSettings = () => {
     </div>,
     document.body
   );
+};
+
+// The wrapper ensures the hooks inside EditSettingsPanel are completely destroyed when hidden
+const EditSettings = () => {
+  const editSettings = useStore((s) => s.editSettings);
+
+  if (!editSettings) return null;
+
+  return <EditSettingsPanel />;
 };
 
 export default EditSettings;
