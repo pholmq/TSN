@@ -26,123 +26,135 @@ const LightEffectsMenu = () => {
   const editSettings = useStore((s) => s.editSettings);
   const setEditSettings = useStore((s) => s.setEditSettings);
 
-  const { ambientLight, glow, glowIntensity, antialiasing, stats } =
-    useControls("Settings", {
-      "UI & Labels size": {
-        value: zoomLevel,
-        min: 60,
-        max: 120,
-        step: 1,
-        onChange: (v) => setZoom(v),
-      },
-      ambientLight: {
-        label: "Ambient light",
-        value: 1,
-        min: 0,
-        max: 5,
-        step: 0.1,
-      },
-      sunLight: {
-        label: "Sunlight",
-        value: useStore.getState().sunLight,
-        min: 0,
-        max: 5,
-        step: 0.1,
-        onChange: (v) => useStore.setState({ sunLight: v }),
-      },
+  // Separate controls and the set function so we can update Leva externally
+  const [controls, setControls] = useControls("Settings", () => ({
+    "UI & Labels size": {
+      value: zoomLevel,
+      min: 60,
+      max: 120,
+      step: 1,
+      onChange: (v) => setZoom(v),
+    },
+    ambientLight: {
+      label: "Ambient light",
+      value: 1,
+      min: 0,
+      max: 5,
+      step: 0.1,
+    },
+    sunLight: {
+      label: "Sunlight",
+      value: useStore.getState().sunLight,
+      min: 0,
+      max: 5,
+      step: 0.1,
+      onChange: (v) => useStore.setState({ sunLight: v }),
+    },
 
-      glow: {
-        label: "Glow",
-        value: true,
-        hint: "Glow can affect performance",
-      },
-      glowIntensity: {
-        label: "Glow strength",
-        value: 0.2,
-        min: 0.1,
-        max: 2,
-        step: 0.1,
-        hint: "Glow can affect performance",
-      },
+    glow: {
+      label: "Glow",
+      value: true,
+      hint: "Glow can affect performance",
+    },
+    glowIntensity: {
+      label: "Glow strength",
+      value: 0.2,
+      min: 0.1,
+      max: 2,
+      step: 0.1,
+      hint: "Glow can affect performance",
+    },
 
-      "experimental settings": folder(
-        {
-          antialiasing: {
-            label: "Anti-Aliasing",
-            value: "SMAA",
-            options: ["FXAA", "SMAA", "None"],
-          },
-          stats: {
-            value: false,
-            label: "Show FPS",
-          },
-          "Star sizes": {
-            value: useStore.getState().starScale,
-            min: 0.1,
-            max: 5,
-            step: 0.1,
-            onChange: (v) => useStore.setState({ starScale: v }),
-          },
-          "Zodiac size": {
-            value: useStore.getState().zodiacSize,
-            min: 1,
-            step: 1,
-            onChange: (v) => useStore.setState({ zodiacSize: v }),
-          },
-          "Polar line length": {
-            value: useStore.getState().polarLineSize,
-            min: 5,
-            step: 1,
-            onChange: (v) => useStore.setState({ polarLineSize: v }),
-          },
-          "Celestial sphere size": {
-            value: useStore.getState().celestialSphereSize,
-            min: 5,
-            step: 1,
-            onChange: (v) => useStore.setState({ celestialSphereSize: v }),
-          },
-          "Ecliptic grid size": {
-            value: useStore.getState().eclipticGridSize,
-            min: 5,
-            step: 1,
-            onChange: (v) => useStore.setState({ eclipticGridSize: v }),
-          },
-          "Ground size": {
-            value: usePlanetCameraStore.getState().groundSize,
-            min: 1,
-            step: 1,
-            onChange: (v) => usePlanetCameraStore.setState({ groundSize: v }),
-          },
-          "Ground height": {
-            value: usePlanetCameraStore.getState().groundHeight,
-            min: 0.1,
-            step: 0.1,
-            onChange: (v) => usePlanetCameraStore.setState({ groundHeight: v }),
-          },
-          "Show planet camera position": {
-            value: useStore.getState().planetCameraHelper,
-            onChange: (v) => useStore.setState({ planetCameraHelper: v }),
-          },
-          "Show Intro": {
-            value: runIntro,
-            onChange: (v) => setRunIntro(v),
-          },
-          "Video Recorder": {
-            value: useStore.getState().showRecorder,
-            onChange: (v) => useStore.setState({ showRecorder: v }),
-          },
-          "Reference Stars": {
-            value: refStars,
-            onChange: setRefStars,
-          },
-          "Edit settings": {
-            value: editSettings,
-            onChange: setEditSettings,
+    "Developer menu": folder(
+      {
+        antialiasing: {
+          label: "Anti-Aliasing",
+          value: "SMAA",
+          options: ["FXAA", "SMAA", "None"],
+        },
+        stats: {
+          value: false,
+          label: "Show FPS",
+        },
+        "Star sizes": {
+          value: useStore.getState().starScale,
+          min: 0.1,
+          max: 5,
+          step: 0.1,
+          onChange: (v) => useStore.setState({ starScale: v }),
+        },
+        "Zodiac size": {
+          value: useStore.getState().zodiacSize,
+          min: 1,
+          step: 1,
+          onChange: (v) => useStore.setState({ zodiacSize: v }),
+        },
+        "Polar line length": {
+          value: useStore.getState().polarLineSize,
+          min: 5,
+          step: 1,
+          onChange: (v) => useStore.setState({ polarLineSize: v }),
+        },
+        "Celestial sphere size": {
+          value: useStore.getState().celestialSphereSize,
+          min: 5,
+          step: 1,
+          onChange: (v) => useStore.setState({ celestialSphereSize: v }),
+        },
+        "Ecliptic grid size": {
+          value: useStore.getState().eclipticGridSize,
+          min: 5,
+          step: 1,
+          onChange: (v) => useStore.setState({ eclipticGridSize: v }),
+        },
+        "Ground size": {
+          value: usePlanetCameraStore.getState().groundSize,
+          min: 1,
+          step: 1,
+          onChange: (v) => usePlanetCameraStore.setState({ groundSize: v }),
+        },
+        "Ground height": {
+          value: usePlanetCameraStore.getState().groundHeight,
+          min: 0.1,
+          step: 0.1,
+          onChange: (v) => usePlanetCameraStore.setState({ groundHeight: v }),
+        },
+        "Show planet camera position": {
+          value: useStore.getState().planetCameraHelper,
+          onChange: (v) => useStore.setState({ planetCameraHelper: v }),
+        },
+        "Show Intro": {
+          value: runIntro,
+          onChange: (v) => setRunIntro(v),
+        },
+        "Video Recorder": {
+          value: useStore.getState().showRecorder,
+          onChange: (v) => useStore.setState({ showRecorder: v }),
+        },
+        "Reference Stars": {
+          value: refStars,
+          onChange: setRefStars,
+        },
+        "Edit settings": {
+          value: editSettings,
+          onChange: (v, path, context) => {
+            // FIX: Ignore Leva's automatic mount sync so it doesn't overwrite state
+            if (context?.initial) return;
+            setEditSettings(v);
           },
         },
-        { collapsed: false }
-      ),
-    });
+      },
+      { collapsed: false }
+    ),
+  }));
+
+  // Keep the destructured variables working for the return block
+  const { ambientLight, glow, glowIntensity, antialiasing, stats } = controls;
+
+  // FIX: Sync Leva visually if "editSettings" is turned off externally (like clicking the "✕" button)
+  useEffect(() => {
+    setControls({ "Edit settings": editSettings });
+  }, [editSettings, setControls]);
 
   return (
     <>
