@@ -15,6 +15,7 @@ const EphemerisChecker = () => {
     setParsedData,
     setShowPlot,
     setPlotSize,
+    setCheckPlotOpacity, // NEW
   } = useCheckerStore();
 
   const levaStore = useCreateStore();
@@ -47,6 +48,14 @@ const EphemerisChecker = () => {
         step: 1,
         onChange: (v) => setPlotSize(v),
       },
+      "Check plots opacity": {
+        // NEW
+        value: 0.5,
+        min: 0,
+        max: 1,
+        step: 0.05,
+        onChange: (v) => setCheckPlotOpacity(v),
+      },
       Status: {
         value: "Idle",
         editable: false,
@@ -58,7 +67,6 @@ const EphemerisChecker = () => {
       Object.keys(parsedData).forEach((planet) => {
         const hasDist = parsedData[planet][0]?.distAU !== null;
 
-        // Base Max Error configurations
         const planetConfig = {
           [`${planet}_max_ra`]: {
             label: "Max RA Error",
@@ -82,7 +90,6 @@ const EphemerisChecker = () => {
           },
         };
 
-        // Create individual date sub-folders for each plot
         parsedData[planet].forEach((row, idx) => {
           const rowKey = `${row.date} ${row.time}`;
           const rowFolderContent = {
@@ -128,8 +135,9 @@ const EphemerisChecker = () => {
       });
     }
 
+    // Add setCheckPlotOpacity to dependencies
     return folders;
-  }, [parsedData, setShowPlot, setPlotSize]);
+  }, [parsedData, setShowPlot, setPlotSize, setCheckPlotOpacity]);
 
   const [, set] = useControls(() => resultFolders, { store: levaStore }, [
     resultFolders,
@@ -150,7 +158,6 @@ const EphemerisChecker = () => {
       const hasDist = parsedData[planet][0]?.distAU !== null;
       const hasElong = parsedData[planet][0]?.elongDeg !== null;
 
-      // Update max errors
       updates[`${planet}_max_ra`] = res
         ? `${res.maxErrors.maxRaDev.toFixed(4)}°`
         : "Pending...";
@@ -168,7 +175,6 @@ const EphemerisChecker = () => {
           : "N/A"
         : "Pending...";
 
-      // Update per-row specific errors
       parsedData[planet].forEach((row, idx) => {
         if (res && res.rows[idx]) {
           updates[`${planet}_${idx}_raErr`] = `${res.rows[idx].raErr.toFixed(

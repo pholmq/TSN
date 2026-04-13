@@ -29,6 +29,9 @@ export const useCheckerStore = create((set) => ({
   showPlot: true,
   setShowPlot: (v) => set({ showPlot: v }),
 
+  checkPlotOpacity: 0.5,
+  setCheckPlotOpacity: (v) => set({ checkPlotOpacity: v }),
+
   modelPoints: null,
   setModelPoints: (data) => set({ modelPoints: data }),
 }));

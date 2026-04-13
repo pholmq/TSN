@@ -39,6 +39,7 @@ const CheckerController = () => {
     setModelPoints,
     showPlot,
     plotSize,
+    checkPlotOpacity, // NEW
   } = useCheckerStore();
 
   const [checking, setChecking] = useState(false);
@@ -216,7 +217,6 @@ const CheckerController = () => {
           ra: row.raStr,
           dec: row.decStr,
           dist: row.distAU,
-          // NEW: Store specific row errors to display in the hover panel
           raErr: raDiff,
           decErr: decDiff,
           distErr: distDiff,
@@ -398,7 +398,6 @@ const CheckerController = () => {
     const distStr =
       hoveredData.pt.dist !== null ? hoveredData.pt.dist.toFixed(6) : "N/A";
 
-    // Evaluate rounded strings to prevent microscopic floating-point errors from showing up as "0.0000"
     const raErrVal =
       hoveredData.pt.raErr !== undefined
         ? hoveredData.pt.raErr.toFixed(4)
@@ -412,7 +411,6 @@ const CheckerController = () => {
         ? hoveredData.pt.distErr.toFixed(6)
         : "0.000000";
 
-    // Only generate the HTML span if an actual visible error exists
     const raErrHtml =
       raErrVal !== "0.0000"
         ? `<span style="color: #ff8888; margin-left: 6px;">[Err: ${raErrVal}°]</span>`
@@ -474,7 +472,7 @@ const CheckerController = () => {
             depthTest={false}
             map={circleTexture}
             transparent={true}
-            opacity={0.5}
+            opacity={checkPlotOpacity} // NEW: Linked to slider
             alphaTest={0.05}
           />
         </points>
