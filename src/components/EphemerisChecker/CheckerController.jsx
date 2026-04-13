@@ -19,7 +19,7 @@ import createCircleTexture from "../../utils/createCircleTexture";
 
 const CheckerController = () => {
   const pointsRef = useRef();
-  const modelPointsRef = useRef(); // NEW: Ref for the model check points
+  const modelPointsRef = useRef();
   const getThreeState = useThree((state) => state.get);
   const { invalidate, scene } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
@@ -54,10 +54,9 @@ const CheckerController = () => {
     totalRows: 0,
     processedRows: 0,
     rawPoints: [],
-    rawModelPoints: [], // NEW: Collect model positions
+    rawModelPoints: [],
   });
 
-  // Re-evaluates automatically if showChecker, parsedData, OR settings change!
   useEffect(() => {
     if (!showChecker) {
       setChecking(false);
@@ -85,7 +84,6 @@ const CheckerController = () => {
 
       planets.forEach((p) => {
         totalRows += parsedData[p].length;
-        // Restructured to track max errors AND row arrays
         initialDeviations[p] = {
           maxErrors: {
             maxRaDev: 0,
@@ -150,7 +148,6 @@ const CheckerController = () => {
         const modelDistAU = parseDistanceToAU(data.dist);
         const modelElongDeg = parseFloat(data.elongation) || 0;
 
-        // Calculate and apply maximum deviations
         let raDiff = Math.abs(row.raDeg - modelRaDeg);
         if (raDiff > 180) raDiff = 360 - raDiff;
         if (raDiff > job.deviations[planetName].maxErrors.maxRaDev)
@@ -173,14 +170,12 @@ const CheckerController = () => {
             job.deviations[planetName].maxErrors.maxElongDev = elongDiff;
         }
 
-        // Store individual row differences
         job.deviations[planetName].rows.push({
           raErr: raDiff,
           decErr: decDiff,
           distErr: distDiff,
         });
 
-        // 1. Calculate Ephemeris 3D
         const raRad = row.raDeg * (Math.PI / 180);
         const decRad = row.decDeg * (Math.PI / 180);
         const dist = row.distAU !== null ? row.distAU * 100 : 100;
@@ -192,7 +187,6 @@ const CheckerController = () => {
           localCoords.z
         );
 
-        // 2. Calculate Model Check 3D
         const raRadMod = modelRaDeg * (Math.PI / 180);
         const decRadMod = modelDecDeg * (Math.PI / 180);
         const distMod = modelDistAU !== null ? modelDistAU * 100 : 100;
@@ -222,6 +216,10 @@ const CheckerController = () => {
           ra: row.raStr,
           dec: row.decStr,
           dist: row.distAU,
+          // NEW: Store specific row errors to display in the hover panel
+          raErr: raDiff,
+          decErr: decDiff,
+          distErr: distDiff,
         });
 
         job.rawModelPoints.push({
@@ -256,12 +254,10 @@ const CheckerController = () => {
         const pSetting = settings.find((s) => s.name === pt.planet);
         const color = new THREE.Color(pSetting?.color || "#ffffff");
 
-        // Primary Ephemeris
         positions.push(pt.position[0], pt.position[1], pt.position[2]);
         colors.push(color.r, color.g, color.b);
         pointsData.push(pt);
 
-        // Model Checks
         const mPt = job.rawModelPoints[i];
         mPositions.push(mPt.position[0], mPt.position[1], mPt.position[2]);
         mColors.push(color.r, color.g, color.b);
@@ -283,7 +279,6 @@ const CheckerController = () => {
     }
   });
 
-  // Apply Primary Buffer
   useEffect(() => {
     if (pointsRef.current && visualPoints?.positions) {
       const geo = pointsRef.current.geometry;
@@ -302,7 +297,6 @@ const CheckerController = () => {
     }
   }, [visualPoints]);
 
-  // Apply Model Check Buffer
   useEffect(() => {
     if (modelPointsRef.current && modelPoints?.positions) {
       const geo = modelPointsRef.current.geometry;
@@ -403,13 +397,42 @@ const CheckerController = () => {
 
     const distStr =
       hoveredData.pt.dist !== null ? hoveredData.pt.dist.toFixed(6) : "N/A";
+
+    // Evaluate rounded strings to prevent microscopic floating-point errors from showing up as "0.0000"
+    const raErrVal =
+      hoveredData.pt.raErr !== undefined
+        ? hoveredData.pt.raErr.toFixed(4)
+        : "0.0000";
+    const decErrVal =
+      hoveredData.pt.decErr !== undefined
+        ? hoveredData.pt.decErr.toFixed(4)
+        : "0.0000";
+    const distErrVal =
+      hoveredData.pt.distErr !== null && hoveredData.pt.distErr !== undefined
+        ? hoveredData.pt.distErr.toFixed(6)
+        : "0.000000";
+
+    // Only generate the HTML span if an actual visible error exists
+    const raErrHtml =
+      raErrVal !== "0.0000"
+        ? `<span style="color: #ff8888; margin-left: 6px;">[Err: ${raErrVal}°]</span>`
+        : "";
+    const decErrHtml =
+      decErrVal !== "0.0000"
+        ? `<span style="color: #ff8888; margin-left: 6px;">[Err: ${decErrVal}°]</span>`
+        : "";
+    const distErrHtml =
+      distErrVal !== "0.000000" && hoveredData.pt.dist !== null
+        ? `<span style="color: #ff8888; margin-left: 6px;">[Err: ${distErrVal} AU]</span>`
+        : "";
+
     el.innerHTML = `
       <strong style="color: ${hoveredData.color}; font-size: 14px;">${hoveredData.pt.planet}</strong><br />
       <span style="color: #aaa;">Date:</span> <span style="color: #fff; font-weight: bold;">${hoveredData.pt.date}</span><br />
       <span style="color: #aaa;">Time:</span> <span style="color: #fff;">${hoveredData.pt.time}</span><br />
-      <span style="color: #aaa;">RA:</span> <span style="color: #fff;">${hoveredData.pt.ra}</span><br />
-      <span style="color: #aaa;">Dec:</span> <span style="color: #fff;">${hoveredData.pt.dec}</span><br />
-      <span style="color: #aaa;">AU:</span> <span style="color: #fff;">${distStr}</span>
+      <span style="color: #aaa;">RA:</span> <span style="color: #fff;">${hoveredData.pt.ra}</span>${raErrHtml}<br />
+      <span style="color: #aaa;">Dec:</span> <span style="color: #fff;">${hoveredData.pt.dec}</span>${decErrHtml}<br />
+      <span style="color: #aaa;">AU:</span> <span style="color: #fff;">${distStr}</span>${distErrHtml}
     `;
 
     document.body.appendChild(el);
@@ -422,7 +445,6 @@ const CheckerController = () => {
 
   return (
     <group>
-      {/* Primary Ephemeris Points (Hoverable, Solid) */}
       <points
         ref={pointsRef}
         raycast={customRaycast}
@@ -442,13 +464,8 @@ const CheckerController = () => {
         />
       </points>
 
-      {/* Secondary Model Check Points (No Hover, 50% Opacity) */}
       {modelPoints?.positions && (
-        <points
-          ref={modelPointsRef}
-          visible={showPlot}
-          raycast={() => null} // Disable raycasting completely
-        >
+        <points ref={modelPointsRef} visible={showPlot} raycast={() => null}>
           <bufferGeometry />
           <pointsMaterial
             size={plotSize}
@@ -458,7 +475,7 @@ const CheckerController = () => {
             map={circleTexture}
             transparent={true}
             opacity={0.5}
-            alphaTest={0.05} // Lowered so the opacity override doesn't clip the texture out of existence
+            alphaTest={0.05}
           />
         </points>
       )}
