@@ -15,11 +15,19 @@ const EphemerisChecker = () => {
     setParsedData,
     setShowPlot,
     setPlotSize,
-    setCheckPlotOpacity, // NEW
+    setCheckPlotOpacity,
+    resetChecker,
   } = useCheckerStore();
 
   const levaStore = useCreateStore();
   const fileInputRef = useRef(null);
+
+  // --- NEW: Watch showChecker. If it turns false from ANY source, reset everything. ---
+  useEffect(() => {
+    if (!showChecker) {
+      resetChecker();
+    }
+  }, [showChecker, resetChecker]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -49,7 +57,6 @@ const EphemerisChecker = () => {
         onChange: (v) => setPlotSize(v),
       },
       "Check plots opacity": {
-        // NEW
         value: 0.5,
         min: 0,
         max: 1,
@@ -135,7 +142,6 @@ const EphemerisChecker = () => {
       });
     }
 
-    // Add setCheckPlotOpacity to dependencies
     return folders;
   }, [parsedData, setShowPlot, setPlotSize, setCheckPlotOpacity]);
 
@@ -235,6 +241,7 @@ const EphemerisChecker = () => {
             e.preventDefault();
             e.stopPropagation();
             setShowChecker(false);
+            // resetChecker() is removed here because the new useEffect handles it!
           };
           titleBar.appendChild(closeBtn);
         }
@@ -262,9 +269,16 @@ const EphemerisChecker = () => {
           fill={false}
           hideCopyButton
           theme={{
-            fontSizes: { root: "12px" },
-            fonts: { mono: "" },
-            colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
+            fontSizes: {
+              root: "12px",
+            },
+            fonts: {
+              mono: "",
+            },
+            colors: {
+              highlight1: "#FFFFFF",
+              highlight2: "#FFFFFF",
+            },
           }}
         />
       </div>

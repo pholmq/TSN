@@ -34,6 +34,17 @@ export const useCheckerStore = create((set) => ({
 
   modelPoints: null,
   setModelPoints: (data) => set({ modelPoints: data }),
+
+  resetChecker: () =>
+    set({
+      parsedData: null,
+      results: null,
+      visualPoints: null,
+      modelPoints: null,
+      isChecking: false,
+      progress: 0,
+      triggerCheck: false,
+    }),
 }));
 
 export function raToDeg(raStr) {
