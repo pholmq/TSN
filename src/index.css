@@ -1,3 +1,4 @@
+// src/index.css
 html,
 body,
 #root {
@@ -218,9 +219,9 @@ body {
 /* --- NEW CHECKER BLOCK --- */
 .checker-div > div {
   position: fixed;
-  top: 290px !important; /* Stacks below Recorder */
-  left: 10px !important;
-  right: auto !important;
+  top: 80px !important; /* Aligns vertically with the top of your other panels */
+  right: 270px !important; /* Pushes it exactly to the left of your 250px main menu */
+  left: auto !important; /* Stops forcing it to the far left */
   width: 300px;
   opacity: 0.8;
 }

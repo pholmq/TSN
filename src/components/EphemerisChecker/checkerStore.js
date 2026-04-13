@@ -1,3 +1,4 @@
+/// src/components/EphemerisChecker/checkerStore.js
 import { create } from "zustand";
 
 export const useCheckerStore = create((set) => ({
@@ -18,6 +19,15 @@ export const useCheckerStore = create((set) => ({
 
   results: null,
   setResults: (res) => set({ results: res }),
+
+  visualPoints: [],
+  setVisualPoints: (pts) => set({ visualPoints: pts }),
+
+  plotSize: 6,
+  setPlotSize: (v) => set({ plotSize: v }),
+
+  showPlot: true,
+  setShowPlot: (v) => set({ showPlot: v }),
 }));
 
 export function raToDeg(raStr) {

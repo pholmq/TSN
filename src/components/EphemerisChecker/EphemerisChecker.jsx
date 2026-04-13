@@ -1,3 +1,4 @@
+// src/components/EphemerisChecker/EphemerisChecker.jsx
 import { useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useControls, useCreateStore, Leva, button, folder } from "leva";
@@ -12,6 +13,8 @@ const EphemerisChecker = () => {
     results,
     parsedData,
     setParsedData,
+    setShowPlot,
+    setPlotSize,
   } = useCheckerStore();
 
   const levaStore = useCreateStore();
@@ -33,6 +36,17 @@ const EphemerisChecker = () => {
   const resultFolders = useMemo(() => {
     const folders = {
       "Upload Ephemerides": button(() => fileInputRef.current?.click()),
+      "Show Plot": {
+        value: true,
+        onChange: (v) => setShowPlot(v),
+      },
+      "Plot Size": {
+        value: 6,
+        min: 1,
+        max: 30,
+        step: 1,
+        onChange: (v) => setPlotSize(v),
+      },
       Status: {
         value: "Idle",
         editable: false,
@@ -42,33 +56,36 @@ const EphemerisChecker = () => {
 
     if (parsedData) {
       Object.keys(parsedData).forEach((planet) => {
-        folders[planet] = folder({
-          [`${planet}_ra`]: {
-            label: "Max RA Error",
-            value: "Pending...",
-            editable: false,
+        folders[planet] = folder(
+          {
+            [`${planet}_ra`]: {
+              label: "Max RA Error",
+              value: "Pending...",
+              editable: false,
+            },
+            [`${planet}_dec`]: {
+              label: "Max Dec Error",
+              value: "Pending...",
+              editable: false,
+            },
+            [`${planet}_dist`]: {
+              label: "Max Dist Error",
+              value: "Pending...",
+              editable: false,
+            },
+            [`${planet}_elong`]: {
+              label: "Max Elong Error",
+              value: "Pending...",
+              editable: false,
+            },
           },
-          [`${planet}_dec`]: {
-            label: "Max Dec Error",
-            value: "Pending...",
-            editable: false,
-          },
-          [`${planet}_dist`]: {
-            label: "Max Dist Error",
-            value: "Pending...",
-            editable: false,
-          },
-          [`${planet}_elong`]: {
-            label: "Max Elong Error",
-            value: "Pending...",
-            editable: false,
-          },
-        });
+          { collapsed: true }
+        );
       });
     }
 
     return folders;
-  }, [parsedData]);
+  }, [parsedData, setShowPlot, setPlotSize]);
 
   const [, set] = useControls(() => resultFolders, { store: levaStore }, [
     resultFolders,
@@ -78,7 +95,6 @@ const EphemerisChecker = () => {
     if (!parsedData) return;
 
     const updates = {};
-
     if (isChecking) {
       updates.Status = `Checking... ${progress}%`;
     } else {
@@ -167,23 +183,26 @@ const EphemerisChecker = () => {
         ref={fileInputRef}
         onChange={handleFileChange}
       />
-      <div
-        className="checker-div"
-        style={{
-          position: "fixed",
-          top: "80px",
-          right: "10px",
-          zIndex: 2147483647,
-        }}
-      >
+      {/* The inline style here is intentionally left mostly blank, 
+        because index.css is now taking full control of the positioning!
+      */}
+      <div className="checker-div">
         <Leva
           store={levaStore}
           titleBar={{ drag: true, title: "Ephemeris Checker", filter: false }}
           fill={false}
           hideCopyButton
           theme={{
-            fontSizes: { root: "12px" },
-            colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
+            fontSizes: {
+              root: "12px",
+            },
+            fonts: {
+              mono: "",
+            },
+            colors: {
+              highlight1: "#FFFFFF",
+              highlight2: "#FFFFFF",
+            },
           }}
         />
       </div>
