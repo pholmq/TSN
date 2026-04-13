@@ -1,3 +1,4 @@
+// src/components/EphemerisChecker/EphemerisChecker.jsx
 import { useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useControls, useCreateStore, Leva, button, folder } from "leva";
@@ -12,10 +13,21 @@ const EphemerisChecker = () => {
     results,
     parsedData,
     setParsedData,
+    setShowPlot,
+    setPlotSize,
+    setCheckPlotOpacity,
+    resetChecker,
   } = useCheckerStore();
 
   const levaStore = useCreateStore();
   const fileInputRef = useRef(null);
+
+  // --- NEW: Watch showChecker. If it turns false from ANY source, reset everything. ---
+  useEffect(() => {
+    if (!showChecker) {
+      resetChecker();
+    }
+  }, [showChecker, resetChecker]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -33,6 +45,24 @@ const EphemerisChecker = () => {
   const resultFolders = useMemo(() => {
     const folders = {
       "Upload Ephemerides": button(() => fileInputRef.current?.click()),
+      "Show Plot": {
+        value: true,
+        onChange: (v) => setShowPlot(v),
+      },
+      "Plot Size": {
+        value: 6,
+        min: 1,
+        max: 30,
+        step: 1,
+        onChange: (v) => setPlotSize(v),
+      },
+      "Check plots opacity": {
+        value: 0.5,
+        min: 0,
+        max: 1,
+        step: 0.05,
+        onChange: (v) => setCheckPlotOpacity(v),
+      },
       Status: {
         value: "Idle",
         editable: false,
@@ -42,33 +72,78 @@ const EphemerisChecker = () => {
 
     if (parsedData) {
       Object.keys(parsedData).forEach((planet) => {
-        folders[planet] = folder({
-          [`${planet}_ra`]: {
+        const hasDist = parsedData[planet][0]?.distAU !== null;
+
+        const planetConfig = {
+          [`${planet}_max_ra`]: {
             label: "Max RA Error",
             value: "Pending...",
             editable: false,
           },
-          [`${planet}_dec`]: {
+          [`${planet}_max_dec`]: {
             label: "Max Dec Error",
             value: "Pending...",
             editable: false,
           },
-          [`${planet}_dist`]: {
+          [`${planet}_max_dist`]: {
             label: "Max Dist Error",
             value: "Pending...",
             editable: false,
           },
-          [`${planet}_elong`]: {
+          [`${planet}_max_elong`]: {
             label: "Max Elong Error",
             value: "Pending...",
             editable: false,
           },
+        };
+
+        parsedData[planet].forEach((row, idx) => {
+          const rowKey = `${row.date} ${row.time}`;
+          const rowFolderContent = {
+            [`${planet}_${idx}_ra`]: {
+              label: "RA",
+              value: row.raStr,
+              editable: false,
+            },
+            [`${planet}_${idx}_raErr`]: {
+              label: "RA Err",
+              value: "Pending...",
+              editable: false,
+            },
+            [`${planet}_${idx}_dec`]: {
+              label: "Dec",
+              value: row.decStr,
+              editable: false,
+            },
+            [`${planet}_${idx}_decErr`]: {
+              label: "Dec Err",
+              value: "Pending...",
+              editable: false,
+            },
+          };
+
+          if (hasDist) {
+            rowFolderContent[`${planet}_${idx}_dist`] = {
+              label: "Dist AU",
+              value: row.distAU.toFixed(6),
+              editable: false,
+            };
+            rowFolderContent[`${planet}_${idx}_distErr`] = {
+              label: "Dist Err",
+              value: "Pending...",
+              editable: false,
+            };
+          }
+
+          planetConfig[rowKey] = folder(rowFolderContent, { collapsed: true });
         });
+
+        folders[planet] = folder(planetConfig, { collapsed: true });
       });
     }
 
     return folders;
-  }, [parsedData]);
+  }, [parsedData, setShowPlot, setPlotSize, setCheckPlotOpacity]);
 
   const [, set] = useControls(() => resultFolders, { store: levaStore }, [
     resultFolders,
@@ -78,7 +153,6 @@ const EphemerisChecker = () => {
     if (!parsedData) return;
 
     const updates = {};
-
     if (isChecking) {
       updates.Status = `Checking... ${progress}%`;
     } else {
@@ -90,22 +164,42 @@ const EphemerisChecker = () => {
       const hasDist = parsedData[planet][0]?.distAU !== null;
       const hasElong = parsedData[planet][0]?.elongDeg !== null;
 
-      updates[`${planet}_ra`] = res
-        ? `${res.maxRaDev.toFixed(4)}°`
+      updates[`${planet}_max_ra`] = res
+        ? `${res.maxErrors.maxRaDev.toFixed(4)}°`
         : "Pending...";
-      updates[`${planet}_dec`] = res
-        ? `${res.maxDecDev.toFixed(4)}°`
+      updates[`${planet}_max_dec`] = res
+        ? `${res.maxErrors.maxDecDev.toFixed(4)}°`
         : "Pending...";
-      updates[`${planet}_dist`] = res
+      updates[`${planet}_max_dist`] = res
         ? hasDist
-          ? `${res.maxDistDev.toFixed(6)} AU`
+          ? `${res.maxErrors.maxDistDev.toFixed(6)} AU`
           : "N/A"
         : "Pending...";
-      updates[`${planet}_elong`] = res
+      updates[`${planet}_max_elong`] = res
         ? hasElong
-          ? `${res.maxElongDev.toFixed(4)}°`
+          ? `${res.maxErrors.maxElongDev.toFixed(4)}°`
           : "N/A"
         : "Pending...";
+
+      parsedData[planet].forEach((row, idx) => {
+        if (res && res.rows[idx]) {
+          updates[`${planet}_${idx}_raErr`] = `${res.rows[idx].raErr.toFixed(
+            4
+          )}°`;
+          updates[`${planet}_${idx}_decErr`] = `${res.rows[idx].decErr.toFixed(
+            4
+          )}°`;
+          if (hasDist) {
+            updates[`${planet}_${idx}_distErr`] = `${res.rows[
+              idx
+            ].distErr.toFixed(6)} AU`;
+          }
+        } else {
+          updates[`${planet}_${idx}_raErr`] = "Pending...";
+          updates[`${planet}_${idx}_decErr`] = "Pending...";
+          if (hasDist) updates[`${planet}_${idx}_distErr`] = "Pending...";
+        }
+      });
     });
 
     set(updates);
@@ -147,6 +241,7 @@ const EphemerisChecker = () => {
             e.preventDefault();
             e.stopPropagation();
             setShowChecker(false);
+            // resetChecker() is removed here because the new useEffect handles it!
           };
           titleBar.appendChild(closeBtn);
         }
@@ -167,23 +262,23 @@ const EphemerisChecker = () => {
         ref={fileInputRef}
         onChange={handleFileChange}
       />
-      <div
-        className="checker-div"
-        style={{
-          position: "fixed",
-          top: "80px",
-          right: "10px",
-          zIndex: 2147483647,
-        }}
-      >
+      <div className="checker-div">
         <Leva
           store={levaStore}
           titleBar={{ drag: true, title: "Ephemeris Checker", filter: false }}
           fill={false}
           hideCopyButton
           theme={{
-            fontSizes: { root: "12px" },
-            colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
+            fontSizes: {
+              root: "12px",
+            },
+            fonts: {
+              mono: "",
+            },
+            colors: {
+              highlight1: "#FFFFFF",
+              highlight2: "#FFFFFF",
+            },
           }}
         />
       </div>
