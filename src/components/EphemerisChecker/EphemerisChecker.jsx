@@ -56,31 +56,75 @@ const EphemerisChecker = () => {
 
     if (parsedData) {
       Object.keys(parsedData).forEach((planet) => {
-        folders[planet] = folder(
-          {
-            [`${planet}_ra`]: {
-              label: "Max RA Error",
-              value: "Pending...",
-              editable: false,
-            },
-            [`${planet}_dec`]: {
-              label: "Max Dec Error",
-              value: "Pending...",
-              editable: false,
-            },
-            [`${planet}_dist`]: {
-              label: "Max Dist Error",
-              value: "Pending...",
-              editable: false,
-            },
-            [`${planet}_elong`]: {
-              label: "Max Elong Error",
-              value: "Pending...",
-              editable: false,
-            },
+        const hasDist = parsedData[planet][0]?.distAU !== null;
+
+        // Base Max Error configurations
+        const planetConfig = {
+          [`${planet}_max_ra`]: {
+            label: "Max RA Error",
+            value: "Pending...",
+            editable: false,
           },
-          { collapsed: true }
-        );
+          [`${planet}_max_dec`]: {
+            label: "Max Dec Error",
+            value: "Pending...",
+            editable: false,
+          },
+          [`${planet}_max_dist`]: {
+            label: "Max Dist Error",
+            value: "Pending...",
+            editable: false,
+          },
+          [`${planet}_max_elong`]: {
+            label: "Max Elong Error",
+            value: "Pending...",
+            editable: false,
+          },
+        };
+
+        // Create individual date sub-folders for each plot
+        parsedData[planet].forEach((row, idx) => {
+          const rowKey = `${row.date} ${row.time}`;
+          const rowFolderContent = {
+            [`${planet}_${idx}_ra`]: {
+              label: "RA",
+              value: row.raStr,
+              editable: false,
+            },
+            [`${planet}_${idx}_raErr`]: {
+              label: "RA Err",
+              value: "Pending...",
+              editable: false,
+            },
+            [`${planet}_${idx}_dec`]: {
+              label: "Dec",
+              value: row.decStr,
+              editable: false,
+            },
+            [`${planet}_${idx}_decErr`]: {
+              label: "Dec Err",
+              value: "Pending...",
+              editable: false,
+            },
+          };
+
+          if (hasDist) {
+            rowFolderContent[`${planet}_${idx}_dist`] = {
+              label: "Dist AU",
+              value: row.distAU.toFixed(6),
+              editable: false,
+            };
+            rowFolderContent[`${planet}_${idx}_distErr`] = {
+              label: "Dist Err",
+              value: "Pending...",
+              editable: false,
+            };
+          }
+
+          planetConfig[rowKey] = folder(rowFolderContent, { collapsed: true });
+        });
+
+        folders[planet] = folder(planetConfig, { collapsed: true });
       });
     }
 
@@ -106,22 +150,44 @@ const EphemerisChecker = () => {
       const hasDist = parsedData[planet][0]?.distAU !== null;
       const hasElong = parsedData[planet][0]?.elongDeg !== null;
 
-      updates[`${planet}_ra`] = res
-        ? `${res.maxRaDev.toFixed(4)}°`
+      // Update max errors
+      updates[`${planet}_max_ra`] = res
+        ? `${res.maxErrors.maxRaDev.toFixed(4)}°`
         : "Pending...";
-      updates[`${planet}_dec`] = res
-        ? `${res.maxDecDev.toFixed(4)}°`
+      updates[`${planet}_max_dec`] = res
+        ? `${res.maxErrors.maxDecDev.toFixed(4)}°`
         : "Pending...";
-      updates[`${planet}_dist`] = res
+      updates[`${planet}_max_dist`] = res
         ? hasDist
-          ? `${res.maxDistDev.toFixed(6)} AU`
+          ? `${res.maxErrors.maxDistDev.toFixed(6)} AU`
           : "N/A"
         : "Pending...";
-      updates[`${planet}_elong`] = res
+      updates[`${planet}_max_elong`] = res
         ? hasElong
-          ? `${res.maxElongDev.toFixed(4)}°`
+          ? `${res.maxErrors.maxElongDev.toFixed(4)}°`
           : "N/A"
         : "Pending...";
+
+      // Update per-row specific errors
+      parsedData[planet].forEach((row, idx) => {
+        if (res && res.rows[idx]) {
+          updates[`${planet}_${idx}_raErr`] = `${res.rows[idx].raErr.toFixed(
+            4
+          )}°`;
+          updates[`${planet}_${idx}_decErr`] = `${res.rows[idx].decErr.toFixed(
+            4
+          )}°`;
+          if (hasDist) {
+            updates[`${planet}_${idx}_distErr`] = `${res.rows[
+              idx
+            ].distErr.toFixed(6)} AU`;
+          }
+        } else {
+          updates[`${planet}_${idx}_raErr`] = "Pending...";
+          updates[`${planet}_${idx}_decErr`] = "Pending...";
+          if (hasDist) updates[`${planet}_${idx}_distErr`] = "Pending...";
+        }
+      });
     });
 
     set(updates);
@@ -183,9 +249,6 @@ const EphemerisChecker = () => {
         ref={fileInputRef}
         onChange={handleFileChange}
       />
-      {/* The inline style here is intentionally left mostly blank, 
-        because index.css is now taking full control of the positioning!
-      */}
       <div className="checker-div">
         <Leva
           store={levaStore}
@@ -193,16 +256,9 @@ const EphemerisChecker = () => {
           fill={false}
           hideCopyButton
           theme={{
-            fontSizes: {
-              root: "12px",
-            },
-            fonts: {
-              mono: "",
-            },
-            colors: {
-              highlight1: "#FFFFFF",
-              highlight2: "#FFFFFF",
-            },
+            fontSizes: { root: "12px" },
+            fonts: { mono: "" },
+            colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
           }}
         />
       </div>

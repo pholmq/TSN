@@ -28,6 +28,9 @@ export const useCheckerStore = create((set) => ({
 
   showPlot: true,
   setShowPlot: (v) => set({ showPlot: v }),
+
+  modelPoints: null,
+  setModelPoints: (data) => set({ modelPoints: data }),
 }));
 
 export function raToDeg(raStr) {

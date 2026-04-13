@@ -19,6 +19,7 @@ import createCircleTexture from "../../utils/createCircleTexture";
 
 const CheckerController = () => {
   const pointsRef = useRef();
+  const modelPointsRef = useRef(); // NEW: Ref for the model check points
   const getThreeState = useThree((state) => state.get);
   const { invalidate, scene } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
@@ -34,6 +35,8 @@ const CheckerController = () => {
     setResults,
     visualPoints,
     setVisualPoints,
+    modelPoints,
+    setModelPoints,
     showPlot,
     plotSize,
   } = useCheckerStore();
@@ -51,8 +54,10 @@ const CheckerController = () => {
     totalRows: 0,
     processedRows: 0,
     rawPoints: [],
+    rawModelPoints: [], // NEW: Collect model positions
   });
 
+  // Re-evaluates automatically if showChecker, parsedData, OR settings change!
   useEffect(() => {
     if (!showChecker) {
       setChecking(false);
@@ -72,6 +77,7 @@ const CheckerController = () => {
       setIsChecking(true);
       setProgress(0);
       setVisualPoints(null);
+      setModelPoints(null);
 
       const planets = Object.keys(parsedData);
       let totalRows = 0;
@@ -79,11 +85,15 @@ const CheckerController = () => {
 
       planets.forEach((p) => {
         totalRows += parsedData[p].length;
+        // Restructured to track max errors AND row arrays
         initialDeviations[p] = {
-          maxRaDev: 0,
-          maxDecDev: 0,
-          maxDistDev: 0,
-          maxElongDev: 0,
+          maxErrors: {
+            maxRaDev: 0,
+            maxDecDev: 0,
+            maxDistDev: 0,
+            maxElongDev: 0,
+          },
+          rows: [],
         };
       });
 
@@ -95,6 +105,7 @@ const CheckerController = () => {
         totalRows,
         processedRows: 0,
         rawPoints: [],
+        rawModelPoints: [],
       };
 
       setChecking(true);
@@ -108,6 +119,7 @@ const CheckerController = () => {
     setTriggerCheck,
     showChecker,
     setVisualPoints,
+    setModelPoints,
   ]);
 
   useFrame(() => {
@@ -138,26 +150,37 @@ const CheckerController = () => {
         const modelDistAU = parseDistanceToAU(data.dist);
         const modelElongDeg = parseFloat(data.elongation) || 0;
 
+        // Calculate and apply maximum deviations
         let raDiff = Math.abs(row.raDeg - modelRaDeg);
         if (raDiff > 180) raDiff = 360 - raDiff;
-        if (raDiff > job.deviations[planetName].maxRaDev)
-          job.deviations[planetName].maxRaDev = raDiff;
+        if (raDiff > job.deviations[planetName].maxErrors.maxRaDev)
+          job.deviations[planetName].maxErrors.maxRaDev = raDiff;
 
         const decDiff = Math.abs(row.decDeg - modelDecDeg);
-        if (decDiff > job.deviations[planetName].maxDecDev)
-          job.deviations[planetName].maxDecDev = decDiff;
+        if (decDiff > job.deviations[planetName].maxErrors.maxDecDev)
+          job.deviations[planetName].maxErrors.maxDecDev = decDiff;
 
+        let distDiff = null;
         if (row.distAU !== null) {
-          const distDiff = Math.abs(row.distAU - modelDistAU);
-          if (distDiff > job.deviations[planetName].maxDistDev)
-            job.deviations[planetName].maxDistDev = distDiff;
+          distDiff = Math.abs(row.distAU - modelDistAU);
+          if (distDiff > job.deviations[planetName].maxErrors.maxDistDev)
+            job.deviations[planetName].maxErrors.maxDistDev = distDiff;
         }
+
         if (row.elongDeg !== null) {
           const elongDiff = Math.abs(row.elongDeg - modelElongDeg);
-          if (elongDiff > job.deviations[planetName].maxElongDev)
-            job.deviations[planetName].maxElongDev = elongDiff;
+          if (elongDiff > job.deviations[planetName].maxErrors.maxElongDev)
+            job.deviations[planetName].maxErrors.maxElongDev = elongDiff;
         }
 
+        // Store individual row differences
+        job.deviations[planetName].rows.push({
+          raErr: raDiff,
+          decErr: decDiff,
+          distErr: distDiff,
+        });
+
+        // 1. Calculate Ephemeris 3D
         const raRad = row.raDeg * (Math.PI / 180);
         const decRad = row.decDeg * (Math.PI / 180);
         const dist = row.distAU !== null ? row.distAU * 100 : 100;
@@ -169,19 +192,41 @@ const CheckerController = () => {
           localCoords.z
         );
 
+        // 2. Calculate Model Check 3D
+        const raRadMod = modelRaDeg * (Math.PI / 180);
+        const decRadMod = modelDecDeg * (Math.PI / 180);
+        const distMod = modelDistAU !== null ? modelDistAU * 100 : 100;
+
+        const localCoordsMod = sphericalToCartesian(
+          raRadMod,
+          decRadMod,
+          distMod
+        );
+        const modelPos = new THREE.Vector3(
+          localCoordsMod.x,
+          localCoordsMod.y,
+          localCoordsMod.z
+        );
+
         const earthObj = plotObjects.find((p) => p.name === "Earth");
         if (earthObj && earthObj.cSphereRef?.current) {
           earthObj.cSphereRef.current.localToWorld(ephemerisPos);
+          earthObj.cSphereRef.current.localToWorld(modelPos);
         }
 
         job.rawPoints.push({
           planet: planetName,
           position: [ephemerisPos.x, ephemerisPos.y, ephemerisPos.z],
           date: row.date,
-          time: row.time, // Included Time
+          time: row.time,
           ra: row.raStr,
           dec: row.decStr,
           dist: row.distAU,
+        });
+
+        job.rawModelPoints.push({
+          planet: planetName,
+          position: [modelPos.x, modelPos.y, modelPos.z],
         });
 
         job.currentRowIdx++;
@@ -204,14 +249,22 @@ const CheckerController = () => {
       const colors = [];
       const pointsData = [];
 
-      job.rawPoints.forEach((pt) => {
-        positions.push(pt.position[0], pt.position[1], pt.position[2]);
+      const mPositions = [];
+      const mColors = [];
 
+      job.rawPoints.forEach((pt, i) => {
         const pSetting = settings.find((s) => s.name === pt.planet);
         const color = new THREE.Color(pSetting?.color || "#ffffff");
 
+        // Primary Ephemeris
+        positions.push(pt.position[0], pt.position[1], pt.position[2]);
         colors.push(color.r, color.g, color.b);
         pointsData.push(pt);
+
+        // Model Checks
+        const mPt = job.rawModelPoints[i];
+        mPositions.push(mPt.position[0], mPt.position[1], mPt.position[2]);
+        mColors.push(color.r, color.g, color.b);
       });
 
       setVisualPoints({
@@ -220,11 +273,17 @@ const CheckerController = () => {
         pointsData,
       });
 
+      setModelPoints({
+        positions: new Float32Array(mPositions),
+        colors: new Float32Array(mColors),
+      });
+
       setChecking(false);
       setIsChecking(false);
     }
   });
 
+  // Apply Primary Buffer
   useEffect(() => {
     if (pointsRef.current && visualPoints?.positions) {
       const geo = pointsRef.current.geometry;
@@ -236,7 +295,6 @@ const CheckerController = () => {
         "color",
         new THREE.BufferAttribute(visualPoints.colors, 3)
       );
-
       geo.attributes.position.needsUpdate = true;
       geo.attributes.color.needsUpdate = true;
       geo.computeBoundingBox();
@@ -244,15 +302,31 @@ const CheckerController = () => {
     }
   }, [visualPoints]);
 
+  // Apply Model Check Buffer
+  useEffect(() => {
+    if (modelPointsRef.current && modelPoints?.positions) {
+      const geo = modelPointsRef.current.geometry;
+      geo.setAttribute(
+        "position",
+        new THREE.BufferAttribute(modelPoints.positions, 3)
+      );
+      geo.setAttribute(
+        "color",
+        new THREE.BufferAttribute(modelPoints.colors, 3)
+      );
+      geo.attributes.position.needsUpdate = true;
+      geo.attributes.color.needsUpdate = true;
+      geo.computeBoundingBox();
+      geo.computeBoundingSphere();
+    }
+  }, [modelPoints]);
+
   const customRaycast = useCallback(
     (raycaster, intersects) => {
-      // Do not raycast if the plot is toggled off
       if (!pointsRef.current || !visualPoints?.positions || !showPlot) return;
-
       const { camera, size, pointer } = getThreeState();
       const posArray = visualPoints.positions;
       const matrixWorld = pointsRef.current.matrixWorld;
-
       const HOVER_RADIUS_PX = Math.max(plotSize, 6);
       const thresholdSqPx = HOVER_RADIUS_PX * HOVER_RADIUS_PX;
 
@@ -269,13 +343,11 @@ const CheckerController = () => {
         _v1.project(camera);
 
         if (_v1.z > 1 || _v1.z < -1) continue;
-
         const starPxX = ((_v1.x + 1) / 2) * size.width;
         const starPxY = ((-_v1.y + 1) / 2) * size.height;
 
         const distSq =
           (starPxX - pointerPxX) ** 2 + (starPxY - pointerPxY) ** 2;
-
         if (distSq < thresholdSqPx) {
           intersects.push({
             distance: raycaster.ray.origin.distanceTo(_worldPos) * 1.0001,
@@ -295,7 +367,6 @@ const CheckerController = () => {
     if (e.index !== undefined && visualPoints?.pointsData) {
       const pt = visualPoints.pointsData[e.index];
       const pSetting = settings.find((s) => s.name === pt.planet);
-
       setHoveredData({
         pt,
         x: e.clientX,
@@ -305,9 +376,7 @@ const CheckerController = () => {
     }
   };
 
-  const handlePointerOut = () => {
-    setHoveredData(null);
-  };
+  const handlePointerOut = () => setHoveredData(null);
 
   useEffect(() => {
     if (!showPlot) setHoveredData(null);
@@ -315,7 +384,6 @@ const CheckerController = () => {
 
   useEffect(() => {
     if (!hoveredData) return;
-
     const el = document.createElement("div");
     el.style.position = "fixed";
     el.style.top = `${hoveredData.y - 80}px`;
@@ -335,18 +403,12 @@ const CheckerController = () => {
 
     const distStr =
       hoveredData.pt.dist !== null ? hoveredData.pt.dist.toFixed(6) : "N/A";
-
     el.innerHTML = `
-      <strong style="color: ${hoveredData.color}; font-size: 14px;">${hoveredData.pt.planet}</strong>
-      <br />
-      <span style="color: #aaa;">Date:</span> <span style="color: #fff; font-weight: bold;">${hoveredData.pt.date}</span>
-      <br />
-      <span style="color: #aaa;">Time:</span> <span style="color: #fff;">${hoveredData.pt.time}</span>
-      <br />
-      <span style="color: #aaa;">RA:</span> <span style="color: #fff;">${hoveredData.pt.ra}</span>
-      <br />
-      <span style="color: #aaa;">Dec:</span> <span style="color: #fff;">${hoveredData.pt.dec}</span>
-      <br />
+      <strong style="color: ${hoveredData.color}; font-size: 14px;">${hoveredData.pt.planet}</strong><br />
+      <span style="color: #aaa;">Date:</span> <span style="color: #fff; font-weight: bold;">${hoveredData.pt.date}</span><br />
+      <span style="color: #aaa;">Time:</span> <span style="color: #fff;">${hoveredData.pt.time}</span><br />
+      <span style="color: #aaa;">RA:</span> <span style="color: #fff;">${hoveredData.pt.ra}</span><br />
+      <span style="color: #aaa;">Dec:</span> <span style="color: #fff;">${hoveredData.pt.dec}</span><br />
       <span style="color: #aaa;">AU:</span> <span style="color: #fff;">${distStr}</span>
     `;
 
@@ -356,18 +418,16 @@ const CheckerController = () => {
     };
   }, [hoveredData]);
 
-  // NEVER return null based on `showPlot`. The geometry stays loaded in memory.
   if (!showChecker || !visualPoints?.positions) return null;
 
   return (
     <group>
+      {/* Primary Ephemeris Points (Hoverable, Solid) */}
       <points
         ref={pointsRef}
         raycast={customRaycast}
-        // Only trigger hovers if the plot is visible
         onPointerMove={showPlot ? handlePointerMove : undefined}
         onPointerOut={showPlot ? handlePointerOut : undefined}
-        // Toggles visibility visually without destroying the data!
         visible={showPlot}
       >
         <bufferGeometry />
@@ -381,6 +441,27 @@ const CheckerController = () => {
           alphaTest={0.5}
         />
       </points>
+
+      {/* Secondary Model Check Points (No Hover, 50% Opacity) */}
+      {modelPoints?.positions && (
+        <points
+          ref={modelPointsRef}
+          visible={showPlot}
+          raycast={() => null} // Disable raycasting completely
+        >
+          <bufferGeometry />
+          <pointsMaterial
+            size={plotSize}
+            vertexColors
+            sizeAttenuation={false}
+            depthTest={false}
+            map={circleTexture}
+            transparent={true}
+            opacity={0.5}
+            alphaTest={0.05} // Lowered so the opacity override doesn't clip the texture out of existence
+          />
+        </points>
+      )}
     </group>
   );
 };
