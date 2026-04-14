@@ -55,8 +55,20 @@ export default function Orbit({ radius, visible, s }) {
   // 1. Pull editSettings from the store
   const editSettings = useStore((s) => s.editSettings);
 
+  const shadeOrbits = useStore((s) => s.shadeOrbits);
+
   // BUG FIX: Prevent NaN mathematical collapse for planets at center (radius 0)
   const safeRadius = radius === 0 ? 0.000001 : radius;
+
+  const shadeMaterial = useMemo(() => {
+    return new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+  }, [color]);
 
   // Export the edge position so we can use it for the second red dot
   const { points, centerToEdgePoints, edgePosition } = useMemo(() => {
@@ -86,6 +98,11 @@ export default function Orbit({ radius, visible, s }) {
   return (
     <>
       <group visible={showOrbits && visible}>
+        {shadeOrbits && (
+          <mesh material={shadeMaterial}>
+            <circleGeometry args={[safeRadius, 128]} />
+          </mesh>
+        )}
         <group visible={arrows && showArrows}>
           <Arrow
             rotation={Math.PI / 4}

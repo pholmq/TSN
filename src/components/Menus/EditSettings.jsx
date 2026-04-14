@@ -170,6 +170,8 @@ const getControls = (s, updateSetting) => ({
 const EditSettingsPanel = () => {
   const showPlanets = useStore((s) => s.showPlanets);
   const setShowPlanets = useStore((s) => s.setShowPlanets);
+  const shadeOrbits = useStore((s) => s.shadeOrbits);
+  const setShadeOrbits = useStore((s) => s.setShadeOrbits);
   const setEditSettings = useStore((s) => s.setEditSettings); // NEW
   const positions = usePosStore((s) => s.positions);
   const { settings, updateSetting, resetSettings } = useSettingsStore();
@@ -340,10 +342,21 @@ const EditSettingsPanel = () => {
         value: showPlanets,
         onChange: (v) => setShowPlanets(v),
       },
+      "Shade Orbits": {
+        value: shadeOrbits,
+        onChange: (v) => setShadeOrbits(v),
+      },
       "Show / Hide settings": folder(showHideMenu, { collapsed: false }),
       Settings: folder(settingsMenu, { collapsed: false }),
     };
-  }, [settings, updateSetting, showPlanets, setShowPlanets]);
+  }, [
+    settings,
+    updateSetting,
+    showPlanets,
+    setShowPlanets,
+    shadeOrbits,
+    setShadeOrbits,
+  ]);
 
   const levaSettingsStore = useCreateStore();
 
@@ -354,6 +367,7 @@ const EditSettingsPanel = () => {
   useEffect(() => {
     const updatedValues = {
       "Show / Hide Planets": showPlanets,
+      "Shade Orbits": shadeOrbits,
     };
     settings.forEach((s) => {
       if (!s.name.includes("deferent")) {
@@ -380,7 +394,7 @@ const EditSettingsPanel = () => {
       updatedValues[`${s.name}orbitTiltb`] = "\u200B" + s.orbitTiltb;
     });
     set(updatedValues);
-  }, [settings, set, showPlanets]);
+  }, [settings, set, showPlanets, shadeOrbits]);
 
   return createPortal(
     <div
