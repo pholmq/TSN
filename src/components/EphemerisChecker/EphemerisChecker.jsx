@@ -22,7 +22,6 @@ const EphemerisChecker = () => {
   const levaStore = useCreateStore();
   const fileInputRef = useRef(null);
 
-  // --- NEW: Watch showChecker. If it turns false from ANY source, reset everything. ---
   useEffect(() => {
     if (!showChecker) {
       resetChecker();
@@ -97,6 +96,9 @@ const EphemerisChecker = () => {
           },
         };
 
+        // NEW: Group all individual rows into a separate sub-menu object
+        const individualErrorsConfig = {};
+
         parsedData[planet].forEach((row, idx) => {
           const rowKey = `${row.date} ${row.time}`;
           const rowFolderContent = {
@@ -135,7 +137,15 @@ const EphemerisChecker = () => {
             };
           }
 
-          planetConfig[rowKey] = folder(rowFolderContent, { collapsed: true });
+          // Add each row to the individual errors object instead of the root planet config
+          individualErrorsConfig[rowKey] = folder(rowFolderContent, {
+            collapsed: true,
+          });
+        });
+
+        // Add the grouped sub-menu to the planet configuration
+        planetConfig["Individual Errors"] = folder(individualErrorsConfig, {
+          collapsed: true,
         });
 
         folders[planet] = folder(planetConfig, { collapsed: true });
@@ -241,7 +251,6 @@ const EphemerisChecker = () => {
             e.preventDefault();
             e.stopPropagation();
             setShowChecker(false);
-            // resetChecker() is removed here because the new useEffect handles it!
           };
           titleBar.appendChild(closeBtn);
         }
