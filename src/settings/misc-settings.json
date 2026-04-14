@@ -31,12 +31,7 @@
     "type": "deferent",
     "visible": false
   },
-  {
-    "name": "Moon deferent B",
-    "color": "gray",
-    "type": "deferent",
-    "visible": false
-  },
+
   {
     "name": "Moon",
     "color": "#8b8b8b",
@@ -49,12 +44,6 @@
     "horizonColor": "#8B8B8B",
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
-  },
-  {
-    "name": "Sun deferent",
-    "color": "yellow",
-    "type": "deferent",
-    "visible": false
   },
   {
     "name": "Sun",

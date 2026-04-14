@@ -44,46 +44,21 @@
     "orbitTilta": -0.2,
     "orbitTiltb": 0.5
   },
-  {
-    "name": "Moon deferent B",
-    "size": 0.6,
-    "startPos": -1.8,
-    "speed": 0,
-    "tilt": 0,
-    "orbitRadius": 0,
-    "orbitCentera": -0.009691949050954147,
-    "orbitCenterb": 0.005611128397920822,
-    "orbitCenterc": 0,
-    "orbitTilta": 2.3,
-    "orbitTiltb": 2.6
-  },
+
   {
     "name": "Moon",
     "size": 1,
     "actualSize": 0.00116,
-    "startPos": 261.2,
+    "startPos": 259.4,
     "speed": 83.28521,
     "tilt": 0,
     "rotationStart": 3.14159,
     "rotationSpeed": 0,
     "orbitRadius": 0.25505129081458283,
-    "orbitCentera": 0.020404103265166628,
-    "orbitCenterb": -0.02065915455598121,
+    "orbitCentera": 0.010712154214212481,
+    "orbitCenterb": -0.015048026158060388,
     "orbitCenterc": -0.00178535903570208,
-    "orbitTilta": -1.8,
-    "orbitTiltb": -2.6
-  },
-  {
-    "name": "Sun deferent",
-    "size": 2,
-    "startPos": 0,
-    "speed": 0,
-    "tilt": 0,
-    "orbitRadius": 0,
-    "orbitCentera": 1.4,
-    "orbitCenterb": -0.6,
-    "orbitCenterc": 0,
-    "orbitTilta": 0.1,
+    "orbitTilta": 0.5,
     "orbitTiltb": 0
   },
   {
@@ -97,10 +72,10 @@
     "rotationStart": 0,
     "rotationSpeed": 90.5,
     "orbitRadius": 100,
-    "orbitCentera": 1.2,
-    "orbitCenterb": -0.1,
+    "orbitCentera": 2.6,
+    "orbitCenterb": -0.7,
     "orbitCenterc": 0,
-    "orbitTilta": 0.1,
+    "orbitTilta": 0.2,
     "orbitTiltb": 0
   },
   {

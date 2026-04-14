@@ -6,31 +6,27 @@ const PlotSolarSystem = () => {
       <Pobj name="SystemCenter">
         <Pobj name="Earth">
           <Pobj name="Moon deferent A">
-            <Pobj name="Moon deferent B">
-              <Pobj name="Moon" />
-            </Pobj>
+            <Pobj name="Moon" />
           </Pobj>
-          <Pobj name="Sun deferent">
-            <Pobj name="Sun">
-              <Pobj name="Halleys deferent">
-                <Pobj name="Halleys" />
-              </Pobj>
+          <Pobj name="Sun">
+            <Pobj name="Halleys deferent">
+              <Pobj name="Halleys" />
+            </Pobj>
 
-              <Pobj name="Jupiter deferent">
-                <Pobj name="Jupiter" />
-              </Pobj>
-              <Pobj name="Saturn deferent">
-                <Pobj name="Saturn" />
-              </Pobj>
-              <Pobj name="Uranus deferent">
-                <Pobj name="Uranus" />
-              </Pobj>
-              <Pobj name="Neptune deferent">
-                <Pobj name="Neptune" />
-              </Pobj>
-              <Pobj name="Pluto deferent">
-                <Pobj name="Pluto" />
-              </Pobj>
+            <Pobj name="Jupiter deferent">
+              <Pobj name="Jupiter" />
+            </Pobj>
+            <Pobj name="Saturn deferent">
+              <Pobj name="Saturn" />
+            </Pobj>
+            <Pobj name="Uranus deferent">
+              <Pobj name="Uranus" />
+            </Pobj>
+            <Pobj name="Neptune deferent">
+              <Pobj name="Neptune" />
+            </Pobj>
+            <Pobj name="Pluto deferent">
+              <Pobj name="Pluto" />
             </Pobj>
           </Pobj>
           <Pobj name="Venus deferent A">
