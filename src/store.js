@@ -49,6 +49,8 @@ export const useStore = create(
       setOrbits: (v) => set({ orbits: v }),
       orbitsLineWidth: 1.5,
       setOrbitsLineWidth: (v) => set({ orbitsLineWidth: v }),
+      shadeOrbits: false,
+      setShadeOrbits: (v) => set({ shadeOrbits: v }),
       planetScale: 1,
       setPlanetScale: (v) => set({ planetScale: v }),
       actualPlanetSizes: false,

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import * as THREE from "three";
 import { SpriteMaterial } from "three";
 import { useStore } from "../store";
 import { Line } from "@react-three/drei";
@@ -18,6 +19,17 @@ const spriteMaterial = new SpriteMaterial({
 export default function Orbit({ radius, visible, s }) {
   const color = s.color;
   const orbitsLineWidth = useStore((state) => state.orbitsLineWidth);
+  const shadeOrbits = useStore((state) => state.shadeOrbits);
+
+  const shadeMaterial = useMemo(() => {
+    return new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+  }, [color]);
 
   // PERFORMANCE FIX: Wrap the 3,600 iteration loop in a useMemo so we
   // only crunch this math when the radius actually changes.
@@ -45,6 +57,12 @@ export default function Orbit({ radius, visible, s }) {
   return (
     <group visible={visible} name={s.name}>
       {visible && <HoverObj s={s} />}
+
+      {shadeOrbits && (
+        <mesh material={shadeMaterial}>
+          <circleGeometry args={[radius, 128]} />
+        </mesh>
+      )}
 
       <Line
         points={points}
