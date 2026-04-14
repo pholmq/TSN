@@ -17,6 +17,10 @@ import {
 import { sphericalToCartesian } from "../../utils/celestial-functions";
 import createCircleTexture from "../../utils/createCircleTexture";
 
+// MODULE-LEVEL CACHE: Survives React Suspense unmounts/remounts.
+let cachedSettingsHash = null;
+let cachedParsedData = null;
+
 const CheckerController = () => {
   const pointsRef = useRef();
   const modelPointsRef = useRef();
@@ -24,6 +28,16 @@ const CheckerController = () => {
   const { invalidate, scene } = useThree();
   const plotObjects = usePlotStore((s) => s.plotObjects);
   const settings = useSettingsStore((s) => s.settings);
+
+  // Map only the exact physical parameters that dictate orbital math
+  const physicalSettingsHash = useMemo(() => {
+    return settings
+      .map(
+        (s) =>
+          `${s.name}|${s.startPos}|${s.speed}|${s.orbitRadius}|${s.orbitCentera}|${s.orbitCenterb}|${s.orbitCenterc}|${s.orbitTilta}|${s.orbitTiltb}|${s.tilt}|${s.tiltb}|${s.rotationStart}|${s.rotationSpeed}`
+      )
+      .join("||");
+  }, [settings]);
 
   const {
     showChecker,
@@ -39,7 +53,7 @@ const CheckerController = () => {
     setModelPoints,
     showPlot,
     plotSize,
-    checkPlotOpacity, // NEW
+    checkPlotOpacity,
   } = useCheckerStore();
 
   const [checking, setChecking] = useState(false);
@@ -59,18 +73,40 @@ const CheckerController = () => {
   });
 
   useEffect(() => {
+    // 1. If checker is closed, clear everything including the module cache
     if (!showChecker) {
       setChecking(false);
       setIsChecking(false);
+      cachedSettingsHash = null;
+      cachedParsedData = null;
       return;
     }
+
     if (parsedData) {
+      // 2. Prevent phantom checks from Suspense remounts
+      if (
+        cachedSettingsHash === physicalSettingsHash &&
+        cachedParsedData === parsedData
+      ) {
+        return; // The math and data haven't changed. Do nothing.
+      }
+
+      // 3. Update the cache to the new state
+      cachedSettingsHash = physicalSettingsHash;
+      cachedParsedData = parsedData;
+
       setChecking(false);
       setIsChecking(false);
       const timer = setTimeout(() => setTriggerCheck(true), 300);
       return () => clearTimeout(timer);
     }
-  }, [settings, parsedData, setTriggerCheck, setIsChecking, showChecker]);
+  }, [
+    physicalSettingsHash,
+    parsedData,
+    setTriggerCheck,
+    setIsChecking,
+    showChecker,
+  ]);
 
   useEffect(() => {
     if (triggerCheck && parsedData && showChecker) {
@@ -472,7 +508,7 @@ const CheckerController = () => {
             depthTest={false}
             map={circleTexture}
             transparent={true}
-            opacity={checkPlotOpacity} // NEW: Linked to slider
+            opacity={checkPlotOpacity}
             alphaTest={0.05}
           />
         </points>
