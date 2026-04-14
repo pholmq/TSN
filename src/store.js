@@ -271,14 +271,26 @@ export const useSettingsStore = create((set, get) => ({
   },
 
   resetSettings: () =>
-    set({
+    set((state) => ({
       settings: celestialSettings.map((obj1) => {
         const [matchingObj] = miscSettings.filter(
           (obj2) => obj2.name === obj1.name
         );
-        return { ...obj1, ...matchingObj };
+
+        // Merge the default settings
+        const defaultSetting = { ...obj1, ...matchingObj };
+
+        // Find the matching current setting in the state
+        const currentSetting = state.settings.find((s) => s.name === obj1.name);
+
+        // Preserve the 'visible' state if it exists
+        if (currentSetting && currentSetting.visible !== undefined) {
+          defaultSetting.visible = currentSetting.visible;
+        }
+
+        return defaultSetting;
       }),
-    }),
+    })),
 }));
 
 export const useStarStore = create((set, get) => ({
