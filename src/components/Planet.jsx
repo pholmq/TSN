@@ -36,7 +36,7 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   );
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
   const editSettings = useStore((state) => state.editSettings);
-  const showPlanets = useStore((state) => state.showPlanets); // <-- Get new global boolean
+  const showPlanets = useStore((state) => state.showPlanets);
 
   const { texture, isLoading } = s.texture
     ? useTextureLoader(s.texture)
@@ -97,9 +97,9 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
       >
         {s.name === "Earth" && <CelestialSphere />}
 
-        {(s.name === "Earth" || s.name === "Sun") && (
-          <PolarLine visible={visible} />
-        )}
+        {/* CHANGED: Attach PolarLine to ALL planets and pass down the `name` prop so it hooks into the right Leva menu setting */}
+        <PolarLine visible={visible} name={name} />
+
         {showLabel && <NameLabel s={s} />}
         {showLabel && <HoverObj s={s} />}
 
@@ -108,7 +108,7 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
             <mesh geometry={planetGeometry} scale={size}>
               <meshStandardMaterial
                 ref={materialRef}
-                visible={!editSettings || showPlanets} // <-- Uses the new boolean override
+                visible={!editSettings || showPlanets}
                 color={
                   isLoading || !texture ? s.color : s.textureTint || "#ffffff"
                 }
