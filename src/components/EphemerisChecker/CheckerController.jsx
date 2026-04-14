@@ -25,6 +25,27 @@ const CheckerController = () => {
   const plotObjects = usePlotStore((s) => s.plotObjects);
   const settings = useSettingsStore((s) => s.settings);
 
+  // NEW: Create a hash of ONLY the settings that affect mathematical positions.
+  // This prevents visual toggles (like visibility, color, size) from triggering a re-check.
+  const physicalSettingsHash = useMemo(() => {
+    return JSON.stringify(
+      settings.map((s) => ({
+        startPos: s.startPos,
+        speed: s.speed,
+        orbitRadius: s.orbitRadius,
+        orbitCentera: s.orbitCentera,
+        orbitCenterb: s.orbitCenterb,
+        orbitCenterc: s.orbitCenterc,
+        orbitTilta: s.orbitTilta,
+        orbitTiltb: s.orbitTiltb,
+        tilt: s.tilt,
+        tiltb: s.tiltb,
+        rotationStart: s.rotationStart,
+        rotationSpeed: s.rotationSpeed,
+      }))
+    );
+  }, [settings]);
+
   const {
     showChecker,
     parsedData,
@@ -39,7 +60,7 @@ const CheckerController = () => {
     setModelPoints,
     showPlot,
     plotSize,
-    checkPlotOpacity, // NEW
+    checkPlotOpacity,
   } = useCheckerStore();
 
   const [checking, setChecking] = useState(false);
@@ -70,7 +91,13 @@ const CheckerController = () => {
       const timer = setTimeout(() => setTriggerCheck(true), 300);
       return () => clearTimeout(timer);
     }
-  }, [settings, parsedData, setTriggerCheck, setIsChecking, showChecker]);
+  }, [
+    physicalSettingsHash, // Changed: Replaced `settings` with our physical hash
+    parsedData,
+    setTriggerCheck,
+    setIsChecking,
+    showChecker,
+  ]);
 
   useEffect(() => {
     if (triggerCheck && parsedData && showChecker) {
@@ -472,7 +499,7 @@ const CheckerController = () => {
             depthTest={false}
             map={circleTexture}
             transparent={true}
-            opacity={checkPlotOpacity} // NEW: Linked to slider
+            opacity={checkPlotOpacity}
             alphaTest={0.05}
           />
         </points>
