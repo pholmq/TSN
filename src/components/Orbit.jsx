@@ -1,5 +1,7 @@
+//Orbit
 import { useRef, useMemo } from "react";
 import * as THREE from "three";
+import { useFrame } from "@react-three/fiber";
 import { useStore } from "../store";
 import { Line } from "@react-three/drei";
 import createCircleTexture from "../utils/createCircleTexture";
@@ -21,7 +23,9 @@ const spriteMaterial = new THREE.SpriteMaterial({
 });
 
 function Arrow({ rotation, radius, color, reverse = false }) {
-  const arrowScale = useStore((s) => s.arrowScale);
+  const meshRef = useRef();
+  const globalArrowSize = useStore((s) => s.globalArrowSize);
+  const globalArrowFixedSize = useStore((s) => s.globalArrowFixedSize);
   const arrowDirection = reverse ? Math.PI : 0;
 
   const mat = useMemo(() => {
@@ -30,12 +34,32 @@ function Arrow({ rotation, radius, color, reverse = false }) {
     return m;
   }, [color]);
 
+  // Use a pre-allocated vector to prevent recreating objects in the animation loop
+  const vec = useMemo(() => new THREE.Vector3(), []);
+
+  // Ensure arrow stays the same apparent size regardless of camera distance
+  useFrame(({ camera }) => {
+    if (meshRef.current) {
+      if (globalArrowFixedSize) {
+        // Fixed size in the 3D world (gets smaller as you zoom out)
+        // Multiplier 0.2 means a slider value of 5 equals a scale of 1.0
+        meshRef.current.scale.setScalar(globalArrowSize * 0.2);
+      } else {
+        // Dynamic size (stays the same apparent size on screen)
+        meshRef.current.getWorldPosition(vec);
+        const distance = camera.position.distanceTo(vec);
+        const dynamicScale = distance * globalArrowSize * 0.0001;
+        meshRef.current.scale.setScalar(dynamicScale);
+      }
+    }
+  });
+
   return (
     <group rotation={[0, 0, rotation]}>
       <mesh
+        ref={meshRef}
         position={[radius, 0, 0]}
         rotation={[0, 0, arrowDirection]}
-        scale={arrowScale}
         geometry={arrowGeometry}
         material={mat}
       />
@@ -45,16 +69,14 @@ function Arrow({ rotation, radius, color, reverse = false }) {
 
 export default function Orbit({ radius, visible, s }) {
   const color = s.color;
-  const arrows = s?.arrows ? s.arrows : false;
-  const reverse = s?.reverseArrows ? s.reverseArrows : false;
+  const showOrbitArrows = s?.orbitArrowsVisible || false;
+  const reverse = s?.reverseArrows || false;
 
   const showOrbits = useStore((s) => s.orbits);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
-
-  // 1. Pull editSettings from the store
   const editSettings = useStore((s) => s.editSettings);
-
   const shadeOrbits = useStore((s) => s.shadeOrbits);
+  const globalArrowCount = useStore((s) => s.globalArrowCount);
 
   // BUG FIX: Prevent NaN mathematical collapse for planets at center (radius 0)
   const safeRadius = radius === 0 ? 0.000001 : radius;
@@ -68,6 +90,24 @@ export default function Orbit({ radius, visible, s }) {
       depthWrite: false,
     });
   }, [color]);
+
+  // Distribute arrows evenly based on global count
+  const arrowsToRender = useMemo(() => {
+    const elements = [];
+    const step = (Math.PI * 2) / globalArrowCount;
+    for (let i = 0; i < globalArrowCount; i++) {
+      elements.push(
+        <Arrow
+          key={i}
+          rotation={i * step}
+          radius={safeRadius}
+          color={color}
+          reverse={reverse}
+        />
+      );
+    }
+    return elements;
+  }, [globalArrowCount, safeRadius, color, reverse]);
 
   // Export the edge position so we can use it for the second red dot
   const { points, centerToEdgePoints, edgePosition } = useMemo(() => {
@@ -102,32 +142,9 @@ export default function Orbit({ radius, visible, s }) {
             <circleGeometry args={[safeRadius, 128]} />
           </mesh>
         )}
-        <group visible={arrows}>
-          <Arrow
-            rotation={Math.PI / 4}
-            radius={safeRadius}
-            color={color}
-            reverse={reverse}
-          />
-          <Arrow
-            rotation={(Math.PI / 4) * 3}
-            radius={safeRadius}
-            color={color}
-            reverse={reverse}
-          />
-          <Arrow
-            rotation={(Math.PI / 4) * 5}
-            radius={safeRadius}
-            color={color}
-            reverse={reverse}
-          />
-          <Arrow
-            rotation={(Math.PI / 4) * 7}
-            radius={safeRadius}
-            color={color}
-            reverse={reverse}
-          />
-        </group>
+
+        {/* Visibility driven by specific planet setting */}
+        <group visible={showOrbitArrows}>{arrowsToRender}</group>
 
         <Line
           points={points}

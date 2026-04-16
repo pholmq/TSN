@@ -1,3 +1,4 @@
+//LevaUI
 import { useRef, useEffect } from "react";
 import { useControls, useCreateStore, Leva, folder } from "leva";
 import { useStore, useTraceStore, useSettingsStore } from "../store";
@@ -64,6 +65,12 @@ const LevaUI = () => {
     cameraTransitioning,
     showConstellations,
     setShowConstellations,
+    globalArrowSize,
+    setGlobalArrowSize,
+    globalArrowCount,
+    setGlobalArrowCount,
+    globalArrowFixedSize,
+    setGlobalArrowFixedSize,
   } = useStore();
 
   const {
@@ -90,18 +97,21 @@ const LevaUI = () => {
 
   settings.forEach((s) => {
     if (s.type === "planet") {
-      polarLineCheckboxes[s.name] = {
+      // FIX: Append unique suffixes to the keys so Leva doesn't overwrite them,
+      // but override the `label` so it still looks clean in the UI.
+      polarLineCheckboxes[`${s.name}_polar`] = {
+        label: s.name,
         value: s.polarLineVisible || false,
         onChange: (v) => {
-          // FIX: Only send the specific field that changed to prevent overwriting
           updateSetting({ name: s.name, polarLineVisible: v });
         },
       };
 
-      orbitArrowsCheckboxes[s.name] = {
-        value: s.arrows || false,
+      orbitArrowsCheckboxes[`${s.name}_arrows`] = {
+        label: s.name,
+        value: s.orbitArrowsVisible || false,
         onChange: (v) => {
-          updateSetting({ name: s.name, arrows: v });
+          updateSetting({ name: s.name, orbitArrowsVisible: v });
         },
       };
     }
@@ -213,6 +223,24 @@ const LevaUI = () => {
         },
         "Orbit arrows": folder(
           {
+            Size: {
+              value: globalArrowSize,
+              min: 1, // Updated to 1
+              max: 10, // Updated to 10
+              step: 0.1,
+              onChange: setGlobalArrowSize,
+            },
+            "No of arrows": {
+              value: globalArrowCount,
+              min: 1,
+              max: 24,
+              step: 1,
+              onChange: setGlobalArrowCount,
+            },
+            "Fixed size": {
+              value: globalArrowFixedSize,
+              onChange: setGlobalArrowFixedSize,
+            },
             ...orbitArrowsCheckboxes,
           },
           { collapsed: true }
@@ -230,10 +258,10 @@ const LevaUI = () => {
           },
           { collapsed: true }
         ),
-        Graticules: {
-          value: geoSphere,
-          onChange: setGeoSphere,
-        },
+        // Graticules: {
+        //   value: geoSphere,
+        //   onChange: setGeoSphere,
+        // },
       },
       { collapsed: true }
     ),
