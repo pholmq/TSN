@@ -208,7 +208,19 @@ const LevaUI = () => {
           value: arrows,
           onChange: setArrows,
         },
-        "Polar lines": folder(polarLineCheckboxes, { collapsed: true }),
+        "Polar lines": folder(
+          {
+            "Line length": {
+              value: useStore.getState().polarLineSize,
+              min: 5,
+              max: 1000,
+              step: 5,
+              onChange: (v) => useStore.setState({ polarLineSize: v }),
+            },
+            ...polarLineCheckboxes,
+          },
+          { collapsed: true }
+        ),
         Graticules: {
           value: geoSphere,
           onChange: setGeoSphere,
