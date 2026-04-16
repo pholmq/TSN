@@ -48,7 +48,6 @@ export default function Orbit({ radius, visible, s }) {
   const arrows = s?.arrows ? s.arrows : false;
   const reverse = s?.reverseArrows ? s.reverseArrows : false;
 
-  const showArrows = useStore((s) => s.arrows);
   const showOrbits = useStore((s) => s.orbits);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
 
@@ -103,7 +102,7 @@ export default function Orbit({ radius, visible, s }) {
             <circleGeometry args={[safeRadius, 128]} />
           </mesh>
         )}
-        <group visible={arrows && showArrows}>
+        <group visible={arrows}>
           <Arrow
             rotation={Math.PI / 4}
             radius={safeRadius}

@@ -17,8 +17,6 @@ const LevaUI = () => {
     setPlanetCamera,
     orbits,
     setOrbits,
-    arrows,
-    setArrows,
     orbitsLineWidth,
     setOrbitsLineWidth,
     planetScale,
@@ -88,6 +86,8 @@ const LevaUI = () => {
   };
 
   const polarLineCheckboxes = {};
+  const orbitArrowsCheckboxes = {};
+
   settings.forEach((s) => {
     if (s.type === "planet") {
       polarLineCheckboxes[s.name] = {
@@ -95,6 +95,13 @@ const LevaUI = () => {
         onChange: (v) => {
           // FIX: Only send the specific field that changed to prevent overwriting
           updateSetting({ name: s.name, polarLineVisible: v });
+        },
+      };
+
+      orbitArrowsCheckboxes[s.name] = {
+        value: s.arrows || false,
+        onChange: (v) => {
+          updateSetting({ name: s.name, arrows: v });
         },
       };
     }
@@ -204,10 +211,12 @@ const LevaUI = () => {
           step: 0.5,
           onChange: setOrbitsLineWidth,
         },
-        Arrows: {
-          value: arrows,
-          onChange: setArrows,
-        },
+        "Orbit arrows": folder(
+          {
+            ...orbitArrowsCheckboxes,
+          },
+          { collapsed: true }
+        ),
         "Polar lines": folder(
           {
             "Line length": {

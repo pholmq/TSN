@@ -55,8 +55,6 @@ export const useStore = create(
       setPlanetScale: (v) => set({ planetScale: v }),
       actualPlanetSizes: false,
       setActualPlanetSizes: (v) => set({ actualPlanetSizes: v }),
-      arrows: false,
-      setArrows: (v) => set({ arrows: v }),
 
       showLevaMenu: true,
       toggleShowLevaMenu: () =>
