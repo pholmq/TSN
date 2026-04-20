@@ -50,17 +50,6 @@ const isTouchDevice = () => {
   );
 };
 
-const SuspenseCompleteSignal = ({ onComplete }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
-
-  return null;
-};
-
 const TSNext = () => {
   const [canvasVisible, setCanvasVisible] = useState(false);
 
@@ -82,10 +71,6 @@ const TSNext = () => {
       toggleShowLevaMenu();
     }
   }, []);
-
-  const handleSuspenseComplete = () => {
-    setCanvasVisible(true);
-  };
 
   const getCanvasStyle = () => {
     if (!runIntro) {
@@ -131,12 +116,12 @@ const TSNext = () => {
         raycaster={{
           params: { Line: { threshold: 0.1 } },
         }}
+        onCreated={() => setCanvasVisible(true)}
       >
         <RecorderController />
         <IntroQuote />
 
         <Suspense fallback={null}>
-          <SuspenseCompleteSignal onComplete={handleSuspenseComplete} />
           <OrbitCamera />
           {planetCamera && !cameraTransitioning && <PlanetCamera />}
           <TransitionCamera />
