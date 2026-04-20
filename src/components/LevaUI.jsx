@@ -93,12 +93,13 @@ const LevaUI = () => {
 
   const polarLineCheckboxes = {};
   const orbitArrowsCheckboxes = {};
-  const planetVisibilityCheckboxes = {}; // NEW: Hold visibility toggles
+  const planetVisibilityCheckboxes = {};
+  const filledOrbitsCheckboxes = {};
 
   settings.forEach((s) => {
     if (s.type === "planet") {
-      // NEW: Map the main visibility toggle
-      planetVisibilityCheckboxes[`${s.name}_visible`] = {
+      // 100% unique keys with clean display labels
+      planetVisibilityCheckboxes[`${s.name}_vis`] = {
         label: s.name,
         value: s.visible || false,
         onChange: (v) => {
@@ -106,7 +107,7 @@ const LevaUI = () => {
         },
       };
 
-      polarLineCheckboxes[`${s.name}_polar`] = {
+      polarLineCheckboxes[`${s.name}_pol`] = {
         label: s.name,
         value: s.polarLineVisible || false,
         onChange: (v) => {
@@ -114,11 +115,19 @@ const LevaUI = () => {
         },
       };
 
-      orbitArrowsCheckboxes[`${s.name}_arrows`] = {
+      orbitArrowsCheckboxes[`${s.name}_arr`] = {
         label: s.name,
         value: s.orbitArrowsVisible || false,
         onChange: (v) => {
           updateSetting({ name: s.name, orbitArrowsVisible: v });
+        },
+      };
+
+      filledOrbitsCheckboxes[`${s.name}_fil`] = {
+        label: s.name,
+        value: s.shadeOrbit || false,
+        onChange: (v) => {
+          updateSetting({ name: s.name, shadeOrbit: v });
         },
       };
     }
@@ -221,10 +230,23 @@ const LevaUI = () => {
           step: 0.1,
           onChange: setPlanetScale,
         },
-        // NEW: Relocated here to be exactly underneath Planet sizes
-        "Show/Hide Planets": folder(
+        "Show/Hide planets": folder(
           {
             ...planetVisibilityCheckboxes,
+          },
+          { collapsed: true }
+        ),
+        // FOLDER UN-NESTED: Moved directly below Show/Hide planets
+        "Polar lines": folder(
+          {
+            "Line length": {
+              value: useStore.getState().polarLineSize,
+              min: 5,
+              max: 1000,
+              step: 5,
+              onChange: (v) => useStore.setState({ polarLineSize: v }),
+            },
+            ...polarLineCheckboxes,
           },
           { collapsed: true }
         ),
@@ -235,6 +257,12 @@ const LevaUI = () => {
           step: 0.5,
           onChange: setOrbitsLineWidth,
         },
+        "Filled orbits": folder(
+          {
+            ...filledOrbitsCheckboxes,
+          },
+          { collapsed: true }
+        ),
         "Orbit arrows": folder(
           {
             Size: {
@@ -259,23 +287,11 @@ const LevaUI = () => {
           },
           { collapsed: true }
         ),
-        "Polar lines": folder(
-          {
-            "Line length": {
-              value: useStore.getState().polarLineSize,
-              min: 5,
-              max: 1000,
-              step: 5,
-              onChange: (v) => useStore.setState({ polarLineSize: v }),
-            },
-            ...polarLineCheckboxes,
-          },
-          { collapsed: true }
-        ),
-        Graticules: {
-          value: geoSphere,
-          onChange: setGeoSphere,
-        },
+        // Re-enabled exactly as pasted in your previous code chunk
+        // Graticules: {
+        //   value: geoSphere,
+        //   onChange: setGeoSphere,
+        // },
       },
       { collapsed: true }
     ),

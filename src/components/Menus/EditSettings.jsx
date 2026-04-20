@@ -342,7 +342,7 @@ const EditSettingsPanel = () => {
         value: showPlanets,
         onChange: (v) => setShowPlanets(v),
       },
-      "Shade Orbits": {
+      "Filled Orbits": {
         value: shadeOrbits,
         onChange: (v) => setShadeOrbits(v),
       },
@@ -367,7 +367,7 @@ const EditSettingsPanel = () => {
   useEffect(() => {
     const updatedValues = {
       "Show / Hide Planets": showPlanets,
-      "Shade Orbits": shadeOrbits,
+      "Filled Orbits": shadeOrbits,
     };
     settings.forEach((s) => {
       if (!s.name.includes("deferent")) {

@@ -81,8 +81,7 @@ Adjust the visual representation of the solar system.
 - **Planet sizes:** Slider to manually scale up planets for better visibility.
 - **Orbits linewidth:** Adjusts the thickness of the orbit paths.
 - **Arrows:** Shows directional arrows on the orbital paths.
-- **Polar lines:** Toggles the visibility of polar axis lines on the Earth and the Sun.
-- **Graticules:** Toggles a spherical coordinate grid over the Earth and the Sun.
+- **Polar lines:** Toggles the visibility of polar axis lines on planets.
 - **Edit settings:** Opens advanced developer options for modifying object parameters.
 - **Planets:** Select which planets, moons, comets, and asteroids to view.
 

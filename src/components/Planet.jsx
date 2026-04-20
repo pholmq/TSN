@@ -97,13 +97,15 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
       >
         {s.name === "Earth" && <CelestialSphere />}
 
-        {/* CHANGED: Attach PolarLine to ALL planets and pass down the `name` prop so it hooks into the right Leva menu setting */}
         <PolarLine visible={visible} name={name} />
 
         {showLabel && <NameLabel s={s} />}
         {showLabel && <HoverObj s={s} />}
 
         <group ref={transformRef} scale={planetScale}>
+          {/* CHANGED: Moved the light outside the visible group so it stays on even when the Sun is hidden */}
+          {s.light && <pointLight intensity={sunLight * 100000} />}
+
           <group name={name} ref={planetRef} visible={visible}>
             <mesh geometry={planetGeometry} scale={size}>
               <meshStandardMaterial
@@ -120,7 +122,6 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
                 opacity={planetOpacity}
                 depthWrite={!isTransparent}
               />
-              {s.light && <pointLight intensity={sunLight * 100000} />}
             </mesh>
           </group>
           {s.geoSphere && geoSphere ? (

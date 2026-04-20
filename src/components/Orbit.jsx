@@ -1,4 +1,3 @@
-//Orbit
 import { useRef, useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
@@ -37,7 +36,7 @@ function Arrow({ rotation, radius, color, reverse = false }) {
   // Use a pre-allocated vector to prevent recreating objects in the animation loop
   const vec = useMemo(() => new THREE.Vector3(), []);
 
-  // Ensure arrow stays the same apparent size regardless of camera distance
+  // Ensure arrow stays the same apparent size OR remains fixed depending on the setting
   useFrame(({ camera }) => {
     if (meshRef.current) {
       if (globalArrowFixedSize) {
@@ -70,6 +69,7 @@ function Arrow({ rotation, radius, color, reverse = false }) {
 export default function Orbit({ radius, visible, s }) {
   const color = s.color;
   const showOrbitArrows = s?.orbitArrowsVisible || false;
+  const localShadeOrbit = s?.shadeOrbit || false; // NEW: Grab local specific planet shade toggle
   const reverse = s?.reverseArrows || false;
 
   const showOrbits = useStore((s) => s.orbits);
@@ -96,15 +96,14 @@ export default function Orbit({ radius, visible, s }) {
     const elements = [];
     const step = (Math.PI * 2) / globalArrowCount;
 
-    // FIX: Offset by half a step so arrows don't spawn exactly at 0 degrees
-    // This perfectly matches your original 45/135/225/315 degree placements
+    // Offset by half a step so arrows don't spawn exactly at 0 degrees
     const offset = step / 2;
 
     for (let i = 0; i < globalArrowCount; i++) {
       elements.push(
         <Arrow
           key={i}
-          rotation={i * step + offset} // Applied offset here
+          rotation={i * step + offset}
           radius={safeRadius}
           color={color}
           reverse={reverse}
@@ -142,13 +141,13 @@ export default function Orbit({ radius, visible, s }) {
   return (
     <>
       <group visible={showOrbits && visible}>
-        {shadeOrbits && (
+        {/* NEW: Updated logic to render if either global OR local toggle is true */}
+        {(shadeOrbits || localShadeOrbit) && (
           <mesh material={shadeMaterial}>
             <circleGeometry args={[safeRadius, 128]} />
           </mesh>
         )}
 
-        {/* Visibility driven by specific planet setting */}
         <group visible={showOrbitArrows}>{arrowsToRender}</group>
 
         <Line
