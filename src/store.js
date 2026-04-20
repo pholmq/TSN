@@ -1,3 +1,4 @@
+//store
 import { createRef } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -55,8 +56,13 @@ export const useStore = create(
       setPlanetScale: (v) => set({ planetScale: v }),
       actualPlanetSizes: false,
       setActualPlanetSizes: (v) => set({ actualPlanetSizes: v }),
-      arrows: false,
-      setArrows: (v) => set({ arrows: v }),
+
+      globalArrowSize: 5,
+      setGlobalArrowSize: (v) => set({ globalArrowSize: v }),
+      globalArrowCount: 4,
+      setGlobalArrowCount: (v) => set({ globalArrowCount: v }),
+      globalArrowFixedSize: false,
+      setGlobalArrowFixedSize: (v) => set({ globalArrowFixedSize: v }),
 
       showLevaMenu: true,
       toggleShowLevaMenu: () =>
@@ -110,7 +116,6 @@ export const useStore = create(
       BSCStars: true,
       setBSCStars: (v) => set({ BSCStars: v }),
 
-      // State for Reference Stars
       refStars: false,
       setRefStars: (v) => set({ refStars: v }),
 
@@ -192,7 +197,7 @@ export const useStore = create(
       setShowRecorder: (v) => set({ showRecorder: v }),
     }),
     {
-      name: "tsn-main-settings", // Name of the localStorage key
+      name: "tsn-main-settings",
       partialize: (state) => ({
         showHelpOnStartup: state.showHelpOnStartup,
       }),
@@ -215,19 +220,16 @@ export const usePlotStore = create((set, get) => ({
       );
 
       if (index !== -1) {
-        // Replace existing object so speed and startPos updates are respected
         const newPlotObjects = [...state.plotObjects];
         newPlotObjects[index] = newObj;
         return { plotObjects: newPlotObjects };
       }
 
-      // Add new object if it doesn't exist
       return { plotObjects: [...state.plotObjects, newObj] };
     }),
 
   getPlotObj: (name) => get().plotObjects.find((p) => p.name === name),
 
-  // Added to fulfill the cleanup requirement in Pobj.jsx
   removePlotObj: (name) =>
     set((state) => ({
       plotObjects: state.plotObjects.filter((obj) => obj.name !== name),
@@ -279,13 +281,9 @@ export const useSettingsStore = create((set, get) => ({
           (obj2) => obj2.name === obj1.name
         );
 
-        // Merge the default settings
         const defaultSetting = { ...obj1, ...matchingObj };
-
-        // Find the matching current setting in the state
         const currentSetting = state.settings.find((s) => s.name === obj1.name);
 
-        // Preserve the 'visible' state if it exists
         if (currentSetting && currentSetting.visible !== undefined) {
           defaultSetting.visible = currentSetting.visible;
         }

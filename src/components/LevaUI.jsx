@@ -17,8 +17,6 @@ const LevaUI = () => {
     setPlanetCamera,
     orbits,
     setOrbits,
-    arrows,
-    setArrows,
     orbitsLineWidth,
     setOrbitsLineWidth,
     planetScale,
@@ -66,6 +64,12 @@ const LevaUI = () => {
     cameraTransitioning,
     showConstellations,
     setShowConstellations,
+    globalArrowSize,
+    setGlobalArrowSize,
+    globalArrowCount,
+    setGlobalArrowCount,
+    globalArrowFixedSize,
+    setGlobalArrowFixedSize,
   } = useStore();
 
   const {
@@ -88,13 +92,42 @@ const LevaUI = () => {
   };
 
   const polarLineCheckboxes = {};
+  const orbitArrowsCheckboxes = {};
+  const planetVisibilityCheckboxes = {};
+  const filledOrbitsCheckboxes = {};
+
   settings.forEach((s) => {
     if (s.type === "planet") {
-      polarLineCheckboxes[s.name] = {
+      // 100% unique keys with clean display labels
+      planetVisibilityCheckboxes[`${s.name}_vis`] = {
+        label: s.name,
+        value: s.visible || false,
+        onChange: (v) => {
+          updateSetting({ name: s.name, visible: v });
+        },
+      };
+
+      polarLineCheckboxes[`${s.name}_pol`] = {
+        label: s.name,
         value: s.polarLineVisible || false,
         onChange: (v) => {
-          // FIX: Only send the specific field that changed to prevent overwriting
           updateSetting({ name: s.name, polarLineVisible: v });
+        },
+      };
+
+      orbitArrowsCheckboxes[`${s.name}_arr`] = {
+        label: s.name,
+        value: s.orbitArrowsVisible || false,
+        onChange: (v) => {
+          updateSetting({ name: s.name, orbitArrowsVisible: v });
+        },
+      };
+
+      filledOrbitsCheckboxes[`${s.name}_fil`] = {
+        label: s.name,
+        value: s.shadeOrbit || false,
+        onChange: (v) => {
+          updateSetting({ name: s.name, shadeOrbit: v });
         },
       };
     }
@@ -197,6 +230,26 @@ const LevaUI = () => {
           step: 0.1,
           onChange: setPlanetScale,
         },
+        "Show/Hide planets": folder(
+          {
+            ...planetVisibilityCheckboxes,
+          },
+          { collapsed: true }
+        ),
+        // FOLDER UN-NESTED: Moved directly below Show/Hide planets
+        "Polar lines": folder(
+          {
+            "Line length": {
+              value: useStore.getState().polarLineSize,
+              min: 5,
+              max: 1000,
+              step: 5,
+              onChange: (v) => useStore.setState({ polarLineSize: v }),
+            },
+            ...polarLineCheckboxes,
+          },
+          { collapsed: true }
+        ),
         "Orbits linewidth": {
           value: orbitsLineWidth,
           min: 0.5,
@@ -204,15 +257,41 @@ const LevaUI = () => {
           step: 0.5,
           onChange: setOrbitsLineWidth,
         },
-        Arrows: {
-          value: arrows,
-          onChange: setArrows,
-        },
-        "Polar lines": folder(polarLineCheckboxes, { collapsed: true }),
-        Graticules: {
-          value: geoSphere,
-          onChange: setGeoSphere,
-        },
+        "Filled orbits": folder(
+          {
+            ...filledOrbitsCheckboxes,
+          },
+          { collapsed: true }
+        ),
+        "Orbit arrows": folder(
+          {
+            Size: {
+              value: globalArrowSize,
+              min: 1,
+              max: 10,
+              step: 0.1,
+              onChange: setGlobalArrowSize,
+            },
+            "No of Arrows": {
+              value: globalArrowCount,
+              min: 1,
+              max: 24,
+              step: 1,
+              onChange: setGlobalArrowCount,
+            },
+            "Fixed size": {
+              value: globalArrowFixedSize,
+              onChange: setGlobalArrowFixedSize,
+            },
+            ...orbitArrowsCheckboxes,
+          },
+          { collapsed: true }
+        ),
+        // Re-enabled exactly as pasted in your previous code chunk
+        // Graticules: {
+        //   value: geoSphere,
+        //   onChange: setGeoSphere,
+        // },
       },
       { collapsed: true }
     ),
