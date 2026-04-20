@@ -1,4 +1,3 @@
-//LevaUI
 import { useRef, useEffect } from "react";
 import { useControls, useCreateStore, Leva, folder } from "leva";
 import { useStore, useTraceStore, useSettingsStore } from "../store";
@@ -94,11 +93,19 @@ const LevaUI = () => {
 
   const polarLineCheckboxes = {};
   const orbitArrowsCheckboxes = {};
+  const planetVisibilityCheckboxes = {}; // NEW: Hold visibility toggles
 
   settings.forEach((s) => {
     if (s.type === "planet") {
-      // FIX: Append unique suffixes to the keys so Leva doesn't overwrite them,
-      // but override the `label` so it still looks clean in the UI.
+      // NEW: Map the main visibility toggle
+      planetVisibilityCheckboxes[`${s.name}_visible`] = {
+        label: s.name,
+        value: s.visible || false,
+        onChange: (v) => {
+          updateSetting({ name: s.name, visible: v });
+        },
+      };
+
       polarLineCheckboxes[`${s.name}_polar`] = {
         label: s.name,
         value: s.polarLineVisible || false,
@@ -214,6 +221,13 @@ const LevaUI = () => {
           step: 0.1,
           onChange: setPlanetScale,
         },
+        // NEW: Relocated here to be exactly underneath Planet sizes
+        "Show/Hide Planets": folder(
+          {
+            ...planetVisibilityCheckboxes,
+          },
+          { collapsed: true }
+        ),
         "Orbits linewidth": {
           value: orbitsLineWidth,
           min: 0.5,
@@ -225,12 +239,12 @@ const LevaUI = () => {
           {
             Size: {
               value: globalArrowSize,
-              min: 1, // Updated to 1
-              max: 10, // Updated to 10
+              min: 1,
+              max: 10,
               step: 0.1,
               onChange: setGlobalArrowSize,
             },
-            "No of arrows": {
+            "No of Arrows": {
               value: globalArrowCount,
               min: 1,
               max: 24,
@@ -258,10 +272,10 @@ const LevaUI = () => {
           },
           { collapsed: true }
         ),
-        // Graticules: {
-        //   value: geoSphere,
-        //   onChange: setGeoSphere,
-        // },
+        Graticules: {
+          value: geoSphere,
+          onChange: setGeoSphere,
+        },
       },
       { collapsed: true }
     ),
