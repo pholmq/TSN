@@ -1,7 +1,13 @@
 import { useRef, useEffect } from "react";
 import { useControls, useCreateStore, Leva, folder } from "leva";
-import { useStore, useTraceStore, useSettingsStore } from "../store";
+import { useStore } from "../store";
 import { speedFactOpts } from "../utils/time-date-functions";
+import {
+  useMainControlsConfig,
+  useTraceConfig,
+  usePlanetOrbitsConfig,
+  useStarsHelpersConfig,
+} from "./Menus/menuConfigs";
 
 const LevaUI = () => {
   const levaStore = useCreateStore();
@@ -11,127 +17,22 @@ const LevaUI = () => {
     setSpeedMultiplier,
     speedFact,
     setSpeedFact,
-    cameraFollow,
-    setCameraFollow,
-    planetCamera,
-    setPlanetCamera,
-    orbits,
-    setOrbits,
-    orbitsLineWidth,
-    setOrbitsLineWidth,
-    planetScale,
-    setPlanetScale,
     actualPlanetSizes,
-    setActualPlanetSizes,
-    showPositions,
-    setShowPositions,
-    zodiac,
-    setZodiac,
-    zodiacSize,
-    setZodiacSize,
-    tropicalZodiac,
-    setTropicalZodiac,
-    southLine,
-    setSouthLine,
-    celestialSphere,
-    setCelestialSphere,
-    celestialSphereSize,
-    setCelestialSphereSize,
-    eclipticGrid,
-    setEclipticGrid,
-    eclipticGridSize,
-    setEclipticGridSize,
-    starDistanceModifier,
-    setStarDistanceModifier,
-    officialStarDistances,
-    setOfficialStarDistances,
-    starScale,
-    setStarScale,
-    showLabels,
-    setShowLables,
-    geoSphere,
-    setGeoSphere,
+    orbits,
     ephimerides,
-    setEphemerides,
-    plot,
-    setPlot,
-    BSCStars,
-    setBSCStars,
-    hScale,
-    sethScale,
+    showPositions,
     searchStars,
-    setSearchStars,
+    planetCamera,
     cameraTransitioning,
-    showConstellations,
-    setShowConstellations,
-    globalArrowSize,
-    setGlobalArrowSize,
-    globalArrowCount,
-    setGlobalArrowCount,
-    globalArrowFixedSize,
-    setGlobalArrowFixedSize,
+    setOrbits,
+    setActualPlanetSizes,
   } = useStore();
 
-  const {
-    trace,
-    setTrace,
-    lineWidth,
-    setLineWidth,
-    dotted,
-    setDotted,
-    lengthMultiplier,
-    setLengthMultiplier,
-    stepMultiplier,
-    setStepMultiplier,
-  } = useTraceStore();
-
-  const { settings, updateSetting } = useSettingsStore();
-
-  const setEquidistantStars = (value) => {
-    setOfficialStarDistances(!value);
-  };
-
-  const polarLineCheckboxes = {};
-  const orbitArrowsCheckboxes = {};
-  const planetVisibilityCheckboxes = {};
-  const filledOrbitsCheckboxes = {};
-
-  settings.forEach((s) => {
-    if (s.type === "planet") {
-      // 100% unique keys with clean display labels
-      planetVisibilityCheckboxes[`${s.name}_vis`] = {
-        label: s.name,
-        value: s.visible || false,
-        onChange: (v) => {
-          updateSetting({ name: s.name, visible: v });
-        },
-      };
-
-      polarLineCheckboxes[`${s.name}_pol`] = {
-        label: s.name,
-        value: s.polarLineVisible || false,
-        onChange: (v) => {
-          updateSetting({ name: s.name, polarLineVisible: v });
-        },
-      };
-
-      orbitArrowsCheckboxes[`${s.name}_arr`] = {
-        label: s.name,
-        value: s.orbitArrowsVisible || false,
-        onChange: (v) => {
-          updateSetting({ name: s.name, orbitArrowsVisible: v });
-        },
-      };
-
-      filledOrbitsCheckboxes[`${s.name}_fil`] = {
-        label: s.name,
-        value: s.shadeOrbit || false,
-        onChange: (v) => {
-          updateSetting({ name: s.name, shadeOrbit: v });
-        },
-      };
-    }
-  });
+  // Load extracted configurations
+  const mainControls = useMainControlsConfig();
+  const traceControls = useTraceConfig();
+  const planetOrbitsControls = usePlanetOrbitsConfig();
+  const starsHelpersControls = useStarsHelpersConfig();
 
   const [, set1] = useControls(
     () => ({
@@ -150,205 +51,14 @@ const LevaUI = () => {
   );
 
   const [, set2] = useControls(() => ({
-    Controls: folder(
-      {
-        "Actual planet sizes": {
-          value: actualPlanetSizes,
-          onChange: setActualPlanetSizes,
-        },
-        "Planet camera": {
-          value: planetCamera,
-          onChange: setPlanetCamera,
-        },
-        "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
-        Labels: {
-          value: showLabels,
-          onChange: setShowLables,
-        },
-        Orbits: {
-          value: orbits,
-          onChange: setOrbits,
-        },
-        Search: {
-          value: searchStars,
-          onChange: setSearchStars,
-        },
-        Positions: {
-          value: showPositions,
-          hint: "Keep unchecked for best performance",
-          onChange: setShowPositions,
-        },
-        Ephemerides: {
-          value: ephimerides,
-          onChange: setEphemerides,
-        },
-      },
-      { collapsed: false }
-    ),
-
-    Trace: folder(
-      {
-        TraceOnOff: {
-          label: "Trace On/Off",
-          value: trace,
-          onChange: setTrace,
-        },
-        "Line width": {
-          value: lineWidth,
-          min: 0.5,
-          max: 5,
-          step: 0.5,
-          onChange: setLineWidth,
-        },
-        "Dotted line": {
-          value: dotted,
-          onChange: setDotted,
-        },
-        "Trace length": {
-          value: lengthMultiplier,
-          min: 0.5,
-          max: 5,
-          step: 0.5,
-          onChange: setLengthMultiplier,
-        },
-        "Step length": {
-          value: stepMultiplier,
-          min: 1,
-          max: 10,
-          step: 1,
-          onChange: setStepMultiplier,
-        },
-      },
-      { collapsed: true }
-    ),
-    "Planets & Orbits": folder(
-      {
-        "Planet sizes": {
-          value: planetScale,
-          min: 0.1,
-          max: 5,
-          step: 0.1,
-          onChange: setPlanetScale,
-        },
-        "Show/Hide planets": folder(
-          {
-            ...planetVisibilityCheckboxes,
-          },
-          { collapsed: true }
-        ),
-        // FOLDER UN-NESTED: Moved directly below Show/Hide planets
-        "Polar lines": folder(
-          {
-            "Line length": {
-              value: useStore.getState().polarLineSize,
-              min: 5,
-              max: 1000,
-              step: 5,
-              onChange: (v) => useStore.setState({ polarLineSize: v }),
-            },
-            ...polarLineCheckboxes,
-          },
-          { collapsed: true }
-        ),
-        "Orbits linewidth": {
-          value: orbitsLineWidth,
-          min: 0.5,
-          max: 5,
-          step: 0.5,
-          onChange: setOrbitsLineWidth,
-        },
-        "Filled orbits": folder(
-          {
-            ...filledOrbitsCheckboxes,
-          },
-          { collapsed: true }
-        ),
-        "Orbit arrows": folder(
-          {
-            Size: {
-              value: globalArrowSize,
-              min: 1,
-              max: 10,
-              step: 0.1,
-              onChange: setGlobalArrowSize,
-            },
-            "No of Arrows": {
-              value: globalArrowCount,
-              min: 1,
-              max: 24,
-              step: 1,
-              onChange: setGlobalArrowCount,
-            },
-            "Fixed size": {
-              value: globalArrowFixedSize,
-              onChange: setGlobalArrowFixedSize,
-            },
-            ...orbitArrowsCheckboxes,
-          },
-          { collapsed: true }
-        ),
-        // Re-enabled exactly as pasted in your previous code chunk
-        // Graticules: {
-        //   value: geoSphere,
-        //   onChange: setGeoSphere,
-        // },
-      },
-      { collapsed: true }
-    ),
-    "Stars & Helpers": folder(
-      {
-        Stars: {
-          value: BSCStars,
-          onChange: (v) => {
-            setBSCStars(v);
-            if (!v) {
-              setSearchStars(false);
-            } else {
-              setSearchStars(true);
-            }
-          },
-        },
-        "Divide distances by": {
-          value: starDistanceModifier,
-          min: 1,
-          step: 100,
-          onChange: setStarDistanceModifier,
-        },
-        "Celestial sphere": {
-          value: false,
-          min: 1,
-          step: 100,
-          onChange: setEquidistantStars,
-        },
-        Constellations: {
-          value: showConstellations,
-          onChange: setShowConstellations,
-        },
-        "Equinoxes & Solistices": {
-          value: eclipticGrid,
-          onChange: setEclipticGrid,
-        },
-        "Sidereal Zodiac": {
-          value: zodiac,
-          onChange: setZodiac,
-        },
-        "Tropical Zodiac": {
-          value: tropicalZodiac,
-          onChange: setTropicalZodiac,
-        },
-        "Sphere & Zodiac size": {
-          value: hScale,
-          min: 0.5,
-          max: 100,
-          step: 0.5,
-          onChange: sethScale,
-        },
-      },
-      { collapsed: true }
-    ),
+    Controls: folder(mainControls, { collapsed: false }),
+    Trace: folder(traceControls, { collapsed: true }),
+    "Planets & Orbits": folder(planetOrbitsControls, { collapsed: true }),
+    "Stars & Helpers": folder(starsHelpersControls, { collapsed: true }),
     Settings: folder({}, { collapsed: true }),
   }));
 
+  // Sync state changes triggered outside of Leva back into the UI
   useEffect(() => {
     set2({
       "Actual planet sizes": actualPlanetSizes,
@@ -368,12 +78,8 @@ const LevaUI = () => {
 
   const prevTransitioningRef = useRef(false);
   useEffect(() => {
-    if (planetCamera) {
-      setActualPlanetSizes(true);
-    } else {
-      setActualPlanetSizes(false);
-    }
-  }, [planetCamera]);
+    setActualPlanetSizes(planetCamera ? true : false);
+  }, [planetCamera, setActualPlanetSizes]);
 
   useEffect(() => {
     if (
@@ -389,7 +95,7 @@ const LevaUI = () => {
     }
 
     prevTransitioningRef.current = cameraTransitioning;
-  }, [planetCamera, cameraTransitioning]);
+  }, [planetCamera, cameraTransitioning, setOrbits]);
 
   return (
     <>
