@@ -1,7 +1,14 @@
 import { useRef, useEffect } from "react";
-import { useControls, useCreateStore, Leva, folder, levaStore } from "leva";
-import { useStore, useTraceStore, useSettingsStore } from "../store";
+import { useControls, useCreateStore, Leva, folder } from "leva";
+import { useStore } from "../store";
 import { speedFactOpts } from "../utils/time-date-functions";
+import {
+  useMainControlsConfig,
+  useTraceConfig,
+  usePlanetOrbitsConfig,
+  useStarsHelpersConfig,
+} from "./Menus/menuConfigs";
+
 const LevaUI = () => {
   const levaStore = useCreateStore();
   const {
@@ -10,89 +17,23 @@ const LevaUI = () => {
     setSpeedMultiplier,
     speedFact,
     setSpeedFact,
-    cameraFollow,
-    setCameraFollow,
-    planetCamera,
-    setPlanetCamera,
-    orbits,
-    setOrbits,
-    arrows,
-    setArrows,
-    orbitsLineWidth,
-    setOrbitsLineWidth,
-    planetScale,
-    setPlanetScale,
     actualPlanetSizes,
-    setActualPlanetSizes,
-    showPositions,
-    setShowPositions,
-    zodiac,
-    setZodiac,
-    zodiacSize,
-    setZodiacSize,
-    tropicalZodiac,
-    setTropicalZodiac,
-    polarLine,
-    setPolarLine,
-    polarLineSize,
-    setPolarLineSize,
-    southLine,
-    setSouthLine,
-    celestialSphere,
-    setCelestialSphere,
-    celestialSphereSize,
-    setCelestialSphereSize,
-    eclipticGrid,
-    setEclipticGrid,
-    eclipticGridSize,
-    setEclipticGridSize,
-    starDistanceModifier,
-    setStarDistanceModifier,
-    officialStarDistances,
-    setOfficialStarDistances,
-    starScale,
-    setStarScale,
-    editSettings,
-    setEditSettings,
-    showLabels,
-    setShowLables,
-    geoSphere,
-    setGeoSphere,
+    orbits,
     ephimerides,
-    setEphemerides,
-    plot,
-    setPlot,
-    BSCStars,
-    setBSCStars,
-    hScale,
-    sethScale,
+    showPositions,
     searchStars,
-    setSearchStars,
+    planetCamera,
     cameraTransitioning,
-    // Add Constellations
-    showConstellations,
-    setShowConstellations,
+    setOrbits,
+    setActualPlanetSizes,
   } = useStore();
 
-  const {
-    trace,
-    setTrace,
-    lineWidth,
-    setLineWidth,
-    dotted,
-    setDotted,
-    lengthMultiplier,
-    setLengthMultiplier,
-    stepMultiplier,
-    setStepMultiplier,
-  } = useTraceStore();
+  // Load extracted configurations
+  const mainControls = useMainControlsConfig();
+  const traceControls = useTraceConfig();
+  const planetOrbitsControls = usePlanetOrbitsConfig();
+  const starsHelpersControls = useStarsHelpersConfig();
 
-  const setEquidistantStars = (value) => {
-    setOfficialStarDistances(!value);
-  };
-
-  //We use a spearate levaStore for the first items so we can hide the rest of the
-  //Leva UI when showLevaMenu is false
   const [, set1] = useControls(
     () => ({
       "1 sec/step equals": {
@@ -103,209 +44,22 @@ const LevaUI = () => {
       "\u{000D}": {
         value: speedFact,
         options: speedFactOpts,
-
         onChange: setSpeedFact,
       },
     }),
     { store: levaStore }
   );
 
-  //Some of these hese folders are populated by other components, but to get them in the correct
-  //order we create them here
-
   const [, set2] = useControls(() => ({
-    Controls: folder(
-      {
-        "Actual planet sizes": {
-          value: actualPlanetSizes,
-          onChange: setActualPlanetSizes,
-        },
-
-        "Planet camera": {
-          value: planetCamera,
-          onChange: setPlanetCamera,
-        },
-       
-        "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
-        Labels: {
-          value: showLabels,
-          onChange: setShowLables,
-        },
-        Orbits: {
-          value: orbits,
-          onChange: setOrbits,
-        },
-        Search: {
-          value: searchStars,
-          onChange: setSearchStars,
-        },
-        Positions: {
-          value: showPositions,
-          hint: "Keep unchecked for best performance",
-          onChange: setShowPositions,
-        },
-        Ephemerides: {
-          value: ephimerides,
-          onChange: setEphemerides,
-        },
-        // Plot: {
-        //   value: plot,
-        //   onChange: (v) => {
-        //     setPlot(v);
-        //   },
-        // },
-      },
-      { collapsed: false }
-    ),
-
-    Trace: folder(
-      {
-        TraceOnOff: {
-          label: "Trace On/Off",
-          value: trace,
-          onChange: setTrace,
-        },
-        "Line width": {
-          value: lineWidth,
-          min: 0.5,
-          max: 5,
-          step: 0.5,
-          onChange: setLineWidth,
-        },
-        "Dotted line": {
-          value: dotted,
-          onChange: setDotted,
-        },
-        "Trace length": {
-          value: lengthMultiplier,
-          min: 0.5,
-          max: 5,
-          step: 0.5,
-          onChange: setLengthMultiplier,
-        },
-        "Step length": {
-          value: stepMultiplier,
-          min: 1,
-          max: 10,
-          step: 1,
-          onChange: setStepMultiplier,
-        },
-      },
-
-      { collapsed: true }
-    ),
-    "Planets & Orbits": folder(
-      {
-        "Planet sizes": {
-          value: planetScale,
-          min: 0.1,
-          max: 5,
-          step: 0.1,
-          onChange: setPlanetScale,
-        },
-
-        "Orbits linewidth": {
-          value: orbitsLineWidth,
-          min: 0.5,
-          max: 5,
-          step: 0.5,
-          onChange: setOrbitsLineWidth,
-        },
-        Arrows: {
-          value: arrows,
-          onChange: setArrows,
-        },
-        // Moved here:
-        "Polar lines": {
-          value: polarLine,
-          onChange: setPolarLine,
-        },
-        Graticules: {
-          value: geoSphere,
-          onChange: setGeoSphere,
-        },
-        "Edit settings": {
-          value: editSettings,
-          onChange: setEditSettings,
-        },
-      },
-      { collapsed: true }
-    ),
-    "Stars & Helpers": folder(
-      {
-        // Moved to the top of "Stars & Helpers"
-        Stars: {
-          // Changed from "BSC Stars"
-          value: BSCStars,
-          onChange: (v) => {
-            setBSCStars(v); // Toggle stars visibility
-
-            // Explicitly turn off the Search menu state if Stars are unchecked
-            if (!v) {
-              setSearchStars(false);
-            } else {
-              setSearchStars(true);
-            }
-          },
-        },
-        // "Use star distances": {
-        //   value: officialStarDistances,
-        //   onChange: setOfficialStarDistances,
-        // },
-
-        "Divide distances by": {
-          value: starDistanceModifier,
-          min: 1,
-          step: 100,
-          onChange: setStarDistanceModifier,
-        },
-        //Renamed equdistant stars to Celestial sphere in the meny. Easier to understand.
-        "Celestial sphere": {
-          value: false,
-          min: 1,
-          step: 100,
-          onChange: setEquidistantStars,
-        },
-        // Added Constellations here
-        Constellations: {
-          value: showConstellations,
-          onChange: setShowConstellations,
-        },
-        // "Celestial grid": {
-        //   value: celestialSphere,
-        //   onChange: setCelestialSphere,
-        // },
-        "Equinoxes & Solistices": {
-          value: eclipticGrid,
-          onChange: setEclipticGrid,
-        },
-        "Sidereal Zodiac": {
-          value: zodiac,
-          onChange: setZodiac,
-        },
-        "Tropical Zodiac": {
-          value: tropicalZodiac,
-          onChange: setTropicalZodiac,
-        },
-        "Sphere & Zodiac size": {
-          value: hScale,
-          min: 0.5,
-          max: 100,
-          step: 0.5,
-          onChange: sethScale,
-        },
-      },
-      { collapsed: true }
-    ),
-    Settings: folder(
-      {},
-      //Populated in LightEffectsMenu
-      { collapsed: true }
-    ),
+    Controls: folder(mainControls, { collapsed: false }),
+    Trace: folder(traceControls, { collapsed: true }),
+    "Planets & Orbits": folder(planetOrbitsControls, { collapsed: true }),
+    "Stars & Helpers": folder(starsHelpersControls, { collapsed: true }),
+    Settings: folder({}, { collapsed: true }),
   }));
 
+  // Sync state changes triggered outside of Leva back into the UI
   useEffect(() => {
-    // Only update actualPlanetSizes in the UI, don't touch planetCamera
     set2({
       "Actual planet sizes": actualPlanetSizes,
       Orbits: orbits,
@@ -324,16 +78,10 @@ const LevaUI = () => {
 
   const prevTransitioningRef = useRef(false);
   useEffect(() => {
-    // Change actual planet sizes immediately when planet camera is checked
-    if (planetCamera) {
-      setActualPlanetSizes(true);
-    } else {
-      setActualPlanetSizes(false);
-    }
-  }, [planetCamera]);
+    setActualPlanetSizes(planetCamera ? true : false);
+  }, [planetCamera, setActualPlanetSizes]);
 
   useEffect(() => {
-    // Detect when transition completes (was true, now false)
     if (
       prevTransitioningRef.current === true &&
       cameraTransitioning === false &&
@@ -342,14 +90,12 @@ const LevaUI = () => {
       setOrbits(false);
     }
 
-    // Restore orbits when exiting planet camera
     if (!planetCamera) {
       setOrbits(true);
     }
 
-    // Update ref for next render
     prevTransitioningRef.current = cameraTransitioning;
-  }, [planetCamera, cameraTransitioning]);
+  }, [planetCamera, cameraTransitioning, setOrbits]);
 
   return (
     <>
@@ -359,20 +105,12 @@ const LevaUI = () => {
         titleBar={false}
         hideCopyButton
         theme={{
-          sizes: {
-            controlWidth: "40%",
-          },
-          fontSizes: {
-            root: "12px",
-          },
-          fonts: {
-            mono: "",
-          },
+          sizes: { controlWidth: "40%" },
+          fontSizes: { root: "12px" },
+          fonts: { mono: "" },
           colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
         }}
       />
-      {/* TODO: Sort out the scollbar apperance so that it appears
-      and you can scroll through the entire leva menu */}
       <div
         hidden={!showLevaMenu}
         style={{ maxHeight: "80vh", overflow: "auto" }}
@@ -382,15 +120,9 @@ const LevaUI = () => {
           titleBar={false}
           hideCopyButton
           theme={{
-            sizes: {
-              controlWidth: "40%",
-            },
-            fontSizes: {
-              root: "12px",
-            },
-            fonts: {
-              mono: "",
-            },
+            sizes: { controlWidth: "40%" },
+            fontSizes: { root: "12px" },
+            fonts: { mono: "" },
             colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
           }}
         />

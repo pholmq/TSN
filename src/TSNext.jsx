@@ -10,19 +10,19 @@ import SolarSystem from "./components/SolarSystem";
 import PlotSolarSystem from "./components/PlotSolarSystem";
 import TraceController from "./components/Trace/TraceController";
 import LightEffectsMenu from "./components/Menus/LightEffectsMenu";
-import PlanetsPositionsMenu from "./components/Menus/PlanetsPositionsMenu";
 import PosController from "./components/PosController";
 import Positions from "./components/Menus/Positions";
 import Ephemerides from "./components/Ephemerides/Ephemerides";
 import EphController from "./components/Ephemerides/EphController";
 import EphemeridesResult from "./components/Ephemerides/EphemeridesResult";
 import EphemeridesProgress from "./components/Ephemerides/EphemeridesProgress";
+import EphemerisChecker from "./components/EphemerisChecker/EphemerisChecker";
+import CheckerController from "./components/EphemerisChecker/CheckerController";
 import Plot from "./components/Plot/Plot";
-// import PlotController from "./components/Plot/PlotController";
 import Stars from "./components/Stars/Stars";
 import LabeledStars from "./components/Stars/LabeledStars";
-// import BSCStars from "./components/Stars/BSCStars";
 import BSCStarsH from "./components/Stars/BSCStarsHandler";
+import ReferenceStars from "./components/Stars/ReferenceStars";
 import Zodiac from "./components/Helpers/Zodiac";
 import PlanetCamera from "./components/PlanetCamera/PlanetCamera";
 import PlanetCameraUI from "./components/PlanetCamera/PlanetCameraUI";
@@ -38,7 +38,7 @@ import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
 import TransitionCamera from "./components/PlanetCamera/TransitionCamera";
 import Constellations from "./components/Stars/Constellations";
 import PlanetCameraHelper from "./components/PlanetCamera/PlanetCameraHelper";
-import { VideoCanvas } from "./components/Recorder/r3f-video-recorder"; 
+import { VideoCanvas } from "./components/Recorder/r3f-video-recorder";
 import RecorderMenu from "./components/Menus/RecorderMenu";
 import RecorderController from "./components/Recorder/RecorderController";
 
@@ -50,28 +50,14 @@ const isTouchDevice = () => {
   );
 };
 
-// Component that signals when Suspense is complete
-const SuspenseCompleteSignal = ({ onComplete }) => {
-  useEffect(() => {
-    // Small delay to ensure all components are fully mounted
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
-
-  return null;
-};
-
 const TSNext = () => {
   const [canvasVisible, setCanvasVisible] = useState(false);
 
-  // Get runIntro state from store
   const runIntro = useStore((s) => s.runIntro);
-
   const toggleShowMenu = useStore((s) => s.toggleShowMenu);
   const toggleShowLevaMenu = useStore((s) => s.toggleShowLevaMenu);
   const BSCStarsOn = useStore((s) => s.BSCStars);
+  const refStarsOn = useStore((s) => s.refStars);
   const searchStars = useStore((s) => s.searchStars);
   const planetCamera = useStore((s) => s.planetCamera);
   const cameraTransitioning = useStore((s) => s.cameraTransitioning);
@@ -86,20 +72,13 @@ const TSNext = () => {
     }
   }, []);
 
-  const handleSuspenseComplete = () => {
-    setCanvasVisible(true);
-  };
-
-  // Calculate canvas opacity and transition based on runIntro state
   const getCanvasStyle = () => {
     if (!runIntro) {
-      // If intro is interrupted, immediately show canvas with no transition
       return {
         opacity: 1,
         transition: "none",
       };
     }
-    // Otherwise, use the canvasVisible state for the fade-in effect
     return {
       opacity: canvasVisible ? 1 : 0,
       transition: "opacity 5s ease-in-out",
@@ -114,6 +93,7 @@ const TSNext = () => {
         <Ephemerides />
         <EphemeridesResult />
         <EphemeridesProgress />
+        <EphemerisChecker />
         <Plot />
         <EditSettings />
         <PlanetCameraUI />
@@ -126,22 +106,22 @@ const TSNext = () => {
       <VideoCanvas
         id="canvas"
         frameloop="always"
-        fps={60} 
-        gl={{ 
+        fps={60}
+        dpr={[1, 1.5]}
+        gl={{
           logarithmicDepthBuffer: true,
-          preserveDrawingBuffer: true // Required for pixel extraction
+          preserveDrawingBuffer: true,
         }}
         style={getCanvasStyle()}
         raycaster={{
           params: { Line: { threshold: 0.1 } },
         }}
+        onCreated={() => setCanvasVisible(true)}
       >
         <RecorderController />
         <IntroQuote />
 
-        {/* Other components wrapped in Suspense */}
         <Suspense fallback={null}>
-          <SuspenseCompleteSignal onComplete={handleSuspenseComplete} />
           <OrbitCamera />
           {planetCamera && !cameraTransitioning && <PlanetCamera />}
           <TransitionCamera />
@@ -152,8 +132,7 @@ const TSNext = () => {
           <PosController />
           <TraceController />
           <EphController />
-          {/* <PlotController /> */}
-          <PlanetsPositionsMenu />
+          <CheckerController />
           <LightEffectsMenu />
           <SolarSystem />
           <PlotSolarSystem />
@@ -161,6 +140,7 @@ const TSNext = () => {
           <LabeledStars />
           {BSCStarsOn && <BSCStarsH />}
           {BSCStarsOn && !isTouchDev && <HighlightSelectedStar />}
+          {refStarsOn && <ReferenceStars />}
           <Zodiac />
           <Constellations />
           <PlanetCameraHelper />

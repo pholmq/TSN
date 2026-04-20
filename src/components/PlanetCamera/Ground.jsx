@@ -17,6 +17,7 @@ export function Ground() {
       <mesh
         rotation-x={-Math.PI / 2}
         userData={{ baseOpacity: 0.2, isHorizon: true }}
+        raycast={() => null}
       >
         <torusGeometry args={[groundSize * 0.97, 0.0001, 16, 64]} />
         <meshBasicMaterial
@@ -28,7 +29,11 @@ export function Ground() {
       </mesh>
 
       {/* ADDED: isBowl: true */}
-      <mesh rotation-x={Math.PI} userData={{ baseOpacity: 0.7, isBowl: true }}>
+      <mesh
+        rotation-x={Math.PI}
+        userData={{ baseOpacity: 0.7, isBowl: true }}
+        raycast={() => null}
+      >
         <sphereGeometry
           args={[groundSize, 64, 16, 0, Math.PI * 2, 0, Math.PI / 2]}
         />

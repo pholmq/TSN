@@ -4,17 +4,23 @@ import { useFrame } from "@react-three/fiber";
 import { useStore } from "../../store";
 import TychosLogo3D from "./TychosLogo3D";
 
+// --- STRICT TIMING CONSTANTS ---
+const TYCHOSIUM_DURATION = 2.0; // Seconds before main title starts fading
+const WARNING_DURATION = 8.0; // Seconds before warning text starts fading
+const FADE_SPEED = 0.05; // Consistent slow fade speed
+
 export default function IntroText() {
   const runIntro = useStore((s) => s.runIntro);
   const setRunIntro = useStore((s) => s.setRunIntro);
 
   const materialRef = useRef();
   const warningMaterialRef = useRef();
-  const logoMaterialRef = useRef(); // Ref for the 3D logo
+  const logoMaterialRef = useRef();
+
+  // This timer runs independently of the global runIntro state
+  const holdTimer = useRef(0);
 
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-
-  // Decouple the banner's existence from runIntro so it can finish fading out
   const [isFinished, setIsFinished] = useState(!runIntro);
 
   useEffect(() => {
@@ -26,41 +32,52 @@ export default function IntroText() {
     }
   }, []);
 
-  // If the intro is ever reset/replayed, reset the banner
-  useEffect(() => {
-    if (runIntro) {
-      setIsFinished(false);
-      if (materialRef.current) materialRef.current.opacity = 1;
-      if (warningMaterialRef.current) warningMaterialRef.current.opacity = 1;
-      if (logoMaterialRef.current) logoMaterialRef.current.opacity = 1;
-    }
-  }, [runIntro]);
-
   useFrame((state, delta) => {
     if (isFinished) return;
 
-    // Only fade if opacity is significantly above 0
-    if (materialRef.current && materialRef.current.opacity > 0.01) {
-      // Fade twice as fast if the user clicked to interrupt (runIntro === false)
-      const fadeSpeed = runIntro ? 0.07 : 0.14;
+    // 1. Advance the text's internal timer regardless of what the intro sequence is doing
+    holdTimer.current += delta;
 
-      const newOpacity = Math.max(
-        materialRef.current.opacity - delta * fadeSpeed,
-        0
-      );
-      materialRef.current.opacity = newOpacity;
+    let mainDone = false;
+    let warningDone = false;
 
+    // 2. Fade Main Title and Logo purely based on time
+    if (holdTimer.current > TYCHOSIUM_DURATION) {
+      if (materialRef.current) {
+        let currentOp = materialRef.current.opacity;
+        if (currentOp === undefined) currentOp = 1; // Failsafe for R3F first-frame render
+
+        if (currentOp > 0.01) {
+          const newOp = Math.max(0, currentOp - delta * FADE_SPEED);
+          materialRef.current.opacity = newOp;
+          if (logoMaterialRef.current) logoMaterialRef.current.opacity = newOp;
+        } else {
+          mainDone = true;
+        }
+      }
+    }
+
+    // 3. Fade Warning Text purely based on time
+    if (!isTouchDevice) {
+      warningDone = true;
+    } else if (holdTimer.current > WARNING_DURATION) {
       if (warningMaterialRef.current) {
-        warningMaterialRef.current.opacity = newOpacity;
-      }
+        let currentOp = warningMaterialRef.current.opacity;
+        if (currentOp === undefined) currentOp = 1;
 
-      if (logoMaterialRef.current) {
-        logoMaterialRef.current.opacity = newOpacity;
+        if (currentOp > 0.01) {
+          const newOp = Math.max(0, currentOp - delta * FADE_SPEED);
+          warningMaterialRef.current.opacity = newOp;
+        } else {
+          warningDone = true;
+        }
       }
-    } else {
-      // Once faded out, turn off the flag and unmount
+    }
+
+    // 4. Cleanup: Only unmount text when both are fully transparent
+    if (mainDone && warningDone) {
       setIsFinished(true);
-      // Only clear runIntro if it's still true (user might have already clicked through)
+      // Just in case the camera animation hasn't already unlocked the UI, ensure it does here
       if (runIntro) {
         setRunIntro(false);
       }
@@ -69,11 +86,9 @@ export default function IntroText() {
 
   if (isFinished) return null;
 
-  const titlePosition = [-140, 0, -150];
-  const warningPos = [-180, 0, -100];
-
-  // Adjusted to sit much closer to the left of the title
-  const logoPosition = [-125, 0, -185];
+  const titlePosition = isTouchDevice ? [-140, 0, -80] : [-140, 0, -150];
+  const warningPos = [-180, 0, -130];
+  const logoPosition = isTouchDevice ? [-125, 0, -115] : [-125, 0, -185];
 
   return (
     <>
@@ -87,7 +102,7 @@ export default function IntroText() {
         font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
         position={titlePosition}
         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-        size={30}
+        size={isTouchDevice ? 20 : 30}
         height={8}
         curveSegments={12}
         bevelEnabled
@@ -100,6 +115,8 @@ export default function IntroText() {
         <meshStandardMaterial
           ref={materialRef}
           color="white"
+          emissive="white"
+          emissiveIntensity={0.2} // Slight glow to ensure it isn't grey
           metalness={0.2}
           roughness={0.5}
           transparent={true}
@@ -112,8 +129,8 @@ export default function IntroText() {
           font={process.env.PUBLIC_URL + "/fonts/Cambria_Regular.json"}
           position={warningPos}
           rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-          size={20}
-          height={2}
+          size={12}
+          height={3}
           curveSegments={12}
           bevelEnabled
           bevelThickness={1}
@@ -121,10 +138,12 @@ export default function IntroText() {
           bevelOffset={0}
           bevelSegments={4}
         >
-          Optimized for Mouse & Keyboard
+          Keyboard and mouse recommended
           <meshStandardMaterial
             ref={warningMaterialRef}
-            color="#FFFFFF"
+            color="white"
+            emissive="white"
+            emissiveIntensity={0.8} // High intensity so it pops
             metalness={0.2}
             roughness={0.5}
             transparent={true}

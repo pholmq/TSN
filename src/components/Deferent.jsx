@@ -1,82 +1,84 @@
-import { useRef } from "react";
+import { useMemo } from "react";
+import * as THREE from "three";
 import { SpriteMaterial } from "three";
-
-import { useFrame } from "@react-three/fiber";
 import { useStore } from "../store";
 import { Line } from "@react-three/drei";
 import HoverObj from "../components/HoverObj/HoverObj";
 import createCircleTexture from "../utils/createCircleTexture";
 
+// PERFORMANCE FIX: Hoisted outside the component to prevent memory leaks
+// and re-allocations on every render.
+const circleTexture = createCircleTexture("red");
+const spriteMaterial = new SpriteMaterial({
+  map: circleTexture,
+  transparent: true,
+  opacity: 1,
+  sizeAttenuation: false,
+});
+
 export default function Orbit({ radius, visible, s }) {
   const color = s.color;
-  const arrows = s?.arrows ? s.arrows : false;
-  const reverse = s?.reverseArrows ? s.reverseArrows : false;
-  // const visible = s.visible;
+  const orbitsLineWidth = useStore((state) => state.orbitsLineWidth);
+  const shadeOrbits = useStore((state) => state.shadeOrbits);
 
-  const orbitRef = useRef();
+  const shadeMaterial = useMemo(() => {
+    return new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+  }, [color]);
 
-  const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
-
-  const edgePosition = [
-    Math.sin(Math.PI / 2) * radius,
-    Math.cos(Math.PI / 2) * radius,
-    0,
-  ];
-
-  const centerToEdgePoints = [
-    [0, 0, 0], // Center point
-    edgePosition,
-  ];
-
-  let points = [];
-
-  // // 360 full circle will be drawn clockwise
-  // for (let i = 0; i <= 360; i++) {
-  for (let i = 0; i <= 360; i = i + 0.1) {
-    points.push([
-      Math.sin(i * (Math.PI / 180)) * radius,
-      Math.cos(i * (Math.PI / 180)) * radius,
+  // PERFORMANCE FIX: Wrap the 3,600 iteration loop in a useMemo so we
+  // only crunch this math when the radius actually changes.
+  const { points, centerToEdgePoints } = useMemo(() => {
+    const edgePosition = [
+      Math.sin(Math.PI / 2) * radius,
+      Math.cos(Math.PI / 2) * radius,
       0,
-    ]);
-  }
+    ];
 
-  const markerSize = s.orbitRadius < 0.01 ? 0.01 : s.orbitRadius / 100;
+    const centerEdge = [[0, 0, 0], edgePosition];
+    const circlePoints = [];
 
-  const circleTexture = createCircleTexture("red");
-  const spriteMaterial = new SpriteMaterial({
-    map: circleTexture,
-    transparent: true,
-    opacity: 1,
-    sizeAttenuation: false,
-    // depthTest: false,
-  });
+    for (let i = 0; i <= 360; i += 0.1) {
+      circlePoints.push([
+        Math.sin(i * (Math.PI / 180)) * radius,
+        Math.cos(i * (Math.PI / 180)) * radius,
+        0,
+      ]);
+    }
+
+    return { points: circlePoints, centerToEdgePoints: centerEdge };
+  }, [radius]);
 
   return (
-    <>
-      <group visible={visible} name={s.name}>
-        {visible && <HoverObj s={s} />}
-        <Line
-          points={points} // Array of points
-          color={color} // Default
-          lineWidth={orbitsLineWidth} // In pixels (default)
-          dashed={false}
-        />
-        <Line
-          points={centerToEdgePoints}
-          color={color}
-          lineWidth={orbitsLineWidth}
-          dashed={false}
-        />
-        <sprite material={spriteMaterial} scale={[0.005, 0.005, 0.005]} />
-        {/* <mesh>
-          <sphereGeometry args={[markerSize, 32, 32]} />
-          <meshBasicMaterial color="white" />
+    <group visible={visible} name={s.name}>
+      {visible && <HoverObj s={s} />}
+
+      {shadeOrbits && (
+        <mesh material={shadeMaterial}>
+          <circleGeometry args={[radius, 128]} />
         </mesh>
-        <mesh position={edgePosition}>
-          <sphereGeometry args={[markerSize, 32, 32]} />
-          <meshBasicMaterial color="red" />
-        </mesh> */}
-      </group>
-    </>
+      )}
+
+      <Line
+        points={points}
+        color={color}
+        lineWidth={orbitsLineWidth}
+        dashed={false}
+      />
+
+      <Line
+        points={centerToEdgePoints}
+        color={color}
+        lineWidth={orbitsLineWidth}
+        dashed={false}
+      />
+
+      <sprite material={spriteMaterial} scale={[0.002, 0.002, 0.002]} />
+    </group>
   );
 }

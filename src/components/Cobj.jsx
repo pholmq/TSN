@@ -1,19 +1,30 @@
 import { useRef } from "react";
+import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { folder, useControls, button } from "leva";
 import { useStore, useSettingsStore } from "../store";
+import { Line } from "@react-three/drei";
 import Planet from "./Planet";
 import Orbit from "./Orbit";
 import Deferent from "./Deferent";
 import EclipticGrid from "./Helpers/EclipticGrid";
+import createCircleTexture from "../utils/createCircleTexture";
+
+// PERFORMANCE FIX: Hoist the red dot material outside the component
+const circleTexture = createCircleTexture("red");
+const spriteMaterial = new THREE.SpriteMaterial({
+  map: circleTexture,
+  transparent: true,
+  opacity: 1,
+  sizeAttenuation: false,
+});
 
 const Cobj = ({ name, children }) => {
   const { settings } = useSettingsStore();
   let s;
   let visible;
   let actualMoon = false;
-  //Special hack for the Moon. We have an "actual" invisible moon since the "Non actual planet size" moon has the wrong
-  // position so it can be visible
+
   if (name.startsWith("Actual ")) {
     actualMoon = true;
     visible = false;
@@ -29,6 +40,9 @@ const Cobj = ({ name, children }) => {
 
   const posRef = useStore((s) => s.posRef);
   const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
+  const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
+  const editSettings = useStore((s) => s.editSettings);
+
   useFrame(() => {
     orbitRef.current.rotation.y =
       s.speed * posRef.current - s.startPos * (Math.PI / 180);
@@ -38,6 +52,7 @@ const Cobj = ({ name, children }) => {
   let orbitCentera = s.orbitCentera;
   let orbitCenterb = s.orbitCenterb;
   let orbitCenterc = s.orbitCenterc;
+
   if (!actualPlanetSizes && !actualMoon) {
     if (
       s.name === "Moon" ||
@@ -51,9 +66,31 @@ const Cobj = ({ name, children }) => {
     }
   }
 
+  const hasDisplacement =
+    orbitCentera !== 0 || orbitCenterb !== 0 || orbitCenterc !== 0;
+
   return (
     <>
-      {/* <Pobj name={name}></Pobj> */}
+      {hasDisplacement && visible && editSettings && (
+        <group>
+          <Line
+            points={[
+              [0, 0, 0],
+              [orbitCentera, orbitCenterc, orbitCenterb],
+            ]}
+            color="yellow"
+            lineWidth={orbitsLineWidth}
+            dashed={false}
+          />
+          {/* NEW: Red dot precisely at the un-displaced origin */}
+          <sprite
+            position={[0, 0, 0]}
+            material={spriteMaterial}
+            scale={[0.002, 0.002, 0.002]}
+          />
+        </group>
+      )}
+
       <group
         name="Container"
         ref={containerRef}
@@ -62,15 +99,15 @@ const Cobj = ({ name, children }) => {
         rotation-z={s.orbitTiltb * (Math.PI / 180)}
       >
         <group name="Orbit" ref={orbitRef}>
-        {orbitRadius ? (
-          <group rotation-x={-Math.PI / 2}>
-            {s.type === "deferent" ? (
-              <Deferent radius={orbitRadius} visible={visible} s={s} />
-            ) : (
-              <Orbit radius={orbitRadius} visible={visible} s={s} />
-            )}
-          </group>
-        ) : null}
+          {orbitRadius !== undefined && orbitRadius !== null ? (
+            <group rotation-x={-Math.PI / 2}>
+              {s.type === "deferent" ? (
+                <Deferent radius={orbitRadius} visible={visible} s={s} />
+              ) : (
+                <Orbit radius={orbitRadius} visible={visible} s={s} />
+              )}
+            </group>
+          ) : null}
           <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
             {s.axesHelper && visible ? <axesHelper args={[10]} /> : null}
             {s.type === "planet" ? (

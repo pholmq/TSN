@@ -1,6 +1,8 @@
 html,
 body,
 #root {
+  position: fixed; /* Locks the document to the viewport entirely */
+  width: 100%;
   height: 100%;
   margin: 0;
   background: #000000;
@@ -213,6 +215,16 @@ body {
   opacity: 0.8;
 }
 
+/* --- NEW CHECKER BLOCK --- */
+.checker-div > div {
+  position: fixed;
+  top: 80px !important; /* Aligns vertically with the top of your other panels */
+  right: 270px !important; /* Pushes it exactly to the left of your 250px main menu */
+  left: auto !important; /* Stops forcing it to the far left */
+  width: 300px;
+  opacity: 0.8;
+}
+
 .settings-div > div {
   position: fixed;
   top: 60px !important;
@@ -224,13 +236,13 @@ body {
 }
 .plancam-div > div {
   position: fixed;
-  bottom: 10px !important;
-  top: auto !important; /* Override any top positioning */
-  left: 10px !important;
+  bottom: 170px !important; /* 150px map + 20px margin + 20px gap */
+  top: auto !important;
+  left: 12px !important; /* Align with the map HUD */
   right: auto !important;
   opacity: 0.8;
-  width: 350px;
-  max-height: calc(100vh - 100px) !important;
+  width: 300px; /* Match the map's width */
+  max-height: calc(100vh - 220px) !important;
   overflow-y: auto !important;
   z-index: 2147483647 !important;
 }
@@ -243,7 +255,7 @@ body {
   user-select: none;
   white-space: nowrap; /* Prevent text wrapping */
   pointer-events: none;
-  
+
   /* --- New Background Styles --- */
   background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent black */
   padding: 0.2rem 0.4rem; /* Spacing around the text */

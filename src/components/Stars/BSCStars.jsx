@@ -16,6 +16,7 @@ import Star from "./Star";
 // Cache vectors outside the component to prevent garbage collection stutters
 const _v1 = new THREE.Vector3();
 const _worldPos = new THREE.Vector3();
+const _hoverWorldPos = new THREE.Vector3();
 
 const BSCStars = ({ onStarClick, onStarHover }) => {
   const pointsRef = useRef();
@@ -67,7 +68,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
 
     if (selectedStarHR && starData.length > 0 && pointsRef.current) {
       const star = starData.find(
-        (s) => parseInt(s.HR) === parseInt(selectedStarHR)
+        (s) =>
+          (s.HR && String(s.HR) === String(selectedStarHR)) ||
+          (s.HIP && `HIP-${s.HIP}` === String(selectedStarHR))
       );
       if (!star) {
         if (!selectedStarHR.includes(":")) setSelectedStarPosition(null);
@@ -218,14 +221,14 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       currentHoverIndex.current = starIndex;
       const star = starData[starIndex];
 
-      const worldPosition = new THREE.Vector3(
+      _hoverWorldPos.set(
         positions[starIndex * 3],
         positions[starIndex * 3 + 1],
         positions[starIndex * 3 + 2]
       );
-      if (pointsRef.current) pointsRef.current.localToWorld(worldPosition);
+      if (pointsRef.current) pointsRef.current.localToWorld(_hoverWorldPos);
 
-      const hoverData = { star, position: worldPosition, index: starIndex };
+      const hoverData = { star, position: _hoverWorldPos, index: starIndex };
       currentHoverDataRef.current = hoverData;
 
       if (onStarHover) onStarHover(hoverData, e);
@@ -290,7 +293,8 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
       const b = colors[index * 3 + 2];
       const hexColor = "#" + new THREE.Color(r, g, b).getHexString();
 
-      const targetName = `BSCStarTarget_${star.HR}`;
+      const targetId = star.HR ? star.HR : `HIP-${star.HIP}`;
+      const targetName = `BSCStarTarget_${targetId}`;
       targetGroupRef.current.name = targetName;
 
       setTargetedStarData({
@@ -314,7 +318,9 @@ const BSCStars = ({ onStarClick, onStarHover }) => {
         ref={targetGroupRef}
         name={
           targetedStarData
-            ? `BSCStarTarget_${targetedStarData.HR}`
+            ? `BSCStarTarget_${
+                targetedStarData.HR || "HIP-" + targetedStarData.HIP
+              }`
             : "BSCStarTarget"
         }
       >

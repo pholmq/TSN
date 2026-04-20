@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
 import { useStore, useSettingsStore, usePosStore } from "../store";
 import { getRaDecDistance } from "../utils/celestial-functions";
@@ -6,40 +6,30 @@ import useFrameInterval from "../utils/useFrameInterval";
 
 const PosController = () => {
   const { scene } = useThree();
-  const { settings } = useSettingsStore();
-  const showPositions = useStore((s) => s.showPositions);
-
-  const tracked = settings
-    .filter((item) => item.traceable)
-    .map((item) => item.name);
-
-  usePosStore.setState(() => ({ trackedObjects: tracked }));
-
-  function updatePositions() {
-    let positions = {}; // Fresh object for positions
-
-    for (const item of tracked) {
-      positions[item] = getRaDecDistance(item, scene);
-    }
-    // Update the store with new positions
-    usePosStore.setState({ positions });
-  }
-
-  let previousPosRef = null;
-
-  useFrameInterval(() => {
-    if (!showPositions) return;
-    const currentPosRef = useStore.getState().posRef.current;
-
-    updatePositions();
-
-    // Update the previous value for the next check
-    previousPosRef = currentPosRef;
-  }, 200);
+  const trackedNames = useRef([]);
 
   useEffect(() => {
-    updatePositions();
+    // Cache the traceable settings once on mount
+    const tracked = useSettingsStore
+      .getState()
+      .settings.filter((item) => item.traceable)
+      .map((item) => item.name);
+
+    trackedNames.current = tracked;
+    usePosStore.setState({ trackedObjects: tracked });
   }, []);
+
+  useFrameInterval(() => {
+    if (!useStore.getState().showPositions) return;
+
+    let positions = {};
+    for (let i = 0; i < trackedNames.current.length; i++) {
+      const item = trackedNames.current[i];
+      positions[item] = getRaDecDistance(item, scene);
+    }
+
+    usePosStore.setState({ positions });
+  }, 200);
 
   return null;
 };

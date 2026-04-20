@@ -1,44 +1,40 @@
 import { useRef, useState, useMemo, useEffect } from "react";
-// Remove SpriteMaterial import, we will use the JSX element <spriteMaterial />
 import { useStore } from "../../store";
 import HoverPanel from "./HoverPanel";
 import createCircleTexture from "../../utils/createCircleTexture";
-import { useThree } from "@react-three/fiber"; // 1. Import useThree
+import { useThree } from "@react-three/fiber";
 
 const HoverObj = ({ s, starColor = false }) => {
-  const [hovered, setHover] = useState(false);
-  const [contextMenu, setContextMenu] = useState(false);
-
-  // Selectors
+  // 1. Subscribe to the global store for visibility so only ONE panel can ever be open
   const hoveredObjectId = useStore((state) => state.hoveredObjectId);
   const setHoveredObjectId = useStore((state) => state.setHoveredObjectId);
   const setCameraTarget = useStore((state) => state.setCameraTarget);
   const setSearchTarget = useStore((state) => state.setSearchTarget);
-  const runIntro = useStore((state) => state.runIntro); // Get runIntro state
-  const planetCamera = useStore((state) => state.planetCamera); // Get planetCamera state
 
-  const { gl } = useThree(); // Get gl to access domElement
-  const mouseDownRef = useRef(false); // Track mouse state
+  const [contextMenu, setContextMenu] = useState(false);
+  const [pinned, setPinned] = useState(false);
 
+  // Derived state: This object is active ONLY if its name matches the global store
+  const isHovered = hoveredObjectId === s.name;
+
+  const { gl } = useThree();
+  const mouseDownRef = useRef(false);
   const timeoutRef = useRef(null);
+
+  // Refs for custom double-tap logic
+  const singleTapTimeout = useRef(null);
+  const lastTap = useRef(0);
 
   const color = !starColor ? s.color : starColor;
 
-  // FIX 1: Only create the texture ONCE when the color changes.
   const circleTexture = useMemo(() => {
     return createCircleTexture(color);
   }, [color]);
 
-  // Setup mouse listeners to track dragging
   useEffect(() => {
     const canvas = gl.domElement;
-
-    const onMouseDown = () => {
-      mouseDownRef.current = true;
-    };
-    const onMouseUp = () => {
-      mouseDownRef.current = false;
-    };
+    const onMouseDown = () => (mouseDownRef.current = true);
+    const onMouseUp = () => (mouseDownRef.current = false);
 
     canvas.addEventListener("mousedown", onMouseDown);
     canvas.addEventListener("mouseup", onMouseUp);
@@ -49,34 +45,76 @@ const HoverObj = ({ s, starColor = false }) => {
     };
   }, [gl]);
 
-  const handlePointerOver = () => {
-    // Abort if intro is running OR mouse is held down (dragging)
-    if (runIntro || mouseDownRef.current) return;
+  // --- DESKTOP HOVER LOGIC ---
+  const handlePointerOver = (e) => {
+    if (useStore.getState().runIntro || mouseDownRef.current) return;
+
+    // Ignore automatic "hover" on mobile. Touch devices rely entirely on taps.
+    if (e.pointerType === "touch") return;
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
-      // Double check state before activating
-      if (!mouseDownRef.current && !runIntro) {
-        setHover(true);
+      if (!mouseDownRef.current && !useStore.getState().runIntro) {
         setHoveredObjectId(s.name);
       }
     }, 200);
   };
 
-  const handlePointerLeave = () => {
+  const handlePointerLeave = (e) => {
+    if (e.pointerType === "touch") return;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setHover(false);
-    if (!contextMenu) {
-      // Only clear if WE are the one currently hovered
-      // (This prevents clearing if the user moved quickly to another object)
-      // Although purely based on this component, we can just check our local state
-      if (hoveredObjectId === s.name) {
+
+    if (!contextMenu && !pinned) {
+      if (useStore.getState().hoveredObjectId === s.name) {
         setHoveredObjectId(null);
       }
     }
   };
 
-  const showPanel = hovered && hoveredObjectId === s.name;
+  const handleDoubleClick = () => {
+    if (useStore.getState().planetCamera) {
+      setSearchTarget(s.name);
+    } else {
+      setCameraTarget(s.name);
+    }
+  };
+
+  // --- MOBILE TAP & DOUBLE-TAP LOGIC ---
+  const handleClick = (e) => {
+    if (useStore.getState().runIntro) return;
+    e.stopPropagation(); // Prevent the click from hitting the background
+
+    const now = Date.now();
+
+    // If tapped twice within 300ms, execute double tap
+    if (now - lastTap.current < 300) {
+      clearTimeout(singleTapTimeout.current); // CANCEL the single tap!
+      handleDoubleClick();
+    } else {
+      // Single tap (with a delay to ensure a second tap isn't coming)
+      singleTapTimeout.current = setTimeout(() => {
+        if (e.pointerType === "touch") {
+          setHoveredObjectId(s.name); // Sets global state, automatically closing any other panels
+        }
+      }, 300);
+    }
+
+    lastTap.current = now;
+  };
+
+  // --- BACKGROUND CLICK LOGIC ---
+  const handlePointerMissed = (e) => {
+    // If the user clicks on nothing (background canvas), and THIS object is the active one, close it.
+    if (
+      e.pointerType === "touch" &&
+      useStore.getState().hoveredObjectId === s.name
+    ) {
+      if (!pinned && !contextMenu) {
+        setHoveredObjectId(null);
+      }
+    }
+  };
+
   const size = 0.005;
 
   return (
@@ -84,34 +122,31 @@ const HoverObj = ({ s, starColor = false }) => {
       scale={[size, size, size]}
       onPointerOver={handlePointerOver}
       onPointerLeave={handlePointerLeave}
-      onDoubleClick={() => {
-        if (planetCamera) {
-          setSearchTarget(s.name);
-        } else {
-          setCameraTarget(s.name);
-        }
-      }}
+      onClick={handleClick}
+      onPointerMissed={handlePointerMissed}
+      onDoubleClick={handleDoubleClick} // Retain native desktop double-click support
       onContextMenu={() => {
-        if (showPanel) setContextMenu(true);
+        if (isHovered) setContextMenu(true);
       }}
       renderOrder={1}
     >
-      {/* FIX 2: Use declarative <spriteMaterial> instead of 'new SpriteMaterial()' */}
-      {/* This allows R3F to update the opacity without destroying/recreating the material */}
       <spriteMaterial
         map={circleTexture}
         transparent={true}
-        // Reduced opacity to make planets visible through the marker
-        opacity={hovered ? 0.04 : 0.015}
+        opacity={isHovered ? 0.04 : 0.015}
         sizeAttenuation={false}
       />
 
-      <HoverPanel
-        hovered={showPanel}
-        contextMenu={contextMenu}
-        setContextMenu={setContextMenu}
-        s={s}
-      />
+      {(isHovered || contextMenu || pinned) && (
+        <HoverPanel
+          hovered={isHovered}
+          contextMenu={contextMenu}
+          setContextMenu={setContextMenu}
+          pinned={pinned}
+          setPinned={setPinned}
+          s={s}
+        />
+      )}
     </sprite>
   );
 };

@@ -25,7 +25,10 @@ export default function PlanetCamera() {
   const targetObjRef = useRef(null);
   const groundFade = useRef(0);
 
-  const CAM_NEAR_UNITS = 0.00007;
+  // PERFORMANCE FIX: Pre-cache the ground meshes to avoid traversing every frame
+  const cachedGroundMeshes = useRef([]);
+
+  const CAM_NEAR_UNITS = 0.0002;
 
   const { scene } = useThree();
   const planetCamera = useStore((s) => s.planetCamera);
@@ -51,7 +54,6 @@ export default function PlanetCamera() {
   const setStarScale = useStore((s) => s.setStarScale);
   const originalScaleRef = useRef(null);
 
-  // 1. CAPTURE & RESTORE EFFECT
   useEffect(() => {
     if (planetCamera) {
       originalScaleRef.current = useStore.getState().starScale;
@@ -65,7 +67,6 @@ export default function PlanetCamera() {
     };
   }, [planetCamera, setStarScale]);
 
-  // 2. DYNAMIC ZOOM EFFECT
   useEffect(() => {
     if (planetCamera && originalScaleRef.current !== null) {
       const rawRatio = 45 / planCamFov;
@@ -83,12 +84,26 @@ export default function PlanetCamera() {
   }, [planetCameraTarget, scene]);
 
   useEffect(() => {
-    // Reset the atmospheric fade-in whenever a transition starts,
-    // OR whenever the target planet changes abruptly.
     groundFade.current = 0;
   }, [cameraTransitioning, planetCameraTarget]);
 
-  // 3. OPTIMIZED CROSSFADE (Decoupled Fades & Horizon Toggle)
+  // PERFORMANCE FIX: Populate the cache array once when the ground mounts
+  useEffect(() => {
+    if (groundMountRef.current) {
+      const meshes = [];
+      groundMountRef.current.traverse((child) => {
+        if (child.isMesh && child.material) {
+          meshes.push({
+            mesh: child,
+            baseOpacity: child.userData.baseOpacity || 1,
+            isBowl: child.userData.isBowl,
+          });
+        }
+      });
+      cachedGroundMeshes.current = meshes;
+    }
+  }, []);
+
   useFrame((_, delta) => {
     if (cameraTransitioning) return;
 
@@ -100,21 +115,18 @@ export default function PlanetCamera() {
 
     const nearClipKm = unitsToKm(CAM_NEAR_UNITS);
 
-    // PLANET FADE: Fades in early so the true curved horizon appears in front of the bowl
-    const pLow = planetRadiusKm * 1.0005; // ~3km (Starts fading in)
-    const pHigh = planetRadiusKm * 1.002; // ~12km (Fully opaque)
+    const pLow = planetRadiusKm * 1.0005;
+    const pHigh = planetRadiusKm * 1.002;
 
-    // GROUND FADE: Fades out much later to patch the clipping hole beneath the camera
-    const gLow = planetRadiusKm + nearClipKm * 0.8; // ~80km (Starts fading out)
-    const gHigh = planetRadiusKm + nearClipKm * 2.0; // ~200km (Fully gone)
+    const gLow = planetRadiusKm + nearClipKm * 0.8;
+    const gHigh = planetRadiusKm + nearClipKm * 2.0;
 
-    // Calculate independent opacities
     let pOpacity =
       planCamHeight <= pLow
         ? 0
         : planCamHeight >= pHigh
         ? 1
-        : Math.pow((planCamHeight - pLow) / (pHigh - pLow), 2); // Squared for smooth entry
+        : Math.pow((planCamHeight - pLow) / (pHigh - pLow), 2);
 
     let gOpacity =
       planCamHeight <= gLow
@@ -123,14 +135,11 @@ export default function PlanetCamera() {
         ? 0
         : 1 - Math.pow((planCamHeight - gLow) / (gHigh - gLow), 2);
 
-    // Apply Planet Visibility
     if (targetObjRef.current?.material) {
       targetObjRef.current.material.transparent = true;
-      // CORRECT: Planet is completely hidden (0) when showGround is false
       targetObjRef.current.material.opacity = showGround ? pOpacity : 0;
     }
 
-    // Apply Ground & Horizon Line Visibility
     if (planetCamera) {
       if (groundFade.current < 1) {
         groundFade.current = Math.min(1, groundFade.current + delta * 0.4);
@@ -138,26 +147,22 @@ export default function PlanetCamera() {
 
       if (groundMountRef.current) {
         if (gOpacity > 0) {
-          groundMountRef.current.traverse((child) => {
-            if (child.isMesh && child.material) {
-              const baseOpacity = child.userData.baseOpacity || 1;
-              const isBowl = child.userData.isBowl;
+          // PERFORMANCE FIX: Loop through the flat array instead of traversing the whole tree
+          const meshes = cachedGroundMeshes.current;
+          for (let i = 0; i < meshes.length; i++) {
+            const { mesh, baseOpacity, isBowl } = meshes[i];
 
-              // LOGIC: If showGround is unchecked, force the bowl to 0 opacity,
-              // but let the horizon line render normally based on altitude!
-              let finalOpacity = 0;
-              if (!showGround && isBowl) {
-                finalOpacity = 0;
-              } else {
-                finalOpacity = baseOpacity * groundFade.current * gOpacity;
-              }
-
-              child.material.transparent = true;
-              child.material.opacity = finalOpacity;
-              // Minor optimization: hide the mesh entirely if it is fully transparent
-              child.visible = finalOpacity > 0;
+            let finalOpacity = 0;
+            if (!showGround && isBowl) {
+              finalOpacity = 0;
+            } else {
+              finalOpacity = baseOpacity * groundFade.current * gOpacity;
             }
-          });
+
+            mesh.material.transparent = true;
+            mesh.material.opacity = finalOpacity;
+            mesh.visible = finalOpacity > 0;
+          }
           groundMountRef.current.visible = true;
         } else {
           groundMountRef.current.visible = false;
@@ -168,7 +173,6 @@ export default function PlanetCamera() {
     }
   });
 
-  // 4. COORDINATES & DIP TRACKING
   useEffect(() => {
     if (!latAxisRef.current) return;
     latAxisRef.current.rotation.x = latToRad(planCamLat);
@@ -184,7 +188,6 @@ export default function PlanetCamera() {
       const dipAngleRad = H > R ? Math.acos(R / H) : 0;
       const groundSizeUnits = 0.015;
 
-      // FIX: Use Math.tan to perfectly sync the visual angle for smaller planets
       const yDropUnits = groundSizeUnits * Math.tan(dipAngleRad);
 
       groundMountRef.current.position.y = camY - yDropUnits;

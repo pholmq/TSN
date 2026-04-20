@@ -1,18 +1,17 @@
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
+import { useRef } from "react";
 
-const useFrameInterval = (fn, delay = 10, invalidateFr = false) => {
-  let start = performance.now();
-  const { invalidate } = useThree();
+const useFrameInterval = (fn, delay = 10) => {
+  const timer = useRef(0);
+  const delayInSeconds = delay / 1000;
 
-  useFrame((state) => {
-    let current = performance.now();
-    let delta = current - start;
+  useFrame((state, delta) => {
+    timer.current += delta;
 
-    if (delta >= delay) {
-      // Pass the state (camera, scene, etc.) to the callback function
+    if (timer.current >= delayInSeconds) {
       fn(state);
-
-      start = performance.now();
+      // Retain the remainder to prevent drift over time
+      timer.current %= delayInSeconds;
     }
   });
 };

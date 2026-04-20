@@ -36,7 +36,7 @@ function ZodiacGrid() {
   }, []);
 
   return (
-    <lineSegments geometry={geometry}>
+    <lineSegments geometry={geometry} raycast={() => null}>
       <lineBasicMaterial color={0xffaa00} opacity={0.6} transparent />
     </lineSegments>
   );
@@ -97,7 +97,7 @@ function ZodiacLabels() {
 
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
-      <mesh>
+      <mesh raycast={() => null}>
         <ringGeometry args={[235, 250, 32]} />
         <meshBasicMaterial
           map={texture1}
@@ -107,7 +107,7 @@ function ZodiacLabels() {
           color={0xffaa00}
         />
       </mesh>
-      <mesh>
+      <mesh raycast={() => null}>
         <ringGeometry args={[215, 230, 32]} />
         <meshBasicMaterial
           map={texture2}

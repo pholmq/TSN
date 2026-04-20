@@ -4,7 +4,6 @@ import { useRef, useState, useEffect } from "react";
 
 const IntroQuote = ({ duration = 10000, fade = 2000 }) => {
   const runIntro = useStore((s) => s.runIntro);
-  const showMenu = useStore((s) => s.showMenu);
   const portalRef = useRef(document.body);
   const [currentQuote, setCurrentQuote] = useState("");
   const [isVisible, setIsVisible] = useState(false);
@@ -41,6 +40,27 @@ const IntroQuote = ({ duration = 10000, fade = 2000 }) => {
     {
       text: "“He who goes slowly goes safely — and goes far” — old Italian adage",
     },
+    {
+      text: "“Astronomy advances not by arbitrary fictions, but by numbers that are grounded in observation and confirmed by the harmony of the heavens.” — Christen Sørensen Longomontanus",
+    },
+    {
+      text: "“Tycho Brahe left behind such ample and accurate observations, and from them may be established a system that truly reflects the order of the heavens.” — Christen Sørensen Longomontanus",
+    },
+    {
+      text: "“The orbit of Mars is a faithful judge of the order of the spheres; no hypothesis that misplaces Mars can be in harmony with the observations.” — Christen Sørensen Longomontanus",
+    },
+    {
+      text: "“Without geometry we cannot measure the heavens; without numbers we cannot express the motions; and without observation we cannot judge whether our geometry and numbers are true.” — Christen Sørensen Longomontanus",
+    },
+    {
+      text: "“I have taken up the unfinished work of Tycho Brahe, that the system of the heavens, so carefully measured by him, might not remain hidden in scattered manuscripts.” — Christen Sørensen Longomontanus",
+    },
+    {
+      text: "“Geometry is the language of the heavens; without it, the motions of the stars remain mute riddles.” — Christen Sørensen Longomontanus",
+    },
+    {
+      text: "“When we behold the heavens, admire their order, and measure their motions, we turn them to the praise of the Creator and to the benefit of human life.” — Christen Sørensen Longomontanus",
+    },
   ];
 
   useEffect(() => {
@@ -72,12 +92,15 @@ const IntroQuote = ({ duration = 10000, fade = 2000 }) => {
           opacity: isVisible ? 1 : 0,
           transition: `opacity ${fade}ms ease-in-out`,
           fontFamily: "'Times New Roman', serif",
-          fontSize: "clamp(2.5rem, 3.5vw, 3rem)",
+          // Lowered the min font size from 2.5rem to 1.5rem for better narrow mobile fit
+          fontSize: "clamp(1.5rem, 6vw, 3rem)",
           fontWeight: "400",
           textAlign: "center",
           color: "grey",
           textShadow: "2px 2px 6px rgba(0,0,0,0.7)",
-          width: `min(900px, 90vw)`,
+          width: "90vw",
+          maxWidth: "900px",
+          boxSizing: "border-box", // Prevents padding from blowing out the viewport width
           padding: "0 20px",
           whiteSpace: "normal",
           wordWrap: "break-word",

@@ -1,38 +1,46 @@
+import { useMemo } from "react";
 import { Line } from "@react-three/drei";
-import { useStore } from "../../store";
+import { useStore, useSettingsStore } from "../../store";
 
-// Component version
-export default function PolarLine({ visible }) {
-  const polarLine = useStore((s) => s.polarLine);
-  const southLine = useStore((s) => s.southLine);
+export default function PolarLine({ visible, name }) {
   const polarLineSize = useStore((s) => s.polarLineSize);
-  const points = [
-    [0, -100, 0], // bottom point
-    [0, 100, 0], // top point
-  ];
+
+  // We no longer need the global southLine state
+  const planetSetting = useSettingsStore((s) => s.getSetting(name));
+  const showPolarLine = planetSetting?.polarLineVisible || false;
+
+  const northPoints = useMemo(
+    () => [
+      [0, 0, 0],
+      [0, polarLineSize, 0],
+    ],
+    [polarLineSize]
+  );
+  const southPoints = useMemo(
+    () => [
+      [0, -polarLineSize, 0],
+      [0, 0, 0],
+    ],
+    [polarLineSize]
+  );
+
+  if (!visible || !showPolarLine) return null;
 
   return (
     <>
-      {polarLine && visible ? (
-        <Line
-          points={[
-            [0, 0, 0], // bottom point
-            [0, polarLineSize, 0], // top point
-          ]}
-          color="red"
-          lineWidth={1.5}
-        />
-      ) : null}
-      {southLine && visible ? (
-        <Line
-          points={[
-            [0, -polarLineSize, 0], // bottom point
-            [0, 0, 0], // top point
-          ]}
-          color="white"
-          lineWidth={1.5}
-        />
-      ) : null}
+      <Line
+        points={northPoints}
+        color="red"
+        lineWidth={1.5}
+        raycast={() => null}
+      />
+      {/* Removed the conditional check so this always renders with the north line */}
+      <Line
+        points={southPoints}
+        color="white"
+        lineWidth={1.5}
+        raycast={() => null}
+      />
     </>
   );
 }

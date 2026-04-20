@@ -8,10 +8,6 @@ import {
   FaBars,
   FaTimes,
   FaQuestionCircle,
-  FaShareAlt,
-  FaExternalLinkAlt,
-  FaGithub,
-  FaInfoCircle,
 } from "react-icons/fa";
 
 import LevaUI from "./LevaUI";
@@ -46,15 +42,13 @@ const UserInterface = () => {
     posRef,
     speedFact,
     speedMultiplier,
-    showLevaMenu,
-    toggleShowLevaMenu,
     showMenu,
     toggleShowMenu,
+    showLevaMenu,
+    toggleShowLevaMenu,
     setResetClicked,
     setCameraTarget,
     runIntro,
-    setRunIntro,
-    showHelp,
     setShowHelp,
   } = useStore();
 
@@ -62,15 +56,36 @@ const UserInterface = () => {
   const timeRef = useRef();
   const julianRef = useRef();
   const intervalRef = useRef();
+  const menuRef = useRef(null);
+  const dateTimeDisplayRef = useRef(null);
 
-  // Refs for stepping logic
   const steppingInterval = useRef(null);
   const steppingTimeout = useRef(null);
+
+  // Updated to only show the date
+  const updateDateTimeDisplay = () => {
+    if (dateTimeDisplayRef.current) {
+      dateTimeDisplayRef.current.textContent = posToDate(posRef.current);
+    }
+  };
+
+  useEffect(() => {
+    const handleOutsideTap = (e) => {
+      if (e.pointerType !== "touch") return;
+      if (showMenu && menuRef.current && !menuRef.current.contains(e.target)) {
+        handleToggleBothMenus();
+      }
+    };
+
+    document.addEventListener("pointerdown", handleOutsideTap);
+    return () => document.removeEventListener("pointerdown", handleOutsideTap);
+  }, [showMenu]);
 
   useEffect(() => {
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
+    updateDateTimeDisplay();
 
     if (run) {
       intervalRef.current = setInterval(() => {
@@ -83,19 +98,18 @@ const UserInterface = () => {
         if (document.activeElement !== julianRef.current) {
           julianRef.current.value = posToJulianDay(posRef.current);
         }
+        updateDateTimeDisplay();
       }, 100);
     } else {
       clearInterval(intervalRef.current);
     }
   }, [run]);
 
-  // Cleanup stepping timers on unmount
   useEffect(() => {
     return () => stopStepping();
   }, []);
 
   const performStep = (direction) => {
-    // direction: 1 for forward, -1 for backward
     if (speedFact === sYear) {
       posRef.current =
         dateToDays(
@@ -118,31 +132,26 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
+    updateDateTimeDisplay();
   };
 
   const startStepping = (direction) => {
-    // 1. Perform immediate step for responsiveness
     performStep(direction);
-
-    // 2. Clear any existing timers to be safe
     if (steppingTimeout.current) clearTimeout(steppingTimeout.current);
     if (steppingInterval.current) clearInterval(steppingInterval.current);
 
-    // 3. Set a timeout: wait 500ms before starting the continuous loop
     steppingTimeout.current = setTimeout(() => {
       steppingInterval.current = setInterval(() => {
         performStep(direction);
-      }, 100); // Speed of continuous stepping
-    }, 500); // Delay before continuous stepping starts
+      }, 100);
+    }, 500);
   };
 
   const stopStepping = () => {
-    // Clear the timeout (if user released button before 500ms)
     if (steppingTimeout.current) {
       clearTimeout(steppingTimeout.current);
       steppingTimeout.current = null;
     }
-    // Clear the interval (if continuous stepping was running)
     if (steppingInterval.current) {
       clearInterval(steppingInterval.current);
       steppingInterval.current = null;
@@ -150,18 +159,12 @@ const UserInterface = () => {
   };
 
   function dateKeyDown(e) {
-    // Prevent planet camera from moving
     e.stopPropagation();
-
-    if (e.key !== "Enter" && e.key !== "Tab") {
-      return;
-    }
-
+    if (e.key !== "Enter" && e.key !== "Tab") return;
     if (!isValidDate(dateRef.current.value)) {
       dateRef.current.value = posToDate(posRef.current);
       return;
     }
-
     posRef.current = dateTimeToPos(
       dateRef.current.value,
       posToTime(posRef.current)
@@ -170,25 +173,17 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
-
-    if (e.key === "Enter") {
-      document.activeElement.blur();
-    }
-    // For Tab key, let the default behavior occur (moving focus to next element)
+    updateDateTimeDisplay();
+    if (e.key === "Enter") document.activeElement.blur();
   }
 
   function timeKeyDown(e) {
     e.stopPropagation();
-
-    if (e.key !== "Enter" && e.key !== "Tab") {
-      return;
-    }
-
+    if (e.key !== "Enter" && e.key !== "Tab") return;
     if (!isValidTime(timeRef.current.value)) {
       timeRef.current.value = posToTime(posRef.current);
       return;
     }
-
     posRef.current = dateTimeToPos(
       posToDate(posRef.current),
       timeRef.current.value
@@ -197,25 +192,17 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
-
-    if (e.key === "Enter") {
-      document.activeElement.blur();
-    }
-    // For Tab key, let the default behavior occur
+    updateDateTimeDisplay();
+    if (e.key === "Enter") document.activeElement.blur();
   }
 
   function julianKeyDown(e) {
     e.stopPropagation();
-
-    if (e.key !== "Enter" && e.key !== "Tab") {
-      return;
-    }
-
+    if (e.key !== "Enter" && e.key !== "Tab") return;
     if (!isNumeric(julianRef.current.value)) {
       julianRef.current.value = posToJulianDay(posRef.current);
       return;
     }
-
     posRef.current = julianDayTimeToPos(
       julianRef.current.value,
       posToTime(posRef.current)
@@ -224,11 +211,8 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
-
-    if (e.key === "Enter") {
-      document.activeElement.blur();
-    }
-    // For Tab key, let the default behavior occur
+    updateDateTimeDisplay();
+    if (e.key === "Enter") document.activeElement.blur();
   }
 
   const handleReset = () => {
@@ -237,43 +221,94 @@ const UserInterface = () => {
     timeRef.current.value = posToTime(posRef.current);
     julianRef.current.value = posToJulianDay(posRef.current);
     updateAC();
+    updateDateTimeDisplay();
     setResetClicked();
     setCameraTarget("Earth");
   };
 
-  const handleToggleMenu = () => {
-    if (showLevaMenu) {
-      toggleShowLevaMenu();
-      return;
-    }
-    if (showMenu) {
-      toggleShowMenu();
-      return;
-    }
-    toggleShowLevaMenu();
+  const handleToggleBothMenus = () => {
     toggleShowMenu();
+    toggleShowLevaMenu();
   };
 
   return createPortal(
     <>
-      <button
-        hidden={showMenu}
-        className="menu-toggle-button"
-        onClick={handleToggleMenu}
-        style={{
-          position: "fixed",
-          top: "14px",
-          right: "12px",
-          zIndex: 2147483647,
-          background: "#374151",
-          border: "none",
-          borderRadius: "6px",
-          padding: "12px",
-          color: "white",
-          cursor: "pointer",
-        }}
-      ></button>
+      {!(showMenu || runIntro) && (
+        <div
+          style={{
+            position: "fixed",
+            top: "14px",
+            right: "12px",
+            zIndex: 2147483647,
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          {/* Floating Date Text */}
+          <div
+            ref={dateTimeDisplayRef}
+            style={{
+              color: "#9ca3af",
+              fontFamily: "monospace",
+              fontSize: "14px",
+              fontVariantNumeric: "tabular-nums",
+              textShadow: "1px 1px 2px rgba(0,0,0,0.6)",
+              pointerEvents: "none",
+              marginRight: "4px",
+            }}
+          >
+            {/* Initial render fallback updated to only date */}
+            {posToDate(posRef.current)}
+          </div>
+
+          <button
+            className="menu-toggle-button"
+            onClick={toggleRun}
+            style={{
+              background: "#374151",
+              border: "none",
+              borderRadius: "6px",
+              width: "24px",
+              height: "24px",
+              padding: "0",
+              color: "white",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            title={run ? "Pause" : "Play"}
+          >
+            {run ? <FaPause size={10} /> : <FaPlay size={10} />}
+          </button>
+
+          <button
+            className="menu-toggle-button"
+            onClick={handleToggleBothMenus}
+            style={{
+              background: "#374151",
+              border: "none",
+              borderRadius: "6px",
+              width: "24px",
+              height: "24px",
+              padding: "0",
+              color: "white",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            title="Open Menu"
+          >
+            <FaBars size={10} />
+          </button>
+        </div>
+      )}
+
       <div
+        ref={menuRef}
         className="menu"
         hidden={runIntro || !showMenu}
         style={{ zIndex: 2147483647 }}
@@ -286,15 +321,14 @@ const UserInterface = () => {
               gap: "5px",
             }}
           >
-            <TychosLogoIcon size={25} />{" "}
-            {/* Bumped size to match the 2rem font */}
+            <TychosLogoIcon size={25} />
             <span className="menu-header">The Tychosium</span>
           </div>
           <button
             className="menu-button menu-header-button"
             title="Help"
             onClick={() => setShowHelp(true)}
-            style={{ marginRight: "0.25rem", marginLeft: "0.5rem" }} // Add spacing
+            style={{ marginRight: "0.25rem", marginLeft: "0.5rem" }}
           >
             <FaQuestionCircle />
           </button>
@@ -303,10 +337,10 @@ const UserInterface = () => {
             <UIZoom />
             <button
               className="menu-button menu-header-button"
-              title="Hide/Show Menu"
-              onClick={handleToggleMenu}
+              title="Close Menu"
+              onClick={handleToggleBothMenus}
             >
-              {showLevaMenu ? <FaBars /> : <FaTimes />}
+              <FaTimes />
             </button>
           </div>
         </div>
@@ -332,12 +366,11 @@ const UserInterface = () => {
               timeRef.current.value = posToTime(posRef.current);
               julianRef.current.value = posToJulianDay(posRef.current);
               updateAC();
+              updateDateTimeDisplay();
             }}
           >
             Today
           </button>
-
-          {/* BACKWARD BUTTON */}
           <button
             className="menu-button"
             onMouseDown={() => startStepping(-1)}
@@ -346,12 +379,9 @@ const UserInterface = () => {
           >
             <FaStepBackward />
           </button>
-
           <button className="menu-button" onClick={toggleRun}>
             {run ? <FaPause /> : <FaPlay />}
           </button>
-
-          {/* FORWARD BUTTON */}
           <button
             className="menu-button"
             onMouseDown={() => startStepping(1)}
@@ -361,6 +391,7 @@ const UserInterface = () => {
             <FaStepForward />
           </button>
         </div>
+
         <div className="menu-item">
           <label className="menu-label">Date:</label>
           <input
@@ -368,9 +399,9 @@ const UserInterface = () => {
             ref={dateRef}
             onKeyDown={dateKeyDown}
             onBlur={(e) => {
-              if (!isValidDate(e.target.value)) {
+              if (!isValidDate(e.target.value))
                 dateRef.current.value = posToDate(posRef.current);
-              }
+              updateDateTimeDisplay();
             }}
           />
         </div>
@@ -381,9 +412,9 @@ const UserInterface = () => {
             ref={timeRef}
             onKeyDown={timeKeyDown}
             onBlur={(e) => {
-              if (!isValidTime(e.target.value)) {
+              if (!isValidTime(e.target.value))
                 timeRef.current.value = posToTime(posRef.current);
-              }
+              updateDateTimeDisplay();
             }}
           />
         </div>
@@ -394,13 +425,13 @@ const UserInterface = () => {
             ref={julianRef}
             onKeyDown={julianKeyDown}
             onBlur={(e) => {
-              if (!isNumeric(e.target.value)) {
+              if (!isNumeric(e.target.value))
                 julianRef.current.value = posToJulianDay(posRef.current);
-              }
+              updateDateTimeDisplay();
             }}
           />
         </div>
-        <div className="menu-item">
+        <div className="menu-item" hidden={!showLevaMenu}>
           <div className="leva-container">
             <LevaUI />
           </div>

@@ -75,6 +75,8 @@ export const useBSCStarData = (forceProjected = false) => {
         name: (() => {
           if (s.N && s.HIP) {
             return `${s.N} / HIP ${s.HIP}`;
+          } else if (s.N) {
+            return s.N;
           } else if (s.HIP) {
             return `HIP ${s.HIP}`;
           } else if (s.HR) {
@@ -83,6 +85,7 @@ export const useBSCStarData = (forceProjected = false) => {
           return "Unknown";
         })(),
         HR: s.HR,
+        HIP: s.HIP, // Expose HIP for lookups in BSCStars
         magnitude: isNaN(magnitude) ? 5 : magnitude,
         colorTemp,
         ra: s.RA,

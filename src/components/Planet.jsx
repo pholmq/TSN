@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef, useEffect, memo, useMemo } from "react";
+import { useRef, memo, useMemo } from "react";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { usePlanetCameraStore } from "./PlanetCamera/planetCameraStore";
@@ -12,14 +12,15 @@ import PlanetRings from "./PlanetRings";
 import NameLabel from "./Labels/NameLabelBillboard";
 import GeoSphere from "./Helpers/GeoSphere";
 
-// Define reusable vector outside to prevent GC pressure
-const worldPositionVec = new THREE.Vector3();
+// PERFORMANCE: Define geometries and constants globally to share across all planet instances
+const lowResSphere = new THREE.SphereGeometry(1, 64, 64);
+const highResSphere = new THREE.SphereGeometry(1, 128, 128); // Reserved for Earth
+const DEG2RAD = THREE.MathUtils.DEG2RAD; // Pre-calculated constant
 
 const Planet = memo(function Planet({ s, actualMoon, name }) {
   const planetRef = useRef();
-  const transformRef = useRef(); // New ref for the scale group
+  const transformRef = useRef();
   const pivotRef = useRef();
-  const materialRef = useRef();
 
   const posRef = useStore((state) => state.posRef);
   const sunLight = useStore((state) => state.sunLight);
@@ -30,24 +31,45 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const planetCameraTarget = usePlanetCameraStore(
     (state) => state.planetCameraTarget
   );
-  const cameraTransitioning = useStore((s) => s.cameraTransitioning);
+  const cameraTransitioning = useStore((state) => state.cameraTransitioning);
+  const editSettings = useStore((state) => state.editSettings);
+  const showPlanets = useStore((state) => state.showPlanets);
 
   const { texture, isLoading } = s.texture
     ? useTextureLoader(s.texture)
     : { texture: null, isLoading: false };
 
-  useEffect(() => {
-    if (materialRef.current && texture) {
-      materialRef.current.map = texture;
-      if (s.light) {
-        materialRef.current.emissiveMap = texture;
-      }
-      materialRef.current.needsUpdate = true;
-    }
-  }, [texture, s.light]);
+  // PERFORMANCE: Memoize material properties to avoid GC pressure and diffing on every render
+  const isTransparent = s.opacity !== undefined ? s.opacity < 1 : false;
+  const planetOpacity = s.opacity !== undefined ? s.opacity : 1;
+  const materialProps = useMemo(
+    () => ({
+      color: isLoading || !texture ? s.color : s.textureTint || "#ffffff",
+      emissive: s.light ? s.color : "#000000",
+      emissiveIntensity: s.light ? sunLight : 0,
+      roughness: 0.7,
+      metalness: 0.2,
+      transparent: isTransparent,
+      opacity: planetOpacity,
+      depthWrite: !isTransparent,
+      visible: !editSettings || showPlanets,
+    }),
+    [
+      texture,
+      isLoading,
+      s,
+      sunLight,
+      editSettings,
+      showPlanets,
+      isTransparent,
+      planetOpacity,
+    ]
+  );
 
   const rotationSpeed = Number(s.rotationSpeed || 0);
   const rotationStart = Number(s.rotationStart || 0);
+  const speed = Number(s.speed || 0);
+  const startPosRad = Number(s.startPos || 0) * DEG2RAD;
 
   let size = actualPlanetSizes ? s.actualSize : s.size;
   let visible = s.visible;
@@ -58,72 +80,55 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
 
   useFrame(() => {
     if (s.fixedTilt && pivotRef.current) {
-      pivotRef.current.rotation.y = -(
-        s.speed * posRef.current -
-        s.startPos * (Math.PI / 180)
-      );
+      // Use pre-calculated DEG2RAD to avoid math inside the loop
+      pivotRef.current.rotation.y = -(speed * posRef.current - startPosRad);
     }
-
     if (planetRef.current) {
       planetRef.current.rotation.y =
         rotationStart + rotationSpeed * posRef.current;
     }
   });
 
-  const tilt = Number(s.tilt || 0);
-  const tiltb = Number(s.tiltb || 0);
+  const tiltRad = Number(s.tilt || 0) * DEG2RAD;
+  const tiltbRad = Number(s.tiltb || 0) * DEG2RAD;
 
   const showLabel =
     visible &&
     !(planetCamera && !cameraTransitioning && name === planetCameraTarget);
-
-  // Updated Geometry logic: 256 for Earth, 128 otherwise
-  const planetGeometry = useMemo(() => {
-    const segments = s.name === "Earth" ? 256 : 128;
-    return <sphereGeometry args={[size, segments, segments]} />;
-  }, [size, s.name]);
+  const planetGeometry = s.name === "Earth" ? highResSphere : lowResSphere;
 
   return (
     <group>
       {s.name === "Earth" && <TropicalZodiac />}
-      <group
-        ref={pivotRef}
-        rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}
-      >
+      <group ref={pivotRef} rotation={[tiltbRad, 0, tiltRad]}>
         {s.name === "Earth" && <CelestialSphere />}
 
-        {(s.name === "Earth" || s.name === "Sun") && (
-          <PolarLine visible={visible} />
-        )}
+        <PolarLine visible={visible} name={name} />
         {showLabel && <NameLabel s={s} />}
         {showLabel && <HoverObj s={s} />}
 
         <group ref={transformRef} scale={planetScale}>
-          <mesh name={name} visible={visible} ref={planetRef}>
-            {planetGeometry}
-            <meshStandardMaterial
-              ref={materialRef}
-              color={
-                isLoading || !texture ? s.color : s.textureTint || "#ffffff"
-              }
-              emissive={s.light && s.color}
-              emissiveIntensity={s.light && sunLight}
-              roughness={0.7}
-              metalness={0.2}
-              transparent={true}
-              opacity={s.opacity ? s.opacity : 1}
-              // depthWrite={false} // Note: Keeping this as requested, but careful with overlapping transparent objects
-            />
-            {s.light && <pointLight intensity={sunLight * 100000} />}
-          </mesh>
-          {s.geoSphere && geoSphere ? (
+          {s.light && <pointLight intensity={sunLight * 100000} />}
+
+          <group name={name} ref={planetRef} visible={visible}>
+            <mesh geometry={planetGeometry} scale={size}>
+              <meshStandardMaterial
+                map={texture}
+                emissiveMap={s.light ? texture : null}
+                {...materialProps}
+              />
+            </mesh>
+          </group>
+
+          {s.geoSphere && geoSphere && (
             <GeoSphere
               s={s}
               size={size}
               visible={visible}
               color={s.geoSphereColor}
             />
-          ) : null}
+          )}
+
           {s.rings && (
             <PlanetRings
               innerRadius={s.rings.innerRadius + s.size}
