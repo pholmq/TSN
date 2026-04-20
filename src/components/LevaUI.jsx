@@ -95,10 +95,22 @@ const LevaUI = () => {
   const orbitArrowsCheckboxes = {};
   const planetVisibilityCheckboxes = {};
   const filledOrbitsCheckboxes = {};
+  const tracedPlanetsCheckboxes = {}; // NEW
 
   settings.forEach((s) => {
+    // Generate Trace Checkboxes (Checks if traceable first)
+    if (s.traceable) {
+      tracedPlanetsCheckboxes[`${s.name}_trc`] = {
+        label: s.name,
+        // Default Mars to true if undefined
+        value: s.traced !== undefined ? s.traced : s.name === "Mars",
+        onChange: (v) => {
+          updateSetting({ name: s.name, traced: v });
+        },
+      };
+    }
+
     if (s.type === "planet") {
-      // 100% unique keys with clean display labels
       planetVisibilityCheckboxes[`${s.name}_vis`] = {
         label: s.name,
         value: s.visible || false,
@@ -108,7 +120,7 @@ const LevaUI = () => {
       };
 
       polarLineCheckboxes[`${s.name}_pol`] = {
-        label: s.name,
+        label: s.name + " ",
         value: s.polarLineVisible || false,
         onChange: (v) => {
           updateSetting({ name: s.name, polarLineVisible: v });
@@ -116,7 +128,7 @@ const LevaUI = () => {
       };
 
       orbitArrowsCheckboxes[`${s.name}_arr`] = {
-        label: s.name,
+        label: s.name + "  ",
         value: s.orbitArrowsVisible || false,
         onChange: (v) => {
           updateSetting({ name: s.name, orbitArrowsVisible: v });
@@ -124,7 +136,7 @@ const LevaUI = () => {
       };
 
       filledOrbitsCheckboxes[`${s.name}_fil`] = {
-        label: s.name,
+        label: s.name + "   ",
         value: s.shadeOrbit || false,
         onChange: (v) => {
           updateSetting({ name: s.name, shadeOrbit: v });
@@ -193,6 +205,13 @@ const LevaUI = () => {
           value: trace,
           onChange: setTrace,
         },
+        // NEW: Folded directly inside LevaUI to strictly enforce ordering
+        "Traced planets": folder(
+          {
+            ...tracedPlanetsCheckboxes,
+          },
+          { collapsed: true }
+        ),
         "Line width": {
           value: lineWidth,
           min: 0.5,
@@ -236,7 +255,6 @@ const LevaUI = () => {
           },
           { collapsed: true }
         ),
-        // FOLDER UN-NESTED: Moved directly below Show/Hide planets
         "Polar lines": folder(
           {
             "Line length": {
@@ -287,11 +305,6 @@ const LevaUI = () => {
           },
           { collapsed: true }
         ),
-        // Re-enabled exactly as pasted in your previous code chunk
-        // Graticules: {
-        //   value: geoSphere,
-        //   onChange: setGeoSphere,
-        // },
       },
       { collapsed: true }
     ),
