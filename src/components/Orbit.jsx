@@ -95,11 +95,16 @@ export default function Orbit({ radius, visible, s }) {
   const arrowsToRender = useMemo(() => {
     const elements = [];
     const step = (Math.PI * 2) / globalArrowCount;
+
+    // FIX: Offset by half a step so arrows don't spawn exactly at 0 degrees
+    // This perfectly matches your original 45/135/225/315 degree placements
+    const offset = step / 2;
+
     for (let i = 0; i < globalArrowCount; i++) {
       elements.push(
         <Arrow
           key={i}
-          rotation={i * step}
+          rotation={i * step + offset} // Applied offset here
           radius={safeRadius}
           color={color}
           reverse={reverse}
