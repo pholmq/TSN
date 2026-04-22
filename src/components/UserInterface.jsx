@@ -84,7 +84,7 @@ const UserInterface = () => {
   useEffect(() => {
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
-    julianRef.current.value = posToJulianDay(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current).toFixed(6);
     updateDateTimeDisplay();
 
     if (run) {
@@ -96,7 +96,7 @@ const UserInterface = () => {
           timeRef.current.value = posToTime(posRef.current);
         }
         if (document.activeElement !== julianRef.current) {
-          julianRef.current.value = posToJulianDay(posRef.current);
+          julianRef.current.value = posToJulianDay(posRef.current).toFixed(6);
         }
         updateDateTimeDisplay();
       }, 100);
@@ -130,7 +130,7 @@ const UserInterface = () => {
 
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
-    julianRef.current.value = posToJulianDay(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current).toFixed(6);
     updateAC();
     updateDateTimeDisplay();
   };
@@ -171,7 +171,7 @@ const UserInterface = () => {
     );
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
-    julianRef.current.value = posToJulianDay(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current).toFixed(6);
     updateAC();
     updateDateTimeDisplay();
     if (e.key === "Enter") document.activeElement.blur();
@@ -190,7 +190,7 @@ const UserInterface = () => {
     );
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
-    julianRef.current.value = posToJulianDay(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current).toFixed(6);
     updateAC();
     updateDateTimeDisplay();
     if (e.key === "Enter") document.activeElement.blur();
@@ -200,7 +200,7 @@ const UserInterface = () => {
     e.stopPropagation();
     if (e.key !== "Enter" && e.key !== "Tab") return;
     if (!isNumeric(julianRef.current.value)) {
-      julianRef.current.value = posToJulianDay(posRef.current);
+      julianRef.current.value = posToJulianDay(posRef.current).toFixed(6);
       return;
     }
     posRef.current = julianDayTimeToPos(
@@ -209,7 +209,7 @@ const UserInterface = () => {
     );
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
-    julianRef.current.value = posToJulianDay(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current).toFixed(6);
     updateAC();
     updateDateTimeDisplay();
     if (e.key === "Enter") document.activeElement.blur();
@@ -219,7 +219,7 @@ const UserInterface = () => {
     posRef.current = 0;
     dateRef.current.value = posToDate(posRef.current);
     timeRef.current.value = posToTime(posRef.current);
-    julianRef.current.value = posToJulianDay(posRef.current);
+    julianRef.current.value = posToJulianDay(posRef.current).toFixed(6);
     updateAC();
     updateDateTimeDisplay();
     setResetClicked();
@@ -364,7 +364,9 @@ const UserInterface = () => {
               posRef.current = todayPos;
               dateRef.current.value = posToDate(posRef.current);
               timeRef.current.value = posToTime(posRef.current);
-              julianRef.current.value = posToJulianDay(posRef.current);
+              julianRef.current.value = posToJulianDay(posRef.current).toFixed(
+                6
+              );
               updateAC();
               updateDateTimeDisplay();
             }}
@@ -426,7 +428,10 @@ const UserInterface = () => {
             onKeyDown={julianKeyDown}
             onBlur={(e) => {
               if (!isNumeric(e.target.value))
-                julianRef.current.value = posToJulianDay(posRef.current);
+                julianRef.current.value = posToJulianDay(
+                  posRef.current
+                ).toFixed(6);
+              else julianRef.current.value = Number(e.target.value).toFixed(6);
               updateDateTimeDisplay();
             }}
           />
