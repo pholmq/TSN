@@ -176,8 +176,14 @@ export function daysToDate(days) {
   return posToDate(days * sDay);
 }
 
+// export function julianDayTimeToPos(julianDays, time) {
+//   return sDay * (julianDays - TYCHOS_EPOCH_JD) + timeToPos(time);
+// }
+
 export function julianDayTimeToPos(julianDays, time) {
-  return sDay * (julianDays - TYCHOS_EPOCH_JD) + timeToPos(time);
+  // A Julian Day already contains the time mathematically as a fraction.
+  // Adding the UI's time string double-counts the time offset and shifts the JD!
+  return sDay * (Number(julianDays) - TYCHOS_EPOCH_JD);
 }
 
 export function addYears(sDate, years) {
