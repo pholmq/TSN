@@ -1,4 +1,5 @@
 import { Vector3, Spherical } from "three";
+import { calendarToJD } from "./time-date-functions";
 
 // Convert RA/Dec to Altitude/Azimuth for observer at given lat/lon/time
 export function raDecToAltAz(ra, dec, lat, lon, time) {
@@ -11,9 +12,16 @@ export function raDecToAltAz(ra, dec, lat, lon, time) {
   const latRad = toRadians(lat);
   const lonRad = toRadians(lon);
 
-  // Calculate Julian Date
-  const date = new Date(time);
-  const jd = date.getTime() / 86400000 + 2440587.5;
+  // Calculate Julian Date using Meeus algorithm
+  const tParts = String(time).split(/[- :T]/);
+  const jd = calendarToJD(
+    Number(tParts[0]),
+    Number(tParts[1]),
+    Number(tParts[2]),
+    tParts[3] ? Number(tParts[3]) : 0,
+    tParts[4] ? Number(tParts[4]) : 0,
+    tParts[5] ? Number(tParts[5]) : 0
+  );
 
   // Calculate GMST (Greenwich Mean Sidereal Time)
   const t = (jd - 2451545.0) / 36525;
@@ -55,31 +63,15 @@ export function raDecToAltAz(ra, dec, lat, lon, time) {
 }
 
 export function azEl2RaDec(Az, El, lat, lon, time) {
-  const date = new Date(time);
-
-  function julianDate(year, month, day, hour, min, sec) {
-    const YearDur = 365.25;
-    if (month <= 2) {
-      year -= 1;
-      month += 12;
-    }
-    const A = Math.floor(YearDur * (year + 4716));
-    const B = Math.floor(30.6001 * (month + 1));
-    const C = 2;
-    const D = Math.floor(year / 100);
-    const E = Math.floor(D * 0.25);
-    const F = day - 1524.5;
-    const G = (hour + min / 60 + sec / 3600) / 24;
-    return A + B + C - D + E + F + G;
-  }
-
-  const JD = julianDate(
-    date.getUTCFullYear(),
-    date.getUTCMonth() + 1,
-    date.getUTCDate(),
-    date.getUTCHours(),
-    date.getUTCMinutes(),
-    date.getUTCSeconds()
+  // Calculate Julian Date using Meeus algorithm
+  const tParts = String(time).split(/[- :T]/);
+  const JD = calendarToJD(
+    Number(tParts[0]),
+    Number(tParts[1]),
+    Number(tParts[2]),
+    tParts[3] ? Number(tParts[3]) : 0,
+    tParts[4] ? Number(tParts[4]) : 0,
+    tParts[5] ? Number(tParts[5]) : 0
   );
 
   const T_UT1 = (JD - 2451545) / 36525;
@@ -143,12 +135,17 @@ export function rAandDecFromLocal(lat, lon, time, az, alt) {
   az = toRadians(az);
   alt = toRadians(alt);
 
-  const date = new Date(time);
-  const utc =
-    date.getUTCHours() +
-    date.getUTCMinutes() / 60 +
-    date.getUTCSeconds() / 3600;
-  const jd = date.getTime() / 86400000 + 2440587.5;
+  // Calculate Julian Date using Meeus algorithm
+  const tParts = String(time).split(/[- :T]/);
+  const jd = calendarToJD(
+    Number(tParts[0]),
+    Number(tParts[1]),
+    Number(tParts[2]),
+    tParts[3] ? Number(tParts[3]) : 0,
+    tParts[4] ? Number(tParts[4]) : 0,
+    tParts[5] ? Number(tParts[5]) : 0
+  );
+
   const t = (jd - 2451545.0) / 36525;
   const gmst =
     280.46061837 +
@@ -198,16 +195,11 @@ export function getRaDecDistance(name, scene) {
 }
 
 export function getRaDecDistanceFromPosition(position, scene) {
-  // Reuse vectors and objects to avoid allocations
   const csPos = new Vector3();
   const sunPos = new Vector3();
   const sphericalPos = new Spherical();
   const lookAtDir = new Vector3(0, 0, 1);
 
-  // REMOVED: scene.updateMatrixWorld();
-  // Optimization: This caused lag spikes. The caller (PosController) must handle matrix updates once per frame.
-
-  // Get world positions for celestial sphere and sun
   const celestialSphere = scene.getObjectByName("CelestialSphere");
   const sun = scene.getObjectByName("Sun");
   const csLookAtObj = scene.getObjectByName("CSLookAtObj");
@@ -342,57 +334,39 @@ export function rightAscensionToRadians(ra) {
 }
 
 export function sphericalToCartesian(raRad, decRad, dist) {
-  const z = dist * Math.cos(decRad) * Math.cos(raRad); // Z is now equatorial plane
-  const x = dist * Math.cos(decRad) * Math.sin(raRad); // X now tracks RA rotation
-  const y = dist * Math.sin(decRad); // Y determines height (North/South)
+  const z = dist * Math.cos(decRad) * Math.cos(raRad);
+  const x = dist * Math.cos(decRad) * Math.sin(raRad);
+  const y = dist * Math.sin(decRad);
 
   return { x, y, z };
 }
 
 export function convertMagnitude(magnitude) {
-  // Define the reference magnitude (brightness of the dimmest visible star)
   const referenceMagnitude = 6.5;
-
-  // Calculate the difference from the reference magnitude
   const difference = referenceMagnitude - magnitude;
-
-  // Convert to a positive scale where brighter objects have higher values
   const convertedValue = Math.max(0, Math.pow(10, difference / 2.5));
-
-  // Round to 2 decimal places for readability
   return Math.round(convertedValue * 100) / 100;
 }
 
 export function latToRad(degrees) {
-  // Shift the input by -90 degrees and scale to match the desired output
-  // Normal conversion is (degrees * Math.PI / 180)
-  // We want: 90° → 0, 0° → -π/2, -90° → -π
   return (degrees - 90) * (Math.PI / 180);
 }
 
 export function radToLat(radians) {
-  // Normal conversion is (radians * 180 / Math.PI)
-  // We want: 0 → 90°, -π/2 → 0°, -π → -90°
   return radians * (180 / Math.PI) + 90;
 }
 
 export function longToRad(degrees) {
-  // Normalize the angle to be within -180 to 180 degrees
   let normalized = ((((degrees + 180) % 360) + 360) % 360) - 180;
-  // Convert to standard radians where 0° = 0rad, 90° = π/2, etc.
   let standardRadians = normalized * (Math.PI / 180);
-  // Shift the result by adding 3π/2 and normalize to 0 to 2π range
   let shiftedRadians = (standardRadians + (3 * Math.PI) / 2) % (2 * Math.PI);
   return shiftedRadians;
 }
 
 export function radToLong(radians) {
-  // Normalize radians to 0 to 2π
   let normalizedRad = ((radians % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-  // Reverse the shift by subtracting 3π/2 and normalize again
   let unshiftedRad =
     (normalizedRad - (3 * Math.PI) / 2 + 2 * Math.PI) % (2 * Math.PI);
-  // Convert to degrees and adjust to -180 to 180 range
   let degrees = unshiftedRad * (180 / Math.PI);
   if (degrees > 180) {
     degrees -= 360;
@@ -401,15 +375,11 @@ export function radToLong(radians) {
 }
 
 export function kmToUnits(kilometers) {
-  const units = kilometers / 1495978.707;
-  //Kilometers is divided by this since 100 units in the model is 1 AU
-  return units;
+  return kilometers / 1495978.707;
 }
 
 export function unitsToKm(units) {
-  const kilometers = units * 1495978.707;
-  //Units is multiplied by this since 100 units in the model is 1 AU
-  return kilometers;
+  return units * 1495978.707;
 }
 
 export function lyToUnits(lightYears) {
@@ -421,9 +391,6 @@ export function altToRad(degrees) {
 }
 
 export function dirToRad(degrees) {
-  // Correct for 12-degree offset between compass and celestial coordinates
-  // This aligns the planet camera's azimuth with true astronomical directions
-  // const astronomicalAzimuth = (degrees + 12) % 360;
   const astronomicalAzimuth = degrees % 360;
   return Math.PI - (Math.PI / 180) * astronomicalAzimuth;
 }

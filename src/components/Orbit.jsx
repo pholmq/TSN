@@ -1,3 +1,4 @@
+//Orbit.jsx
 import { useRef, useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
@@ -141,9 +142,13 @@ export default function Orbit({ radius, visible, s }) {
   return (
     <>
       <group visible={showOrbits && visible}>
-        {/* NEW: Updated logic to render if either global OR local toggle is true */}
+        {/* FIX: Applied a microscopic Z-offset based on radius to eliminate Z-fighting */}
         {(shadeOrbits || localShadeOrbit) && (
-          <mesh material={shadeMaterial}>
+          <mesh
+            material={shadeMaterial}
+            position={[0, 0, -safeRadius * 0.00001]}
+            renderOrder={-1}
+          >
             <circleGeometry args={[safeRadius, 128]} />
           </mesh>
         )}
