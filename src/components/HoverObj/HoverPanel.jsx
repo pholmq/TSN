@@ -44,20 +44,26 @@ const HoverPanel = ({
 
     const target = scene.getObjectByName(s.name);
     if (target && target.userData.speeds) {
+      // Helper to dynamically switch to km/h if speed is below 1 km/s
+      const formatSpeed = (speedKmS) => {
+        if (speedKmS < 1) {
+          return `${(speedKmS * 3600).toFixed(2)} km/h`;
+        }
+        return `${speedKmS.toFixed(2)} km/s`;
+      };
+
       if (orbSpeedRef.current) {
-        orbSpeedRef.current.value = `${target.userData.speeds.orbital.toFixed(
-          2
-        )} km/s`;
+        orbSpeedRef.current.value = formatSpeed(target.userData.speeds.orbital);
       }
       if (absSpeedRef.current) {
-        absSpeedRef.current.value = `${target.userData.speeds.absolute.toFixed(
-          2
-        )} km/s`;
+        absSpeedRef.current.value = formatSpeed(
+          target.userData.speeds.absolute
+        );
       }
       if (avgAbsSpeedRef.current) {
-        avgAbsSpeedRef.current.value = `${target.userData.speeds.avgAbsolute.toFixed(
-          2
-        )} km/s`;
+        avgAbsSpeedRef.current.value = formatSpeed(
+          target.userData.speeds.avgAbsolute
+        );
       }
     }
   }
@@ -90,6 +96,8 @@ const HoverPanel = ({
             style={{
               transform: "translateX(-60%) ",
               transformOrigin: "top left",
+              width: "280px", // Widened to fit the extra speed info
+              whiteSpace: "nowrap", // Prevents text from breaking to a new line
             }}
             onContextMenu={(e) => {
               if (pinned) {
