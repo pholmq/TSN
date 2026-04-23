@@ -96,7 +96,6 @@ const HoverPanel = ({
             style={{
               transform: "translateX(-60%) ",
               transformOrigin: "top left",
-              width: "280px", // Widened to fit the extra speed info
               whiteSpace: "nowrap", // Prevents text from breaking to a new line
             }}
             onContextMenu={(e) => {
