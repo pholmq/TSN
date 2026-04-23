@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import * as THREE from "three";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { folder, useControls, button } from "leva";
 import { useStore, useSettingsStore } from "../store";
 import { Line } from "@react-three/drei";
@@ -9,6 +9,7 @@ import Orbit from "./Orbit";
 import Deferent from "./Deferent";
 import EclipticGrid from "./Helpers/EclipticGrid";
 import createCircleTexture from "../utils/createCircleTexture";
+import usePlanetSpeed from "../utils/usePlanetSpeed";
 
 // PERFORMANCE FIX: Hoist the red dot material outside the component
 const circleTexture = createCircleTexture("red");
@@ -21,6 +22,8 @@ const spriteMaterial = new THREE.SpriteMaterial({
 
 const Cobj = ({ name, children }) => {
   const { settings } = useSettingsStore();
+  const { scene } = useThree();
+
   let s;
   let visible;
   let actualMoon = false;
@@ -69,6 +72,9 @@ const Cobj = ({ name, children }) => {
   const hasDisplacement =
     orbitCentera !== 0 || orbitCenterb !== 0 || orbitCenterc !== 0;
 
+  // Initialize and update speeds silently into the object's userData
+  usePlanetSpeed(name, s, orbitRadius, scene);
+
   return (
     <>
       {hasDisplacement && visible && editSettings && (
@@ -82,7 +88,7 @@ const Cobj = ({ name, children }) => {
             lineWidth={orbitsLineWidth}
             dashed={false}
           />
-          {/* NEW: Red dot precisely at the un-displaced origin */}
+          {/* Red dot precisely at the un-displaced origin */}
           <sprite
             position={[0, 0, 0]}
             material={spriteMaterial}

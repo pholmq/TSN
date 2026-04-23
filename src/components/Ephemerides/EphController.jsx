@@ -6,6 +6,10 @@ import {
   posToDate,
   posToTime,
   dateTimeToPos,
+  addYears,
+  addMonths,
+  sYear,
+  sMonth,
 } from "../../utils/time-date-functions";
 import {
   movePlotModel,
@@ -63,6 +67,9 @@ const EphController = () => {
 
       // Setup Job
       jobRef.current = {
+        startDate: params.startDate,
+        stepSize: params.stepSize,
+        stepFactor: params.stepFactor,
         startPos: startPos,
         currentStep: 0,
         totalSteps: totalSteps,
@@ -102,9 +109,34 @@ const EphController = () => {
     let batchCount = 0;
 
     while (job.currentStep <= job.totalSteps && batchCount < BATCH_SIZE) {
-      const currentPos = job.startPos + job.currentStep * job.increment;
-      const currentDate = posToDate(currentPos);
-      const currentTime = posToTime(currentPos);
+      let currentPos, currentDate, currentTime;
+
+      // Pin to the original exact start time (e.g., "00:00:00")
+      const startTime = posToTime(job.startPos);
+
+      // Calendar-aware stepping to prevent time-of-day drift
+      if (job.stepFactor === sYear) {
+        const dir = job.increment < 0 ? -1 : 1;
+        currentDate = addYears(
+          job.startDate,
+          job.stepSize * job.currentStep * dir
+        );
+        currentTime = startTime;
+        currentPos = dateTimeToPos(currentDate, currentTime);
+      } else if (job.stepFactor === sMonth) {
+        const dir = job.increment < 0 ? -1 : 1;
+        currentDate = addMonths(
+          job.startDate,
+          job.stepSize * job.currentStep * dir
+        );
+        currentTime = startTime;
+        currentPos = dateTimeToPos(currentDate, currentTime);
+      } else {
+        // Fallback for days, hours, minutes
+        currentPos = job.startPos + job.currentStep * job.increment;
+        currentDate = posToDate(currentPos);
+        currentTime = posToTime(currentPos);
+      }
 
       movePlotModel(plotObjects, currentPos);
 

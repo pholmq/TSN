@@ -19,6 +19,11 @@ const HoverPanel = ({
   const decRef = useRef(null);
   const distRef = useRef(null);
   const eloRef = useRef(null);
+
+  const orbSpeedRef = useRef(null);
+  const absSpeedRef = useRef(null);
+  const avgAbsSpeedRef = useRef(null);
+
   const intervalRef = useRef(null);
 
   const setCameraTarget = useStore((state) => state.setCameraTarget);
@@ -26,6 +31,7 @@ const HoverPanel = ({
   const planetCamera = useStore((state) => state.planetCamera);
 
   const groupRef = useRef(null);
+  const portalRef = useRef(document.body);
 
   function update() {
     if (!raRef.current) return;
@@ -35,6 +41,25 @@ const HoverPanel = ({
     decRef.current.value = dec;
     distRef.current.value = dist;
     eloRef.current.value = elongation;
+
+    const target = scene.getObjectByName(s.name);
+    if (target && target.userData.speeds) {
+      if (orbSpeedRef.current) {
+        orbSpeedRef.current.value = `${target.userData.speeds.orbital.toFixed(
+          2
+        )} km/s`;
+      }
+      if (absSpeedRef.current) {
+        absSpeedRef.current.value = `${target.userData.speeds.absolute.toFixed(
+          2
+        )} km/s`;
+      }
+      if (avgAbsSpeedRef.current) {
+        avgAbsSpeedRef.current.value = `${target.userData.speeds.avgAbsolute.toFixed(
+          2
+        )} km/s`;
+      }
+    }
   }
 
   useEffect(() => {
@@ -47,8 +72,6 @@ const HoverPanel = ({
   }, [hovered, pinned]);
 
   const showPanel = (hovered || pinned) && !contextMenu;
-
-  const portalRef = useRef(document.body);
 
   return (
     <group ref={groupRef}>
@@ -104,6 +127,20 @@ const HoverPanel = ({
               <label className="menu-label">Elongation:</label>
               <input className="menu-input" ref={eloRef} disabled />
             </div>
+
+            <div className="panel-item">
+              <label className="menu-label">Orbital Spd:</label>
+              <input className="menu-input" ref={orbSpeedRef} disabled />
+            </div>
+            <div className="panel-item">
+              <label className="menu-label">Abs. Spd:</label>
+              <input className="menu-input" ref={absSpeedRef} disabled />
+            </div>
+            <div className="panel-item">
+              <label className="menu-label">Avg Abs Spd:</label>
+              <input className="menu-input" ref={avgAbsSpeedRef} disabled />
+            </div>
+
             <div className="panel-item">
               <label className="menu-label-centered">
                 Doubleclick - Center cam. <br /> Right click - Menu.
