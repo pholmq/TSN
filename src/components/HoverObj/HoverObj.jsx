@@ -45,6 +45,23 @@ const HoverObj = ({ s, starColor = false }) => {
     };
   }, [gl]);
 
+  // --- STATE CLEANUP INTERCEPTORS ---
+  // When unpinning or closing menus, we must force the global hover state to clear,
+  // otherwise the panel stays stuck open because the pointer left long ago.
+  const handleSetPinned = (val) => {
+    setPinned(val);
+    if (!val) {
+      setHoveredObjectId(null);
+    }
+  };
+
+  const handleSetContextMenu = (val) => {
+    setContextMenu(val);
+    if (!val && !pinned) {
+      setHoveredObjectId(null);
+    }
+  };
+
   // --- DESKTOP HOVER LOGIC ---
   const handlePointerOver = (e) => {
     if (useStore.getState().runIntro || mouseDownRef.current) return;
@@ -141,9 +158,9 @@ const HoverObj = ({ s, starColor = false }) => {
         <HoverPanel
           hovered={isHovered}
           contextMenu={contextMenu}
-          setContextMenu={setContextMenu}
+          setContextMenu={handleSetContextMenu} // Pass the interceptor
           pinned={pinned}
-          setPinned={setPinned}
+          setPinned={handleSetPinned} // Pass the interceptor
           s={s}
         />
       )}
