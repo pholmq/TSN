@@ -57,12 +57,10 @@ export const useTraceConfig = () => {
 
   const tracedPlanetsCheckboxes = {};
 
-  // Generate the checkboxes for any planet that is traceable
   settings.forEach((s) => {
     if (s.traceable) {
       tracedPlanetsCheckboxes[`${s.name}_trc`] = {
         label: s.name,
-        // Default Mars to true if undefined
         value: s.traced !== undefined ? s.traced : s.name === "Mars",
         onChange: (v) => updateSetting({ name: s.name, traced: v }),
       };
@@ -71,7 +69,6 @@ export const useTraceConfig = () => {
 
   return {
     TraceOnOff: { label: "Trace On/Off", value: trace, onChange: setTrace },
-    // Populated the folder with the generated checkboxes
     "Traced planets": folder(tracedPlanetsCheckboxes, { collapsed: true }),
     "Line width": {
       value: lineWidth,
@@ -118,6 +115,7 @@ export const usePlanetOrbitsConfig = () => {
   const orbitArrowsCheckboxes = {};
   const planetVisibilityCheckboxes = {};
   const filledOrbitsCheckboxes = {};
+  const orbitVisibilityCheckboxes = {};
 
   settings.forEach((s) => {
     if (s.type === "planet") {
@@ -125,6 +123,11 @@ export const usePlanetOrbitsConfig = () => {
         label: s.name,
         value: s.visible || false,
         onChange: (v) => updateSetting({ name: s.name, visible: v }),
+      };
+      orbitVisibilityCheckboxes[`${s.name}_orb`] = {
+        label: s.name + "    ",
+        value: s.orbitVisible !== undefined ? s.orbitVisible : true,
+        onChange: (v) => updateSetting({ name: s.name, orbitVisible: v }),
       };
       polarLineCheckboxes[`${s.name}_pol`] = {
         label: s.name + " ",
@@ -176,6 +179,10 @@ export const usePlanetOrbitsConfig = () => {
       step: 0.5,
       onChange: setOrbitsLineWidth,
     },
+    "Show/Hide orbits": folder(
+      { ...orbitVisibilityCheckboxes },
+      { collapsed: true }
+    ),
     "Filled orbits": folder({ ...filledOrbitsCheckboxes }, { collapsed: true }),
     "Orbit arrows": folder(
       {

@@ -1,4 +1,3 @@
-//Orbit.jsx
 import { useRef, useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
@@ -6,14 +5,12 @@ import { useStore } from "../store";
 import { Line } from "@react-three/drei";
 import createCircleTexture from "../utils/createCircleTexture";
 
-// PERFORMANCE FIX: Shared arrow materials
 const arrowGeometry = new THREE.ConeGeometry(3, 8);
 const baseArrowMaterial = new THREE.MeshBasicMaterial({
   opacity: 0.8,
   transparent: true,
 });
 
-// PERFORMANCE FIX: Hoist red dot sprite materials
 const circleTexture = createCircleTexture("red");
 const spriteMaterial = new THREE.SpriteMaterial({
   map: circleTexture,
@@ -34,18 +31,13 @@ function Arrow({ rotation, radius, color, reverse = false }) {
     return m;
   }, [color]);
 
-  // Use a pre-allocated vector to prevent recreating objects in the animation loop
   const vec = useMemo(() => new THREE.Vector3(), []);
 
-  // Ensure arrow stays the same apparent size OR remains fixed depending on the setting
   useFrame(({ camera }) => {
     if (meshRef.current) {
       if (globalArrowFixedSize) {
-        // Fixed size in the 3D world (gets smaller as you zoom out)
-        // Multiplier 0.2 means a slider value of 5 equals a scale of 1.0
         meshRef.current.scale.setScalar(globalArrowSize * 0.2);
       } else {
-        // Dynamic size (stays the same apparent size on screen)
         meshRef.current.getWorldPosition(vec);
         const distance = camera.position.distanceTo(vec);
         const dynamicScale = distance * globalArrowSize * 0.0001;
@@ -70,7 +62,9 @@ function Arrow({ rotation, radius, color, reverse = false }) {
 export default function Orbit({ radius, visible, s }) {
   const color = s.color;
   const showOrbitArrows = s?.orbitArrowsVisible || false;
-  const localShadeOrbit = s?.shadeOrbit || false; // NEW: Grab local specific planet shade toggle
+  const localShadeOrbit = s?.shadeOrbit || false;
+  const localOrbitVisible =
+    s?.orbitVisible !== undefined ? s.orbitVisible : true;
   const reverse = s?.reverseArrows || false;
 
   const showOrbits = useStore((s) => s.orbits);
@@ -79,7 +73,6 @@ export default function Orbit({ radius, visible, s }) {
   const shadeOrbits = useStore((s) => s.shadeOrbits);
   const globalArrowCount = useStore((s) => s.globalArrowCount);
 
-  // BUG FIX: Prevent NaN mathematical collapse for planets at center (radius 0)
   const safeRadius = radius === 0 ? 0.000001 : radius;
 
   const shadeMaterial = useMemo(() => {
@@ -92,12 +85,9 @@ export default function Orbit({ radius, visible, s }) {
     });
   }, [color]);
 
-  // Distribute arrows evenly based on global count
   const arrowsToRender = useMemo(() => {
     const elements = [];
     const step = (Math.PI * 2) / globalArrowCount;
-
-    // Offset by half a step so arrows don't spawn exactly at 0 degrees
     const offset = step / 2;
 
     for (let i = 0; i < globalArrowCount; i++) {
@@ -114,7 +104,6 @@ export default function Orbit({ radius, visible, s }) {
     return elements;
   }, [globalArrowCount, safeRadius, color, reverse]);
 
-  // Export the edge position so we can use it for the second red dot
   const { points, centerToEdgePoints, edgePosition } = useMemo(() => {
     const pts = [];
     const stepSize = safeRadius > 50000 ? 0.2 : safeRadius > 10000 ? 0.5 : 1;
@@ -124,7 +113,6 @@ export default function Orbit({ radius, visible, s }) {
       pts.push([Math.sin(rad) * safeRadius, Math.cos(rad) * safeRadius, 0]);
     }
 
-    // Calculate center-to-edge pointer
     const edgePos = [
       Math.sin(Math.PI / 2) * safeRadius,
       Math.cos(Math.PI / 2) * safeRadius,
@@ -141,8 +129,7 @@ export default function Orbit({ radius, visible, s }) {
 
   return (
     <>
-      <group visible={showOrbits && visible}>
-        {/* FIX: Applied a microscopic Z-offset based on radius to eliminate Z-fighting */}
+      <group visible={showOrbits && visible && localOrbitVisible}>
         {(shadeOrbits || localShadeOrbit) && (
           <mesh
             material={shadeMaterial}
@@ -163,7 +150,6 @@ export default function Orbit({ radius, visible, s }) {
           raycast={() => null}
         />
 
-        {/* 2. Conditionally render the center red dot, radius line, and edge red dot */}
         {editSettings && (
           <>
             <Line
@@ -172,9 +158,7 @@ export default function Orbit({ radius, visible, s }) {
               lineWidth={orbitsLineWidth}
               dashed={false}
             />
-            {/* Center dot */}
             <sprite material={spriteMaterial} scale={[0.002, 0.002, 0.002]} />
-            {/* Edge dot */}
             <sprite
               material={spriteMaterial}
               position={edgePosition}
