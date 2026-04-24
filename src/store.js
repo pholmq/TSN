@@ -20,7 +20,7 @@ export const useStore = create(
       setSpeedMultiplier: (v) => set({ speedMultiplier: v }),
       showPositions: false,
       setShowPositions: (v) => set({ showPositions: v }),
-      searchStars: true,
+      searchStars: false,
       setSearchStars: (v) => set({ searchStars: v }),
       activeCamera: "orbit",
       cameraTarget: "Earth",

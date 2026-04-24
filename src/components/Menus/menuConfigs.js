@@ -26,10 +26,10 @@ export const useMainControlsConfig = () => {
       value: actualPlanetSizes,
       onChange: setActualPlanetSizes,
     },
+    Labels: { value: showLabels, onChange: setShowLables },
     "Planet camera": { value: planetCamera, onChange: setPlanetCamera },
     "Camera follow": { value: cameraFollow, onChange: setCameraFollow },
-    Labels: { value: showLabels, onChange: setShowLables },
-    Orbits: { value: orbits, onChange: setOrbits },
+    // Orbits: { value: orbits, onChange: setOrbits },
     Search: { value: searchStars, onChange: setSearchStars },
     Positions: {
       value: showPositions,
@@ -240,7 +240,6 @@ export const useStarsHelpersConfig = () => {
       value: BSCStars,
       onChange: (v) => {
         setBSCStars(v);
-        setSearchStars(v ? true : false);
       },
     },
     "Divide distances by": {
