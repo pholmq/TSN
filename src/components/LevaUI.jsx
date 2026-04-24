@@ -62,7 +62,7 @@ const LevaUI = () => {
   useEffect(() => {
     set2({
       "Actual planet sizes": actualPlanetSizes,
-      Orbits: orbits,
+      // Orbits: orbits,
       Ephemerides: ephimerides,
       Positions: showPositions,
       Search: searchStars,

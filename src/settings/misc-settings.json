@@ -49,7 +49,7 @@
   },
   {
     "name": "Sun deferent",
-    "color": "yellow",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
@@ -99,13 +99,13 @@
   },
   {
     "name": "Venus deferent A",
-    "color": "#FFC649",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Venus deferent B",
-    "color": "orange",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
@@ -124,13 +124,13 @@
   },
   {
     "name": "Mars deferent E",
-    "color": "red",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Mars deferent S",
-    "color": "red",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
@@ -165,6 +165,7 @@
   },
   {
     "name": "Jupiter deferent",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
@@ -187,6 +188,7 @@
   },
   {
     "name": "Saturn deferent",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
@@ -209,6 +211,7 @@
   },
   {
     "name": "Uranus deferent",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
@@ -231,6 +234,7 @@
   },
   {
     "name": "Neptune deferent",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
@@ -253,6 +257,7 @@
   },
   {
     "name": "Pluto deferent",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
@@ -269,6 +274,7 @@
   },
   {
     "name": "Halleys deferent",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
@@ -285,11 +291,13 @@
   },
   {
     "name": "Eros deferent A",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
   {
     "name": "Eros deferent B",
+    "color": "gray",
     "type": "deferent",
     "visible": false
   },
