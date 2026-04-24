@@ -88,11 +88,21 @@ const HoverObj = ({ s, starColor = false }) => {
     }
   };
 
+  // const handleDoubleClick = () => {
+  //   if (useStore.getState().planetCamera) {
+  //     setSearchTarget(s.name);
+  //   } else {
+  //     setCameraTarget(s.name);
+  //   }
+  // };
+
   const handleDoubleClick = () => {
+    // FIX: Always update the global camera target so the 3D Name/HIP label appears
+    setCameraTarget(s.name);
+
+    // If in Planet Camera, additionally trigger the local projection math
     if (useStore.getState().planetCamera) {
       setSearchTarget(s.name);
-    } else {
-      setCameraTarget(s.name);
     }
   };
 

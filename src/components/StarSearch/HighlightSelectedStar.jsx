@@ -186,11 +186,12 @@ export default function HighlightSelectedStar() {
   const isPlanetVisible = pSetting ? pSetting.visible : true;
   const hideText = isPlanet && showLabels && isPlanetVisible;
 
-  if (!selectedStarHR || !searchStars) return null;
+  if (!selectedStarHR) return null;
 
   return (
     <group ref={groupRef}>
       <group ref={canvasGroupRef}>
+        {/* 1. The Text label renders whenever a star is selected */}
         {starName && !hideText && (
           <Text
             raycast={() => null}
@@ -212,36 +213,54 @@ export default function HighlightSelectedStar() {
             {starName}
           </Text>
         )}
-        <mesh position={[0, -14, 0]} renderOrder={9999999} raycast={() => null}>
-          <planeGeometry args={[4, 12]} />
-          <meshBasicMaterial
-            color="yellow"
-            transparent={true}
-            depthTest={false}
-            depthWrite={false}
-            toneMapped={false}
-          />
-        </mesh>
-        <mesh position={[-14, 0, 0]} renderOrder={9999999} raycast={() => null}>
-          <planeGeometry args={[12, 4]} />
-          <meshBasicMaterial
-            color="yellow"
-            transparent={true}
-            depthTest={false}
-            depthWrite={false}
-            toneMapped={false}
-          />
-        </mesh>
-        <mesh position={[14, 0, 0]} renderOrder={9999999} raycast={() => null}>
-          <planeGeometry args={[12, 4]} />
-          <meshBasicMaterial
-            color="yellow"
-            transparent={true}
-            depthTest={false}
-            depthWrite={false}
-            toneMapped={false}
-          />
-        </mesh>
+
+        {/* 2. The Crosshairs ONLY render if the Search Menu is open */}
+        {searchStars && (
+          <>
+            <mesh
+              position={[0, -14, 0]}
+              renderOrder={9999999}
+              raycast={() => null}
+            >
+              <planeGeometry args={[4, 12]} />
+              <meshBasicMaterial
+                color="yellow"
+                transparent={true}
+                depthTest={false}
+                depthWrite={false}
+                toneMapped={false}
+              />
+            </mesh>
+            <mesh
+              position={[-14, 0, 0]}
+              renderOrder={9999999}
+              raycast={() => null}
+            >
+              <planeGeometry args={[12, 4]} />
+              <meshBasicMaterial
+                color="yellow"
+                transparent={true}
+                depthTest={false}
+                depthWrite={false}
+                toneMapped={false}
+              />
+            </mesh>
+            <mesh
+              position={[14, 0, 0]}
+              renderOrder={9999999}
+              raycast={() => null}
+            >
+              <planeGeometry args={[12, 4]} />
+              <meshBasicMaterial
+                color="yellow"
+                transparent={true}
+                depthTest={false}
+                depthWrite={false}
+                toneMapped={false}
+              />
+            </mesh>
+          </>
+        )}
       </group>
     </group>
   );
