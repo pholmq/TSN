@@ -34,6 +34,7 @@ export default function FocusSearchedStar() {
         } else {
           setSelectedStarHR(cleanTarget);
         }
+        useStore.getState().setCameraTarget(searchTarget);
       }
     }
   }, [
