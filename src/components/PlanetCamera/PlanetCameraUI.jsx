@@ -173,7 +173,7 @@ const PlanetCameraUI = () => {
         value: followPlanetRotation,
         onChange: setFollowPlanetRotation,
       },
-      "Show ground/planet": { value: showGround, onChange: setShowGround },
+      "Show ground": { value: showGround, onChange: setShowGround },
       Location: {
         value: "-",
         options: Object.keys(cities),
