@@ -15,6 +15,7 @@ const HoverPanel = ({
   s,
 }) => {
   const { scene } = useThree();
+  const showSpeeds = useStore((state) => state.showSpeeds);
   const raRef = useRef(null);
   const decRef = useRef(null);
   const distRef = useRef(null);
@@ -43,7 +44,7 @@ const HoverPanel = ({
     eloRef.current.value = elongation;
 
     const target = scene.getObjectByName(s.name);
-    if (target && target.userData.speeds) {
+    if (showSpeeds && target && target.userData.speeds) {
       // Helper to dynamically switch to km/h if speed is below 1 km/s
       const formatSpeed = (speedKmS) => {
         if (speedKmS < 1) {
@@ -135,18 +136,22 @@ const HoverPanel = ({
               <input className="menu-input" ref={eloRef} disabled />
             </div>
 
-            <div className="panel-item">
-              <label className="menu-label">Orbital Spd:</label>
-              <input className="menu-input" ref={orbSpeedRef} disabled />
-            </div>
-            <div className="panel-item">
-              <label className="menu-label">Abs. Spd:</label>
-              <input className="menu-input" ref={absSpeedRef} disabled />
-            </div>
-            <div className="panel-item">
-              <label className="menu-label">Avg Abs Spd:</label>
-              <input className="menu-input" ref={avgAbsSpeedRef} disabled />
-            </div>
+            {showSpeeds && (
+              <>
+                <div className="panel-item">
+                  <label className="menu-label">Orbital Spd:</label>
+                  <input className="menu-input" ref={orbSpeedRef} disabled />
+                </div>
+                <div className="panel-item">
+                  <label className="menu-label">Abs. Spd:</label>
+                  <input className="menu-input" ref={absSpeedRef} disabled />
+                </div>
+                <div className="panel-item">
+                  <label className="menu-label">Avg Abs Spd:</label>
+                  <input className="menu-input" ref={avgAbsSpeedRef} disabled />
+                </div>
+              </>
+            )}
 
             <div className="panel-item">
               <label className="menu-label-centered">

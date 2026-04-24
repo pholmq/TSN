@@ -27,6 +27,9 @@ const LightEffectsMenu = () => {
   const editSettings = useStore((s) => s.editSettings);
   const setEditSettings = useStore((s) => s.setEditSettings);
 
+  const showSpeeds = useStore((state) => state.showSpeeds);
+  const setShowSpeeds = useStore((state) => state.setShowSpeeds);
+
   const showChecker = useCheckerStore((s) => s.showChecker);
   const setShowChecker = useCheckerStore((s) => s.setShowChecker);
 
@@ -153,6 +156,11 @@ const LightEffectsMenu = () => {
             if (context?.initial) return;
             setEditSettings(v);
           },
+        },
+
+        "Show Speeds": {
+          value: showSpeeds,
+          onChange: (v) => setShowSpeeds(v),
         },
       },
       { collapsed: false }
