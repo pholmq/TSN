@@ -6,14 +6,15 @@ export function raDecToAltAz(ra, dec, lat, lon, time) {
   const toRadians = (deg) => deg * (Math.PI / 180);
   const toDegrees = (rad) => rad * (180 / Math.PI);
 
-  // Convert inputs to radians
-  const raRad = toRadians(ra * 15); // RA is in hours, convert to degrees first
+  const raRad = toRadians(ra * 15);
   const decRad = toRadians(dec);
   const latRad = toRadians(lat);
   const lonRad = toRadians(lon);
 
-  // Calculate Julian Date using Meeus algorithm
-  const tParts = String(time).split(/[- :T]/);
+  // FIX 1: Strip the "Z" from the time string before splitting
+  const tParts = String(time)
+    .replace("Z", "")
+    .split(/[- :T]/);
   const jd = calendarToJD(
     Number(tParts[0]),
     Number(tParts[1]),
@@ -23,7 +24,6 @@ export function raDecToAltAz(ra, dec, lat, lon, time) {
     tParts[5] ? Number(tParts[5]) : 0
   );
 
-  // Calculate GMST (Greenwich Mean Sidereal Time)
   const t = (jd - 2451545.0) / 36525;
   let gmst =
     280.46061837 +
@@ -32,26 +32,25 @@ export function raDecToAltAz(ra, dec, lat, lon, time) {
     (t * t * t) / 38710000;
   gmst = gmst % 360;
 
-  // Calculate LST (Local Sidereal Time)
   let lst = (gmst + toDegrees(lonRad)) % 360;
   const lstRad = toRadians(lst);
-
-  // Calculate Hour Angle
   const ha = lstRad - raRad;
 
-  // Calculate Altitude
   const sinAlt =
     Math.sin(decRad) * Math.sin(latRad) +
     Math.cos(decRad) * Math.cos(latRad) * Math.cos(ha);
-  const alt = Math.asin(sinAlt);
 
-  // Calculate Azimuth
-  const cosAz =
+  // FIX 2: Clamp sinAlt to [-1, 1] to prevent NaN from floating point drift
+  const alt = Math.asin(Math.max(-1, Math.min(1, sinAlt)));
+
+  let cosAz =
     (Math.sin(decRad) - Math.sin(alt) * Math.sin(latRad)) /
     (Math.cos(alt) * Math.cos(latRad));
+
+  // FIX 3: Clamp cosAz to [-1, 1] to prevent NaN
+  cosAz = Math.max(-1, Math.min(1, cosAz));
   let az = Math.acos(cosAz);
 
-  // Adjust azimuth for quadrant
   if (Math.sin(ha) > 0) {
     az = 2 * Math.PI - az;
   }
@@ -61,10 +60,11 @@ export function raDecToAltAz(ra, dec, lat, lon, time) {
     azimuth: toDegrees(az),
   };
 }
-
 export function azEl2RaDec(Az, El, lat, lon, time) {
   // Calculate Julian Date using Meeus algorithm
-  const tParts = String(time).split(/[- :T]/);
+  const tParts = String(time)
+    .replace("Z", "")
+    .split(/[- :T]/);
   const JD = calendarToJD(
     Number(tParts[0]),
     Number(tParts[1]),
@@ -136,7 +136,9 @@ export function rAandDecFromLocal(lat, lon, time, az, alt) {
   alt = toRadians(alt);
 
   // Calculate Julian Date using Meeus algorithm
-  const tParts = String(time).split(/[- :T]/);
+  const tParts = String(time)
+    .replace("Z", "")
+    .split(/[- :T]/);
   const jd = calendarToJD(
     Number(tParts[0]),
     Number(tParts[1]),
