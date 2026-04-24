@@ -18,7 +18,9 @@ const NameLabel = ({ s }) => {
   const runIntro = useStore((state) => state.runIntro);
   const planetCamera = useStore((state) => state.planetCamera);
   const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
-  const planetScale = useStore((state) => state.planetScale);
+  const getPlanetScale = useStore((state) => state.planetScale);
+  // No scaling if planet camera is active
+  const planetScale = planetCamera ? 1 : getPlanetScale;
 
   const groupRef = useRef();
   const scaleGroupRef = useRef();
