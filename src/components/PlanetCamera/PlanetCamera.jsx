@@ -44,6 +44,7 @@ export default function PlanetCamera() {
     planCamFov,
     planCamFar,
     showGround,
+    followPlanetRotation,
   } = usePlanetCameraStore();
 
   const planetRadiusKm = unitsToKm(
@@ -76,12 +77,27 @@ export default function PlanetCamera() {
   }, [planCamFov, planetCamera, setStarScale]);
 
   useLayoutEffect(() => {
-    if (planetCamSystemRef.current.parent)
+    // 1. Detach from current parent
+    if (planetCamSystemRef.current.parent) {
       planetCamSystemRef.current.parent.remove(planetCamSystemRef.current);
+    }
+
+    // 2. Find the planet group
     targetObjRef.current = scene.getObjectByName(planetCameraTarget);
-    if (targetObjRef.current)
-      targetObjRef.current.add(planetCamSystemRef.current);
-  }, [planetCameraTarget, scene]);
+
+    // 3. Mount to the correct anchor
+    if (targetObjRef.current) {
+      // If following rotation, attach to the planet itself.
+      // If not, attach to the planet's parent (which holds orbit position/scale but doesn't spin).
+      const mountTarget = followPlanetRotation
+        ? targetObjRef.current
+        : targetObjRef.current.parent;
+
+      if (mountTarget) {
+        mountTarget.add(planetCamSystemRef.current);
+      }
+    }
+  }, [planetCameraTarget, scene, followPlanetRotation]);
 
   useEffect(() => {
     groundFade.current = 0;

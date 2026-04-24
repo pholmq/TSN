@@ -34,6 +34,13 @@ const PlanetCameraUI = () => {
   const showGround = usePlanetCameraStore((s) => s.showGround);
   const setShowGround = usePlanetCameraStore((s) => s.setShowGround);
 
+  const followPlanetRotation = usePlanetCameraStore(
+    (s) => s.followPlanetRotation
+  );
+  const setFollowPlanetRotation = usePlanetCameraStore(
+    (s) => s.setFollowPlanetRotation
+  );
+
   // Get planet radius and calculate surface height
   const planetSettings = getSetting(planetCameraTarget);
   const planetRadiusInUnits = planetSettings?.actualSize || 0.00426;
@@ -162,7 +169,11 @@ const PlanetCameraUI = () => {
         options: ["Earth", "Moon", "Mars", "Sun", "Mercury", "Venus"],
         onChange: setPlanetCameraTarget,
       },
-      "Ground/Planet": { value: showGround, onChange: setShowGround },
+      "Follow planet rotation": {
+        value: followPlanetRotation,
+        onChange: setFollowPlanetRotation,
+      },
+      "Show ground": { value: showGround, onChange: setShowGround },
       Location: {
         value: "-",
         options: Object.keys(cities),
@@ -308,6 +319,8 @@ const PlanetCameraUI = () => {
             hideCopyButton
             theme={{
               sizes: {
+                rootWidth: "320px",
+                controlWidth: "155px",
                 numberInputMinWidth: "60px",
               },
               fontSizes: {

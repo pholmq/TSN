@@ -24,10 +24,13 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
 
   const posRef = useStore((state) => state.posRef);
   const sunLight = useStore((state) => state.sunLight);
-  const planetScale = useStore((state) => state.planetScale);
+  const getPlanetScale = useStore((state) => state.planetScale);
+  const planetCamera = useStore((state) => state.planetCamera);
+  // No scaling if planet camera is active
+  const planetScale = planetCamera ? 1 : getPlanetScale;
+
   const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
   const geoSphere = useStore((state) => state.geoSphere);
-  const planetCamera = useStore((state) => state.planetCamera);
   const planetCameraTarget = usePlanetCameraStore(
     (state) => state.planetCameraTarget
   );
@@ -72,6 +75,12 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const startPosRad = Number(s.startPos || 0) * DEG2RAD;
 
   let size = actualPlanetSizes ? s.actualSize : s.size;
+
+  // FIX: Force Earth to use actualSize when planetCamera is active
+  if (planetCamera && s.name === "Earth") {
+    size = s.actualSize;
+  }
+
   let visible = s.visible;
   if (actualMoon) {
     size = s.actualSize;
