@@ -4,6 +4,10 @@ export const usePlanetCameraStore = create((set) => ({
   planetCameraTarget: "Earth",
   setPlanetCameraTarget: (v) => set({ planetCameraTarget: v }),
 
+  // Toggle for following planet rotation
+  followPlanetRotation: true,
+  setFollowPlanetRotation: (v) => set({ followPlanetRotation: v }),
+
   planCamLat: 0,
   setPlanCamLat: (v) => set({ planCamLat: v }),
 
