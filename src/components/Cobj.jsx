@@ -87,6 +87,8 @@ const Cobj = ({ name, children }) => {
             color="yellow"
             lineWidth={orbitsLineWidth}
             dashed={false}
+            raycast={() => null}
+            toneMapped={false}
           />
           {/* Red dot precisely at the un-displaced origin */}
           <sprite

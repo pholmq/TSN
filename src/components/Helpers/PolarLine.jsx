@@ -33,6 +33,7 @@ export default function PolarLine({ visible, name }) {
         color="red"
         lineWidth={1.5}
         raycast={() => null}
+        toneMapped={false}
       />
       {/* Removed the conditional check so this always renders with the north line */}
       <Line
@@ -40,6 +41,7 @@ export default function PolarLine({ visible, name }) {
         color="white"
         lineWidth={1.5}
         raycast={() => null}
+        toneMapped={false}
       />
     </>
   );

@@ -107,9 +107,11 @@ const TSNext = () => {
         id="canvas"
         frameloop="always"
         fps={60}
-        dpr={[1, 1.5]}
+        dpr={[1, 2]} // FIX 1: Boost max pixel ratio to 2 for crisp Retina/High-DPI rendering
         gl={{
-          logarithmicDepthBuffer: true,
+          antialias: true, // FIX 2: Explicitly request hardware anti-aliasing
+          samples: 8, // FIX 3: Force maximum MSAA samples (supported in WebGL2)
+          logarithmicDepthBuffer: true, // Necessary for solar system scale, but can conflict with AA on older GPUs
           preserveDrawingBuffer: true,
         }}
         style={getCanvasStyle()}

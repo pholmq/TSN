@@ -71,6 +71,11 @@ const LightEffectsMenu = () => {
       step: 0.1,
       hint: "Glow can affect performance",
     },
+    antialiasing: {
+      label: "Anti-Aliasing",
+      value: "SMAA",
+      options: ["FXAA", "SMAA", "None"],
+    },
 
     "Developer menu": folder(
       {
