@@ -69,6 +69,8 @@ export default function Orbit({ radius, visible, s }) {
         color={color}
         lineWidth={orbitsLineWidth}
         dashed={false}
+        raycast={() => null}
+        toneMapped={false}
       />
 
       <Line
@@ -76,6 +78,8 @@ export default function Orbit({ radius, visible, s }) {
         color={color}
         lineWidth={orbitsLineWidth}
         dashed={false}
+        raycast={() => null}
+        toneMapped={false}
       />
 
       <sprite material={spriteMaterial} scale={[0.002, 0.002, 0.002]} />

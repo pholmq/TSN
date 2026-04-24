@@ -120,6 +120,8 @@ const TraceLine = ({
       lineWidth={width}
       color="white"
       frustumCulled={false}
+      raycast={() => null}
+      toneMapped={false}
     />
   );
 };
