@@ -6,6 +6,7 @@ import { useStore, useSettingsStore, usePosStore } from "../../store";
 const Positions = () => {
   const showPositions = useStore((s) => s.showPositions);
   const setShowPositions = useStore((s) => s.setShowPositions);
+  const showSpeeds = useStore((s) => s.showSpeeds); // Get Show speeds state
   const positions = usePosStore((s) => s.positions);
   const { settings } = useSettingsStore();
 
@@ -15,23 +16,41 @@ const Positions = () => {
 
     settings.forEach((s) => {
       if (s.traceable) {
-        folders[s.name] = folder(
-          {
-            [`${s.name}ra`]: { label: "RA:", value: "", editable: false },
-            [`${s.name}dec`]: { label: "Dec:", value: "", editable: false },
-            [`${s.name}dist`]: {
-              label: "Distance:",
-              value: "",
-              editable: false,
-            },
-            [`${s.name}elongation`]: {
-              label: "Elongation:",
-              value: "",
-              editable: false,
-            },
+        let controls = {
+          [`${s.name}ra`]: { label: "RA:", value: "", editable: false },
+          [`${s.name}dec`]: { label: "Dec:", value: "", editable: false },
+          [`${s.name}dist`]: {
+            label: "Distance:",
+            value: "",
+            editable: false,
           },
-          { collapsed: true }
-        );
+          [`${s.name}elongation`]: {
+            label: "Elongation:",
+            value: "",
+            editable: false,
+          },
+        };
+
+        // Conditionally add speed fields
+        if (showSpeeds) {
+          controls[`${s.name}orbSpeed`] = {
+            label: "Orbital speed:",
+            value: "",
+            editable: false,
+          };
+          controls[`${s.name}absSpeed`] = {
+            label: "Absolute speed:",
+            value: "",
+            editable: false,
+          };
+          controls[`${s.name}avgAbsSpeed`] = {
+            label: "Avg abs speed:",
+            value: "",
+            editable: false,
+          };
+        }
+
+        folders[s.name] = folder(controls, { collapsed: true });
       }
     });
 
@@ -42,7 +61,7 @@ const Positions = () => {
     };
 
     return folders;
-  }, [settings]);
+  }, [settings, showSpeeds]);
 
   // Create a custom Leva store
   const levaStore = useCreateStore();
@@ -106,20 +125,44 @@ const Positions = () => {
     return () => clearInterval(interval);
   }, [showPositions, setShowPositions]);
 
-  // Set up Leva controls for planets (removed the old manual button)
-  const [, set] = useControls(() => planetFolders, { store: levaStore });
+  // Set up Leva controls for planets (re-init when planetFolders updates via `showSpeeds` change)
+  const [, set] = useControls(() => planetFolders, { store: levaStore }, [
+    planetFolders,
+  ]);
 
   // Update Leva controls when `positions` change
   useEffect(() => {
+    const formatSpeed = (speedKmS) => {
+      if (speedKmS == null) return "";
+      if (speedKmS < 1) {
+        return `${(speedKmS * 3600).toFixed(2)} km/h`;
+      }
+      return `${speedKmS.toFixed(2)} km/s`;
+    };
+
     for (const pos in positions) {
-      set({
+      const updateData = {
         [`${pos}ra`]: positions[pos].ra,
         [`${pos}dec`]: positions[pos].dec,
         [`${pos}dist`]: positions[pos].dist,
         [`${pos}elongation`]: positions[pos].elongation,
-      });
+      };
+
+      if (showSpeeds && positions[pos].speeds) {
+        updateData[`${pos}orbSpeed`] = formatSpeed(
+          positions[pos].speeds.orbital
+        );
+        updateData[`${pos}absSpeed`] = formatSpeed(
+          positions[pos].speeds.absolute
+        );
+        updateData[`${pos}avgAbsSpeed`] = formatSpeed(
+          positions[pos].speeds.avgAbsolute
+        );
+      }
+
+      set(updateData);
     }
-  }, [JSON.stringify(positions), set]);
+  }, [JSON.stringify(positions), set, showSpeeds]);
 
   if (!showPositions) return null;
 
@@ -128,8 +171,8 @@ const Positions = () => {
       className="positions-div"
       style={{
         position: "fixed",
-        top: "80px", // Adding top standard position so it matches others
-        right: "10px", // Adding right standard position
+        top: "80px",
+        right: "10px",
         zIndex: 2147483647,
       }}
     >

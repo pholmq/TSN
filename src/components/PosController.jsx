@@ -25,7 +25,15 @@ const PosController = () => {
     let positions = {};
     for (let i = 0; i < trackedNames.current.length; i++) {
       const item = trackedNames.current[i];
-      positions[item] = getRaDecDistance(item, scene);
+      const posData = getRaDecDistance(item, scene);
+
+      const target = scene.getObjectByName(item);
+      // Grab speeds from userData if available
+      if (target && target.userData && target.userData.speeds) {
+        posData.speeds = target.userData.speeds;
+      }
+
+      positions[item] = posData;
     }
 
     usePosStore.setState({ positions });
