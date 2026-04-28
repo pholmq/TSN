@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useStore } from "../store";
@@ -8,23 +8,28 @@ const SECONDS_IN_YEAR = 365.25 * 86400; // 31,557,600 seconds
 
 export default function usePlanetSpeed(name, s, orbitRadius, scene) {
   const posRef = useStore((state) => state.posRef);
-  const showSpeeds = useStore((state) => state.showSpeeds); // <-- Get the state
+  const showSpeeds = useStore((state) => state.showSpeeds);
 
+  const targetRef = useRef(null);
   const prevPos = useRef(0);
   const prevWorldPos = useRef(new THREE.Vector3());
   const currentWorldPos = useRef(new THREE.Vector3());
 
+  // Back to true physical accumulators
   const totalDistKm = useRef(0);
   const totalTimeSec = useRef(0);
+  const frameCount = useRef(0);
+
+  useEffect(() => {
+    if (scene) {
+      targetRef.current = scene.getObjectByName(name);
+    }
+  }, [scene, name]);
 
   useFrame(() => {
-    // If the toggle is off, exit immediately to save performance
-    if (!showSpeeds) return;
+    if (!showSpeeds || !targetRef.current || !posRef.current) return;
 
-    const target = scene.getObjectByName(name);
-    if (!target || !posRef.current) return;
-
-    // ... [Rest of your existing calculation code remains exactly the same] ...
+    const target = targetRef.current;
     const currentPosTime = posRef.current;
     const deltaYears = currentPosTime - prevPos.current;
 
@@ -37,26 +42,45 @@ export default function usePlanetSpeed(name, s, orbitRadius, scene) {
       target.userData.speeds.orbital = distancePerYearKm / SECONDS_IN_YEAR;
     }
 
-    if (Math.abs(deltaYears) > 0) {
+    // GATE 1: Filter out micro-stutters and timeline scrubs.
+    // Adjust the 0.1 upper limit depending on your app's max simulation speed.
+    const isStableFrame =
+      Math.abs(deltaYears) > 0.000001 && Math.abs(deltaYears) < 0.1;
+
+    if (isStableFrame) {
       target.getWorldPosition(currentWorldPos.current);
 
       if (prevPos.current !== 0 && prevWorldPos.current.lengthSq() > 0) {
-        const distanceMovedUnits = currentWorldPos.current.distanceTo(
-          prevWorldPos.current
-        );
-        const distanceMovedKm = unitsToKm(distanceMovedUnits);
+        frameCount.current += 1;
 
-        const deltaSeconds = Math.abs(deltaYears) * SECONDS_IN_YEAR;
+        // GATE 2: Ignore the first 5 frames while the scene initializes
+        if (frameCount.current > 5) {
+          const distanceMovedUnits = currentWorldPos.current.distanceTo(
+            prevWorldPos.current
+          );
+          const distanceMovedKm = unitsToKm(distanceMovedUnits);
+          const deltaSeconds = Math.abs(deltaYears) * SECONDS_IN_YEAR;
 
-        target.userData.speeds.absolute = distanceMovedKm / deltaSeconds;
+          const currentAbsoluteSpeed = distanceMovedKm / deltaSeconds;
+          target.userData.speeds.absolute = currentAbsoluteSpeed;
 
-        totalDistKm.current += distanceMovedKm;
-        totalTimeSec.current += deltaSeconds;
-        target.userData.speeds.avgAbsolute =
-          totalDistKm.current / totalTimeSec.current;
+          // Mathematically accurate time-weighted average
+          totalDistKm.current += distanceMovedKm;
+          totalTimeSec.current += deltaSeconds;
+
+          target.userData.speeds.avgAbsolute =
+            totalDistKm.current / totalTimeSec.current;
+        }
       }
 
+      // Update refs for the next frame
       prevWorldPos.current.copy(currentWorldPos.current);
+      prevPos.current = currentPosTime;
+    } else if (Math.abs(deltaYears) >= 0.1) {
+      // CRITICAL: If the user scrubs the timeline (massive deltaYears),
+      // we DO NOT add the jump to our totals, but we MUST silently update
+      // the positions so the next frame has a clean baseline to measure from.
+      target.getWorldPosition(prevWorldPos.current);
       prevPos.current = currentPosTime;
     }
   });
