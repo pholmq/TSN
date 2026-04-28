@@ -52,8 +52,10 @@ export default function usePlanetSpeed(name, s, orbitRadius, scene) {
       target.userData.speeds = { orbital: 0, absolute: 0, avgAbsolute: 0 };
     }
 
-    if (s.speed && orbitRadius) {
-      const distancePerYearKm = unitsToKm(Math.abs(s.speed) * orbitRadius);
+    // FIX: Always use the unscaled s.orbitRadius from settings to calculate orbital speed.
+    // This prevents the Moon's 39.2x visual scaling multiplier from affecting the math!
+    if (s.speed && s.orbitRadius) {
+      const distancePerYearKm = unitsToKm(Math.abs(s.speed) * s.orbitRadius);
       target.userData.speeds.orbital = distancePerYearKm / SECONDS_IN_YEAR;
     }
 
