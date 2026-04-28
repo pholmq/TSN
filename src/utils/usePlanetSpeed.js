@@ -10,12 +10,15 @@ export default function usePlanetSpeed(name, s, orbitRadius, scene) {
   const posRef = useStore((state) => state.posRef);
   const showSpeeds = useStore((state) => state.showSpeeds);
 
+  // The logical object where speeds are stored (e.g., "Moon")
   const targetRef = useRef(null);
+  // The physical object used to calculate actual 3D movement (e.g., "Actual Moon")
+  const physTargetRef = useRef(null);
+
   const prevPos = useRef(0);
   const prevWorldPos = useRef(new THREE.Vector3());
   const currentWorldPos = useRef(new THREE.Vector3());
 
-  // Back to true physical accumulators
   const totalDistKm = useRef(0);
   const totalTimeSec = useRef(0);
   const frameCount = useRef(0);
@@ -23,13 +26,25 @@ export default function usePlanetSpeed(name, s, orbitRadius, scene) {
   useEffect(() => {
     if (scene) {
       targetRef.current = scene.getObjectByName(name);
+      // Reroute the physical tracking target for the Moon
+      physTargetRef.current =
+        name === "Moon"
+          ? scene.getObjectByName("Actual Moon")
+          : targetRef.current;
     }
   }, [scene, name]);
 
   useFrame(() => {
-    if (!showSpeeds || !targetRef.current || !posRef.current) return;
+    if (
+      !showSpeeds ||
+      !targetRef.current ||
+      !physTargetRef.current ||
+      !posRef.current
+    )
+      return;
 
     const target = targetRef.current;
+    const physTarget = physTargetRef.current;
     const currentPosTime = posRef.current;
     const deltaYears = currentPosTime - prevPos.current;
 
@@ -42,18 +57,16 @@ export default function usePlanetSpeed(name, s, orbitRadius, scene) {
       target.userData.speeds.orbital = distancePerYearKm / SECONDS_IN_YEAR;
     }
 
-    // GATE 1: Filter out micro-stutters and timeline scrubs.
-    // Adjust the 0.1 upper limit depending on your app's max simulation speed.
     const isStableFrame =
       Math.abs(deltaYears) > 0.000001 && Math.abs(deltaYears) < 0.1;
 
     if (isStableFrame) {
-      target.getWorldPosition(currentWorldPos.current);
+      // ALWAYS measure position from the physical target
+      physTarget.getWorldPosition(currentWorldPos.current);
 
       if (prevPos.current !== 0 && prevWorldPos.current.lengthSq() > 0) {
         frameCount.current += 1;
 
-        // GATE 2: Ignore the first 5 frames while the scene initializes
         if (frameCount.current > 5) {
           const distanceMovedUnits = currentWorldPos.current.distanceTo(
             prevWorldPos.current
@@ -62,9 +75,10 @@ export default function usePlanetSpeed(name, s, orbitRadius, scene) {
           const deltaSeconds = Math.abs(deltaYears) * SECONDS_IN_YEAR;
 
           const currentAbsoluteSpeed = distanceMovedKm / deltaSeconds;
+
+          // ALWAYS store the calculated data on the logical target
           target.userData.speeds.absolute = currentAbsoluteSpeed;
 
-          // Mathematically accurate time-weighted average
           totalDistKm.current += distanceMovedKm;
           totalTimeSec.current += deltaSeconds;
 
@@ -73,14 +87,10 @@ export default function usePlanetSpeed(name, s, orbitRadius, scene) {
         }
       }
 
-      // Update refs for the next frame
       prevWorldPos.current.copy(currentWorldPos.current);
       prevPos.current = currentPosTime;
     } else if (Math.abs(deltaYears) >= 0.1) {
-      // CRITICAL: If the user scrubs the timeline (massive deltaYears),
-      // we DO NOT add the jump to our totals, but we MUST silently update
-      // the positions so the next frame has a clean baseline to measure from.
-      target.getWorldPosition(prevWorldPos.current);
+      physTarget.getWorldPosition(prevWorldPos.current);
       prevPos.current = currentPosTime;
     }
   });
