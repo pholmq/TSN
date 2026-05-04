@@ -9,7 +9,6 @@ export function movePlotModel(plotObjects, plotPos) {
     if (pObj.orbitRef && pObj.orbitRef.current) {
       pObj.orbitRef.current.rotation.y =
         pObj.speed * plotPos - pObj.startPos * D2R;
-      pObj.orbitRef.current.updateMatrixWorld(true);
     }
   });
 }
