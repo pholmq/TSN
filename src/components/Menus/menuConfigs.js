@@ -77,7 +77,7 @@ export const useTraceConfig = () => {
   });
 
   return {
-    TraceOnOff: { label: "Trace On/Off", value: trace, onChange: setTrace },
+    TraceOnOff: { label: "Trace On", value: trace, onChange: setTrace },
     "Traced planets": folder(tracedPlanetsCheckboxes, { collapsed: true }),
     "Line width": {
       value: lineWidth,
