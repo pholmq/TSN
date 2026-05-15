@@ -69,7 +69,7 @@
     "groundColor": "#FFA500",
     "horizonColor": "#FFD700",
     "traceable": true,
-    "traceSettings": { "length": 5000, "step": 10, "stepFact": "sYear" }
+    "traceSettings": { "length": 5000, "step": 1304, "stepFact": "sWeek" }
   },
   {
     "name": "Mercury deferent A",
