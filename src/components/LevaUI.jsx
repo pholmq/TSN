@@ -36,7 +36,7 @@ const LevaUI = () => {
 
   const [, set1] = useControls(
     () => ({
-      "1 sec/step equals": {
+      "1 step equals": {
         value: speedMultiplier,
         step: 1,
         onChange: setSpeedMultiplier,

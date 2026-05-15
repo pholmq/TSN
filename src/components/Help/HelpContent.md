@@ -40,7 +40,7 @@ The primary panel controls the flow of time in the simulator.
 
 ## Speed Controls
 
-- **1 sec/step equals:** Sets the multiplier for time progression. You can use `Up/Down` on your keyboard to add/remove increments. Negative numbers cause the simulation to move backwards.
+- **1 step equals:** Sets the multiplier for time progression. You can use `Up/Down` on your keyboard to add/remove increments. Negative numbers cause the simulation to move backwards.
 - **Time Unit (Dropdown):** Choose the unit of time for each step/second (e.g., Seconds, Hours, Days, Solar Years, Sidereal Years).
 
 ---
