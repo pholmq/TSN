@@ -1,12 +1,8 @@
 import { useRef, useEffect } from "react";
 import { Vector3 } from "three";
 import useFrameInterval from "../../utils/useFrameInterval";
-import {
-  useStore,
-  usePlotStore,
-  useTraceStore,
-  useSettingsStore,
-} from "../../store";
+import { useStore, usePlotStore, useSettingsStore } from "../../store";
+import { useTraceStore } from "./traceStore";
 import { getSpeedFact } from "../../utils/time-date-functions.js";
 import { movePlotModel } from "../../utils/plotModelFunctions";
 import TraceLine from "./TraceLine";

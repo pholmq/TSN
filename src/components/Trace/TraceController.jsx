@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
-import { useStore, useSettingsStore, useTraceStore } from "../../store";
+import { useStore, useSettingsStore } from "../../store";
+import { useTraceStore } from "./traceStore";
 import Trace from "./Trace";
 
 const TraceController = () => {

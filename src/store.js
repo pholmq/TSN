@@ -239,25 +239,6 @@ export const usePlotStore = create((set, get) => ({
     })),
 }));
 
-export const useTraceStore = create((set) => ({
-  trace: false,
-  setTrace: (v) => set({ trace: v }),
-  toggleTrace: () => set((state) => ({ trace: !state.trace })),
-  interval: 10,
-  lineWidth: 1.5,
-  setLineWidth: (v) => set({ lineWidth: v }),
-  lengthMultiplier: 1,
-  setLengthMultiplier: (v) => set({ lengthMultiplier: v }),
-  stepMultiplier: 1,
-  setStepMultiplier: (v) => set({ stepMultiplier: v }),
-  dotted: false,
-  setDotted: (v) => set({ dotted: v }),
-  traceStartPos: 0,
-  setTraceStart: (v) => set({ traceStartPos: v }),
-  stepFact: sDay,
-  tracedObjects: [],
-}));
-
 export const useSettingsStore = create((set, get) => ({
   settings: celestialSettings.map((obj1) => {
     const [matchingObj] = miscSettings.filter(

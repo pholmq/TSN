@@ -1,5 +1,6 @@
 import { folder } from "leva";
-import { useStore, useTraceStore, useSettingsStore } from "../../store";
+import { useStore, useSettingsStore } from "../../store";
+import { useTraceStore } from "../Trace/traceStore";
 
 export const useMainControlsConfig = () => {
   const {
