@@ -37,7 +37,7 @@ Built with modern web technologies to ensure performance and accuracy, this proj
 ### 🎨 3D Visualization
 
 - **Dual Camera System:** Switch between a global "Orbit Camera" and a surface-level "Planet Camera".
-- **Orbital Tracing:** Visualize complex planetary geometric paths (spirographs) over time.
+- **Trace:** Visualize complex planetary geometric paths (spirographs) over time.
 - **Visual Aids:** Ecliptic grids, celestial sphere, zodiacal bands, and polar lines.
 - **High-Fidelity Graphics:** Realistic textures and dynamic solar lighting using post-processing effects.
 
