@@ -68,7 +68,7 @@ Tool for drawing the paths that planets take through space over time.
 
 > **Note:** To trace the Sun, you need to set the "1 sec/step equals" to 100 years or higher, since the trace shows the Sun's motion during a Great Year.
 
-- **Trace On/Off:** Enables tracing.
+- **Trace On:** Enables tracing.
 - **Line width & Dotted line:** Customizes the appearance of the trace lines.
 - **Trace length:** Determines how far back in time the trace tail extends.
 - **Step length:** Adjusts the resolution/smoothness of the generated trace.
