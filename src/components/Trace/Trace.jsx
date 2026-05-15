@@ -21,17 +21,24 @@ const Trace = ({ name }) => {
     dotted,
     traceStartPos,
     setTraceStart,
+    customTrace,
+    customLength,
+    customStep,
+    customStepFact,
   } = useTraceStore();
 
   const getSetting = useSettingsStore((s) => s.getSetting);
   const s = getSetting(name);
 
-  const traceLength =
-    Math.round((s.traceSettings.length * lengthMultiplier) / 3) * 3;
-  const traceStep =
-    s.traceSettings.step *
-    getSpeedFact(s.traceSettings.stepFact) *
-    stepMultiplier;
+  // Apply custom variables if toggle is active
+  const activeLength = customTrace ? customLength : s.traceSettings.length;
+  const activeStep = customTrace ? customStep : s.traceSettings.step;
+  const activeStepFact = customTrace
+    ? customStepFact
+    : s.traceSettings.stepFact;
+
+  const traceLength = Math.round((activeLength * lengthMultiplier) / 3) * 3;
+  const traceStep = activeStep * getSpeedFact(activeStepFact) * stepMultiplier;
 
   const plotPosRef = useRef(traceStartPos);
 
@@ -39,10 +46,20 @@ const Trace = ({ name }) => {
   const pointsArrRef = useRef(new Float32Array(maxFloats));
   const pointCountRef = useRef(0);
 
+  // Handle initialization and restarts
   useEffect(() => {
     plotPosRef.current = traceStartPos;
     pointCountRef.current = 0;
   }, [traceStartPos, trace, traceStep]);
+
+  // Handle trace buffer sizing to prevent memory leaks or out of bounds when traceLength updates
+  useEffect(() => {
+    if (pointsArrRef.current.length !== maxFloats) {
+      pointsArrRef.current = new Float32Array(maxFloats);
+      pointCountRef.current = 0;
+      plotPosRef.current = traceStartPos;
+    }
+  }, [maxFloats, traceStartPos]);
 
   useFrameInterval(() => {
     if (!trace) return;
@@ -58,11 +75,9 @@ const Trace = ({ name }) => {
       setTraceStart(posRef.current);
     }
 
-    // We only allow this function to run for 50 milliseconds per frame.
     const startTime = performance.now();
     const TIME_BUDGET_MS = 50;
 
-    // Rewinding backwards (Extremely fast, usually negligible)
     while (
       plotPosRef.current > posRef.current &&
       performance.now() - startTime < TIME_BUDGET_MS
@@ -71,19 +86,16 @@ const Trace = ({ name }) => {
       if (pointCountRef.current > 0) pointCountRef.current--;
     }
 
-    // Tracing forwards (The heavy calculation)
     while (
       plotPosRef.current < posRef.current - traceStep &&
       performance.now() - startTime < TIME_BUDGET_MS
     ) {
       plotPosRef.current += traceStep;
 
-      // Moving the shadow solar system
       movePlotModel(plotObjects, plotPosRef.current);
 
       const tracedObj = plotObjects.find((p) => p.name === name);
       if (tracedObj && tracedObj.pivotRef.current) {
-        // Force the shadow object to calculate its global matrix based on the new simulated time
         tracedObj.pivotRef.current.updateMatrixWorld(true);
         tracedObj.pivotRef.current.getWorldPosition(objectPos);
 

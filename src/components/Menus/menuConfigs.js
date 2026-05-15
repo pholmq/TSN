@@ -53,6 +53,14 @@ export const useTraceConfig = () => {
     setLengthMultiplier,
     stepMultiplier,
     setStepMultiplier,
+    customTrace,
+    setCustomTrace,
+    customLength,
+    setCustomLength,
+    customStep,
+    setCustomStep,
+    customStepFact,
+    setCustomStepFact,
   } = useTraceStore();
   const { settings, updateSetting } = useSettingsStore();
 
@@ -93,6 +101,39 @@ export const useTraceConfig = () => {
       step: 1,
       onChange: setStepMultiplier,
     },
+    "Custom trace": folder(
+      {
+        On: {
+          value: customTrace,
+          onChange: setCustomTrace,
+        },
+        Length: {
+          value: customLength,
+          // min: 100,
+          // max: 20000,
+          // step: 100,
+          onChange: setCustomLength,
+        },
+        Step: {
+          value: customStep,
+          min: 1,
+          // max: 100,
+          step: 1,
+          onChange: setCustomStep,
+        },
+        "Step factor": {
+          value: customStepFact,
+          options: {
+            days: "sDay",
+            weeks: "sWeek",
+            months: "sMonth",
+            years: "sYear",
+          },
+          onChange: setCustomStepFact,
+        },
+      },
+      { collapsed: true }
+    ),
   };
 };
 

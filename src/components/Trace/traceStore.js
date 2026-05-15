@@ -18,4 +18,14 @@ export const useTraceStore = create((set) => ({
   setTraceStart: (v) => set({ traceStartPos: v }),
   stepFact: sDay,
   tracedObjects: [],
+
+  // Custom Trace configuration
+  customTrace: false,
+  setCustomTrace: (v) => set({ customTrace: v }),
+  customLength: 5000,
+  setCustomLength: (v) => set({ customLength: v }),
+  customStep: 1,
+  setCustomStep: (v) => set({ customStep: v }),
+  customStepFact: "sDay",
+  setCustomStepFact: (v) => set({ customStepFact: v }),
 }));
