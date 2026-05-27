@@ -73,7 +73,7 @@ const RecorderMenu = () => {
         step: 1,
         onChange: (v) => setDuration(v),
       },
-      Resolution: {
+      Speed: {
         options: ["1x", "2x", "3x", "4x"],
         value: sizePreset,
         onChange: (v) => setSizePreset(v),
