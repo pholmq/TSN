@@ -205,8 +205,7 @@ export const usePlanetOrbitsConfig = () => {
       {
         "Line length": {
           value: useStore.getState().polarLineSize,
-          min: 5,
-          max: 1000,
+
           step: 5,
           onChange: (v) => useStore.setState({ polarLineSize: v }),
         },
