@@ -12,6 +12,8 @@ const objectPos = new Vector3();
 const Trace = ({ name }) => {
   const plotObjects = usePlotStore((s) => s.plotObjects);
   const posRef = useStore((s) => s.posRef);
+  const actualPlanetSizes = useStore((s) => s.actualPlanetSizes); // Grab state to trigger redraws
+
   const {
     trace,
     interval,
@@ -60,6 +62,13 @@ const Trace = ({ name }) => {
       plotPosRef.current = traceStartPos;
     }
   }, [maxFloats, traceStartPos]);
+
+  // FIX: Clear and restart the trace line whenever actualPlanetSizes is toggled
+  useEffect(() => {
+    setTraceStart(posRef.current);
+    pointCountRef.current = 0;
+    plotPosRef.current = posRef.current;
+  }, [actualPlanetSizes, setTraceStart]);
 
   useFrameInterval(() => {
     if (!trace) return;

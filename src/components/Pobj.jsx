@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
-import { usePlotStore, useSettingsStore } from "../store";
+import { useStore, usePlotStore, useSettingsStore } from "../store"; // FIX: Added useStore
 
 // PERFORMANCE FIX: Define geometry globally outside component
 const pobjSphere = new THREE.SphereGeometry(1, 32, 32);
@@ -13,9 +13,7 @@ const Pobj = ({ name, children }) => {
 
   const addPlotObj = usePlotStore((state) => state.addPlotObj);
   const removePlotObj = usePlotStore((state) => state.removePlotObj);
-
-  // NOTICE: actualPlanetSizes is completely removed.
-  // The invisible plot models must ALWAYS use strict mathematical distances!
+  const actualPlanetSizes = useStore((s) => s.actualPlanetSizes); // FIX: Grab actualPlanetSizes to sync with Cobj
 
   const containerRef = useRef();
   const pivotRef = useRef();
@@ -26,10 +24,24 @@ const Pobj = ({ name, children }) => {
   if (!s) return null;
 
   // Use exact coordinates directly from the settings store
-  const orbitRadius = s.orbitRadius;
-  const orbitCentera = s.orbitCentera;
-  const orbitCenterb = s.orbitCenterb;
-  const orbitCenterc = s.orbitCenterc;
+  let orbitRadius = s.orbitRadius;
+  let orbitCentera = s.orbitCentera;
+  let orbitCenterb = s.orbitCenterb;
+  let orbitCenterc = s.orbitCenterc;
+
+  // FIX: Scale the Moon's plot calculations so the Trace aligns with the visual Moon
+  if (!actualPlanetSizes) {
+    if (
+      s.name === "Moon" ||
+      s.name === "Moon deferent A" ||
+      s.name === "Moon deferent B"
+    ) {
+      orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * 39.2078;
+      orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * 39.2078;
+      orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * 39.2078;
+      orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc * 39.2078;
+    }
+  }
 
   useEffect(() => {
     const plotObj = {
@@ -62,7 +74,6 @@ const Pobj = ({ name, children }) => {
       <group name="Orbit" ref={orbitRef}>
         <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
           <mesh scale={1}>
-            {/* THE FIX: Removed s.type check so cSphereRef always mounts for RA/Dec math */}
             <group
               ref={cSphereRef}
               rotation={[tiltb * (Math.PI / 180), 0, tilt * (Math.PI / 180)]}
