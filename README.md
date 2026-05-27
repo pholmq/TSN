@@ -8,7 +8,7 @@
 **The Tychosium** is an interactive 3D astronomical simulation implementing the **TYCHOS model** of our solar system. It offers a unique perspective on celestial mechanics, featuring real-time orbital calculations, a comprehensive star catalog, and immersive visualization.
 
 Built with modern web technologies to ensure performance and accuracy, this project aims to visualize the binary solar system concepts proposed by the Tychos model.
-
+x
 ---
 
 ## 📑 Table of Contents
