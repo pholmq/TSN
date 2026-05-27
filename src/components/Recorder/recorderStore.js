@@ -16,6 +16,6 @@ export const useRecorderStore = create((set) => ({
   duration: 10,
   setDuration: (v) => set({ duration: v }),
 
-  sizePreset: "2x",
+  sizePreset: "1x",
   setSizePreset: (v) => set({ sizePreset: v }),
 }));

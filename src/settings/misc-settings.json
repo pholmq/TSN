@@ -284,7 +284,7 @@
     "type": "planet",
     "visible": false,
     "planet": true,
-    "texture": "",
+    "texture": "/textures/planets/2k_mercury.jpg",
     "unicodeSymbol": "&#x2604;",
     "traceable": true,
     "traceSettings": { "length": 5000, "step": 1, "stepFact": "sDay" }
