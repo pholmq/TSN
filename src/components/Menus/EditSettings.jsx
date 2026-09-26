@@ -290,34 +290,38 @@ const EditSettingsPanel = () => {
     Object.keys(groups).forEach((parentName) => {
       const group = groups[parentName];
 
-      showHideMenu[`${parentName}visible`] = {
-        label: parentName,
-        value: group.main ? group.main.visible : true,
-        editable: true,
-        onChange: (value, path, context) => {
-          // Detect if this is Leva's automatic sync, or a real click from the user
-          const isInitialSync = context
-            ? context.initial
-            : group.main
-            ? group.main.visible === value
-            : group.deferents[0]?.visible === value;
+      // Geometry-only entries (such as Moon Node/Plane) have no visibility switch.
+      const visibility = group.main ? group.main.visible : true;
+      if (typeof visibility === "boolean") {
+        showHideMenu[`${parentName}visible`] = {
+          label: parentName,
+          value: visibility,
+          editable: true,
+          onChange: (value, path, context) => {
+            // Detect if this is Leva's automatic sync, or a real click from the user
+            const isInitialSync = context
+              ? context.initial
+              : group.main
+              ? group.main.visible === value
+              : group.deferents[0]?.visible === value;
 
-          if (group.main) {
-            group.main.visible = value;
-            updateSetting({ ...group.main, visible: value });
-          }
-          group.deferents.forEach((def) => {
-            def.visible = value;
-            updateSetting({ ...def, visible: value });
-
-            // FIX: If the user explicitly clicked the toggle, save it as the new "initial state"
-            // so the cleanup effect doesn't erase their action!
-            if (!isInitialSync) {
-              initialDeferentStates.current[def.name] = value;
+            if (group.main) {
+              group.main.visible = value;
+              updateSetting({ ...group.main, visible: value });
             }
-          });
-        },
-      };
+            group.deferents.forEach((def) => {
+              def.visible = value;
+              updateSetting({ ...def, visible: value });
+
+              // FIX: If the user explicitly clicked the toggle, save it as the new "initial state"
+              // so the cleanup effect doesn't erase their action!
+              if (!isInitialSync) {
+                initialDeferentStates.current[def.name] = value;
+              }
+            });
+          },
+        };
+      }
 
       const planetSubmenus = {};
 
@@ -370,7 +374,7 @@ const EditSettingsPanel = () => {
       "Filled Orbits": shadeOrbits,
     };
     settings.forEach((s) => {
-      if (!s.name.includes("deferent")) {
+      if (!s.name.includes("deferent") && typeof s.visible === "boolean") {
         updatedValues[`${s.name}visible`] = s.visible;
       }
       updatedValues[`${s.name}size`] = "\u200B" + s.size;

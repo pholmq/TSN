@@ -33,8 +33,7 @@ const Pobj = ({ name, children }) => {
   if (!actualPlanetSizes) {
     if (
       s.name === "Moon" ||
-      s.name === "Moon deferent A" ||
-      s.name === "Moon deferent B"
+      s.name === "Moon deferent A"
     ) {
       orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * 39.2078;
       orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * 39.2078;

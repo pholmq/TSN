@@ -1,20 +1,19 @@
 import Cobj from "./Cobj";
+import MoonOrbitalPlane from "./MoonOrbitalPlane";
 
 const SolarSystem = () => {
   return (
     <group>
       <Cobj name="SystemCenter">
         <Cobj name="Earth">
-          <Cobj name="Moon deferent A">
-            <Cobj name="Moon deferent B">
+          <MoonOrbitalPlane live>
+            <Cobj name="Moon deferent A">
               <Cobj name="Moon" />
             </Cobj>
-          </Cobj>
-          <Cobj name="Actual Moon deferent A">
-            <Cobj name="Actual Moon deferent B">
+            <Cobj name="Actual Moon deferent A">
               <Cobj name="Actual Moon" />
             </Cobj>
-          </Cobj>
+          </MoonOrbitalPlane>
           <Cobj name="Sun deferent">
             <Cobj name="Sun">
               <Cobj name="Halleys deferent">
