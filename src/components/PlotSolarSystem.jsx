@@ -1,16 +1,18 @@
 import Pobj from "./Pobj";
+import MoonOrbitalPlane from "./MoonOrbitalPlane";
 
 const PlotSolarSystem = () => {
   return (
     <group>
       <Pobj name="SystemCenter">
-        <Pobj name="Earth">
+      <Pobj name="Earth">
+        <MoonOrbitalPlane>
           <Pobj name="Moon deferent A">
-            <Pobj name="Moon deferent B">
-              <Pobj name="Moon" />
-            </Pobj>
+            <Pobj name="Moon" />
           </Pobj>
-          <Pobj name="Sun deferent">
+        </MoonOrbitalPlane>
+
+        <Pobj name="Sun deferent">
             <Pobj name="Sun">
               <Pobj name="Halleys deferent">
                 <Pobj name="Halleys" />

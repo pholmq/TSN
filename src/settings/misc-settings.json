@@ -29,12 +29,6 @@
     "visible": false
   },
   {
-    "name": "Moon deferent B",
-    "color": "gray",
-    "type": "deferent",
-    "visible": false
-  },
-  {
     "name": "Moon",
     "color": "#8b8b8b",
     "type": "planet",
