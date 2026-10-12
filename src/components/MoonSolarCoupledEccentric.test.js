@@ -2,6 +2,7 @@ import { Quaternion, Vector3 } from "three";
 import {
   deriveSolarCoupledLunarAngles,
   eclipticOffsetInParentFrame,
+  scaleRadialProjection,
   signedAngleInEclipticXZ,
   tangentialProjection,
   wrapRadians,
@@ -70,4 +71,13 @@ test("removes the radial component from an anomalistic displacement", () => {
   const displacement = new Vector3(0.7, -0.2, 0.4);
   const tangent = tangentialProjection(displacement, radial);
   expect(tangent.dot(radial)).toBeCloseTo(0, 12);
+});
+
+test("reflects only the radial part of a solar variation displacement", () => {
+  const radial = new Vector3(1, 0, 0);
+  const displacement = new Vector3(2, 0, 3);
+  const reflected = scaleRadialProjection(displacement, radial, -1);
+  expect(reflected.x).toBeCloseTo(-2, 12);
+  expect(reflected.y).toBeCloseTo(0, 12);
+  expect(reflected.z).toBeCloseTo(3, 12);
 });

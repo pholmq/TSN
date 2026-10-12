@@ -76,6 +76,23 @@ export const tangentialProjection = (
     .addScaledVector(radialDirection, -radialScale);
 };
 
+export const scaleRadialProjection = (
+  displacement,
+  radialDirection,
+  radialMultiplier,
+  target = new Vector3()
+) => {
+  const radialLengthSq = radialDirection.lengthSq();
+  if (radialLengthSq === 0) return target.copy(displacement);
+  const radialScale = displacement.dot(radialDirection) / radialLengthSq;
+  return target
+    .copy(displacement)
+    .addScaledVector(
+      radialDirection,
+      radialScale * (radialMultiplier - 1)
+    );
+};
+
 const MoonSolarCoupledEccentric = ({
   children,
   targetName = "Moon",
@@ -122,6 +139,7 @@ const MoonSolarCoupledEccentric = ({
   const earthToSunEcliptic = useMemo(() => new Vector3(), []);
   const parentQuaternionInverse = useMemo(() => new Quaternion(), []);
   const localOffset = useMemo(() => new Vector3(), []);
+  const eccentricWorld = useMemo(() => new Vector3(), []);
   const variationOffset = useMemo(() => new Vector3(), []);
   const deferentPivotWorld = useMemo(() => new Vector3(), []);
   const deferentContainerWorld = useMemo(() => new Vector3(), []);
@@ -186,12 +204,22 @@ const MoonSolarCoupledEccentric = ({
         anomalisticPhase
       );
       parent.getWorldQuaternion(parentQuaternionInverse).invert();
-      eclipticOffsetInParentFrame(
-        angles.eccentricOrientation,
-        amplitude,
-        parentQuaternionInverse,
-        localOffset
+      eccentricWorld.set(
+        Math.cos(angles.eccentricOrientation) * amplitude,
+        0,
+        -Math.sin(angles.eccentricOrientation) * amplitude
       );
+      // Retain the angular action of the 2D-M geometry while reflecting its
+      // Earth-Moon radial action across the instantaneous lunar tangent.
+      scaleRadialProjection(
+        eccentricWorld,
+        earthToMoonEcliptic,
+        -1,
+        eccentricWorld
+      );
+      localOffset
+        .copy(eccentricWorld)
+        .applyQuaternion(parentQuaternionInverse);
       eclipticOffsetInParentFrame(
         angles.variationOrientation,
         variationAmplitude,
@@ -232,6 +260,7 @@ const MoonSolarCoupledEccentric = ({
       anomalisticWorld,
       deferentContainerWorld,
       deferentPivotWorld,
+      eccentricWorld,
       earthToMoonEcliptic,
       earthToSunEcliptic,
       earthWorld,
