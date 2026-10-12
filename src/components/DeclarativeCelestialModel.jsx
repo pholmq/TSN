@@ -4,6 +4,7 @@ import { normalizeCelestialSettings } from "../utils/celestialSettingsSchema";
 import ErosSunRelativeOrbit from "./ErosSunRelativeOrbit";
 import MercurySunRelativeOrbit from "./MercurySunRelativeOrbit";
 import MoonOrbitalPlane from "./MoonOrbitalPlane";
+import MoonSolarCoupledEccentric from "./MoonSolarCoupledEccentric";
 import SunMarsBinaryTracker from "./SunMarsBinaryTracker";
 import SunMarsRelativeOrbit from "./SunMarsRelativeOrbit";
 import VenusSunRelativeOrbit from "./VenusSunRelativeOrbit";
@@ -14,6 +15,7 @@ export const CELESTIAL_NODE_KINDS = new Set([
   "motion-stage",
   "reference-frame",
   "moon-orbital-plane",
+  "moon-solar-eccentric",
   "sun-mars-relative",
   "venus-sun-relative",
   "mercury-sun-relative",
@@ -154,6 +156,7 @@ export const renderCelestialNode = (
     name: node.name,
     settingId: node.settingId || (node.kind === "object" ? node.id : undefined),
     renderOrbit: node.renderOrbit,
+    targetName: node.targetName,
   };
 
   switch (node.kind) {
@@ -167,6 +170,12 @@ export const renderCelestialNode = (
       return React.createElement(
         MoonOrbitalPlane,
         { ...props, live: mode === "live" },
+        children
+      );
+    case "moon-solar-eccentric":
+      return React.createElement(
+        MoonSolarCoupledEccentric,
+        { ...props, plotMode: mode === "plot" },
         children
       );
     case "sun-mars-relative":

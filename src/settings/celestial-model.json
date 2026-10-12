@@ -91,10 +91,52 @@
           "id": "moon-deferent-a",
           "name": "Moon deferent A",
           "size": "0.6",
-          "startPos": "157.3",
+          "startPos": "167.51",
           "speed": "0.71015440177343",
           "tilt": "0",
-          "orbitRadius": "0.0215",
+          "orbitRadius": "0.01131",
+          "orbitCentera": "0",
+          "orbitCenterb": "0",
+          "orbitCenterc": "0",
+          "orbitTilta": "0",
+          "orbitTiltb": "0"
+        },
+        "solarCoupledEccentric": {
+          "id": "moon-solar-eccentric",
+          "name": "Moon Solar-Coupled Eccentric",
+          "size": "0",
+          "startPos": "0",
+          "speed": "0",
+          "tilt": "0",
+          "orbitRadius": "-0.0055",
+          "orbitCentera": "0",
+          "orbitCenterb": "0",
+          "orbitCenterc": "0",
+          "orbitTilta": "0",
+          "orbitTiltb": "0"
+        },
+        "solarVariation": {
+          "id": "moon-solar-variation",
+          "name": "Moon Solar Variation",
+          "size": "0",
+          "startPos": "0",
+          "speed": "0",
+          "tilt": "0",
+          "orbitRadius": "0.002",
+          "orbitCentera": "0",
+          "orbitCenterb": "0",
+          "orbitCenterc": "0",
+          "orbitTilta": "0",
+          "orbitTiltb": "0"
+        },
+        "anomalisticTangent": {
+          "id": "moon-anomalistic-tangent",
+          "name": "Moon Anomalistic Tangential Frame",
+          "size": "0",
+          "startPos": "0",
+          "speed": "0",
+          "tilt": "0",
+          "orbitRadius": "0.01655",
           "orbitCentera": "0",
           "orbitCenterb": "0",
           "orbitCenterc": "0",
@@ -106,7 +148,7 @@
           "name": "Moon",
           "size": "1",
           "actualSize": "0.00116",
-          "startPos": "328",
+          "startPos": "318",
           "speed": "83.2851946",
           "rotationSpeed": "0",
           "tilt": "0",
@@ -816,10 +858,25 @@
                     "role": "moon-deferent",
                     "children": [
                       {
-                        "id": "moon",
-                        "kind": "object",
-                        "name": "Moon",
-                        "role": "earth-satellite"
+                        "id": "moon-solar-eccentric-frame",
+                        "kind": "moon-solar-eccentric",
+                        "name": "Moon Solar-Coupled Eccentric Frame",
+                        "role": "solar-coupled-lunar-inequality",
+                        "settingIds": [
+                          "moon-solar-eccentric",
+                          "moon-solar-variation",
+                          "moon-anomalistic-tangent",
+                          "moon"
+                        ],
+                        "targetName": "Moon",
+                        "children": [
+                          {
+                            "id": "moon",
+                            "kind": "object",
+                            "name": "Moon",
+                            "role": "earth-satellite"
+                          }
+                        ]
                       }
                     ]
                   },
@@ -834,13 +891,31 @@
                     ],
                     "children": [
                       {
-                        "id": "actual-moon",
-                        "kind": "object",
-                        "name": "Actual Moon",
-                        "settingId": "moon",
-                        "role": "physical-coordinate-moon",
+                        "id": "actual-moon-solar-eccentric-frame",
+                        "kind": "moon-solar-eccentric",
+                        "name": "Actual Moon Solar-Coupled Eccentric Frame",
+                        "role": "physical-coordinate-solar-lunar-inequality",
+                        "settingIds": [
+                          "moon-solar-eccentric",
+                          "moon-solar-variation",
+                          "moon-anomalistic-tangent",
+                          "moon"
+                        ],
+                        "targetName": "Actual Moon",
                         "modes": [
                           "live"
+                        ],
+                        "children": [
+                          {
+                            "id": "actual-moon",
+                            "kind": "object",
+                            "name": "Actual Moon",
+                            "settingId": "moon",
+                            "role": "physical-coordinate-moon",
+                            "modes": [
+                              "live"
+                            ]
+                          }
                         ]
                       }
                     ]

@@ -77,8 +77,17 @@ test("declares real bodies once and keeps motion stages inside their owners", ()
     "node",
     "plane",
     "deferentA",
+    "solarCoupledEccentric",
+    "solarVariation",
+    "anomalisticTangent",
     "orbit",
   ]);
+  expect(findCelestialNode("moon-solar-eccentric-frame")).toEqual(
+    expect.objectContaining({
+      kind: "moon-solar-eccentric",
+      targetName: "Moon",
+    })
+  );
   expect(mars.parentId).toBe("sun");
   expect(mars.motion.parentRelativeCarrier.id).toBe("mars-deferent-e");
   expect(celestialModel.bodies.some((body) => body.id.includes("deferent"))).toBe(
