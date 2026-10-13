@@ -6,6 +6,12 @@ import {
   saveSettingsAsJson,
   loadSettingsFromFile,
 } from "../../utils/saveAndLoadSettings";
+import { getCelestialEditorGroups } from "../../utils/celestialSettingsSchema";
+
+const updateSettingField = (setting, property, value, updateSetting) => {
+  const cleanValue = value.replace(/\u200B/g, "");
+  updateSetting({ id: setting.id, [property]: cleanValue });
+};
 
 const getControls = (s, updateSetting) => ({
   [`${s.name}size`]: {
@@ -13,9 +19,7 @@ const getControls = (s, updateSetting) => ({
     value: "\u200B" + s.size,
     editable: true,
     onChange: (value) => {
-      const cleanValue = value.replace(/\u200B/g, "");
-      s.size = cleanValue;
-      updateSetting({ ...s, size: cleanValue });
+      updateSettingField(s, "size", value, updateSetting);
     },
   },
   ...(s.actualSize !== undefined
@@ -25,9 +29,7 @@ const getControls = (s, updateSetting) => ({
           value: "\u200B" + s.actualSize,
           editable: true,
           onChange: (value) => {
-            const cleanValue = value.replace(/\u200B/g, "");
-            s.actualSize = cleanValue;
-            updateSetting({ ...s, actualSize: cleanValue });
+            updateSettingField(s, "actualSize", value, updateSetting);
           },
         },
       }
@@ -37,9 +39,7 @@ const getControls = (s, updateSetting) => ({
     value: "\u200B" + s.startPos,
     editable: true,
     onChange: (value) => {
-      const cleanValue = value.replace(/\u200B/g, "");
-      s.startPos = cleanValue;
-      updateSetting({ ...s, startPos: cleanValue });
+      updateSettingField(s, "startPos", value, updateSetting);
     },
   },
   [`${s.name}speed`]: {
@@ -47,9 +47,7 @@ const getControls = (s, updateSetting) => ({
     value: "\u200B" + s.speed,
     editable: true,
     onChange: (value) => {
-      const cleanValue = value.replace(/\u200B/g, "");
-      s.speed = cleanValue;
-      updateSetting({ ...s, speed: cleanValue });
+      updateSettingField(s, "speed", value, updateSetting);
     },
   },
   ...(s.rotationStart !== undefined
@@ -59,9 +57,7 @@ const getControls = (s, updateSetting) => ({
           value: "\u200B" + s.rotationStart,
           editable: true,
           onChange: (value) => {
-            const cleanValue = value.replace(/\u200B/g, "");
-            s.rotationStart = cleanValue;
-            updateSetting({ ...s, rotationStart: cleanValue });
+            updateSettingField(s, "rotationStart", value, updateSetting);
           },
         },
       }
@@ -73,9 +69,7 @@ const getControls = (s, updateSetting) => ({
           value: "\u200B" + s.rotationSpeed,
           editable: true,
           onChange: (value) => {
-            const cleanValue = value.replace(/\u200B/g, "");
-            s.rotationSpeed = cleanValue;
-            updateSetting({ ...s, rotationSpeed: cleanValue });
+            updateSettingField(s, "rotationSpeed", value, updateSetting);
           },
         },
       }
@@ -85,9 +79,7 @@ const getControls = (s, updateSetting) => ({
     value: "\u200B" + s.tilt,
     editable: true,
     onChange: (value) => {
-      const cleanValue = value.replace(/\u200B/g, "");
-      s.tilt = cleanValue;
-      updateSetting({ ...s, tilt: cleanValue });
+      updateSettingField(s, "tilt", value, updateSetting);
     },
   },
   ...(s.tiltb !== undefined
@@ -97,9 +89,7 @@ const getControls = (s, updateSetting) => ({
           value: "\u200B" + s.tiltb,
           editable: true,
           onChange: (value) => {
-            const cleanValue = value.replace(/\u200B/g, "");
-            s.tiltb = cleanValue;
-            updateSetting({ ...s, tiltb: cleanValue });
+            updateSettingField(s, "tiltb", value, updateSetting);
           },
         },
       }
@@ -109,9 +99,7 @@ const getControls = (s, updateSetting) => ({
     value: "\u200B" + s.orbitRadius,
     editable: true,
     onChange: (value) => {
-      const cleanValue = value.replace(/\u200B/g, "");
-      s.orbitRadius = cleanValue;
-      updateSetting({ ...s, orbitRadius: cleanValue });
+      updateSettingField(s, "orbitRadius", value, updateSetting);
     },
   },
   [`${s.name}orbitCentera`]: {
@@ -119,9 +107,7 @@ const getControls = (s, updateSetting) => ({
     value: "\u200B" + s.orbitCentera,
     editable: true,
     onChange: (value) => {
-      const cleanValue = value.replace(/\u200B/g, "");
-      s.orbitCentera = cleanValue;
-      updateSetting({ ...s, orbitCentera: cleanValue });
+      updateSettingField(s, "orbitCentera", value, updateSetting);
     },
   },
   [`${s.name}orbitCenterb`]: {
@@ -129,9 +115,7 @@ const getControls = (s, updateSetting) => ({
     value: "\u200B" + s.orbitCenterb,
     editable: true,
     onChange: (value) => {
-      const cleanValue = value.replace(/\u200B/g, "");
-      s.orbitCenterb = cleanValue;
-      updateSetting({ ...s, orbitCenterb: cleanValue });
+      updateSettingField(s, "orbitCenterb", value, updateSetting);
     },
   },
   [`${s.name}orbitCenterc`]: {
@@ -139,9 +123,7 @@ const getControls = (s, updateSetting) => ({
     value: "\u200B" + s.orbitCenterc,
     editable: true,
     onChange: (value) => {
-      const cleanValue = value.replace(/\u200B/g, "");
-      s.orbitCenterc = cleanValue;
-      updateSetting({ ...s, orbitCenterc: cleanValue });
+      updateSettingField(s, "orbitCenterc", value, updateSetting);
     },
   },
   [`${s.name}orbitTilta`]: {
@@ -149,9 +131,7 @@ const getControls = (s, updateSetting) => ({
     value: "\u200B" + s.orbitTilta,
     editable: true,
     onChange: (value) => {
-      const cleanValue = value.replace(/\u200B/g, "");
-      s.orbitTilta = cleanValue;
-      updateSetting({ ...s, orbitTilta: cleanValue });
+      updateSettingField(s, "orbitTilta", value, updateSetting);
     },
   },
   [`${s.name}orbitTiltb`]: {
@@ -159,12 +139,39 @@ const getControls = (s, updateSetting) => ({
     value: "\u200B" + s.orbitTiltb,
     editable: true,
     onChange: (value) => {
-      const cleanValue = value.replace(/\u200B/g, "");
-      s.orbitTiltb = cleanValue;
-      updateSetting({ ...s, orbitTiltb: cleanValue });
+      updateSettingField(s, "orbitTiltb", value, updateSetting);
     },
   },
+  ...Object.fromEntries(
+    [
+      "relativeAnnualStart",
+      "relativeAnnualSpeed",
+      "relativeAnnualCosX",
+      "relativeAnnualCosY",
+      "relativeAnnualCosZ",
+      "relativeAnnualSinX",
+      "relativeAnnualSinY",
+      "relativeAnnualSinZ",
+    ]
+      .filter((property) => s[property] !== undefined)
+      .map((property) => [
+        `${s.name}${property}`,
+        {
+          label: property,
+          value: "\u200B" + s[property],
+          editable: true,
+          onChange: (value) => {
+            updateSettingField(s, property, value, updateSetting);
+          },
+        },
+      ])
+  ),
 });
+
+const componentLabel = (component) =>
+  component
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/^./, (letter) => letter.toUpperCase());
 
 // The inner component containing the hooks only mounts when the menu is active
 const EditSettingsPanel = () => {
@@ -306,12 +313,10 @@ const EditSettingsPanel = () => {
               : group.deferents[0]?.visible === value;
 
             if (group.main) {
-              group.main.visible = value;
-              updateSetting({ ...group.main, visible: value });
+              updateSetting({ id: group.main.id, visible: value });
             }
             group.deferents.forEach((def) => {
-              def.visible = value;
-              updateSetting({ ...def, visible: value });
+              updateSetting({ id: def.id, visible: value });
 
               // FIX: If the user explicitly clicked the toggle, save it as the new "initial state"
               // so the cleanup effect doesn't erase their action!
@@ -323,24 +328,30 @@ const EditSettingsPanel = () => {
         };
       }
 
-      const planetSubmenus = {};
+    });
 
-      if (group.main) {
-        planetSubmenus["Main Orbit"] = folder(
-          getControls(group.main, updateSetting)
-        );
-      }
-
-      group.deferents.forEach((def) => {
-        planetSubmenus[def.name] = folder(getControls(def, updateSetting));
+    // The edit menu follows the declared astronomical system rather than
+    // inferring parentage from display-name substrings.
+    getCelestialEditorGroups(settings).forEach((editorGroup) => {
+      const groupControls = {};
+      editorGroup.bodies.forEach((body) => {
+        const bodyControls = {};
+        body.settings.forEach((setting) => {
+          bodyControls[componentLabel(setting.component)] = folder(
+            getControls(setting, updateSetting),
+            { collapsed: true }
+          );
+        });
+        groupControls[body.name] = folder(bodyControls, { collapsed: true });
       });
-
-      settingsMenu[parentName] = folder(planetSubmenus, { collapsed: true });
+      settingsMenu[editorGroup.name] = folder(groupControls, {
+        collapsed: true,
+      });
     });
 
     return {
       "Load settings": button(() => loadSettingsFromFile()),
-      "Save settings": button(() => saveSettingsAsJson(settings)),
+      "Save settings": button(() => saveSettingsAsJson()),
       "Reset settings": button(() => resetSettings()),
       "Show / Hide Planets": {
         value: showPlanets,
@@ -383,6 +394,9 @@ const EditSettingsPanel = () => {
       }
       updatedValues[`${s.name}startPos`] = "\u200B" + s.startPos;
       updatedValues[`${s.name}speed`] = "\u200B" + s.speed;
+      if (s.rotationStart !== undefined) {
+        updatedValues[`${s.name}rotationStart`] = "\u200B" + s.rotationStart;
+      }
       if (s.rotationSpeed !== undefined) {
         updatedValues[`${s.name}rotationSpeed`] = "\u200B" + s.rotationSpeed;
       }
@@ -396,6 +410,20 @@ const EditSettingsPanel = () => {
       updatedValues[`${s.name}orbitCenterc`] = "\u200B" + s.orbitCenterc;
       updatedValues[`${s.name}orbitTilta`] = "\u200B" + s.orbitTilta;
       updatedValues[`${s.name}orbitTiltb`] = "\u200B" + s.orbitTiltb;
+      [
+        "relativeAnnualStart",
+        "relativeAnnualSpeed",
+        "relativeAnnualCosX",
+        "relativeAnnualCosY",
+        "relativeAnnualCosZ",
+        "relativeAnnualSinX",
+        "relativeAnnualSinY",
+        "relativeAnnualSinZ",
+      ].forEach((property) => {
+        if (s[property] !== undefined) {
+          updatedValues[`${s.name}${property}`] = "\u200B" + s[property];
+        }
+      });
     });
     set(updatedValues);
   }, [settings, set, showPlanets, shadeOrbits]);

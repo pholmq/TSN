@@ -1,14 +1,18 @@
 import { useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
 import { useStore, usePlotStore, useSettingsStore } from "../store"; // FIX: Added useStore
+import { findCelestialSetting } from "../utils/celestialSettingsSchema";
 
 // PERFORMANCE FIX: Define geometry globally outside component
 const pobjSphere = new THREE.SphereGeometry(1, 32, 32);
 
-const Pobj = ({ name, children }) => {
+const Pobj = ({ name, settingId, children }) => {
   // PERFORMANCE FIX: Targeted selection to avoid massive re-renders on any setting change
   const s = useSettingsStore(
-    useCallback((state) => state.settings.find((p) => p.name === name), [name])
+    useCallback(
+      (state) => findCelestialSetting(state.settings, settingId || name),
+      [name, settingId]
+    )
   );
 
   const addPlotObj = usePlotStore((state) => state.addPlotObj);

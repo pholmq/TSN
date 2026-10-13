@@ -1,8 +1,17 @@
 import { Vector3, Spherical } from "three";
 import { radToRa, radToDec } from "../utils/celestial-functions";
+import {
+  createSunMarsBinaryDiagnostics,
+  createSunMarsBinaryState,
+  createSunMarsPrimaryCompanionState,
+  updateSunMarsBinaryDiagnostics,
+  updateSunMarsBinaryState,
+  updateSunMarsPrimaryCompanionState,
+} from "./sunMarsBinaryState";
 
 // Helper to convert degrees to radians
 const D2R = Math.PI / 180;
+const plotBinaryState = createSunMarsBinaryState();
 
 export function movePlotModel(plotObjects, plotPos) {
   plotObjects.forEach((pObj) => {
@@ -11,6 +20,99 @@ export function movePlotModel(plotObjects, plotPos) {
         pObj.speed * plotPos - pObj.startPos * D2R;
     }
   });
+
+  // Coordinate adapters depend on the final orbital rotations for this sample.
+  plotObjects.forEach((pObj) => pObj.updateAfterMotion?.(plotPos));
+
+  return getPlotSunMarsBinaryState(plotObjects, plotBinaryState);
+}
+
+/**
+ * Derive the same common-centre companion vectors from the hidden plot model.
+ * Callers may pass a reusable target when sampling many ephemeris positions.
+ */
+export function getPlotSunMarsBinaryState(
+  plotObjects,
+  target = createSunMarsBinaryState()
+) {
+  const earthObj = plotObjects.find((p) => p.name === "Earth");
+  const sunObj = plotObjects.find((p) => p.name === "Sun");
+  const marsObj = plotObjects.find((p) => p.name === "Mars");
+
+  const earthPivot = earthObj?.pivotRef?.current;
+  const sunPivot = sunObj?.pivotRef?.current;
+  const marsPivot = marsObj?.pivotRef?.current;
+  if (!earthPivot || !sunPivot || !marsPivot) {
+    target.valid = false;
+    return target;
+  }
+
+  earthPivot.getWorldPosition(target.centerWorld);
+  sunPivot.getWorldPosition(target.sunWorld);
+  marsPivot.getWorldPosition(target.marsWorld);
+  return updateSunMarsBinaryState(
+    target,
+    target.centerWorld,
+    target.sunWorld,
+    target.marsWorld
+  );
+}
+
+export function getPlotSunMarsBinaryDiagnostics(
+  plotObjects,
+  target = createSunMarsBinaryDiagnostics()
+) {
+  const systemCenterObj = plotObjects.find((p) => p.name === "SystemCenter");
+  const earthObj = plotObjects.find((p) => p.name === "Earth");
+  const sunObj = plotObjects.find((p) => p.name === "Sun");
+  const marsObj = plotObjects.find((p) => p.name === "Mars");
+
+  const systemCenterPivot = systemCenterObj?.pivotRef?.current;
+  const earthPivot = earthObj?.pivotRef?.current;
+  const sunPivot = sunObj?.pivotRef?.current;
+  const marsPivot = marsObj?.pivotRef?.current;
+  if (!systemCenterPivot || !earthPivot || !sunPivot || !marsPivot) {
+    target.valid = false;
+    return target;
+  }
+
+  systemCenterPivot.getWorldPosition(target.sample.pvpWorld);
+  earthPivot.getWorldPosition(target.sample.earthWorld);
+  sunPivot.getWorldPosition(target.sample.sunWorld);
+  marsPivot.getWorldPosition(target.sample.marsWorld);
+  return updateSunMarsBinaryDiagnostics(
+    target,
+    target.sample.earthWorld,
+    target.sample.pvpWorld,
+    target.sample.sunWorld,
+    target.sample.marsWorld
+  );
+}
+
+/**
+ * Express the hidden model's existing Mars position relative to the Sun.
+ * No transform is changed and world-space reconstruction remains exact.
+ */
+export function getPlotSunMarsPrimaryCompanionState(
+  plotObjects,
+  target = createSunMarsPrimaryCompanionState()
+) {
+  const sunObj = plotObjects.find((p) => p.name === "Sun");
+  const marsObj = plotObjects.find((p) => p.name === "Mars");
+  const sunPivot = sunObj?.pivotRef?.current;
+  const marsPivot = marsObj?.pivotRef?.current;
+  if (!sunPivot || !marsPivot) {
+    target.valid = false;
+    return target;
+  }
+
+  sunPivot.getWorldPosition(target.primaryWorld);
+  marsPivot.getWorldPosition(target.companionWorld);
+  return updateSunMarsPrimaryCompanionState(
+    target,
+    target.primaryWorld,
+    target.companionWorld
+  );
 }
 
 export function getPlotModelRaDecDistance(name, plotObjects) {

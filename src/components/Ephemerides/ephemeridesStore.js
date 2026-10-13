@@ -6,6 +6,7 @@ export const useEphemeridesStore = create((set, get) => ({
   isGenerating: false,
   showResult: false,
   generatedData: null,
+  generatedBinaryDiagnostics: null,
   generationError: null,
   progress: 0,
 
@@ -15,6 +16,7 @@ export const useEphemeridesStore = create((set, get) => ({
       params,
       showResult: false,
       generatedData: null,
+      generatedBinaryDiagnostics: null,
       generationError: null,
       isGenerating: true,
       progress: 0,
@@ -33,9 +35,10 @@ export const useEphemeridesStore = create((set, get) => ({
       trigger: false,
     }),
 
-  setGeneratedData: (data) =>
+  setGeneratedData: (data, binaryDiagnostics = null) =>
     set({
       generatedData: data,
+      generatedBinaryDiagnostics: binaryDiagnostics,
       showResult: true,
       generationError: null,
       isGenerating: false,
@@ -46,6 +49,7 @@ export const useEphemeridesStore = create((set, get) => ({
       generationError: error,
       showResult: true,
       generatedData: null,
+      generatedBinaryDiagnostics: null,
       isGenerating: false,
     }),
 
@@ -53,6 +57,7 @@ export const useEphemeridesStore = create((set, get) => ({
     set({
       showResult: false,
       generatedData: null,
+      generatedBinaryDiagnostics: null,
       generationError: null,
     }),
 }));

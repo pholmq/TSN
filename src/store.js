@@ -4,14 +4,23 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { getDefaultSpeedFact, sDay } from "./utils/time-date-functions.js";
 import miscSettings from "./settings/misc-settings.json";
-import celestialSettings from "./settings/celestial-settings.json";
+import celestialModel from "./settings/celestial-model.json";
 import starSettings from "./settings/star-settings.json";
+import {
+  findCelestialSetting,
+  mergeCelestialSettings,
+  normalizeCelestialSettings,
+} from "./utils/celestialSettingsSchema.js";
 
 // Main simulation store using zustand
 export const useStore = create(
   persist(
     (set) => ({
       posRef: createRef(),
+      // Mutable, read-only diagnostic state populated by SunMarsBinaryTracker.
+      // Keeping it in a ref prevents animation-frame updates from rerendering UI.
+      sunMarsBinaryStateRef: createRef(),
+      sunMarsPrimaryCompanionStateRef: createRef(),
       run: false,
       toggleRun: () => set((state) => ({ run: !state.run })),
       speedFact: getDefaultSpeedFact(),
@@ -239,34 +248,47 @@ export const usePlotStore = create((set, get) => ({
     })),
 }));
 
-export const useSettingsStore = create((set, get) => ({
-  settings: celestialSettings.map((obj1) => {
-    const [matchingObj] = miscSettings.filter(
-      (obj2) => obj2.name === obj1.name
-    );
-    return { ...obj1, ...matchingObj };
-  }),
+const nativeCelestialSettings = normalizeCelestialSettings(celestialModel);
+const createDefaultCelestialSettings = () =>
+  nativeCelestialSettings.map((setting) => {
+    const matching = miscSettings.find((item) => item.name === setting.name);
+    return { ...setting, ...matching, id: setting.id, name: setting.name };
+  });
 
-  getSetting: (name) => get().settings.find((p) => p.name === name),
+export const useSettingsStore = create((set, get) => ({
+  settings: createDefaultCelestialSettings(),
+
+  getSetting: (identifier) =>
+    findCelestialSetting(get().settings, identifier),
 
   updateSetting: (updatedObject) => {
     set((state) => {
-      const newSettings = state.settings.map((item) =>
-        item.name === updatedObject.name ? { ...item, ...updatedObject } : item
-      );
+      const identifier = updatedObject.id || updatedObject.name;
+      const newSettings = state.settings.map((item) => {
+        if (item.id !== identifier && item.name !== identifier) return item;
+        return {
+          ...item,
+          ...updatedObject,
+          id: item.id,
+          name: item.name,
+        };
+      });
       return { settings: newSettings };
     });
   },
 
+  loadSettings: (document) =>
+    set((state) => ({
+      settings: mergeCelestialSettings(state.settings, document),
+    })),
+
   resetSettings: () =>
     set((state) => ({
-      settings: celestialSettings.map((obj1) => {
-        const [matchingObj] = miscSettings.filter(
-          (obj2) => obj2.name === obj1.name
+      settings: createDefaultCelestialSettings().map((defaultSetting) => {
+        const currentSetting = findCelestialSetting(
+          state.settings,
+          defaultSetting.id
         );
-
-        const defaultSetting = { ...obj1, ...matchingObj };
-        const currentSetting = state.settings.find((s) => s.name === obj1.name);
 
         if (currentSetting && currentSetting.visible !== undefined) {
           defaultSetting.visible = currentSetting.visible;

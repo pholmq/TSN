@@ -1,37 +1,14 @@
 import { useSettingsStore } from "../store";
+import { serializeCelestialSettings } from "./celestialSettingsSchema";
 
-export const saveSettingsAsJson = (settings) => {
-  // Define the properties to include in the JSON
-  const allowedProperties = [
-    "name",
-    "size",
-    "actualSize",
-    "startPos",
-    "speed",
-    "rotationSpeed",
-    "tilt",
-    "tiltb",
-    "orbitRadius",
-    "orbitCentera",
-    "orbitCenterb",
-    "orbitCenterc",
-    "orbitTilta",
-    "orbitTiltb",
-  ];
+export const getCurrentCelestialSettingsDocument = () =>
+  serializeCelestialSettings(useSettingsStore.getState().settings);
 
-  // Filter settings to include only the allowed properties
-  const filteredSettings = settings.map((item) => {
-    const filteredItem = {};
-    allowedProperties.forEach((prop) => {
-      if (item.hasOwnProperty(prop)) {
-        filteredItem[prop] = item[prop];
-      }
-    });
-    return filteredItem;
-  });
-
-  // Convert filtered settings to JSON string with indentation
-  const jsonString = JSON.stringify(filteredSettings, null, 2);
+export const saveSettingsAsJson = () => {
+  // Schema v3 exports the complete body hierarchy and its numerical motion
+  // parameters as one directly reusable celestial-model document. Read from
+  // Zustand at click time so Leva cannot retain an obsolete settings snapshot.
+  const jsonString = JSON.stringify(getCurrentCelestialSettingsDocument(), null, 2);
 
   // Create a Blob with the JSON content
   const blob = new Blob([jsonString], { type: "application/json" });
@@ -60,12 +37,17 @@ export const saveSettingsAsJson = (settings) => {
   URL.revokeObjectURL(url);
 };
 
+export const applyCelestialSettingsDocument = (document) => {
+  useSettingsStore.getState().loadSettings(document);
+  return true;
+};
+
 export const loadSettingsFromFile = async () => {
   try {
     // Create file input element
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".txt";
+    input.accept = ".txt,.json";
 
     // Wrap file selection in a promise
     const file = await new Promise((resolve) => {
@@ -79,29 +61,8 @@ export const loadSettingsFromFile = async () => {
     const fileContents = await file.text();
     const parsedSettings = JSON.parse(fileContents);
 
-    // Validate the file structure
-    if (!Array.isArray(parsedSettings)) {
-      throw new Error("Invalid file format: Expected an array of settings");
-    }
-
-    const requiredProperties = ["name"]; // Minimum required property
-    const validSettings = parsedSettings.filter((item) => {
-      return (
-        item &&
-        typeof item === "object" &&
-        requiredProperties.every((prop) => prop in item)
-      );
-    });
-
-    if (validSettings.length === 0) {
-      throw new Error("No valid settings found in the file");
-    }
-
-    // Update Zustand store with each setting
-    const { updateSetting } = useSettingsStore.getState();
-    validSettings.forEach((setting) => {
-      updateSetting(setting);
-    });
+    // One atomic update supports unified models and former settings exports.
+    applyCelestialSettingsDocument(parsedSettings);
 
     return true; // Success
   } catch (error) {
