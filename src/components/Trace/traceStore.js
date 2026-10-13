@@ -12,7 +12,7 @@ export const useTraceStore = create((set) => ({
   setLengthMultiplier: (v) => set({ lengthMultiplier: v }),
   stepMultiplier: 1,
   setStepMultiplier: (v) => set({ stepMultiplier: v }),
-  dotted: false,
+  dotted: true,
   setDotted: (v) => set({ dotted: v }),
   traceStartPos: 0,
   setTraceStart: (v) => set({ traceStartPos: v }),

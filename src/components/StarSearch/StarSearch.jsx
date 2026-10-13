@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import starsData from "../../settings/BSC.json";
-import celestialData from "../../settings/celestial-settings.json";
+import celestialData from "../../settings/celestial-model.json";
+import { normalizeCelestialSettings } from "../../utils/celestialSettingsSchema";
 import specialStarsData from "../../settings/star-settings.json";
 import miscData from "../../settings/misc-settings.json";
 import { useStore, useSettingsStore, useStarStore } from "../../store";
@@ -91,7 +92,7 @@ export default function StarSearch() {
       }));
 
     // 3. Planets
-    const planets = celestialData
+    const planets = normalizeCelestialSettings(celestialData)
       .filter(
         (p) =>
           !p.name.includes("deferent") &&

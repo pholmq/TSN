@@ -185,13 +185,13 @@ const LunarBranch = ({
 const MoonOrbitalPlane = ({ children, live = false }) => {
   const node = useSettingsStore(
     useCallback(
-      (state) => state.settings.find((p) => p.name === "Moon Node"),
+      (state) => state.settings.find((p) => p.id === "moon-node"),
       []
     )
   );
   const plane = useSettingsStore(
     useCallback(
-      (state) => state.settings.find((p) => p.name === "Moon Plane"),
+      (state) => state.settings.find((p) => p.id === "moon-plane"),
       []
     )
   );
