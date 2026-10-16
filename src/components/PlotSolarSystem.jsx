@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import Pobj from "./Pobj";
 import { buildRenderTree } from "../utils/celestialModel";
 
-// The invisible plot/maths model is built from the same `objects` list in
-// settings/celestial-model.json as the live scene, using mode "plot"
-// (objects marked modes: ["live"], like the "Actual Moon" twin, are skipped).
+// The invisible plot/maths model is built from the same real objects as the
+// live scene. Its orbit coordinates retain the display scale for visual traces;
+// physical RA/Dec and ephemeris calculations undo that scale mathematically.
 const renderNode = (node) => {
   const kids = node.children.map(renderNode);
 

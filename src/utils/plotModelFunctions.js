@@ -1,5 +1,6 @@
 import { Vector3, Spherical } from "three";
-import { radToRa, radToDec } from "../utils/celestial-functions";
+import { radToRa, radToDec } from "./celestial-functions";
+import { getPhysicalPositionFromPlotObjects } from "./physicalPosition";
 
 // Helper to convert degrees to radians
 const D2R = Math.PI / 180;
@@ -14,12 +15,7 @@ export function movePlotModel(plotObjects, plotPos) {
 }
 
 export function getPlotModelRaDecDistance(name, plotObjects) {
-  let targetName = name;
-  if (name === "Moon") {
-    const hasActualMoon = plotObjects.some((p) => p.name === "Actual Moon");
-    if (hasActualMoon) targetName = "Actual Moon";
-  }
-  return getPlotRaDecDistanceFromPosition(targetName, plotObjects);
+  return getPlotRaDecDistanceFromPosition(name, plotObjects);
 }
 
 export function getPlotRaDecDistanceFromPosition(targetName, plotObjects) {
@@ -29,53 +25,47 @@ export function getPlotRaDecDistanceFromPosition(targetName, plotObjects) {
 
   if (!earthObj || !sunObj || !targetObj) return null;
 
-  // 1. Get World Positions
+  // Use physical positions for measurements. For the Moon this reverses the
+  // display-only orbit scale around Earth; plot traces still keep visual scale.
   const sunPos = new Vector3();
-  const targetPos = new Vector3();
-  
-  if (sunObj.pivotRef?.current) sunObj.pivotRef.current.getWorldPosition(sunPos);
-  if (targetObj.pivotRef?.current) targetObj.pivotRef.current.getWorldPosition(targetPos);
-  
   const earthPos = new Vector3();
-  if (earthObj.pivotRef?.current) earthObj.pivotRef.current.getWorldPosition(earthPos);
+  const targetPos = getPhysicalPositionFromPlotObjects(
+    targetName,
+    plotObjects,
+    new Vector3()
+  );
 
-  // 2. TRANSFORM TO EARTH EQUATORIAL FRAME
-  // We convert the target's World Position into the local space of Earth's tilted sphere (cSphereRef).
-  // This automatically accounts for Earth's axial tilt without manual quaternion math.
-  
+  if (!targetPos) return null;
+  if (sunObj.pivotRef?.current)
+    sunObj.pivotRef.current.getWorldPosition(sunPos);
+  if (earthObj.pivotRef?.current)
+    earthObj.pivotRef.current.getWorldPosition(earthPos);
+
+  // Transform the target's World Position into Earth's tilted equatorial frame.
   const localVec = targetPos.clone();
-  
   if (earthObj.cSphereRef?.current) {
-    // Transforms from World Space -> Tilted Earth Space (Equatorial)
     earthObj.cSphereRef.current.worldToLocal(localVec);
   }
 
-  // 3. Convert Local Vector to Spherical Coordinates (RA/Dec)
+  // Convert Local Vector to Spherical Coordinates (RA/Dec).
   const sphericalPos = new Spherical().setFromVector3(localVec);
-
   const ra = radToRa(sphericalPos.theta);
   const dec = radToDec(sphericalPos.phi);
-
-  // 4. Calculate Distances & Elongation
   const radius = sphericalPos.radius / 100;
-  
-  // Calculate distances for Elongation formula
+
+  // Calculate distances for elongation using the physical target position.
   const earthSunDist = earthPos.distanceTo(sunPos);
   const sunTargetDist = sunPos.distanceTo(targetPos);
-  const earthTargetDist = earthPos.distanceTo(targetPos); // Same as sphericalPos.radius
+  const earthTargetDist = earthPos.distanceTo(targetPos);
 
-  // Cosine Rule for Elongation
   const numerator =
-    earthSunDist * earthSunDist + // <--- FIXED: Typos corrected here
+    earthSunDist * earthSunDist +
     earthTargetDist * earthTargetDist -
     sunTargetDist * sunTargetDist;
-  
   const denominator = 2.0 * earthSunDist * earthTargetDist;
-
-  // Clamp to [-1, 1] to prevent NaN from floating point errors
   const cosElong = Math.min(Math.max(numerator / denominator, -1), 1);
   const elongationRadians = Math.acos(cosElong);
-  
+
   let elongation = ((180.0 * elongationRadians) / Math.PI).toFixed(3);
   elongation = isNaN(elongation) ? "-" : `${elongation}\u00B0`;
 

@@ -21,25 +21,16 @@ const spriteMaterial = new THREE.SpriteMaterial({
 });
 
 // Props come from an object in settings/celestial-model.json (see utils/celestialModel.js):
-//   name        scene-graph object name (e.g. "Actual Moon")
+//   name        scene-graph object name
 //   settingName settings entry that drives it (defaults to name)
-//   actual      hidden physical-coordinate twin (always invisible, actual size)
 //   orbitScale  display factor for orbit values while actual sizes are off
 //   hosts       extra helpers attached to the pivot (e.g. "ecliptic-grid")
-const Cobj = ({
-  name,
-  settingName,
-  actual = false,
-  orbitScale,
-  hosts = [],
-  children,
-}) => {
+const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
   const { settings } = useSettingsStore();
   const { scene } = useThree();
 
   const s = settings.find((p) => p.name === (settingName ?? name));
-  const actualMoon = actual;
-  const visible = actual ? false : s.visible;
+  const visible = s.visible;
 
   const containerRef = useRef();
   const orbitRef = useRef();
@@ -60,7 +51,7 @@ const Cobj = ({
   let orbitCenterb = s.orbitCenterb;
   let orbitCenterc = s.orbitCenterc;
 
-  if (!actualPlanetSizes && !actualMoon && orbitScale) {
+  if (!actualPlanetSizes && orbitScale) {
     orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * orbitScale;
     orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * orbitScale;
     orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * orbitScale;
@@ -116,9 +107,7 @@ const Cobj = ({
           ) : null}
           <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
             {s.axesHelper && visible ? <axesHelper args={[10]} /> : null}
-            {s.type === "planet" ? (
-              <Planet s={s} actualMoon={actualMoon} name={name} />
-            ) : null}
+            {s.type === "planet" ? <Planet s={s} name={name} /> : null}
             {hosts.includes("ecliptic-grid") ? <EclipticGrid /> : null}
             {children}
           </group>

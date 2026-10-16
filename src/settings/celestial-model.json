@@ -94,27 +94,6 @@
       "orbitTiltb": -2.6
     },
     {
-      "id": "actual-moon-deferent-a",
-      "name": "Actual Moon deferent A",
-      "parentId": "earth",
-      "twinOf": "moon-deferent-a",
-      "modes": ["live"]
-    },
-    {
-      "id": "actual-moon-deferent-b",
-      "name": "Actual Moon deferent B",
-      "parentId": "actual-moon-deferent-a",
-      "twinOf": "moon-deferent-b",
-      "modes": ["live"]
-    },
-    {
-      "id": "actual-moon",
-      "name": "Actual Moon",
-      "parentId": "actual-moon-deferent-b",
-      "twinOf": "moon",
-      "modes": ["live"]
-    },
-    {
       "id": "sun-deferent",
       "name": "Sun deferent",
       "parentId": "earth",
