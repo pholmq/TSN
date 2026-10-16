@@ -6,6 +6,7 @@ import {
   saveSettingsAsJson,
   loadSettingsFromFile,
 } from "../../utils/saveAndLoadSettings";
+import { getStageInfo, isMainStage } from "../../utils/celestialModel";
 
 const getControls = (s, updateSetting) => ({
   [`${s.name}size`]: {
@@ -239,7 +240,7 @@ const EditSettingsPanel = () => {
     // 1. Capture original visibility of all deferents on mount
     settings.forEach((s) => {
       if (
-        s.name.includes("deferent") &&
+        !isMainStage(s.name) &&
         initialDeferentStates.current[s.name] === undefined
       ) {
         initialDeferentStates.current[s.name] = s.visible;
@@ -250,7 +251,7 @@ const EditSettingsPanel = () => {
     return () => {
       const currentStoreSettings = useSettingsStore.getState().settings;
       currentStoreSettings.forEach((s) => {
-        if (s.name.includes("deferent")) {
+        if (!isMainStage(s.name)) {
           const originalVisibility = initialDeferentStates.current[s.name];
           if (
             originalVisibility !== undefined &&
@@ -271,16 +272,16 @@ const EditSettingsPanel = () => {
     const settingsMenu = {};
 
     settings.forEach((s) => {
-      let parent = s.name;
-      if (s.name.includes("deferent")) {
-        parent = s.name.split(" deferent")[0];
-      }
+      // Group each carrier/deferent under the body that owns it in celestial-model.json
+      const info = getStageInfo(s.name);
+      const parent = info ? info.bodyName : s.name;
+      const isCarrier = info ? !info.isMain : false;
 
       if (!groups[parent]) {
         groups[parent] = { main: null, deferents: [] };
       }
 
-      if (s.name.includes("deferent")) {
+      if (isCarrier) {
         groups[parent].deferents.push(s);
       } else {
         groups[parent].main = s;
@@ -370,7 +371,7 @@ const EditSettingsPanel = () => {
       "Filled Orbits": shadeOrbits,
     };
     settings.forEach((s) => {
-      if (!s.name.includes("deferent")) {
+      if (isMainStage(s.name)) {
         updatedValues[`${s.name}visible`] = s.visible;
       }
       updatedValues[`${s.name}size`] = "\u200B" + s.size;

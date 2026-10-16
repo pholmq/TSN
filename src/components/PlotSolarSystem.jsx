@@ -1,64 +1,32 @@
+import { useMemo } from "react";
 import Pobj from "./Pobj";
+import { buildRenderTree } from "../utils/celestialModel";
 
-const PlotSolarSystem = () => {
+// The invisible plot/maths model is built from the same `objects` list in
+// settings/celestial-model.json as the live scene, using mode "plot"
+// (objects marked modes: ["live"], like the "Actual Moon" twin, are skipped).
+const renderNode = (node) => {
+  const kids = node.children.map(renderNode);
+
+  if (node.kind === "group") {
+    return <group key={node.key}>{kids}</group>;
+  }
+
   return (
-    <group>
-      <Pobj name="SystemCenter">
-        <Pobj name="Earth">
-          <Pobj name="Moon deferent A">
-            <Pobj name="Moon deferent B">
-              <Pobj name="Moon" />
-            </Pobj>
-          </Pobj>
-          <Pobj name="Sun deferent">
-            <Pobj name="Sun">
-              <Pobj name="Halleys deferent">
-                <Pobj name="Halleys" />
-              </Pobj>
-
-              <Pobj name="Jupiter deferent">
-                <Pobj name="Jupiter" />
-              </Pobj>
-              <Pobj name="Saturn deferent">
-                <Pobj name="Saturn" />
-              </Pobj>
-              <Pobj name="Uranus deferent">
-                <Pobj name="Uranus" />
-              </Pobj>
-              <Pobj name="Neptune deferent">
-                <Pobj name="Neptune" />
-              </Pobj>
-              <Pobj name="Pluto deferent">
-                <Pobj name="Pluto" />
-              </Pobj>
-            </Pobj>
-          </Pobj>
-          <Pobj name="Venus deferent A">
-            <Pobj name="Venus deferent B">
-              <Pobj name="Venus" />
-            </Pobj>
-          </Pobj>
-          <Pobj name="Mercury deferent A">
-            <Pobj name="Mercury deferent B">
-              <Pobj name="Mercury" />
-            </Pobj>
-          </Pobj>
-          <Pobj name="Mars deferent E">
-            <Pobj name="Mars deferent S">
-              <Pobj name="Mars">
-                <Pobj name="Phobos" />
-                <Pobj name="Deimos" />
-              </Pobj>
-            </Pobj>
-          </Pobj>
-          <Pobj name="Eros deferent A">
-            <Pobj name="Eros deferent B">
-              <Pobj name="Eros"></Pobj>
-            </Pobj>
-          </Pobj>
-        </Pobj>
-      </Pobj>
-    </group>
+    <Pobj
+      key={node.key}
+      name={node.name}
+      settingName={node.settingName}
+      orbitScale={node.orbitScale}
+    >
+      {kids}
+    </Pobj>
   );
 };
+
+const PlotSolarSystem = () => {
+  const tree = useMemo(() => buildRenderTree("plot"), []);
+  return renderNode(tree);
+};
+
 export default PlotSolarSystem;

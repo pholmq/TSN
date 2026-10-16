@@ -129,14 +129,16 @@ src/
 │   ├── PlanetCamera/    # First-person surface view logic
 │   ├── Stars/           # Star rendering (InstancedMesh) & Data
 │   ├── Trace/           # Orbital path tracing logic
-│   ├── SolarSystem.jsx  # Main scene composition
+│   ├── SolarSystem.jsx  # Live scene, built from celestial-model.json
+│   ├── PlotSolarSystem.jsx # Plot maths scene, built from celestial-model.json
 │   └── UserInterface.jsx# HUD and overlays
 ├── settings/
 │   ├── BSC.json         # Bright Star Catalog Data
-│   ├── celestial-settings.json # Planet orbits and constants
+│   ├── celestial-model.json    # Object hierarchy + orbits and constants
 │   └── star-settings.json      # Visual configuration for stars
 ├── utils/
 │   ├── celestial-functions.js  # Tychos model math & logic
+│   ├── celestialModel.js       # Reads celestial-model.json (settings + scene tree)
 │   └── time-date-functions.js  # Julian Date conversions etc
 └── store.js             # Zustand store for global app state
 ```
@@ -147,7 +149,7 @@ src/
 
 You can customize the simulation logic by editing files in the `src/settings/` directory:
 
-- **`celestial-settings.json`**: Modify orbital speeds, distances, sizes, and starting positions for planets.
+- **`celestial-model.json`**: One flat `objects` list. Each object carries its numbers (orbital speeds, distances, sizes, starting positions) and a `parentId`; the hierarchy is derived from `parentId`. `SolarSystem.jsx` and `PlotSolarSystem.jsx` build their scene graphs from it at load time, so adding or re-parenting an object is a JSON edit. See the header of `src/utils/celestialModel.js` for the optional fields (`carrier`, `twinOf`, `modes`, `displayOrbitScale`, `hosts`). Colours, textures and other visual properties are still merged in by name from `misc-settings.json`.
 - **`star-settings.json`**: Adjust the rendering scale, brightness, and colors of stars.
 - **`BSC.json`**: The raw data for the stars.
 

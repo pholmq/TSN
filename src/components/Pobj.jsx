@@ -5,10 +5,19 @@ import { useStore, usePlotStore, useSettingsStore } from "../store"; // FIX: Add
 // PERFORMANCE FIX: Define geometry globally outside component
 const pobjSphere = new THREE.SphereGeometry(1, 32, 32);
 
-const Pobj = ({ name, children }) => {
+// Props come from an object in settings/celestial-model.json (see utils/celestialModel.js):
+//   name        scene-graph object name
+//   settingName settings entry that drives it (defaults to name)
+//   orbitScale  display factor for orbit values while actual sizes are off
+const Pobj = ({ name, settingName, orbitScale, children }) => {
+  const settingKey = settingName ?? name;
+
   // PERFORMANCE FIX: Targeted selection to avoid massive re-renders on any setting change
   const s = useSettingsStore(
-    useCallback((state) => state.settings.find((p) => p.name === name), [name])
+    useCallback(
+      (state) => state.settings.find((p) => p.name === settingKey),
+      [settingKey]
+    )
   );
 
   const addPlotObj = usePlotStore((state) => state.addPlotObj);
@@ -30,17 +39,11 @@ const Pobj = ({ name, children }) => {
   let orbitCenterc = s.orbitCenterc;
 
   // FIX: Scale the Moon's plot calculations so the Trace aligns with the visual Moon
-  if (!actualPlanetSizes) {
-    if (
-      s.name === "Moon" ||
-      s.name === "Moon deferent A" ||
-      s.name === "Moon deferent B"
-    ) {
-      orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * 39.2078;
-      orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * 39.2078;
-      orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * 39.2078;
-      orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc * 39.2078;
-    }
+  if (!actualPlanetSizes && orbitScale) {
+    orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * orbitScale;
+    orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * orbitScale;
+    orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * orbitScale;
+    orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc * orbitScale;
   }
 
   useEffect(() => {

@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { unitsToKm } from "./celestial-functions";
+import { getPhysicalTwinName } from "./celestialModel";
 
 const SECONDS_IN_YEAR = 365.25 * 86400;
 
@@ -32,8 +33,10 @@ export default function usePlanetSpeedV2(name, s, orbitRadius, scene) {
     }
 
     targetRef.current = target;
+    // Bodies with an `actual` twin node in celestial-model.json (e.g. Moon ->
+    // "Actual Moon") are measured on the twin; fall back to the object itself.
     physTargetRef.current =
-      name === "Moon" ? scene.getObjectByName("Actual Moon") : target;
+      scene.getObjectByName(getPhysicalTwinName(name)) || target;
 
     // 🔥 PERFORMANCE: Initialize the speeds object and calculate the static orbital speed ONCE
     let initialOrbitalSpeed = 0;
