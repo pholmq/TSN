@@ -13,6 +13,12 @@
 // This file must NOT import the store (the store imports this file).
 
 import model from "../settings/celestial-model.json";
+import miscSettings from "../settings/misc-settings.json";
+import { validateAndReportCelestialModel } from "./validateCelestialModel";
+
+// Runs as the application modules initialize, before the model is indexed.
+// A malformed JSON module itself is reported by the bundler before runtime.
+validateAndReportCelestialModel(model, miscSettings);
 
 export const celestialModel = model;
 
@@ -112,8 +118,6 @@ export const getCelestialSettings = () => objects.map(toSetting);
 // Render tree
 // ---------------------------------------------------------------------------
 
-const treeCache = {};
-
 const buildNode = (object) => ({
   key: object.id,
   kind: "object",
@@ -128,17 +132,15 @@ const buildNode = (object) => ({
  * Nested render tree for either the visible scene or the invisible plot scene.
  * Both scenes now use the same real objects; the plot scene is hidden by Pobj.
  */
-export const buildRenderTree = (mode = "live") => {
-  if (!treeCache[mode]) {
-    treeCache[mode] = {
-      key: "root",
-      kind: "group",
-      name: model.name,
-      children: (childrenOf.get(null) || []).map(buildNode),
-    };
-  }
-  return treeCache[mode];
+const renderTree = {
+  key: "root",
+  kind: "group",
+  name: model.name,
+  children: (childrenOf.get(null) || []).map(buildNode),
 };
+
+// The visible and hidden plot scenes share this same hierarchy.
+export const buildRenderTree = () => renderTree;
 
 // ---------------------------------------------------------------------------
 // Queries used by menus / search / physical-position helpers

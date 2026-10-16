@@ -135,6 +135,7 @@ src/
 ├── settings/
 │   ├── BSC.json         # Bright Star Catalog Data
 │   ├── celestial-model.json    # Object hierarchy + orbits and constants
+│   ├── misc-settings.json      # Object display configuration
 │   └── star-settings.json      # Visual configuration for stars
 ├── utils/
 │   ├── celestial-functions.js  # Tychos model math & logic
@@ -149,9 +150,12 @@ src/
 
 You can customize the simulation logic by editing files in the `src/settings/` directory:
 
-- **`celestial-model.json`**: One flat `objects` list. Each object carries its numbers (orbital speeds, distances, sizes, starting positions) and a `parentId`; the hierarchy is derived from `parentId`. `SolarSystem.jsx` and `PlotSolarSystem.jsx` build their scene graphs from it at load time, so adding or re-parenting an object is a JSON edit. See the header of `src/utils/celestialModel.js` for the optional fields (`carrier`, `twinOf`, `modes`, `displayOrbitScale`, `hosts`). Colours, textures and other visual properties are still merged in by name from `misc-settings.json`.
+- **`celestial-model.json`**: One flat `objects` list. Each object carries its orbital values, sizes, starting positions, and a `parentId`; the hierarchy is derived from `parentId`. `SolarSystem.jsx` and `PlotSolarSystem.jsx` share this scene hierarchy. Optional structural fields include `carrier`, `displayOrbitScale`, and `hosts`. The model is validated during application module initialization; object names must match `misc-settings.json`.
+- **`misc-settings.json`**: Display properties such as visibility, colors, textures, labels, and trace settings. These are merged with the orbital model by object name.
 - **`star-settings.json`**: Adjust the rendering scale, brightness, and colors of stars.
 - **`BSC.json`**: The raw data for the stars.
+
+The Edit Settings menu saves and loads JSON files using the same root and object schema as `celestial-model.json`. Loading restores editable values only; the file must match the current model's object identities and hierarchy.
 
 ---
 
