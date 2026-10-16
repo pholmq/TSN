@@ -20,22 +20,26 @@ const spriteMaterial = new THREE.SpriteMaterial({
   sizeAttenuation: false,
 });
 
-const Cobj = ({ name, children }) => {
+// Props come from an object in settings/celestial-model.json (see utils/celestialModel.js):
+//   name        scene-graph object name (e.g. "Actual Moon")
+//   settingName settings entry that drives it (defaults to name)
+//   actual      hidden physical-coordinate twin (always invisible, actual size)
+//   orbitScale  display factor for orbit values while actual sizes are off
+//   hosts       extra helpers attached to the pivot (e.g. "ecliptic-grid")
+const Cobj = ({
+  name,
+  settingName,
+  actual = false,
+  orbitScale,
+  hosts = [],
+  children,
+}) => {
   const { settings } = useSettingsStore();
   const { scene } = useThree();
 
-  let s;
-  let visible;
-  let actualMoon = false;
-
-  if (name.startsWith("Actual ")) {
-    actualMoon = true;
-    visible = false;
-    s = settings.find((p) => p.name === name.replace("Actual ", ""));
-  } else {
-    s = settings.find((p) => p.name === name);
-    visible = s.visible;
-  }
+  const s = settings.find((p) => p.name === (settingName ?? name));
+  const actualMoon = actual;
+  const visible = actual ? false : s.visible;
 
   const containerRef = useRef();
   const orbitRef = useRef();
@@ -56,17 +60,11 @@ const Cobj = ({ name, children }) => {
   let orbitCenterb = s.orbitCenterb;
   let orbitCenterc = s.orbitCenterc;
 
-  if (!actualPlanetSizes && !actualMoon) {
-    if (
-      s.name === "Moon" ||
-      s.name === "Moon deferent A" ||
-      s.name === "Moon deferent B"
-    ) {
-      orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * 39.2078;
-      orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * 39.2078;
-      orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * 39.2078;
-      orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc * 39.2078;
-    }
+  if (!actualPlanetSizes && !actualMoon && orbitScale) {
+    orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * orbitScale;
+    orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * orbitScale;
+    orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * orbitScale;
+    orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc * orbitScale;
   }
 
   const hasDisplacement =
@@ -121,7 +119,7 @@ const Cobj = ({ name, children }) => {
             {s.type === "planet" ? (
               <Planet s={s} actualMoon={actualMoon} name={name} />
             ) : null}
-            {s.name === "Earth" ? <EclipticGrid /> : null}
+            {hosts.includes("ecliptic-grid") ? <EclipticGrid /> : null}
             {children}
           </group>
         </group>

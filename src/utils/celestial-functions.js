@@ -1,5 +1,6 @@
 import { Vector3, Spherical } from "three";
 import { calendarToJD } from "./time-date-functions";
+import { getPhysicalTwinName } from "./celestialModel";
 
 // Convert RA/Dec to Altitude/Azimuth for observer at given lat/lon/time
 export function raDecToAltAz(ra, dec, lat, lon, time) {
@@ -181,11 +182,11 @@ export function getRaDecDistance(name, scene) {
   const objectPos = new Vector3();
   let targetObject;
 
-  if (name === "Moon") {
-    targetObject = scene.getObjectByName("Actual Moon");
-  } else {
-    targetObject = scene.getObjectByName(name);
-  }
+  // Bodies with an `actual` twin node in celestial-model.json (e.g. Moon ->
+  // "Actual Moon") are measured on the twin; fall back to the object itself.
+  targetObject =
+    scene.getObjectByName(getPhysicalTwinName(name)) ||
+    scene.getObjectByName(name);
 
   if (!targetObject) {
     throw new Error("getRaDecDistance: Unable to find object " + name);

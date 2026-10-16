@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { getDefaultSpeedFact, sDay } from "./utils/time-date-functions.js";
 import miscSettings from "./settings/misc-settings.json";
-import celestialSettings from "./settings/celestial-settings.json";
+import { getCelestialSettings } from "./utils/celestialModel";
 import starSettings from "./settings/star-settings.json";
 
 // Main simulation store using zustand
@@ -239,13 +239,18 @@ export const usePlotStore = create((set, get) => ({
     })),
 }));
 
-export const useSettingsStore = create((set, get) => ({
-  settings: celestialSettings.map((obj1) => {
+// Settings come from settings/celestial-model.json (motion stages, flattened by
+// utils/celestialModel.js) merged by name with settings/misc-settings.json.
+const buildDefaultSettings = () =>
+  getCelestialSettings().map((obj1) => {
     const [matchingObj] = miscSettings.filter(
       (obj2) => obj2.name === obj1.name
     );
     return { ...obj1, ...matchingObj };
-  }),
+  });
+
+export const useSettingsStore = create((set, get) => ({
+  settings: buildDefaultSettings(),
 
   getSetting: (name) => get().settings.find((p) => p.name === name),
 
@@ -260,7 +265,7 @@ export const useSettingsStore = create((set, get) => ({
 
   resetSettings: () =>
     set((state) => ({
-      settings: celestialSettings.map((obj1) => {
+      settings: getCelestialSettings().map((obj1) => {
         const [matchingObj] = miscSettings.filter(
           (obj2) => obj2.name === obj1.name
         );
