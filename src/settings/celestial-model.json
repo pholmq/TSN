@@ -14,11 +14,12 @@
       "rotationStart": 0,
       "rotationSpeed": 0,
       "orbitRadius": 0,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "earth",
@@ -34,11 +35,12 @@
       "rotationStart": 0,
       "rotationSpeed": 2301.1694948647196,
       "orbitRadius": 37.8453,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "moon-deferent-a",
@@ -51,11 +53,12 @@
       "speed": 0.71015440177343,
       "tilt": 0,
       "orbitRadius": 0.000712491685519208,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": -0.2,
-      "orbitTiltb": 0.5
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": -0.2,
+      "orbitTilty": 0,
+      "orbitTiltz": 0.5
     },
     {
       "id": "moon-deferent-b",
@@ -68,11 +71,12 @@
       "speed": 0,
       "tilt": 0,
       "orbitRadius": 0,
-      "orbitCentera": -0.009691949050954147,
-      "orbitCenterb": 0.005611128397920822,
-      "orbitCenterc": 0,
-      "orbitTilta": 2.3,
-      "orbitTiltb": 2.6
+      "orbitCenterx": -0.009691949050954147,
+      "orbitCentery": 0,
+      "orbitCenterz": 0.005611128397920822,
+      "orbitTiltx": 2.3,
+      "orbitTilty": 0,
+      "orbitTiltz": 2.6
     },
     {
       "id": "moon",
@@ -87,32 +91,12 @@
       "rotationStart": 3.14159,
       "rotationSpeed": 0,
       "orbitRadius": 0.25505129081458283,
-      "orbitCentera": 0.020404103265166628,
-      "orbitCenterb": -0.02065915455598121,
-      "orbitCenterc": -0.00178535903570208,
-      "orbitTilta": -1.8,
-      "orbitTiltb": -2.6
-    },
-    {
-      "id": "actual-moon-deferent-a",
-      "name": "Actual Moon deferent A",
-      "parentId": "earth",
-      "twinOf": "moon-deferent-a",
-      "modes": ["live"]
-    },
-    {
-      "id": "actual-moon-deferent-b",
-      "name": "Actual Moon deferent B",
-      "parentId": "actual-moon-deferent-a",
-      "twinOf": "moon-deferent-b",
-      "modes": ["live"]
-    },
-    {
-      "id": "actual-moon",
-      "name": "Actual Moon",
-      "parentId": "actual-moon-deferent-b",
-      "twinOf": "moon",
-      "modes": ["live"]
+      "orbitCenterx": 0.020404103265166628,
+      "orbitCentery": -0.00178535903570208,
+      "orbitCenterz": -0.02065915455598121,
+      "orbitTiltx": -1.8,
+      "orbitTilty": 0,
+      "orbitTiltz": -2.6
     },
     {
       "id": "sun-deferent",
@@ -124,11 +108,12 @@
       "speed": 0,
       "tilt": 0,
       "orbitRadius": 0,
-      "orbitCentera": 1.4,
-      "orbitCenterb": -0.6,
-      "orbitCenterc": 0,
-      "orbitTilta": 0.1,
-      "orbitTiltb": 0
+      "orbitCenterx": 1.4,
+      "orbitCentery": 0,
+      "orbitCenterz": -0.6,
+      "orbitTiltx": 0.1,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "sun",
@@ -143,11 +128,12 @@
       "rotationStart": 0,
       "rotationSpeed": 90.5,
       "orbitRadius": 100,
-      "orbitCentera": 1.2,
-      "orbitCenterb": -0.1,
-      "orbitCenterc": 0,
-      "orbitTilta": 0.1,
-      "orbitTiltb": 0
+      "orbitCenterx": 1.2,
+      "orbitCentery": 0,
+      "orbitCenterz": -0.1,
+      "orbitTiltx": 0.1,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "mercury-deferent-a",
@@ -159,11 +145,12 @@
       "speed": 6.283185307179586,
       "tilt": 0,
       "orbitRadius": 100,
-      "orbitCentera": -6.9,
-      "orbitCenterb": -3.2,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": -6.9,
+      "orbitCentery": 0,
+      "orbitCenterz": -3.2,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "mercury-deferent-b",
@@ -175,11 +162,12 @@
       "speed": -6.283185307179586,
       "tilt": 0,
       "orbitRadius": 0.6,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": -1.3,
-      "orbitTiltb": 0.5
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": -1.3,
+      "orbitTilty": 0,
+      "orbitTiltz": 0.5
     },
     {
       "id": "mercury",
@@ -193,11 +181,12 @@
       "rotationStart": 0,
       "rotationSpeed": 0,
       "orbitRadius": 38.710225,
-      "orbitCentera": 0,
-      "orbitCenterb": 3,
-      "orbitCenterc": -0.1,
-      "orbitTilta": 3,
-      "orbitTiltb": 0.5
+      "orbitCenterx": 0,
+      "orbitCentery": -0.1,
+      "orbitCenterz": 3,
+      "orbitTiltx": 3,
+      "orbitTilty": 0,
+      "orbitTiltz": 0.5
     },
     {
       "id": "venus-deferent-a",
@@ -209,11 +198,12 @@
       "speed": 6.283185307179586,
       "tilt": 0,
       "orbitRadius": 100,
-      "orbitCentera": 0.5,
-      "orbitCenterb": 0.5,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0.5,
+      "orbitCentery": 0,
+      "orbitCenterz": 0.5,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "venus-deferent-b",
@@ -225,11 +215,12 @@
       "speed": -6.283185307179586,
       "tilt": 0,
       "orbitRadius": 0.6,
-      "orbitCentera": 0,
-      "orbitCenterb": 0.65,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0.65,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "venus",
@@ -243,11 +234,12 @@
       "rotationStart": 0,
       "rotationSpeed": 0,
       "orbitRadius": 72.327789,
-      "orbitCentera": 0,
-      "orbitCenterb": -0.9,
-      "orbitCenterc": 0,
-      "orbitTilta": 3.2,
-      "orbitTiltb": -0.05
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": -0.9,
+      "orbitTiltx": 3.2,
+      "orbitTilty": 0,
+      "orbitTiltz": -0.05
     },
     {
       "id": "mars-deferent-e",
@@ -259,11 +251,12 @@
       "speed": 6.283185307179586,
       "tilt": 0,
       "orbitRadius": 100,
-      "orbitCentera": 10.1,
-      "orbitCenterb": -20.7,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 10.1,
+      "orbitCentery": 0,
+      "orbitCenterz": -20.7,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "mars-deferent-s",
@@ -275,11 +268,12 @@
       "speed": 0.3974599,
       "tilt": 0,
       "orbitRadius": 7.44385,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "mars",
@@ -293,11 +287,12 @@
       "rotationSpeed": 2301.169494864719,
       "tilt": -23.439062,
       "orbitRadius": 152.677,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": -0.2,
-      "orbitTiltb": -1.7
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": -0.2,
+      "orbitTilty": 0,
+      "orbitTiltz": -1.7
     },
     {
       "id": "phobos",
@@ -309,11 +304,12 @@
       "speed": 6986.5,
       "tilt": 0,
       "orbitRadius": 5,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "deimos",
@@ -325,11 +321,12 @@
       "speed": 1802,
       "tilt": 0,
       "orbitRadius": 10,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "jupiter-deferent",
@@ -341,11 +338,12 @@
       "speed": -6.283185307179586,
       "tilt": 0,
       "orbitRadius": 0,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "jupiter",
@@ -359,11 +357,12 @@
       "rotationStart": 0,
       "rotationSpeed": 5562.3218194,
       "orbitRadius": 520.4,
-      "orbitCentera": -49,
-      "orbitCenterb": 3,
-      "orbitCenterc": -1,
-      "orbitTilta": 0,
-      "orbitTiltb": -1.2
+      "orbitCenterx": -49,
+      "orbitCentery": -1,
+      "orbitCenterz": 3,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": -1.2
     },
     {
       "id": "saturn-deferent",
@@ -375,11 +374,12 @@
       "speed": -6.283185307179586,
       "tilt": 0,
       "orbitRadius": 89,
-      "orbitCentera": 11,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 11,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "saturn",
@@ -393,11 +393,12 @@
       "rotationStart": 0,
       "rotationSpeed": 5244.4748582,
       "orbitRadius": 958.2,
-      "orbitCentera": 0,
-      "orbitCenterb": 40,
-      "orbitCenterc": 0,
-      "orbitTilta": -2.5,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 40,
+      "orbitTiltx": -2.5,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "uranus-deferent",
@@ -409,11 +410,12 @@
       "speed": -6.283185307179586,
       "tilt": 0,
       "orbitRadius": 170,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "uranus",
@@ -427,11 +429,12 @@
       "rotationStart": 0,
       "rotationSpeed": 3239.2344713,
       "orbitRadius": 1920.13568,
-      "orbitCentera": 0,
-      "orbitCenterb": -65,
-      "orbitCenterc": 0,
-      "orbitTilta": -0.2,
-      "orbitTiltb": -0.7
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": -65,
+      "orbitTiltx": -0.2,
+      "orbitTilty": 0,
+      "orbitTiltz": -0.7
     },
     {
       "id": "neptune-deferent",
@@ -443,11 +446,12 @@
       "speed": -6.283185307179586,
       "tilt": 0,
       "orbitRadius": 20,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "neptune",
@@ -461,11 +465,12 @@
       "rotationStart": 0,
       "rotationSpeed": 3059.2770006,
       "orbitRadius": 3004.72,
-      "orbitCentera": 0,
-      "orbitCenterb": 20,
-      "orbitCenterc": 0,
-      "orbitTilta": -1.6,
-      "orbitTiltb": 1.15
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 20,
+      "orbitTiltx": -1.6,
+      "orbitTilty": 0,
+      "orbitTiltz": 1.15
     },
     {
       "id": "pluto-deferent",
@@ -477,11 +482,12 @@
       "speed": -6.283185307179586,
       "tilt": 0,
       "orbitRadius": 0,
-      "orbitCentera": 0,
-      "orbitCenterb": 0,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": 0,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "pluto",
@@ -494,11 +500,12 @@
       "rotationSpeed": 1000,
       "tilt": 122.5,
       "orbitRadius": 3948.2,
-      "orbitCentera": 877,
-      "orbitCenterb": 667,
-      "orbitCenterc": -333,
-      "orbitTilta": 15,
-      "orbitTiltb": -10
+      "orbitCenterx": 877,
+      "orbitCentery": -333,
+      "orbitCenterz": 667,
+      "orbitTiltx": 15,
+      "orbitTilty": 0,
+      "orbitTiltz": -10
     },
     {
       "id": "halley-deferent",
@@ -510,11 +517,12 @@
       "speed": -6.283185307179586,
       "tilt": 0,
       "orbitRadius": 20,
-      "orbitCentera": -5,
-      "orbitCenterb": 10,
-      "orbitCenterc": 11,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": -5,
+      "orbitCentery": 11,
+      "orbitCenterz": 10,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "halley",
@@ -528,11 +536,12 @@
       "rotationStart": 0,
       "rotationSpeed": 0,
       "orbitRadius": 1674.5,
-      "orbitCentera": -1540,
-      "orbitCenterb": -233.5,
-      "orbitCenterc": -507,
-      "orbitTilta": 6.4,
-      "orbitTiltb": 18.55
+      "orbitCenterx": -1540,
+      "orbitCentery": -507,
+      "orbitCenterz": -233.5,
+      "orbitTiltx": 6.4,
+      "orbitTilty": 0,
+      "orbitTiltz": 18.55
     },
     {
       "id": "eros-deferent-a",
@@ -544,11 +553,12 @@
       "speed": 6.283185307179586,
       "tilt": 0,
       "orbitRadius": 100,
-      "orbitCentera": -40,
-      "orbitCenterb": 31.5,
-      "orbitCenterc": -0.5,
-      "orbitTilta": -7.3,
-      "orbitTiltb": 3.6
+      "orbitCenterx": -40,
+      "orbitCentery": -0.5,
+      "orbitCenterz": 31.5,
+      "orbitTiltx": -7.3,
+      "orbitTilty": 0,
+      "orbitTiltz": 3.6
     },
     {
       "id": "eros-deferent-b",
@@ -560,11 +570,12 @@
       "speed": -7.291563307179587,
       "tilt": 0,
       "orbitRadius": 5.2,
-      "orbitCentera": -16,
-      "orbitCenterb": -4.5,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": -16,
+      "orbitCentery": 0,
+      "orbitCenterz": -4.5,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     },
     {
       "id": "eros",
@@ -578,11 +589,12 @@
       "rotationStart": 0,
       "rotationSpeed": 0,
       "orbitRadius": 145.79,
-      "orbitCentera": 0,
-      "orbitCenterb": -6,
-      "orbitCenterc": 0,
-      "orbitTilta": 0,
-      "orbitTiltb": 0
+      "orbitCenterx": 0,
+      "orbitCentery": 0,
+      "orbitCenterz": -6,
+      "orbitTiltx": 0,
+      "orbitTilty": 0,
+      "orbitTiltz": 0
     }
   ]
 }

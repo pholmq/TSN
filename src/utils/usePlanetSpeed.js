@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useStore } from "../store";
 import { unitsToKm } from "./celestial-functions";
-import { getPhysicalTwinName } from "./celestialModel";
+import { createPhysicalPositionReader } from "./physicalPosition";
 
 const SECONDS_IN_YEAR = 365.25 * 86400;
 
@@ -12,7 +12,7 @@ export default function usePlanetSpeedV2(name, s, orbitRadius, scene) {
   const showSpeeds = useStore((state) => state.showSpeeds);
 
   const targetRef = useRef(null);
-  const physTargetRef = useRef(null);
+  const readPhysicalPositionRef = useRef(null);
 
   const prevPos = useRef(null);
   const prevWorldPos = useRef(new THREE.Vector3());
@@ -33,10 +33,13 @@ export default function usePlanetSpeedV2(name, s, orbitRadius, scene) {
     }
 
     targetRef.current = target;
-    // Bodies with an `actual` twin node in celestial-model.json (e.g. Moon ->
-    // "Actual Moon") are measured on the twin; fall back to the object itself.
-    physTargetRef.current =
-      scene.getObjectByName(getPhysicalTwinName(name)) || target;
+    // Cache a reader that returns physical coordinates even when the Moon's
+    // visible orbit is enlarged for display.
+    readPhysicalPositionRef.current = createPhysicalPositionReader(name, scene);
+    if (!readPhysicalPositionRef.current) {
+      console.warn("usePlanetSpeed: unable to read physical position:", name);
+      return;
+    }
 
     // 🔥 PERFORMANCE: Initialize the speeds object and calculate the static orbital speed ONCE
     let initialOrbitalSpeed = 0;
@@ -62,18 +65,18 @@ export default function usePlanetSpeedV2(name, s, orbitRadius, scene) {
     if (
       !showSpeeds ||
       !targetRef.current ||
-      !physTargetRef.current ||
+      !readPhysicalPositionRef.current ||
       posRef.current == null
     )
       return;
 
     const target = targetRef.current;
-    const physTarget = physTargetRef.current;
+    const readPhysicalPosition = readPhysicalPositionRef.current;
     const currentPosTime = posRef.current;
 
     // --- initialization ---
     if (prevPos.current === null) {
-      physTarget.getWorldPosition(prevWorldPos.current);
+      readPhysicalPosition(prevWorldPos.current);
       prevPos.current = currentPosTime;
       return;
     }
@@ -83,7 +86,7 @@ export default function usePlanetSpeedV2(name, s, orbitRadius, scene) {
       Math.abs(deltaYears) > 0.000001 && Math.abs(deltaYears) < 0.1;
 
     if (isStableFrame) {
-      physTarget.getWorldPosition(currentWorldPos.current);
+      readPhysicalPosition(currentWorldPos.current);
 
       if (prevWorldPos.current.lengthSq() > 0) {
         frameCount.current += 1;
@@ -115,7 +118,7 @@ export default function usePlanetSpeedV2(name, s, orbitRadius, scene) {
       prevWorldPos.current.copy(currentWorldPos.current);
       prevPos.current = currentPosTime;
     } else if (Math.abs(deltaYears) >= 0.1) {
-      physTarget.getWorldPosition(prevWorldPos.current);
+      readPhysicalPosition(prevWorldPos.current);
       prevPos.current = currentPosTime;
 
       totalDistKm.current = 0;

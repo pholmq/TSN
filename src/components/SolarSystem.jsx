@@ -17,7 +17,6 @@ const renderNode = (node) => {
       key={node.key}
       name={node.name}
       settingName={node.settingName}
-      actual={node.actual}
       orbitScale={node.orbitScale}
       hosts={node.hosts}
     >

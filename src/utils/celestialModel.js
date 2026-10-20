@@ -1,30 +1,24 @@
-// celestialModel.js
-//
 // Single reader for src/settings/celestial-model.json.
 //
 // The model is one flat list, `objects`. Each object is a settings entry
-// (name + numbers, exactly what celestial-settings.json used to hold) plus
-// its place in the hierarchy:
+// (name + numeric settings) plus its place in the hierarchy:
 //
-//   id, name          unique. `name` is the settings / scene-graph name.
-//   parentId          id of the parent object (null = root, e.g. SystemCenter).
-//                     The scene tree is derived from this; list order decides
-//                     sibling order, and is also the order of the settings list.
-//   carrier           true for deferents / carrier stages (not a body itself).
+//   id, name          unique object ID and scene/settings name
+//   parentId          parent object ID (null = model root)
+//   carrier           true for deferents / carrier stages
 //   displayOrbitScale factor applied to orbit values while "Actual planet
-//                     sizes" is off (the Moon exaggeration).
-//   hosts             helpers attached to the object's pivot ("ecliptic-grid").
-//   twinOf            id of another object. Makes this a hidden physical-
-//                     coordinate twin: no numbers of its own, it reuses the
-//                     target's settings, is always invisible, uses actualSize.
-//   modes             build only in these scenes ("live" = SolarSystem,
-//                     "plot" = PlotSolarSystem). Default: all.
-//
-// Every other key is a numeric setting (size, startPos, speed, orbitRadius...).
+//                     sizes" is off (currently used for the Moon's display scale)
+//   hosts             helpers attached to the object's pivot (e.g. "ecliptic-grid")
 //
 // This file must NOT import the store (the store imports this file).
 
 import model from "../settings/celestial-model.json";
+import miscSettings from "../settings/misc-settings.json";
+import { validateAndReportCelestialModel } from "./validateCelestialModel";
+
+// Runs as the application modules initialize, before the model is indexed.
+// A malformed JSON module itself is reported by the bundler before runtime.
+validateAndReportCelestialModel(model, miscSettings);
 
 export const celestialModel = model;
 
@@ -35,8 +29,6 @@ const STRUCTURAL_KEYS = new Set([
   "carrier",
   "displayOrbitScale",
   "hosts",
-  "twinOf",
-  "modes",
 ]);
 
 const toNumber = (v) => {
@@ -80,140 +72,135 @@ objects.forEach((o) => {
 
 const childrenOf = new Map(); // parentId (or null) -> objects, in list order
 objects.forEach((o) => {
-  const p = o.parentId ?? null;
-  if (p !== null && !byId.has(p)) {
-    throw new Error(`celestial-model: "${o.id}" has unknown parentId "${p}"`);
+  const parentId = o.parentId ?? null;
+  if (parentId !== null && !byId.has(parentId)) {
+    throw new Error(
+      `celestial-model: "${o.id}" has unknown parentId "${parentId}"`
+    );
   }
-  if (o.twinOf != null) {
-    const target = byId.get(o.twinOf);
-    if (!target || target.twinOf != null) {
-      throw new Error(
-        `celestial-model: "${o.id}" twinOf "${o.twinOf}" is not a real object`
-      );
-    }
-  }
-  if (!childrenOf.has(p)) childrenOf.set(p, []);
-  childrenOf.get(p).push(o);
+  if (!childrenOf.has(parentId)) childrenOf.set(parentId, []);
+  childrenOf.get(parentId).push(o);
 });
 
-// Cycle check: every object must reach a root
+// Cycle check: every object must reach a root.
 objects.forEach((o) => {
   const seen = new Set();
-  for (let c = o; c; c = c.parentId != null ? byId.get(c.parentId) : null) {
-    if (seen.has(c.id)) {
-      throw new Error(`celestial-model: parentId cycle at "${c.id}"`);
+  for (
+    let current = o;
+    current;
+    current = current.parentId != null ? byId.get(current.parentId) : null
+  ) {
+    if (seen.has(current.id)) {
+      throw new Error(`celestial-model: parentId cycle at "${current.id}"`);
     }
-    seen.add(c.id);
+    seen.add(current.id);
   }
 });
 
-const isTwin = (o) => o.twinOf != null;
-const realObjects = objects.filter((o) => !isTwin(o));
-const realChildren = (o) =>
-  (childrenOf.get(o.id) || []).filter((c) => !isTwin(c));
-
-// The body a carrier belongs to: follow the carrier chain down to the first
-// non-carrier (Moon deferent A -> Moon deferent B -> Moon).
-const bodyOf = (o) => {
-  let cur = o;
-  while (cur.carrier) {
-    const next = realChildren(cur)[0];
+const bodyOf = (object) => {
+  let current = object;
+  while (current.carrier) {
+    const next = (childrenOf.get(current.id) || [])[0];
     if (!next) break;
-    cur = next;
+    current = next;
   }
-  return cur;
+  return current;
 };
 
 // ---------------------------------------------------------------------------
 // Settings
 // ---------------------------------------------------------------------------
 
-/** Fresh flat settings list (what celestial-settings.json used to be). */
-export const getCelestialSettings = () => realObjects.map(toSetting);
+/** Fresh flat settings list (the format consumed by the settings store). */
+export const getCelestialSettings = () => objects.map(toSetting);
 
 // ---------------------------------------------------------------------------
 // Render tree
 // ---------------------------------------------------------------------------
 
-const treeCache = {};
-
-const buildNode = (o, mode) => {
-  if (o.modes && !o.modes.includes(mode)) return null;
-  const source = isTwin(o) ? byId.get(o.twinOf) : o;
-  return {
-    key: o.id,
-    kind: "object",
-    name: o.name, // scene-graph object name (e.g. "Actual Moon")
-    settingName: source.name, // settings entry that drives it
-    actual: isTwin(o),
-    orbitScale: o.displayOrbitScale, // number | undefined
-    hosts: o.hosts || [],
-    children: (childrenOf.get(o.id) || [])
-      .map((c) => buildNode(c, mode))
-      .filter(Boolean),
-  };
-};
+const buildNode = (object) => ({
+  key: object.id,
+  kind: "object",
+  name: object.name,
+  settingName: object.name,
+  orbitScale: object.displayOrbitScale,
+  hosts: object.hosts || [],
+  children: (childrenOf.get(object.id) || []).map(buildNode),
+});
 
 /**
- * Nested render tree for a mode ("live" -> SolarSystem, "plot" -> PlotSolarSystem).
- * A synthetic group node is the root. Memoized: the model is static.
+ * Nested render tree for either the visible scene or the invisible plot scene.
+ * Both scenes now use the same real objects; the plot scene is hidden by Pobj.
  */
-export const buildRenderTree = (mode) => {
-  if (!treeCache[mode]) {
-    treeCache[mode] = {
-      key: "root",
-      kind: "group",
-      name: model.name,
-      children: (childrenOf.get(null) || [])
-        .map((o) => buildNode(o, mode))
-        .filter(Boolean),
-    };
-  }
-  return treeCache[mode];
+const renderTree = {
+  key: "root",
+  kind: "group",
+  name: model.name,
+  children: (childrenOf.get(null) || []).map(buildNode),
 };
 
+// The visible and hidden plot scenes share this same hierarchy.
+export const buildRenderTree = () => renderTree;
+
 // ---------------------------------------------------------------------------
-// Queries used by menus / search / physics helpers
+// Queries used by menus / search / physical-position helpers
 // ---------------------------------------------------------------------------
 
 /** { bodyId, bodyName, isMain, isReferenceFrame } for a settings name. */
 export const getStageInfo = (settingName) => {
-  const o = byName.get(settingName);
-  if (!o || isTwin(o)) return null;
-  const body = bodyOf(o);
+  const object = byName.get(settingName);
+  if (!object) return null;
+  const body = bodyOf(object);
   return {
     bodyId: body.id,
     bodyName: body.name,
-    isMain: !o.carrier,
-    isReferenceFrame: o.parentId == null,
+    isMain: !object.carrier,
+    isReferenceFrame: object.parentId == null,
   };
 };
 
 /** True for a body itself / a root frame; false for deferents/carriers. */
 export const isMainStage = (settingName) => {
-  const o = byName.get(settingName);
-  return o ? !o.carrier : true;
+  const object = byName.get(settingName);
+  return object ? !object.carrier : true;
 };
 
 /** Settings names of real bodies: not carriers, not roots (SystemCenter). */
 export const getBodySettingNames = () =>
-  realObjects
-    .filter((o) => !o.carrier && o.parentId != null)
-    .map((o) => o.name);
+  objects
+    .filter((object) => !object.carrier && object.parentId != null)
+    .map((object) => object.name);
 
 /**
- * Name of the scene object holding an object's physical coordinates.
- * e.g. "Moon" -> "Actual Moon" when the model has a twin for it;
- * otherwise the name itself.
+ * Return the scale and unscaled anchor for an object's physical position.
+ *
+ * The scaled Moon stages all use the same displayOrbitScale. Its nearest
+ * ancestor without that scale is Earth, so the physical Moon position is
+ * Earth + (display Moon - Earth) / scale. Returns null scale for ordinary
+ * unscaled objects.
  */
-let twinMap = null;
-export const getPhysicalTwinName = (name) => {
-  if (!twinMap) {
-    twinMap = new Map();
-    objects.filter(isTwin).forEach((t) => {
-      const target = byId.get(t.twinOf).name;
-      if (!twinMap.has(target)) twinMap.set(target, t.name);
-    });
+export const getPhysicalPositionInfo = (name) => {
+  const object = byName.get(name);
+  if (!object) return null;
+
+  const scale = Number(object.displayOrbitScale);
+  if (!Number.isFinite(scale) || scale === 0) {
+    return { scale: null, anchorName: null };
   }
-  return twinMap.get(name) ?? name;
+
+  let current = object;
+  let parent = current.parentId != null ? byId.get(current.parentId) : null;
+
+  while (parent && parent.displayOrbitScale != null) {
+    const parentScale = Number(parent.displayOrbitScale);
+    if (parentScale !== scale) {
+      throw new Error(
+        `celestial-model: scaled chain for "${name}" uses inconsistent displayOrbitScale values`
+      );
+    }
+    current = parent;
+    parent = current.parentId != null ? byId.get(current.parentId) : null;
+  }
+
+  return { scale, anchorName: parent?.name ?? null };
 };

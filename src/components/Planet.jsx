@@ -17,7 +17,7 @@ const lowResSphere = new THREE.SphereGeometry(1, 64, 64);
 const highResSphere = new THREE.SphereGeometry(1, 128, 128); // Reserved for Earth
 const DEG2RAD = THREE.MathUtils.DEG2RAD; // Pre-calculated constant
 
-const Planet = memo(function Planet({ s, actualMoon, name }) {
+const Planet = memo(function Planet({ s, name }) {
   const planetRef = useRef();
   const transformRef = useRef();
   const pivotRef = useRef();
@@ -81,11 +81,7 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     size = s.actualSize;
   }
 
-  let visible = s.visible;
-  if (actualMoon) {
-    size = s.actualSize;
-    visible = false;
-  }
+  const visible = s.visible;
 
   useFrame(() => {
     if (s.fixedTilt && pivotRef.current) {
