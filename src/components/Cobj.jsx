@@ -20,23 +20,17 @@ const spriteMaterial = new THREE.SpriteMaterial({
   sizeAttenuation: false,
 });
 
-// Props come from an object in settings/celestial-model.json (see utils/celestialModel.js):
-//   name        scene-graph object name
-//   settingName settings entry that drives it (defaults to name)
-//   orbitScale  display factor for orbit values while actual sizes are off
-//   hosts       extra helpers attached to the pivot (e.g. "ecliptic-grid")
 const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
   const { settings } = useSettingsStore();
   const { scene } = useThree();
-
   const s = settings.find((p) => p.name === (settingName ?? name));
   const visible = s.visible;
 
   const containerRef = useRef();
   const orbitRef = useRef();
   const pivotRef = useRef();
-
   const posRef = useStore((s) => s.posRef);
+
   const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
   const editSettings = useStore((s) => s.editSettings);
@@ -47,19 +41,19 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
   });
 
   let orbitRadius = s.orbitRadius;
-  let orbitCentera = s.orbitCentera;
-  let orbitCenterb = s.orbitCenterb;
-  let orbitCenterc = s.orbitCenterc;
+  let orbitCenterx = s.orbitCenterx || 0;
+  let orbitCentery = s.orbitCentery || 0;
+  let orbitCenterz = s.orbitCenterz || 0;
 
   if (!actualPlanetSizes && orbitScale) {
     orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * orbitScale;
-    orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * orbitScale;
-    orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * orbitScale;
-    orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc * orbitScale;
+    orbitCenterx = s.orbitCenterx === 0 ? 0 : s.orbitCenterx * orbitScale;
+    orbitCentery = s.orbitCentery === 0 ? 0 : s.orbitCentery * orbitScale;
+    orbitCenterz = s.orbitCenterz === 0 ? 0 : s.orbitCenterz * orbitScale;
   }
 
   const hasDisplacement =
-    orbitCentera !== 0 || orbitCenterb !== 0 || orbitCenterc !== 0;
+    orbitCenterx !== 0 || orbitCentery !== 0 || orbitCenterz !== 0;
 
   // Initialize and update speeds silently into the object's userData
   usePlanetSpeed(name, s, orbitRadius, scene);
@@ -71,7 +65,7 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
           <Line
             points={[
               [0, 0, 0],
-              [orbitCentera, orbitCenterc, orbitCenterb],
+              [orbitCenterx, orbitCentery, orbitCenterz],
             ]}
             color="yellow"
             lineWidth={orbitsLineWidth}
@@ -91,9 +85,10 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
       <group
         name="Container"
         ref={containerRef}
-        position={[orbitCentera, orbitCenterc, orbitCenterb]}
-        rotation-x={s.orbitTilta * (Math.PI / 180)}
-        rotation-z={s.orbitTiltb * (Math.PI / 180)}
+        position={[orbitCenterx, orbitCentery, orbitCenterz]}
+        rotation-x={(s.orbitTiltx || 0) * (Math.PI / 180)}
+        rotation-y={(s.orbitTilty || 0) * (Math.PI / 180)}
+        rotation-z={(s.orbitTiltz || 0) * (Math.PI / 180)}
       >
         <group name="Orbit" ref={orbitRef}>
           {orbitRadius !== undefined && orbitRadius !== null ? (
@@ -116,5 +111,4 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
     </>
   );
 };
-
 export default Cobj;
