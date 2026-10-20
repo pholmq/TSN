@@ -45,8 +45,11 @@
       "**/*.map",
       "src/settings/hipparcos_8.js",
       "src/settings/BSCOrg.json",
-      "src/settings/BSC.json"
-      
+      "src/settings/BSC.json",
+      "src/settings/reference_stars.json",
+      "src/settings/constellations.json"
+
+
 
 
 
