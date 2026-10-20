@@ -9,19 +9,17 @@ const NUMERIC_FIELDS = new Set([
   "tilt",
   "tiltb",
   "orbitRadius",
-  "orbitCentera",
-  "orbitCenterb",
-  "orbitCenterc",
-  "orbitTilta",
-  "orbitTiltb",
+  "orbitCenterx",
+  "orbitCentery",
+  "orbitCenterz",
+  "orbitTiltx",
+  "orbitTilty",
+  "orbitTiltz",
 ]);
-
 const isObject = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
-
 const parseInput = (input, label, errors) => {
   if (typeof input !== "string") return input;
-
   try {
     return JSON.parse(input);
   } catch (error) {
@@ -29,7 +27,6 @@ const parseInput = (input, label, errors) => {
     return null;
   }
 };
-
 /**
  * Validate a celestial model against the display settings.
  * Inputs may be parsed JavaScript values or raw JSON text. Raw text is accepted
@@ -43,9 +40,7 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
     "misc-settings.json",
     errors
   );
-
   if (errors.length > 0) return { valid: false, errors, model: null };
-
   if (!isObject(model)) {
     errors.push("celestial-model.json must contain a JSON object");
   } else {
@@ -66,24 +61,18 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
       );
     }
   }
-
   if (!Array.isArray(miscSettings)) {
     errors.push("misc-settings.json must contain a JSON array");
   }
-
   if (errors.length > 0) return { valid: false, errors, model };
-
   const byId = new Map();
   const byName = new Map();
-
   model.objects.forEach((object, index) => {
     const label = `celestial-model.json objects[${index}]`;
-
     if (!isObject(object)) {
       errors.push(`${label} must be an object`);
       return;
     }
-
     if (typeof object.id !== "string" || object.id.trim() === "") {
       errors.push(`${label} must have a non-empty string id`);
     } else if (byId.has(object.id)) {
@@ -91,7 +80,6 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
     } else {
       byId.set(object.id, object);
     }
-
     if (typeof object.name !== "string" || object.name.trim() === "") {
       errors.push(`${label} must have a non-empty string name`);
     } else if (byName.has(object.name)) {
@@ -99,7 +87,6 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
     } else {
       byName.set(object.name, object);
     }
-
     if (!Object.prototype.hasOwnProperty.call(object, "parentId")) {
       errors.push(
         `${label} must have a parentId field (use null for the root)`
@@ -110,11 +97,9 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
     ) {
       errors.push(`${label} parentId must be a string or null`);
     }
-
     if (object.carrier !== undefined && typeof object.carrier !== "boolean") {
       errors.push(`${label} carrier must be a boolean when specified`);
     }
-
     if (
       object.hosts !== undefined &&
       (!Array.isArray(object.hosts) ||
@@ -122,7 +107,6 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
     ) {
       errors.push(`${label} hosts must be an array of strings when specified`);
     }
-
     NUMERIC_FIELDS.forEach((field) => {
       if (
         object[field] !== undefined &&
@@ -131,7 +115,6 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
         errors.push(`${label} field "${field}" must be a finite number`);
       }
     });
-
     if (
       object.displayOrbitScale !== undefined &&
       object.displayOrbitScale <= 0
@@ -139,7 +122,6 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
       errors.push(`${label} displayOrbitScale must be greater than zero`);
     }
   });
-
   // Parent references and cycles are checked after all IDs are indexed.
   model.objects.forEach((object) => {
     if (!isObject(object) || typeof object.id !== "string") return;
@@ -153,10 +135,8 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
       );
     }
   });
-
   model.objects.forEach((object) => {
     if (!isObject(object) || typeof object.id !== "string") return;
-
     const visited = new Set();
     let current = object;
     while (current && current.parentId != null && byId.has(current.parentId)) {
@@ -171,7 +151,6 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
     }
     if (current && visited.has(current.id)) return;
   });
-
   const miscByName = new Map();
   miscSettings.forEach((setting, index) => {
     const label = `misc-settings.json[${index}]`;
@@ -189,7 +168,6 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
       miscByName.set(setting.name, setting);
     }
   });
-
   const modelNames = new Set(byName.keys());
   const miscNames = new Set(miscByName.keys());
   [...modelNames]
@@ -208,17 +186,14 @@ export const validateCelestialModelData = (modelInput, miscSettingsInput) => {
         `"${name}" exists in misc-settings.json but not in celestial-model.json`
       );
     });
-
   return { valid: errors.length === 0, errors, model };
 };
-
 /** Log configuration issues without hiding other application diagnostics. */
 export const validateAndReportCelestialModel = (
   modelInput,
   miscSettingsInput
 ) => {
   const result = validateCelestialModelData(modelInput, miscSettingsInput);
-
   if (!result.valid) {
     console.error(
       `[celestial-model validation] Found ${
@@ -226,6 +201,5 @@ export const validateAndReportCelestialModel = (
       } issue(s):\n${result.errors.map((error) => `  - ${error}`).join("\n")}`
     );
   }
-
   return result;
 };

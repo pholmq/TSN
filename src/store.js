@@ -147,6 +147,9 @@ export const useStore = create(
       editSettings: false,
       setEditSettings: (v) => set({ editSettings: v }),
 
+      showOrbitLabels: false,
+      setShowOrbitLabels: (v) => set({ showOrbitLabels: v }),
+
       showSpeeds: false,
       setShowSpeeds: (v) => set({ showSpeeds: v }),
 
