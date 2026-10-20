@@ -1,0 +1,56 @@
+{
+  "output": {
+    "filePath": "repomix-output.xml",
+    "style": "xml",
+    "removeComments": false,
+    "removeEmptyLines": true,
+    "showLineNumbers": true,
+    "topFilesLength": 10
+  },
+  "include": [
+    "src/**/*",
+    "package.json",
+    "tsconfig.json",
+    "vite.config.*"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "**/*.glb",
+      "**/*.gltf",
+      "**/*.obj",
+      "**/*.fbx",
+      "**/*.bin",
+      "**/*.draco",
+      "**/*.hdr",
+      "**/*.exr",
+      "**/*.png",
+      "**/*.jpg",
+      "**/*.jpeg",
+      "**/*.webp",
+      "**/*.svg",
+      "**/*.ico",
+      "**/*.mp3",
+      "**/*.ogg",
+      "**/*.wav",
+      "**/*.mp4",
+      "public/**",
+      "dist/**",
+      "build/**",
+      "package-lock.json",
+      "pnpm-lock.yaml",
+      "yarn.lock",
+      ".env*",
+      "**/*.map",
+      "src/settings/hipparcos_8.js",
+      "src/settings/BSCOrg.json",
+      "src/settings/BSC.json"
+      
+
+
+
+
+    ]
+  }
+}
