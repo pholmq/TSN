@@ -1,11 +1,13 @@
-// src/utils/celestialModel.js
+// Single reader for src/settings/celestial-model.json.
 import model from "../settings/celestial-model.json";
 import miscSettings from "../settings/misc-settings.json";
 import { validateAndReportCelestialModel } from "./validateCelestialModel";
 
+// Runs as the application modules initialize, before the model is indexed.
 validateAndReportCelestialModel(model, miscSettings);
 export const celestialModel = model;
 
+// Keys that describe structure, not settings.
 const STRUCTURAL_KEYS = new Set([
   "id",
   "parentId",
@@ -22,6 +24,7 @@ const toNumber = (v) => {
   return v;
 };
 
+// Object -> flat settings entry ({ name, size, startPos, ... }).
 const toSetting = (obj) => {
   const out = { name: obj.name };
   Object.keys(obj).forEach((k) => {
@@ -45,7 +48,7 @@ objects.forEach((o) => {
   byName.set(o.name, o);
 });
 
-const childrenOf = new Map();
+const childrenOf = new Map(); 
 objects.forEach((o) => {
   const parentId = o.parentId ?? null;
   if (parentId !== null && !byId.has(parentId)) {
@@ -58,7 +61,9 @@ objects.forEach((o) => {
 objects.forEach((o) => {
   const seen = new Set();
   for (let current = o; current; current = current.parentId != null ? byId.get(current.parentId) : null) {
-    if (seen.has(current.id)) throw new Error(`celestial-model: parentId cycle at "${current.id}"`);
+    if (seen.has(current.id)) {
+      throw new Error(`celestial-model: parentId cycle at "${current.id}"`);
+    }
     seen.add(current.id);
   }
 });
@@ -82,9 +87,9 @@ const buildNode = (object) => ({
   settingName: object.name,
   orbitScale: object.displayOrbitScale,
   hosts: object.hosts || [],
-  operation: object.motionOperation,
-  frameType: object.frameType || null,
-  referenceFrame: object.referenceFrame || null, // <--- Exposed here
+  operation: object.motionOperation,             // Extracted ONLY if present in JSON
+  frameType: object.frameType || null,           // Extracted ONLY if present in JSON
+  referenceFrame: object.referenceFrame || null, // Extracted ONLY if present in JSON
   children: (childrenOf.get(object.id) || []).map(buildNode),
 });
 

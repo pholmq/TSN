@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Euler, Quaternion, Vector3 } from "three";
-import { usePlotStore, useSettingsStore, useStore } from "../store";
-import { celestialModel } from "../utils/celestialModel";
+import { usePlotStore, useSettingsStore, useStore } from "../../store";
+import { celestialModel } from "../../utils/celestialModel";
 
 const D2R = Math.PI / 180;
 const number = (value) => Number(value) || 0;
@@ -19,13 +19,11 @@ export function equantCorrection(angle, radius, offset, orientation = 0) {
     offset * Math.cos(orientation) + distance * Math.cos(angle)) - angle);
 }
 
-// Dynamically resolve target settings from celestial-model IDs
 const getSettingById = (id, settings) => {
   const modelObj = celestialModel.objects.find((o) => o.id === id);
   return modelObj ? settings.find((s) => s.name === modelObj.name) : null;
 };
 
-// Isolated Strategy Map for distinct astronomical operations
 const Operations = {
   "moving-eccentric-centre": (group, time, p, setting) => {
     const angle = number(setting.speed) * time - number(setting.startPos) * D2R;
@@ -57,7 +55,6 @@ const Operations = {
       group.position.normalize().multiplyScalar(number(p.amplitude) * Math.cos(number(p.speed) * time - number(p.phase) * D2R));
     }
     
-    // Resolve carrier orientation dynamically
     const carrier = getSettingById(setting.parentId, settings);
     if (carrier) {
       const q = scratch.inverse.setFromEuler(new Euler(number(carrier.orbitTiltx) * D2R, 0, number(carrier.orbitTiltz) * D2R));
@@ -68,20 +65,24 @@ const Operations = {
 
   "solar-coupled-centre-offset": (group, time, p, setting, settings, scratch, scene, plotMode) => {
     const objects = usePlotStore.getState().plotObjects;
-    const find = (id) => {
-      const targetSetting = getSettingById(id, settings);
-      if (!targetSetting) return null;
+    const find = (nameStr) => {
+      if (!nameStr) return null;
       return plotMode 
-        ? objects.find((item) => item.name === targetSetting.name)?.pivotRef?.current 
-        : scene.getObjectByName(targetSetting.name);
+        ? objects.find((item) => item.name === nameStr)?.pivotRef?.current 
+        : scene.getObjectByName(nameStr);
     };
 
-    const earth = find(setting.referenceIds?.observer);
-    const sun = find(setting.referenceIds?.reference);
-    const target = find(setting.targetId);
+    const observerSetting = getSettingById(setting.referenceIds?.observer, settings);
+    const referenceSetting = getSettingById(setting.referenceIds?.reference, settings);
     const targetSetting = getSettingById(setting.targetId, settings);
 
-    if (!earth || !sun || !target || !targetSetting || !group.parent) return;
+    if (!observerSetting || !referenceSetting || !targetSetting) return;
+
+    const earth = find(observerSetting.name);
+    const sun = find(referenceSetting.name);
+    const target = find(targetSetting.name);
+
+    if (!earth || !sun || !target || !group.parent) return;
 
     group.position.set(0, 0, 0);
     group.parent.updateWorldMatrix(true, true);

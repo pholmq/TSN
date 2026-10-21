@@ -1,9 +1,13 @@
-// src/components/PlotSolarSystem.jsx
 import { useMemo } from "react";
 import Pobj from "./Pobj";
-import MotionOperation from "./MotionOperation";
-import SunRelativeFrame from "./SunRelativeFrame";
 import { buildRenderTree } from "../utils/celestialModel";
+
+// ============================================================================
+// OPTIONAL EXTRA MOTION IMPORTS
+// If you delete the ExtraMotionOperations folder, delete these two imports:
+import MotionOperation from "./ExtraMotionOperations/MotionOperation";
+import SunRelativeFrame from "./ExtraMotionOperations/SunRelativeFrame";
+// ============================================================================
 
 const renderNode = (node) => {
   const kids = node.children.map(renderNode);
@@ -12,10 +16,15 @@ const renderNode = (node) => {
     return <group key={node.key}>{kids}</group>;
   }
   
+  // ============================================================================
+  // OPTIONAL EXTRA MOTION ROUTING
+  // If you delete the ExtraMotionOperations folder, delete this if-block:
   if (node.operation) {
     return <MotionOperation key={node.key} name={node.name} operation={node.operation} plotMode>{kids}</MotionOperation>;
   }
+  // ============================================================================
 
+  // STANDARD EPICYCLIC RENDERER (Classic behavior)
   const object = (
     <Pobj
       key={node.key}
@@ -27,7 +36,9 @@ const renderNode = (node) => {
     </Pobj>
   );
 
-  // Replaced hardcoded array with dynamic property
+  // ============================================================================
+  // OPTIONAL EXTRA MOTION ROUTING
+  // If you delete the ExtraMotionOperations folder, delete this if-block:
   if (node.frameType === "sun-relative") {
     return (
       <SunRelativeFrame 
@@ -40,6 +51,7 @@ const renderNode = (node) => {
       </SunRelativeFrame>
     );
   }
+  // ============================================================================
 
   return object;
 };
