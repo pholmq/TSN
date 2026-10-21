@@ -1,8 +1,8 @@
+// src/components/Pobj.jsx
 import { useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
 import { useStore, usePlotStore, useSettingsStore } from "../store";
 
-// PERFORMANCE FIX: Define geometry globally outside component
 const pobjSphere = new THREE.SphereGeometry(1, 32, 32);
 
 const Pobj = ({ name, settingName, orbitScale, children }) => {
@@ -58,7 +58,7 @@ const Pobj = ({ name, settingName, orbitScale, children }) => {
 
   return (
     <group
-      visible={false} // Always hidden, this is the math model
+      visible={false}
       name="Container"
       ref={containerRef}
       position={[orbitCenterx, orbitCentery, orbitCenterz]}
@@ -67,7 +67,7 @@ const Pobj = ({ name, settingName, orbitScale, children }) => {
       rotation-z={(s.orbitTiltz || 0) * (Math.PI / 180)}
     >
       <group name="Orbit" ref={orbitRef}>
-        <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
+        <group name={`${name}-Pivot`} ref={pivotRef} position={[orbitRadius, 0, 0]}>
           <mesh scale={1}>
             <group
               ref={cSphereRef}

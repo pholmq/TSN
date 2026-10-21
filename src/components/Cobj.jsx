@@ -1,3 +1,4 @@
+// src/components/Cobj.jsx
 import { useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
@@ -18,8 +19,8 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
   const containerRef = useRef();
   const orbitRef = useRef();
   const pivotRef = useRef();
-  const posRef = useStore((s) => s.posRef);
 
+  const posRef = useStore((s) => s.posRef);
   const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
   const editSettings = useStore((s) => s.editSettings);
@@ -28,7 +29,7 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
   useFrame(() => {
     orbitRef.current.rotation.y =
       s.speed * posRef.current - s.startPos * (Math.PI / 180);
-  });
+  }, -2);
 
   let orbitRadius = s.orbitRadius;
   let orbitCenterx = s.orbitCenterx || 0;
@@ -47,20 +48,17 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
 
   usePlanetSpeed(name, s, orbitRadius, scene);
 
-  // Visualizers only render if Edit Settings is open AND the toggle is checked
   const showVisualizers = editSettings && visible && showOrbitLabels;
 
   return (
     <>
-      {/* 1. Global Displacement Line */}
       {hasDisplacement && showVisualizers && (
         <OrbitDisplacementLine 
           center={[orbitCenterx, orbitCentery, orbitCenterz]} 
           lineWidth={orbitsLineWidth} 
         />
       )}
-
-      {/* 2. The Core Object Container */}
+      
       <group
         name="Container"
         ref={containerRef}
@@ -69,9 +67,8 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
         rotation-y={(s.orbitTilty || 0) * (Math.PI / 180)}
         rotation-z={(s.orbitTiltz || 0) * (Math.PI / 180)}
       >
-        {/* 3. Edit Mode Visualizers (Axes & Screen-space Label) */}
         {showVisualizers && <OrbitCenterLabel name={name} radius={orbitRadius} />}
-
+        
         <group name="Orbit" ref={orbitRef}>
           {orbitRadius !== undefined && orbitRadius !== null ? (
             <group rotation-x={-Math.PI / 2}>
@@ -82,7 +79,9 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
               )}
             </group>
           ) : null}
-          <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
+          
+          {/* DYANAMIC PIVOT NAME: No more hardcoded "Sun-Mars Binary Frame" */}
+          <group name={`${name}-Pivot`} ref={pivotRef} position={[orbitRadius, 0, 0]}>
             {s.axesHelper && visible ? <axesHelper args={[10]} /> : null}
             {s.type === "planet" ? <Planet s={s} name={name} /> : null}
             {hosts.includes("ecliptic-grid") ? <EclipticGrid /> : null}
@@ -93,4 +92,5 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
     </>
   );
 };
+
 export default Cobj;

@@ -1,18 +1,22 @@
+// src/components/SolarSystem.jsx
 import { useMemo } from "react";
 import Cobj from "./Cobj";
+import MotionOperation from "./MotionOperation";
+import SunRelativeFrame from "./SunRelativeFrame";
 import { buildRenderTree } from "../utils/celestialModel";
 
-// The scene graph is no longer written out by hand. It is built from the flat
-// `objects` list in settings/celestial-model.json (nested via parentId), mode "live".
 const renderNode = (node) => {
   const kids = node.children.map(renderNode);
-
-  // Pure grouping node (e.g. the model root): no orbit, no settings entry.
+  
   if (node.kind === "group") {
     return <group key={node.key}>{kids}</group>;
   }
+  
+  if (node.operation) {
+    return <MotionOperation key={node.key} name={node.name} operation={node.operation}>{kids}</MotionOperation>;
+  }
 
-  return (
+  const object = (
     <Cobj
       key={node.key}
       name={node.name}
@@ -23,6 +27,21 @@ const renderNode = (node) => {
       {kids}
     </Cobj>
   );
+
+  // Replaced hardcoded array with dynamic property
+  if (node.frameType === "sun-relative") {
+    return (
+      <SunRelativeFrame 
+        key={node.key} 
+        name={node.name} 
+        referenceFrame={node.referenceFrame}
+      >
+        {object}
+      </SunRelativeFrame>
+    );
+  }
+
+  return object;
 };
 
 const SolarSystem = () => {
