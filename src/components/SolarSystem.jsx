@@ -2,17 +2,30 @@ import { useMemo } from "react";
 import Cobj from "./Cobj";
 import { buildRenderTree } from "../utils/celestialModel";
 
-// The scene graph is no longer written out by hand. It is built from the flat
-// `objects` list in settings/celestial-model.json (nested via parentId), mode "live".
+// ============================================================================
+// OPTIONAL EXTRA MOTION IMPORTS
+// If you delete the ExtraMotionOperations folder, delete these two imports:
+import MotionOperation from "./ExtraMotionOperations/MotionOperation";
+import SunRelativeFrame from "./ExtraMotionOperations/SunRelativeFrame";
+// ============================================================================
+
 const renderNode = (node) => {
   const kids = node.children.map(renderNode);
-
-  // Pure grouping node (e.g. the model root): no orbit, no settings entry.
+  
   if (node.kind === "group") {
     return <group key={node.key}>{kids}</group>;
   }
 
-  return (
+  // ============================================================================
+  // OPTIONAL EXTRA MOTION ROUTING
+  // If you delete the ExtraMotionOperations folder, delete this if-block:
+  if (node.operation) {
+    return <MotionOperation key={node.key} name={node.name} operation={node.operation}>{kids}</MotionOperation>;
+  }
+  // ============================================================================
+
+  // STANDARD EPICYCLIC RENDERER (Classic behavior)
+  const object = (
     <Cobj
       key={node.key}
       name={node.name}
@@ -23,6 +36,24 @@ const renderNode = (node) => {
       {kids}
     </Cobj>
   );
+
+  // ============================================================================
+  // OPTIONAL EXTRA MOTION ROUTING
+  // If you delete the ExtraMotionOperations folder, delete this if-block:
+  if (node.frameType === "sun-relative") {
+    return (
+      <SunRelativeFrame 
+        key={node.key} 
+        name={node.name} 
+        referenceFrame={node.referenceFrame}
+      >
+        {object}
+      </SunRelativeFrame>
+    );
+  }
+  // ============================================================================
+
+  return object;
 };
 
 const SolarSystem = () => {

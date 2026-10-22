@@ -12,6 +12,10 @@ export function movePlotModel(plotObjects, plotPos) {
         pObj.speed * plotPos - pObj.startPos * D2R;
     }
   });
+  plotObjects
+    .filter((pObj) => typeof pObj.updateAfterMotion === "function")
+    .sort((a, b) => (a.updatePriority ?? 0) - (b.updatePriority ?? 0))
+    .forEach((pObj) => pObj.updateAfterMotion(plotPos));
 }
 
 export function getPlotModelRaDecDistance(name, plotObjects) {
