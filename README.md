@@ -1,5 +1,7 @@
 # The Tychosium 💫
 
+
+
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-GPLv2-blue.svg)
 ![React](https://img.shields.io/badge/React-18-61DAFB.svg?logo=react&logoColor=black)
