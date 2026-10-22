@@ -1,9 +1,22 @@
 // src/components/Pobj.jsx
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import { useStore, usePlotStore, useSettingsStore } from "../store";
+import { celestialModel } from "../utils/celestialModel";
 
 const pobjSphere = new THREE.SphereGeometry(1, 32, 32);
+
+let cachedMoonChainNames = null;
+const getMoonChainNames = () => {
+  if (cachedMoonChainNames) return cachedMoonChainNames;
+  cachedMoonChainNames = new Set();
+  let current = celestialModel.objects.find((o) => o.name === "Moon" || o.id === "moon");
+  while (current && current.name !== "Earth" && current.name !== "SystemCenter") {
+    cachedMoonChainNames.add(current.name);
+    current = celestialModel.objects.find((o) => o.id === current.parentId);
+  }
+  return cachedMoonChainNames;
+};
 
 const Pobj = ({ name, settingName, orbitScale, children }) => {
   const settingKey = settingName ?? name;
@@ -13,31 +26,34 @@ const Pobj = ({ name, settingName, orbitScale, children }) => {
       [settingKey]
     )
   );
-
   const addPlotObj = usePlotStore((state) => state.addPlotObj);
   const removePlotObj = usePlotStore((state) => state.removePlotObj);
   const actualPlanetSizes = useStore((s) => s.actualPlanetSizes); 
-
+  const moonDisplayOrbitScale = useStore((s) => s.moonDisplayOrbitScale);
+  
   const containerRef = useRef();
   const pivotRef = useRef();
   const orbitRef = useRef();
   const objRef = useRef();
   const cSphereRef = useRef();
+  
+  const isMoonChain = useMemo(() => getMoonChainNames().has(name), [name]);
+  const effectiveOrbitScale = isMoonChain ? (moonDisplayOrbitScale ?? 39.2078) : orbitScale;
 
   if (!s) return null;
-
+  
   let orbitRadius = s.orbitRadius;
   let orbitCenterx = s.orbitCenterx || 0;
   let orbitCentery = s.orbitCentery || 0;
   let orbitCenterz = s.orbitCenterz || 0;
-
-  if (!actualPlanetSizes && orbitScale) {
-    orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * orbitScale;
-    orbitCenterx = s.orbitCenterx === 0 ? 0 : s.orbitCenterx * orbitScale;
-    orbitCentery = s.orbitCentery === 0 ? 0 : s.orbitCentery * orbitScale;
-    orbitCenterz = s.orbitCenterz === 0 ? 0 : s.orbitCenterz * orbitScale;
+  
+  if (!actualPlanetSizes && effectiveOrbitScale) {
+    orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * effectiveOrbitScale;
+    orbitCenterx = s.orbitCenterx === 0 ? 0 : s.orbitCenterx * effectiveOrbitScale;
+    orbitCentery = s.orbitCentery === 0 ? 0 : s.orbitCentery * effectiveOrbitScale;
+    orbitCenterz = s.orbitCenterz === 0 ? 0 : s.orbitCenterz * effectiveOrbitScale;
   }
-
+  
   useEffect(() => {
     const plotObj = {
       name: s.name,
@@ -52,10 +68,10 @@ const Pobj = ({ name, settingName, orbitScale, children }) => {
       if (removePlotObj) removePlotObj(s.name);
     };
   }, [s.name, s.speed, s.startPos, addPlotObj, removePlotObj]);
-
+  
   const tilt = s.tilt || 0;
   const tiltb = s.tiltb || 0;
-
+  
   return (
     <group
       visible={false}
@@ -86,5 +102,4 @@ const Pobj = ({ name, settingName, orbitScale, children }) => {
     </group>
   );
 };
-
 export default Pobj;

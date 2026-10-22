@@ -1,5 +1,4 @@
-// src/components/Cobj.jsx
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useStore, useSettingsStore } from "../store";
@@ -9,19 +8,31 @@ import Deferent from "./Deferent";
 import EclipticGrid from "./Helpers/EclipticGrid";
 import usePlanetSpeed from "../utils/usePlanetSpeed";
 import { OrbitDisplacementLine, OrbitCenterLabel } from "./Helpers/OrbitVisualizer";
+import { celestialModel } from "../utils/celestialModel";
+
+let cachedMoonChainNames = null;
+const getMoonChainNames = () => {
+  if (cachedMoonChainNames) return cachedMoonChainNames;
+  cachedMoonChainNames = new Set();
+  let current = celestialModel.objects.find((o) => o.name === "Moon" || o.id === "moon");
+  while (current && current.name !== "Earth" && current.name !== "SystemCenter") {
+    cachedMoonChainNames.add(current.name);
+    current = celestialModel.objects.find((o) => o.id === current.parentId);
+  }
+  return cachedMoonChainNames;
+};
 
 const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
   const { settings } = useSettingsStore();
   const { scene } = useThree();
   const s = settings.find((p) => p.name === (settingName ?? name));
   const visible = s.visible;
-
   const containerRef = useRef();
   const orbitRef = useRef();
   const pivotRef = useRef();
-
   const posRef = useStore((s) => s.posRef);
   const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
+  const moonDisplayOrbitScale = useStore((s) => s.moonDisplayOrbitScale);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
   const editSettings = useStore((s) => s.editSettings);
   const showOrbitLabels = useStore((s) => s.showOrbitLabels);
@@ -31,23 +42,24 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
       s.speed * posRef.current - s.startPos * (Math.PI / 180);
   }, -2);
 
+  const isMoonChain = useMemo(() => getMoonChainNames().has(name), [name]);
+  const effectiveOrbitScale = isMoonChain ? (moonDisplayOrbitScale ?? 39.2078) : orbitScale;
+
   let orbitRadius = s.orbitRadius;
   let orbitCenterx = s.orbitCenterx || 0;
   let orbitCentery = s.orbitCentery || 0;
   let orbitCenterz = s.orbitCenterz || 0;
 
-  if (!actualPlanetSizes && orbitScale) {
-    orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * orbitScale;
-    orbitCenterx = s.orbitCenterx === 0 ? 0 : s.orbitCenterx * orbitScale;
-    orbitCentery = s.orbitCentery === 0 ? 0 : s.orbitCentery * orbitScale;
-    orbitCenterz = s.orbitCenterz === 0 ? 0 : s.orbitCenterz * orbitScale;
+  if (!actualPlanetSizes && effectiveOrbitScale) {
+    orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * effectiveOrbitScale;
+    orbitCenterx = s.orbitCenterx === 0 ? 0 : s.orbitCenterx * effectiveOrbitScale;
+    orbitCentery = s.orbitCentery === 0 ? 0 : s.orbitCentery * effectiveOrbitScale;
+    orbitCenterz = s.orbitCenterz === 0 ? 0 : s.orbitCenterz * effectiveOrbitScale;
   }
 
   const hasDisplacement =
     orbitCenterx !== 0 || orbitCentery !== 0 || orbitCenterz !== 0;
-
   usePlanetSpeed(name, s, orbitRadius, scene);
-
   const showVisualizers = editSettings && visible && showOrbitLabels;
 
   return (
@@ -58,7 +70,6 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
           lineWidth={orbitsLineWidth} 
         />
       )}
-      
       <group
         name="Container"
         ref={containerRef}
@@ -68,7 +79,6 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
         rotation-z={(s.orbitTiltz || 0) * (Math.PI / 180)}
       >
         {showVisualizers && <OrbitCenterLabel name={name} radius={orbitRadius} />}
-        
         <group name="Orbit" ref={orbitRef}>
           {orbitRadius !== undefined && orbitRadius !== null ? (
             <group rotation-x={-Math.PI / 2}>
@@ -79,7 +89,6 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
               )}
             </group>
           ) : null}
-          
           {/* DYANAMIC PIVOT NAME: No more hardcoded "Sun-Mars Binary Frame" */}
           <group name={`${name}-Pivot`} ref={pivotRef} position={[orbitRadius, 0, 0]}>
             {s.axesHelper && visible ? <axesHelper args={[10]} /> : null}
@@ -92,5 +101,4 @@ const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
     </>
   );
 };
-
 export default Cobj;
