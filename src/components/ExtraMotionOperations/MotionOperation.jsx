@@ -5,6 +5,7 @@ import { usePlotStore, useSettingsStore, useStore } from "../../store";
 import { celestialModel } from "../../utils/celestialModel";
 
 const D2R = Math.PI / 180;
+const DISPLAY_MOON_SCALE = 39.2078;
 const number = (value) => Number(value) || 0;
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
@@ -40,7 +41,7 @@ const Operations = {
     }
   },
 
-  "solar-coupled-centre-offset": (group, time, p, setting, settings, scratch, scene, plotMode) => {
+  "solar-coupled-centre-offset": (group, time, p, setting, settings, scratch, scene, plotMode, displayScale = 1) => {
     const objects = usePlotStore.getState().plotObjects;
     const find = (nameStr) => {
       if (!nameStr) return null;
@@ -82,15 +83,15 @@ const Operations = {
       targetVec.addScaledVector(scratch.direction, -2 * targetVec.dot(scratch.direction) / scratch.direction.lengthSq());
     };
 
-    reflected(longitude + 2 * elongation - anomaly, number(p.inequalityRadius), scratch.offset);
-    reflected(longitude + 2 * elongation, number(p.variationRadius), scratch.part);
+    reflected(longitude + 2 * elongation - anomaly, number(p.inequalityRadius) * displayScale, scratch.offset);
+    reflected(longitude + 2 * elongation, number(p.variationRadius) * displayScale, scratch.part);
 
     scratch.offset.add(scratch.part);
     // The paired radial action replaces the retired lunar equant. It is
     // constructed in the apsidal parent's local XZ plane and transformed back
     // to world space, so it follows the nodal/apsidal lunar plane rather than
     // the fixed model XZ plane.
-    const pairedRadius = number(p.pairedRadialRadius);
+    const pairedRadius = number(p.pairedRadialRadius) * displayScale;
     if (pairedRadius && group.parent) {
       group.parent.getWorldQuaternion(scratch.parentQuaternion);
       scratch.localMoon.copy(scratch.direction)
@@ -114,6 +115,7 @@ const MotionOperation = ({ name, operation, plotMode = false, children }) => {
   const ref = useRef();
   const settings = useSettingsStore((state) => state.settings);
   const position = useStore((state) => state.posRef);
+  const actualPlanetSizes = useStore((state) => state.actualPlanetSizes);
   const { scene } = useThree();
   const add = usePlotStore((state) => state.addPlotObj);
   const remove = usePlotStore((state) => state.removePlotObj);
@@ -134,9 +136,13 @@ const MotionOperation = ({ name, operation, plotMode = false, children }) => {
     
     const operationFn = Operations[operation];
     if (operationFn) {
-      operationFn(group, time, p, setting, settings, scratch, scene, plotMode);
+      const displayScale =
+        operation === "solar-coupled-centre-offset" && !actualPlanetSizes
+          ? DISPLAY_MOON_SCALE
+          : 1;
+      operationFn(group, time, p, setting, settings, scratch, scene, plotMode, displayScale);
     }
-  }, [operation, plotMode, scene, scratch, setting, settings]);
+  }, [actualPlanetSizes, operation, plotMode, scene, scratch, setting, settings]);
 
   useFrame(() => { 
     if (!plotMode) update(position.current || 0); 

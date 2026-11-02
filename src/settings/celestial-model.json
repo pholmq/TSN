@@ -104,6 +104,7 @@
       "orbitTiltx": 0,
       "orbitTiltz": 0,
       "parentId": "moon-node-counterrotation",
+      "displayOrbitScale": 39.2078,
       "carrier": true
     },
     {
@@ -121,6 +122,7 @@
       "orbitTiltx": 0,
       "orbitTiltz": 0,
       "parentId": "moon-deferent-a",
+      "displayOrbitScale": 39.2078,
       "carrier": true,
       "motionOperation": "solar-coupled-centre-offset",
       "targetId": "moon",
@@ -150,7 +152,8 @@
       "orbitCentery": 0,
       "orbitTiltx": 0,
       "orbitTiltz": 0,
-      "parentId": "moon-solar-eccentric"
+      "parentId": "moon-solar-eccentric",
+      "displayOrbitScale": 39.2078
     },
     {
       "id": "sun-mars-binary-frame",
