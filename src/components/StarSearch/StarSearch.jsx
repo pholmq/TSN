@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import starsData from "../../settings/BSC.json";
-import celestialData from "../../settings/celestial-model.json";
-import { normalizeCelestialSettings } from "../../utils/celestialSettingsSchema";
+import {
+  getCelestialSettings,
+  getBodySettingNames,
+} from "../../utils/celestialModel";
 import specialStarsData from "../../settings/star-settings.json";
 import miscData from "../../settings/misc-settings.json";
 import { useStore, useSettingsStore, useStarStore } from "../../store";
@@ -92,13 +94,10 @@ export default function StarSearch() {
       }));
 
     // 3. Planets
-    const planets = normalizeCelestialSettings(celestialData)
-      .filter(
-        (p) =>
-          !p.name.includes("deferent") &&
-          p.name !== "SystemCenter" &&
-          !p.name.includes("def")
-      )
+    // Real bodies only (the model's "orbit" stages) - no deferents, no SystemCenter
+    const bodyNames = new Set(getBodySettingNames());
+    const planets = getCelestialSettings()
+      .filter((p) => bodyNames.has(p.name))
       .map((p) => {
         const misc = miscData.find((m) => m.name === p.name);
         return {

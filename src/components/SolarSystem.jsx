@@ -1,7 +1,64 @@
+import { useMemo } from "react";
 import Cobj from "./Cobj";
-import DeclarativeCelestialModel from "./DeclarativeCelestialModel";
+import { buildRenderTree } from "../utils/celestialModel";
+
+// ============================================================================
+// OPTIONAL EXTRA MOTION IMPORTS
+// If you delete the ExtraMotionOperations folder, delete these two imports:
+import MotionOperation from "./ExtraMotionOperations/MotionOperation";
+import SunRelativeFrame from "./ExtraMotionOperations/SunRelativeFrame";
+// ============================================================================
+
+const renderNode = (node) => {
+  const kids = node.children.map(renderNode);
+  
+  if (node.kind === "group") {
+    return <group key={node.key}>{kids}</group>;
+  }
+
+  // ============================================================================
+  // OPTIONAL EXTRA MOTION ROUTING
+  // If you delete the ExtraMotionOperations folder, delete this if-block:
+  if (node.operation) {
+    return <MotionOperation key={node.key} name={node.name} operation={node.operation}>{kids}</MotionOperation>;
+  }
+  // ============================================================================
+
+  // STANDARD EPICYCLIC RENDERER (Classic behavior)
+  const object = (
+    <Cobj
+      key={node.key}
+      name={node.name}
+      settingName={node.settingName}
+      orbitScale={node.orbitScale}
+      hosts={node.hosts}
+    >
+      {kids}
+    </Cobj>
+  );
+
+  // ============================================================================
+  // OPTIONAL EXTRA MOTION ROUTING
+  // If you delete the ExtraMotionOperations folder, delete this if-block:
+  if (node.frameType === "sun-relative") {
+    return (
+      <SunRelativeFrame 
+        key={node.key} 
+        name={node.name} 
+        referenceFrame={node.referenceFrame}
+      >
+        {object}
+      </SunRelativeFrame>
+    );
+  }
+  // ============================================================================
+
+  return object;
+};
 
 const SolarSystem = () => {
-  return <DeclarativeCelestialModel ObjectComponent={Cobj} mode="live" />;
+  const tree = useMemo(() => buildRenderTree("live"), []);
+  return renderNode(tree);
 };
+
 export default SolarSystem;

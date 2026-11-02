@@ -34,7 +34,7 @@ const CheckerController = () => {
     return settings
       .map(
         (s) =>
-          `${s.name}|${s.startPos}|${s.speed}|${s.orbitRadius}|${s.orbitCentera}|${s.orbitCenterb}|${s.orbitCenterc}|${s.orbitTilta}|${s.orbitTiltb}|${s.tilt}|${s.tiltb}|${s.rotationStart}|${s.rotationSpeed}`
+          `${s.name}|${s.startPos}|${s.speed}|${s.orbitRadius}|${s.orbitCenterx}|${s.orbitCentery}|${s.orbitCenterz}|${s.orbitTiltx}|${s.orbitTilty}|${s.orbitTiltz}|${s.tilt}|${s.tiltb}|${s.rotationStart}|${s.rotationSpeed}`
       )
       .join("||");
   }, [settings]);
@@ -97,6 +97,7 @@ const CheckerController = () => {
 
       setChecking(false);
       setIsChecking(false);
+
       const timer = setTimeout(() => setTriggerCheck(true), 300);
       return () => clearTimeout(timer);
     }
@@ -159,6 +160,7 @@ const CheckerController = () => {
 
   useFrame(() => {
     if (!checking || !parsedData || !showChecker) return;
+
     invalidate();
 
     const job = jobRef.current;
@@ -178,6 +180,7 @@ const CheckerController = () => {
 
         movePlotModel(plotObjects, pos);
         const data = getPlotModelRaDecDistance(planetName, plotObjects, scene);
+
         if (!data) return;
 
         const modelRaDeg = raToDeg(data.ra);
@@ -216,8 +219,8 @@ const CheckerController = () => {
         const raRad = row.raDeg * (Math.PI / 180);
         const decRad = row.decDeg * (Math.PI / 180);
         const dist = row.distAU !== null ? row.distAU * 100 : 100;
-
         const localCoords = sphericalToCartesian(raRad, decRad, dist);
+
         const ephemerisPos = new THREE.Vector3(
           localCoords.x,
           localCoords.y,
@@ -227,7 +230,6 @@ const CheckerController = () => {
         const raRadMod = modelRaDeg * (Math.PI / 180);
         const decRadMod = modelDecDeg * (Math.PI / 180);
         const distMod = modelDistAU !== null ? modelDistAU * 100 : 100;
-
         const localCoordsMod = sphericalToCartesian(
           raRadMod,
           decRadMod,
@@ -357,6 +359,7 @@ const CheckerController = () => {
       const { camera, size, pointer } = getThreeState();
       const posArray = visualPoints.positions;
       const matrixWorld = pointsRef.current.matrixWorld;
+
       const HOVER_RADIUS_PX = Math.max(plotSize, 6);
       const thresholdSqPx = HOVER_RADIUS_PX * HOVER_RADIUS_PX;
 
@@ -373,11 +376,13 @@ const CheckerController = () => {
         _v1.project(camera);
 
         if (_v1.z > 1 || _v1.z < -1) continue;
+
         const starPxX = ((_v1.x + 1) / 2) * size.width;
         const starPxY = ((-_v1.y + 1) / 2) * size.height;
 
         const distSq =
           (starPxX - pointerPxX) ** 2 + (starPxY - pointerPxY) ** 2;
+
         if (distSq < thresholdSqPx) {
           intersects.push({
             distance: raycaster.ray.origin.distanceTo(_worldPos) * 1.0001,
@@ -397,6 +402,7 @@ const CheckerController = () => {
     if (e.index !== undefined && visualPoints?.pointsData) {
       const pt = visualPoints.pointsData[e.index];
       const pSetting = settings.find((s) => s.name === pt.planet);
+
       setHoveredData({
         pt,
         x: e.clientX,
@@ -414,6 +420,7 @@ const CheckerController = () => {
 
   useEffect(() => {
     if (!hoveredData) return;
+
     const el = document.createElement("div");
     el.style.position = "fixed";
     el.style.top = `${hoveredData.y - 80}px`;
@@ -433,7 +440,6 @@ const CheckerController = () => {
 
     const distStr =
       hoveredData.pt.dist !== null ? hoveredData.pt.dist.toFixed(6) : "N/A";
-
     const raErrVal =
       hoveredData.pt.raErr !== undefined
         ? hoveredData.pt.raErr.toFixed(4)
@@ -442,6 +448,7 @@ const CheckerController = () => {
       hoveredData.pt.decErr !== undefined
         ? hoveredData.pt.decErr.toFixed(4)
         : "0.0000";
+
     const distErrVal =
       hoveredData.pt.distErr !== null && hoveredData.pt.distErr !== undefined
         ? hoveredData.pt.distErr.toFixed(6)
@@ -461,13 +468,13 @@ const CheckerController = () => {
         : "";
 
     el.innerHTML = `
-      <strong style="color: ${hoveredData.color}; font-size: 14px;">${hoveredData.pt.planet}</strong><br />
-      <span style="color: #aaa;">Date:</span> <span style="color: #fff; font-weight: bold;">${hoveredData.pt.date}</span><br />
-      <span style="color: #aaa;">Time:</span> <span style="color: #fff;">${hoveredData.pt.time}</span><br />
-      <span style="color: #aaa;">RA:</span> <span style="color: #fff;">${hoveredData.pt.ra}</span>${raErrHtml}<br />
-      <span style="color: #aaa;">Dec:</span> <span style="color: #fff;">${hoveredData.pt.dec}</span>${decErrHtml}<br />
-      <span style="color: #aaa;">AU:</span> <span style="color: #fff;">${distStr}</span>${distErrHtml}
-    `;
+       <strong style="color: ${hoveredData.color}; font-size: 14px;">${hoveredData.pt.planet}</strong><br />
+       <span style="color: #aaa;">Date:</span> <span style="color: #fff; font-weight: bold;">${hoveredData.pt.date}</span><br />
+       <span style="color: #aaa;">Time:</span> <span style="color: #fff;">${hoveredData.pt.time}</span><br />
+       <span style="color: #aaa;">RA:</span> <span style="color: #fff;">${hoveredData.pt.ra}</span>${raErrHtml}<br />
+       <span style="color: #aaa;">Dec:</span> <span style="color: #fff;">${hoveredData.pt.dec}</span>${decErrHtml}<br />
+       <span style="color: #aaa;">AU:</span> <span style="color: #fff;">${distStr}</span>${distErrHtml}
+     `;
 
     document.body.appendChild(el);
     return () => {

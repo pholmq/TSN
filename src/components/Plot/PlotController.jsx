@@ -1,15 +1,14 @@
 import { useEffect, useState, useRef } from "react";
-import { useThree, useFrame } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
-import { usePlotStore } from "../../store"; // The main store for plot objects
-import { usePlotterStore } from "./plotStore"; // The local store for this feature
-import { posToDate, dateTimeToPos } from "../../utils/time-date-functions";
+import { usePlotStore } from "../../store";
+import { usePlotterStore } from "./plotStore";
+import { dateTimeToPos } from "../../utils/time-date-functions";
 import { movePlotModel } from "../../utils/plotModelFunctions";
 import PlotVisuals from "./PlotVisuals";
 
 const PlotController = () => {
-  // Use 'scene' if we need to access world manually, but plotObjects have refs
-  const plotObjects = usePlotObjectsStore((s) => s.plotObjects);
+  const plotObjects = usePlotStore((state) => state.plotObjects);
 
   const {
     trigger,
@@ -20,7 +19,7 @@ const PlotController = () => {
     setIsGenerating,
     generatedData,
     showResult,
-  } = usePlotStore();
+  } = usePlotterStore();
 
   const [generating, setGenerating] = useState(false);
 
@@ -33,80 +32,68 @@ const PlotController = () => {
     totalSteps: 0,
   });
 
-  // 1. Initialize Job
+  // Initialize the requested date range and output arrays.
   useEffect(() => {
-    if (trigger && params) {
-      setIsGenerating(true);
+    if (!trigger || !params) return;
 
-      const startPos = dateTimeToPos(params.startDate, "00:00:00");
-      const endPos = dateTimeToPos(params.endDate, "00:00:00");
-      const increment = params.stepSize * params.stepFactor;
+    setIsGenerating(true);
 
-      const calculatedSteps = Math.floor((endPos - startPos) / increment) + 1;
-      const totalOperations = calculatedSteps * params.checkedPlanets.length;
+    const startPos = dateTimeToPos(params.startDate, "00:00:00");
+    const endPos = dateTimeToPos(params.endDate, "00:00:00");
+    const increment = params.stepSize * params.stepFactor;
+    const calculatedSteps = Math.floor((endPos - startPos) / increment) + 1;
+    const totalOperations = calculatedSteps * params.checkedPlanets.length;
 
-      // Safety Limit
-      if (totalOperations > 200000) {
-        const errorMsg = `Too many points to plot (${totalOperations}). Please reduce range or increase step size.`;
-        setGenerationError(errorMsg);
-        setIsGenerating(false);
-        resetTrigger();
-        return;
-      }
-
-      const initialData = {};
-      params.checkedPlanets.forEach((planet) => {
-        initialData[planet] = [];
-      });
-
-      jobRef.current = {
-        currentPos: startPos,
-        endPos: endPos,
-        increment: increment,
-        checkedPlanets: params.checkedPlanets,
-        data: initialData,
-        totalSteps: calculatedSteps,
-      };
-
-      setGenerating(true);
+    if (totalOperations > 200000) {
+      const errorMsg = `Too many points to plot (${totalOperations}). Please reduce range or increase step size.`;
+      setGenerationError(errorMsg);
+      setIsGenerating(false);
       resetTrigger();
+      return;
     }
+
+    const initialData = {};
+    params.checkedPlanets.forEach((planet) => {
+      initialData[planet] = [];
+    });
+
+    jobRef.current = {
+      currentPos: startPos,
+      endPos,
+      increment,
+      checkedPlanets: params.checkedPlanets,
+      data: initialData,
+      totalSteps: calculatedSteps,
+    };
+
+    setGenerating(true);
+    resetTrigger();
   }, [trigger, params, resetTrigger, setGenerationError, setIsGenerating]);
 
-  // 2. Process Job
+  // Batch generation to avoid blocking the renderer for the whole date range.
+  // These are visual plot positions: preserve the Moon's display scale so its
+  // generated trace aligns with the exaggerated Moon shown in the live scene.
   useFrame(() => {
     if (!generating) return;
 
     const job = jobRef.current;
-    const BATCH_SIZE = 100; // Higher batch size for simple position gathering
+    const BATCH_SIZE = 100;
     let batchCount = 0;
 
     while (job.currentPos <= job.endPos && batchCount < BATCH_SIZE) {
-      // Move the invisible calculation model
       movePlotModel(plotObjects, job.currentPos);
 
-      // Collect positions
       job.checkedPlanets.forEach((name) => {
-        let targetName = name;
-        if (name === "Moon") {
-          const hasActualMoon = plotObjects.some(
-            (p) => p.name === "Actual Moon"
-          );
-          if (hasActualMoon) targetName = "Actual Moon";
-        }
-
-        const targetObj = plotObjects.find((p) => p.name === targetName);
-
-        if (targetObj && targetObj.pivotRef && targetObj.pivotRef.current) {
+        const targetObj = plotObjects.find((item) => item.name === name);
+        if (targetObj?.pivotRef?.current) {
           const vec = new Vector3();
           targetObj.pivotRef.current.getWorldPosition(vec);
-          // Store simple xyz object or array to save memory/complexity
           job.data[name].push(vec.toArray());
         }
       });
 
       job.currentPos += job.increment;
-      batchCount++;
+      batchCount += 1;
     }
 
     if (job.currentPos > job.endPos) {

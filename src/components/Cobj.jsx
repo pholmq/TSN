@@ -1,42 +1,20 @@
+// src/components/Cobj.jsx
 import { useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
-import { folder, useControls, button } from "leva";
 import { useStore, useSettingsStore } from "../store";
-import { Line } from "@react-three/drei";
 import Planet from "./Planet";
 import Orbit from "./Orbit";
 import Deferent from "./Deferent";
 import EclipticGrid from "./Helpers/EclipticGrid";
-import createCircleTexture from "../utils/createCircleTexture";
 import usePlanetSpeed from "../utils/usePlanetSpeed";
-import { findCelestialSetting } from "../utils/celestialSettingsSchema";
+import { OrbitDisplacementLine, OrbitCenterLabel } from "./Helpers/OrbitVisualizer";
 
-// PERFORMANCE FIX: Hoist the red dot material outside the component
-const circleTexture = createCircleTexture("red");
-const spriteMaterial = new THREE.SpriteMaterial({
-  map: circleTexture,
-  transparent: true,
-  opacity: 1,
-  sizeAttenuation: false,
-});
-
-const Cobj = ({ name, settingId, renderOrbit = true, children }) => {
+const Cobj = ({ name, settingName, orbitScale, hosts = [], children }) => {
   const { settings } = useSettingsStore();
   const { scene } = useThree();
-
-  let s;
-  let visible;
-  let actualMoon = false;
-
-  if (name.startsWith("Actual ")) {
-    actualMoon = true;
-    visible = false;
-    s = findCelestialSetting(settings, settingId || name.replace("Actual ", ""));
-  } else {
-    s = findCelestialSetting(settings, settingId || name);
-    visible = s.visible;
-  }
+  const s = settings.find((p) => p.name === (settingName ?? name));
+  const visible = s.visible;
 
   const containerRef = useRef();
   const orbitRef = useRef();
@@ -46,68 +24,53 @@ const Cobj = ({ name, settingId, renderOrbit = true, children }) => {
   const actualPlanetSizes = useStore((s) => s.actualPlanetSizes);
   const orbitsLineWidth = useStore((s) => s.orbitsLineWidth);
   const editSettings = useStore((s) => s.editSettings);
+  const showOrbitLabels = useStore((s) => s.showOrbitLabels);
 
   useFrame(() => {
     orbitRef.current.rotation.y =
       s.speed * posRef.current - s.startPos * (Math.PI / 180);
-  });
+  }, -2);
 
   let orbitRadius = s.orbitRadius;
-  let orbitCentera = s.orbitCentera;
-  let orbitCenterb = s.orbitCenterb;
-  let orbitCenterc = s.orbitCenterc;
+  let orbitCenterx = s.orbitCenterx || 0;
+  let orbitCentery = s.orbitCentery || 0;
+  let orbitCenterz = s.orbitCenterz || 0;
 
-  if (!actualPlanetSizes && !actualMoon) {
-    if (
-      s.name === "Moon" ||
-      s.name === "Moon deferent A"
-    ) {
-      orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * 39.2078;
-      orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * 39.2078;
-      orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * 39.2078;
-      orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc * 39.2078;
-    }
+  if (!actualPlanetSizes && orbitScale) {
+    orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * orbitScale;
+    orbitCenterx = s.orbitCenterx === 0 ? 0 : s.orbitCenterx * orbitScale;
+    orbitCentery = s.orbitCentery === 0 ? 0 : s.orbitCentery * orbitScale;
+    orbitCenterz = s.orbitCenterz === 0 ? 0 : s.orbitCenterz * orbitScale;
   }
 
   const hasDisplacement =
-    orbitCentera !== 0 || orbitCenterb !== 0 || orbitCenterc !== 0;
+    orbitCenterx !== 0 || orbitCentery !== 0 || orbitCenterz !== 0;
 
-  // Initialize and update speeds silently into the object's userData
   usePlanetSpeed(name, s, orbitRadius, scene);
+
+  const showVisualizers = editSettings && visible && showOrbitLabels;
 
   return (
     <>
-      {hasDisplacement && visible && editSettings && (
-        <group>
-          <Line
-            points={[
-              [0, 0, 0],
-              [orbitCentera, orbitCenterc, orbitCenterb],
-            ]}
-            color="yellow"
-            lineWidth={orbitsLineWidth}
-            dashed={false}
-            raycast={() => null}
-            toneMapped={false}
-          />
-          {/* Red dot precisely at the un-displaced origin */}
-          <sprite
-            position={[0, 0, 0]}
-            material={spriteMaterial}
-            scale={[0.002, 0.002, 0.002]}
-          />
-        </group>
+      {hasDisplacement && showVisualizers && (
+        <OrbitDisplacementLine 
+          center={[orbitCenterx, orbitCentery, orbitCenterz]} 
+          lineWidth={orbitsLineWidth} 
+        />
       )}
-
+      
       <group
         name="Container"
         ref={containerRef}
-        position={[orbitCentera, orbitCenterc, orbitCenterb]}
-        rotation-x={s.orbitTilta * (Math.PI / 180)}
-        rotation-z={s.orbitTiltb * (Math.PI / 180)}
+        position={[orbitCenterx, orbitCentery, orbitCenterz]}
+        rotation-x={(s.orbitTiltx || 0) * (Math.PI / 180)}
+        rotation-y={(s.orbitTilty || 0) * (Math.PI / 180)}
+        rotation-z={(s.orbitTiltz || 0) * (Math.PI / 180)}
       >
+        {showVisualizers && <OrbitCenterLabel name={name} radius={orbitRadius} />}
+        
         <group name="Orbit" ref={orbitRef}>
-          {renderOrbit && orbitRadius !== undefined && orbitRadius !== null ? (
+          {orbitRadius !== undefined && orbitRadius !== null ? (
             <group rotation-x={-Math.PI / 2}>
               {s.type === "deferent" ? (
                 <Deferent radius={orbitRadius} visible={visible} s={s} />
@@ -116,12 +79,12 @@ const Cobj = ({ name, settingId, renderOrbit = true, children }) => {
               )}
             </group>
           ) : null}
-          <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
+          
+          {/* DYANAMIC PIVOT NAME: No more hardcoded "Sun-Mars Binary Frame" */}
+          <group name={`${name}-Pivot`} ref={pivotRef} position={[orbitRadius, 0, 0]}>
             {s.axesHelper && visible ? <axesHelper args={[10]} /> : null}
-            {s.type === "planet" ? (
-              <Planet s={s} actualMoon={actualMoon} name={name} />
-            ) : null}
-            {s.name === "Earth" ? <EclipticGrid /> : null}
+            {s.type === "planet" ? <Planet s={s} name={name} /> : null}
+            {hosts.includes("ecliptic-grid") ? <EclipticGrid /> : null}
             {children}
           </group>
         </group>

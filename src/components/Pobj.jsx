@@ -1,23 +1,22 @@
+// src/components/Pobj.jsx
 import { useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
-import { useStore, usePlotStore, useSettingsStore } from "../store"; // FIX: Added useStore
-import { findCelestialSetting } from "../utils/celestialSettingsSchema";
+import { useStore, usePlotStore, useSettingsStore } from "../store";
 
-// PERFORMANCE FIX: Define geometry globally outside component
 const pobjSphere = new THREE.SphereGeometry(1, 32, 32);
 
-const Pobj = ({ name, settingId, children }) => {
-  // PERFORMANCE FIX: Targeted selection to avoid massive re-renders on any setting change
+const Pobj = ({ name, settingName, orbitScale, children }) => {
+  const settingKey = settingName ?? name;
   const s = useSettingsStore(
     useCallback(
-      (state) => findCelestialSetting(state.settings, settingId || name),
-      [name, settingId]
+      (state) => state.settings.find((p) => p.name === settingKey),
+      [settingKey]
     )
   );
 
   const addPlotObj = usePlotStore((state) => state.addPlotObj);
   const removePlotObj = usePlotStore((state) => state.removePlotObj);
-  const actualPlanetSizes = useStore((s) => s.actualPlanetSizes); // FIX: Grab actualPlanetSizes to sync with Cobj
+  const actualPlanetSizes = useStore((s) => s.actualPlanetSizes); 
 
   const containerRef = useRef();
   const pivotRef = useRef();
@@ -27,23 +26,16 @@ const Pobj = ({ name, settingId, children }) => {
 
   if (!s) return null;
 
-  // Use exact coordinates directly from the settings store
   let orbitRadius = s.orbitRadius;
-  let orbitCentera = s.orbitCentera;
-  let orbitCenterb = s.orbitCenterb;
-  let orbitCenterc = s.orbitCenterc;
+  let orbitCenterx = s.orbitCenterx || 0;
+  let orbitCentery = s.orbitCentery || 0;
+  let orbitCenterz = s.orbitCenterz || 0;
 
-  // FIX: Scale the Moon's plot calculations so the Trace aligns with the visual Moon
-  if (!actualPlanetSizes) {
-    if (
-      s.name === "Moon" ||
-      s.name === "Moon deferent A"
-    ) {
-      orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * 39.2078;
-      orbitCentera = s.orbitCentera === 0 ? 0 : s.orbitCentera * 39.2078;
-      orbitCenterb = s.orbitCenterb === 0 ? 0 : s.orbitCenterb * 39.2078;
-      orbitCenterc = s.orbitCenterc === 0 ? 0 : s.orbitCenterc * 39.2078;
-    }
+  if (!actualPlanetSizes && orbitScale) {
+    orbitRadius = s.orbitRadius === 0 ? 0 : s.orbitRadius * orbitScale;
+    orbitCenterx = s.orbitCenterx === 0 ? 0 : s.orbitCenterx * orbitScale;
+    orbitCentery = s.orbitCentery === 0 ? 0 : s.orbitCentery * orbitScale;
+    orbitCenterz = s.orbitCenterz === 0 ? 0 : s.orbitCenterz * orbitScale;
   }
 
   useEffect(() => {
@@ -56,7 +48,6 @@ const Pobj = ({ name, settingId, children }) => {
       cSphereRef: cSphereRef,
     };
     addPlotObj(plotObj);
-
     return () => {
       if (removePlotObj) removePlotObj(s.name);
     };
@@ -67,15 +58,16 @@ const Pobj = ({ name, settingId, children }) => {
 
   return (
     <group
-      visible={false} // Always hidden, this is the math model
+      visible={false}
       name="Container"
       ref={containerRef}
-      position={[orbitCentera, orbitCenterc, orbitCenterb]}
-      rotation-x={(s.orbitTilta || 0) * (Math.PI / 180)}
-      rotation-z={(s.orbitTiltb || 0) * (Math.PI / 180)}
+      position={[orbitCenterx, orbitCentery, orbitCenterz]}
+      rotation-x={(s.orbitTiltx || 0) * (Math.PI / 180)}
+      rotation-y={(s.orbitTilty || 0) * (Math.PI / 180)}
+      rotation-z={(s.orbitTiltz || 0) * (Math.PI / 180)}
     >
       <group name="Orbit" ref={orbitRef}>
-        <group name="Pivot" ref={pivotRef} position={[orbitRadius, 0, 0]}>
+        <group name={`${name}-Pivot`} ref={pivotRef} position={[orbitRadius, 0, 0]}>
           <mesh scale={1}>
             <group
               ref={cSphereRef}

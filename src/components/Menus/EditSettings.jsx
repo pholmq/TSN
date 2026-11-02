@@ -6,207 +6,129 @@ import {
   saveSettingsAsJson,
   loadSettingsFromFile,
 } from "../../utils/saveAndLoadSettings";
-import { getCelestialEditorGroups } from "../../utils/celestialSettingsSchema";
+import {
+  getBodySettingNames,
+  getCelestialEditorGroups,
+} from "../../utils/celestialModel";
 
-const updateSettingField = (setting, property, value, updateSetting) => {
-  const cleanValue = value.replace(/\u200B/g, "");
-  updateSetting({ id: setting.id, [property]: cleanValue });
+const SETTING_FIELDS = [
+  "size",
+  "actualSize",
+  "startPos",
+  "speed",
+  "rotationStart",
+  "rotationSpeed",
+  "tilt",
+  "tiltb",
+  "orbitRadius",
+  "orbitCenterx",
+  "orbitCentery",
+  "orbitCenterz",
+  "orbitTiltx",
+  "orbitTilty",
+  "orbitTiltz",
+];
+
+const OPERATION_PARAMETER_LABELS = {
+  inequalityRadius: "2D−M solar modulation",
+  variationRadius: "2D solar modulation",
+  pairedRadialRadius: "Earth–Moon modulation",
 };
 
-const getControls = (s, updateSetting) => ({
-  [`${s.name}size`]: {
-    label: "size",
-    value: "\u200B" + s.size,
-    editable: true,
-    onChange: (value) => {
-      updateSettingField(s, "size", value, updateSetting);
-    },
-  },
-  ...(s.actualSize !== undefined
-    ? {
-        [`${s.name}actualSize`]: {
-          label: "actualSize",
-          value: "\u200B" + s.actualSize,
-          editable: true,
-          onChange: (value) => {
-            updateSettingField(s, "actualSize", value, updateSetting);
-          },
+const EDITOR_LABELS = {
+  SystemCenter: "PVP / Observer Frame",
+};
+
+const editorLabel = (name) => EDITOR_LABELS[name] || name;
+
+const isZeroValue = (value) => {
+  const number = Number(String(value).replace(/\u200B/g, "").trim());
+  return Number.isFinite(number) && number === 0;
+};
+
+const getControls = (s, updateSetting) => {
+  const standardControls = Object.fromEntries(
+    SETTING_FIELDS.filter((key) => s[key] !== undefined).map((key) => [
+      `${s.name}_${key}`,
+      {
+        label: key,
+        value: "\u200B" + s[key],
+        editable: true,
+        render: (get) => Boolean(get("Show zero values")) || !isZeroValue(s[key]),
+        onChange: (value) => {
+          const cleanValue = String(value).replace(/\u200B/g, "");
+          updateSetting({ ...s, [key]: cleanValue });
         },
-      }
-    : {}),
-  [`${s.name}startPos`]: {
-    label: "startPos",
-    value: "\u200B" + s.startPos,
-    editable: true,
-    onChange: (value) => {
-      updateSettingField(s, "startPos", value, updateSetting);
-    },
-  },
-  [`${s.name}speed`]: {
-    label: "speed",
-    value: "\u200B" + s.speed,
-    editable: true,
-    onChange: (value) => {
-      updateSettingField(s, "speed", value, updateSetting);
-    },
-  },
-  ...(s.rotationStart !== undefined
-    ? {
-        [`${s.name}rotationStart`]: {
-          label: "rotationStart",
-          value: "\u200B" + s.rotationStart,
-          editable: true,
-          onChange: (value) => {
-            updateSettingField(s, "rotationStart", value, updateSetting);
-          },
-        },
-      }
-    : {}),
-  ...(s.rotationSpeed !== undefined
-    ? {
-        [`${s.name}rotationSpeed`]: {
-          label: "rotationSpeed",
-          value: "\u200B" + s.rotationSpeed,
-          editable: true,
-          onChange: (value) => {
-            updateSettingField(s, "rotationSpeed", value, updateSetting);
-          },
-        },
-      }
-    : {}),
-  [`${s.name}tilt`]: {
-    label: "tilt",
-    value: "\u200B" + s.tilt,
-    editable: true,
-    onChange: (value) => {
-      updateSettingField(s, "tilt", value, updateSetting);
-    },
-  },
-  ...(s.tiltb !== undefined
-    ? {
-        [`${s.name}tiltb`]: {
-          label: "tiltb",
-          value: "\u200B" + s.tiltb,
-          editable: true,
-          onChange: (value) => {
-            updateSettingField(s, "tiltb", value, updateSetting);
-          },
-        },
-      }
-    : {}),
-  [`${s.name}orbitRadius`]: {
-    label: "orbitRadius",
-    value: "\u200B" + s.orbitRadius,
-    editable: true,
-    onChange: (value) => {
-      updateSettingField(s, "orbitRadius", value, updateSetting);
-    },
-  },
-  [`${s.name}orbitCentera`]: {
-    label: "orbitCentera",
-    value: "\u200B" + s.orbitCentera,
-    editable: true,
-    onChange: (value) => {
-      updateSettingField(s, "orbitCentera", value, updateSetting);
-    },
-  },
-  [`${s.name}orbitCenterb`]: {
-    label: "orbitCenterb",
-    value: "\u200B" + s.orbitCenterb,
-    editable: true,
-    onChange: (value) => {
-      updateSettingField(s, "orbitCenterb", value, updateSetting);
-    },
-  },
-  [`${s.name}orbitCenterc`]: {
-    label: "orbitCenterc",
-    value: "\u200B" + s.orbitCenterc,
-    editable: true,
-    onChange: (value) => {
-      updateSettingField(s, "orbitCenterc", value, updateSetting);
-    },
-  },
-  [`${s.name}orbitTilta`]: {
-    label: "orbitTilta",
-    value: "\u200B" + s.orbitTilta,
-    editable: true,
-    onChange: (value) => {
-      updateSettingField(s, "orbitTilta", value, updateSetting);
-    },
-  },
-  [`${s.name}orbitTiltb`]: {
-    label: "orbitTiltb",
-    value: "\u200B" + s.orbitTiltb,
-    editable: true,
-    onChange: (value) => {
-      updateSettingField(s, "orbitTiltb", value, updateSetting);
-    },
-  },
-  ...Object.fromEntries(
-    [
-      "relativeAnnualStart",
-      "relativeAnnualSpeed",
-      "relativeAnnualCosX",
-      "relativeAnnualCosY",
-      "relativeAnnualCosZ",
-      "relativeAnnualSinX",
-      "relativeAnnualSinY",
-      "relativeAnnualSinZ",
-    ]
-      .filter((property) => s[property] !== undefined)
-      .map((property) => [
-        `${s.name}${property}`,
+      },
+    ])
+  );
+
+  const operationParameters = s.operationParameters || {};
+  const operationControls = Object.fromEntries(
+    Object.entries(operationParameters)
+      .filter(([key, value]) =>
+        (typeof value === "number" || typeof value === "string") &&
+        key !== "pairedRadialPlane"
+      )
+      .map(([key, value]) => [
+        `${s.name}_operation_${key}`,
         {
-          label: property,
-          value: "\u200B" + s[property],
+          label: OPERATION_PARAMETER_LABELS[key] || key,
+          value: "\u200B" + value,
           editable: true,
-          onChange: (value) => {
-            updateSettingField(s, property, value, updateSetting);
+          render: (get) => Boolean(get("Show zero values")) || !isZeroValue(value),
+          onChange: (nextValue) => {
+            const cleanValue = String(nextValue).replace(/\u200B/g, "");
+            updateSetting({
+              ...s,
+              operationParameters: { ...operationParameters, [key]: cleanValue },
+            });
           },
         },
       ])
-  ),
-});
+  );
 
-const componentLabel = (component) =>
-  component
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/^./, (letter) => letter.toUpperCase());
+  return {
+    ...standardControls,
+    ...(Object.keys(operationControls).length > 0
+      // Lunar modulation parameters are part of the declared lunar model,
+      // rather than an opaque implementation detail. Keep them directly in
+      // their named model stage; other motion operations retain the generic
+      // group for now.
+      ? s.motionOperation === "solar-coupled-centre-offset"
+        ? operationControls
+        : { "Geometry operation": folder(operationControls, { collapsed: false }) }
+      : {}),
+  };
+};
 
-// The inner component containing the hooks only mounts when the menu is active
 const EditSettingsPanel = () => {
   const showPlanets = useStore((s) => s.showPlanets);
   const setShowPlanets = useStore((s) => s.setShowPlanets);
   const shadeOrbits = useStore((s) => s.shadeOrbits);
   const setShadeOrbits = useStore((s) => s.setShadeOrbits);
-  const setEditSettings = useStore((s) => s.setEditSettings); // NEW
+  const editSettings = useStore((s) => s.editSettings);
+  const setEditSettings = useStore((s) => s.setEditSettings);
+  const showOrbitLabels = useStore((s) => s.showOrbitLabels);
+  const setShowOrbitLabels = useStore((s) => s.setShowOrbitLabels);
+  
   const positions = usePosStore((s) => s.positions);
   const { settings, updateSetting, resetSettings } = useSettingsStore();
-
   const initialDeferentStates = useRef({});
 
-  // Highly targeted DOM injection for the X button
   useEffect(() => {
+    let closeBtn;
     const interval = setInterval(() => {
-      // Find the deepest div containing ONLY the exact title text
       const textDiv = Array.from(document.querySelectorAll("div")).find(
-        (el) =>
-          el.textContent.trim() === "Edit Settings" && el.children.length === 0
+        (el) => el.textContent.trim() === "Edit Settings" && el.children.length === 0
       );
-
       if (textDiv) {
-        // Leva's title bar is the immediate flex container wrapping this text
         const titleBar = textDiv.parentElement;
-
         if (titleBar && !titleBar.querySelector(".leva-close-x")) {
-          // Allow the title bar to anchor our absolutely positioned button
           titleBar.style.position = "relative";
-
-          const closeBtn = document.createElement("div");
+          closeBtn = document.createElement("div");
           closeBtn.className = "leva-close-x";
           closeBtn.innerHTML = "✕";
-
-          // Style it seamlessly into the top right corner
           Object.assign(closeBtn.style, {
             position: "absolute",
             right: "12px",
@@ -219,150 +141,111 @@ const EditSettingsPanel = () => {
             padding: "4px",
             zIndex: "9999",
           });
-
-          // Native hover colors
           closeBtn.onmouseenter = () => (closeBtn.style.color = "#FFFFFF");
           closeBtn.onmouseleave = () => (closeBtn.style.color = "#8C92A4");
-
-          // CRITICAL: Stop the click from passing through and triggering Leva's drag feature
           closeBtn.onmousedown = (e) => e.stopPropagation();
-
-          // Close action
           closeBtn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
             setEditSettings(false);
           };
-
           titleBar.appendChild(closeBtn);
         }
       }
     }, 150);
-
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (closeBtn && closeBtn.parentNode) {
+        closeBtn.parentNode.removeChild(closeBtn);
+      }
+    };
   }, [setEditSettings]);
 
   useEffect(() => {
-    // 1. Capture original visibility of all deferents on mount
     settings.forEach((s) => {
-      if (
-        s.name.includes("deferent") &&
-        initialDeferentStates.current[s.name] === undefined
-      ) {
+      if (initialDeferentStates.current[s.name] === undefined) {
         initialDeferentStates.current[s.name] = s.visible;
       }
     });
-
-    // 2. Restore them back when menu closes - UNLESS the user explicitly changed them
     return () => {
       const currentStoreSettings = useSettingsStore.getState().settings;
       currentStoreSettings.forEach((s) => {
-        if (s.name.includes("deferent")) {
-          const originalVisibility = initialDeferentStates.current[s.name];
-          if (
-            originalVisibility !== undefined &&
-            s.visible !== originalVisibility
-          ) {
-            useSettingsStore
-              .getState()
-              .updateSetting({ ...s, visible: originalVisibility });
-          }
+        const originalVisibility = initialDeferentStates.current[s.name];
+        if (originalVisibility !== undefined && s.visible !== originalVisibility) {
+          useSettingsStore.getState().updateSetting({ ...s, visible: originalVisibility });
         }
       });
     };
   }, []);
 
   const settingsFolders = useMemo(() => {
-    const groups = {};
-    const showHideMenu = {};
-    const settingsMenu = {};
-
-    settings.forEach((s) => {
-      let parent = s.name;
-      if (s.name.includes("deferent")) {
-        parent = s.name.split(" deferent")[0];
-      }
-
-      if (!groups[parent]) {
-        groups[parent] = { main: null, deferents: [] };
-      }
-
-      if (s.name.includes("deferent")) {
-        groups[parent].deferents.push(s);
-      } else {
-        groups[parent].main = s;
-      }
-    });
-
-    Object.keys(groups).forEach((parentName) => {
-      const group = groups[parentName];
-
-      // Geometry-only entries (such as Moon Node/Plane) have no visibility switch.
-      const visibility = group.main ? group.main.visible : true;
-      if (typeof visibility === "boolean") {
-        showHideMenu[`${parentName}visible`] = {
-          label: parentName,
-          value: visibility,
-          editable: true,
-          onChange: (value, path, context) => {
-            // Detect if this is Leva's automatic sync, or a real click from the user
-            const isInitialSync = context
-              ? context.initial
-              : group.main
-              ? group.main.visible === value
-              : group.deferents[0]?.visible === value;
-
-            if (group.main) {
-              updateSetting({ id: group.main.id, visible: value });
-            }
-            group.deferents.forEach((def) => {
-              updateSetting({ id: def.id, visible: value });
-
-              // FIX: If the user explicitly clicked the toggle, save it as the new "initial state"
-              // so the cleanup effect doesn't erase their action!
-              if (!isInitialSync) {
-                initialDeferentStates.current[def.name] = value;
-              }
-            });
-          },
-        };
-      }
-
-    });
-
-    // The edit menu follows the declared astronomical system rather than
-    // inferring parentage from display-name substrings.
+    const celestialBodiesMenu = {};
+    const bodySettingNames = new Set(getBodySettingNames());
     getCelestialEditorGroups(settings).forEach((editorGroup) => {
-      const groupControls = {};
-      editorGroup.bodies.forEach((body) => {
+      const buildBodyControls = (body) => {
         const bodyControls = {};
-        body.settings.forEach((setting) => {
-          bodyControls[componentLabel(setting.component)] = folder(
-            getControls(setting, updateSetting),
+        if (bodySettingNames.has(body.name) && typeof body.setting.visible === "boolean") {
+          bodyControls[`${body.name}_visible`] = {
+            label: "Visible",
+            value: body.setting.visible,
+            onChange: (value) => updateSetting({ ...body.setting, visible: value }),
+          };
+        }
+        body.frames.forEach((frame) => {
+          const frameControls = {};
+          frame.settings.forEach((setting) => {
+            frameControls[editorLabel(setting.name)] = folder(
+              getControls(setting, updateSetting),
+              { collapsed: true }
+            );
+          });
+          bodyControls[frame.name] = folder(frameControls, { collapsed: true });
+        });
+        body.children.forEach((child) => {
+          bodyControls[editorLabel(child.name)] = folder(
+            buildBodyControls(child),
             { collapsed: true }
           );
         });
-        groupControls[body.name] = folder(bodyControls, { collapsed: true });
-      });
-      settingsMenu[editorGroup.name] = folder(groupControls, {
+        return bodyControls;
+      };
+
+      const groupControls = editorGroup.flattenBody && editorGroup.bodies.length === 1
+        ? buildBodyControls(editorGroup.bodies[0])
+        : Object.fromEntries(editorGroup.bodies.map((body) => [
+            editorLabel(body.name),
+            folder(buildBodyControls(body), { collapsed: true }),
+          ]));
+      celestialBodiesMenu[editorGroup.name] = folder(groupControls, {
         collapsed: true,
       });
     });
 
     return {
-      "Load settings": button(() => loadSettingsFromFile()),
-      "Save settings": button(() => saveSettingsAsJson()),
-      "Reset settings": button(() => resetSettings()),
-      "Show / Hide Planets": {
-        value: showPlanets,
-        onChange: (v) => setShowPlanets(v),
+      "Global Actions": folder({
+        "Load settings": button(() => loadSettingsFromFile()),
+        "Save settings": button(() => saveSettingsAsJson(settings)),
+        "Reset settings": button(() => resetSettings()),
+      }),
+      "Global Display": folder({
+        "Show / Hide Planets": {
+          value: showPlanets,
+          onChange: (v) => setShowPlanets(v),
+        },
+        "Filled Orbits": {
+          value: shadeOrbits,
+          onChange: (v) => setShadeOrbits(v),
+        },
+        "Orbit labels": {
+          value: showOrbitLabels,
+          onChange: (v) => setShowOrbitLabels(v),
+        }
+      }),
+      "Show zero values": {
+        value: false,
+        label: "Show zero values",
       },
-      "Filled Orbits": {
-        value: shadeOrbits,
-        onChange: (v) => setShadeOrbits(v),
-      },
-      "Show / Hide settings": folder(showHideMenu, { collapsed: false }),
-      Settings: folder(settingsMenu, { collapsed: false }),
+      Settings: folder(celestialBodiesMenu, { collapsed: false }),
     };
   }, [
     settings,
@@ -371,62 +254,20 @@ const EditSettingsPanel = () => {
     setShowPlanets,
     shadeOrbits,
     setShadeOrbits,
+    showOrbitLabels,
+    setShowOrbitLabels
   ]);
 
   const levaSettingsStore = useCreateStore();
-
-  const [, set] = useControls(() => settingsFolders, {
+  useControls(() => settingsFolders, {
     store: levaSettingsStore,
   });
 
-  useEffect(() => {
-    const updatedValues = {
-      "Show / Hide Planets": showPlanets,
-      "Filled Orbits": shadeOrbits,
-    };
-    settings.forEach((s) => {
-      if (!s.name.includes("deferent") && typeof s.visible === "boolean") {
-        updatedValues[`${s.name}visible`] = s.visible;
-      }
-      updatedValues[`${s.name}size`] = "\u200B" + s.size;
-      if (s.actualSize !== undefined) {
-        updatedValues[`${s.name}actualSize`] = "\u200B" + s.actualSize;
-      }
-      updatedValues[`${s.name}startPos`] = "\u200B" + s.startPos;
-      updatedValues[`${s.name}speed`] = "\u200B" + s.speed;
-      if (s.rotationStart !== undefined) {
-        updatedValues[`${s.name}rotationStart`] = "\u200B" + s.rotationStart;
-      }
-      if (s.rotationSpeed !== undefined) {
-        updatedValues[`${s.name}rotationSpeed`] = "\u200B" + s.rotationSpeed;
-      }
-      updatedValues[`${s.name}tilt`] = "\u200B" + s.tilt;
-      if (s.tiltb !== undefined) {
-        updatedValues[`${s.name}tiltb`] = "\u200B" + s.tiltb;
-      }
-      updatedValues[`${s.name}orbitRadius`] = "\u200B" + s.orbitRadius;
-      updatedValues[`${s.name}orbitCentera`] = "\u200B" + s.orbitCentera;
-      updatedValues[`${s.name}orbitCenterb`] = "\u200B" + s.orbitCenterb;
-      updatedValues[`${s.name}orbitCenterc`] = "\u200B" + s.orbitCenterc;
-      updatedValues[`${s.name}orbitTilta`] = "\u200B" + s.orbitTilta;
-      updatedValues[`${s.name}orbitTiltb`] = "\u200B" + s.orbitTiltb;
-      [
-        "relativeAnnualStart",
-        "relativeAnnualSpeed",
-        "relativeAnnualCosX",
-        "relativeAnnualCosY",
-        "relativeAnnualCosZ",
-        "relativeAnnualSinX",
-        "relativeAnnualSinY",
-        "relativeAnnualSinZ",
-      ].forEach((property) => {
-        if (s[property] !== undefined) {
-          updatedValues[`${s.name}${property}`] = "\u200B" + s[property];
-        }
-      });
-    });
-    set(updatedValues);
-  }, [settings, set, showPlanets, shadeOrbits]);
+  // Leva keeps a path index for its controls.  The menu is intentionally
+  // generated from a conceptual tree, so a programmatic bulk `set()` can try
+  // to address a path from the preceding tree and crash while folders are
+  // being rebuilt.  Direct user edits already update the settings store; a
+  // load/reset is safely reflected when the panel is reopened.
 
   return createPortal(
     <div
@@ -444,16 +285,9 @@ const EditSettingsPanel = () => {
         fill={false}
         hideCopyButton
         theme={{
-          fontSizes: {
-            root: "12px",
-          },
-          fonts: {
-            mono: "",
-          },
-          colors: {
-            highlight1: "#FFFFFF",
-            highlight2: "#FFFFFF",
-          },
+          fontSizes: { root: "12px" },
+          fonts: { mono: "" },
+          colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
         }}
       />
     </div>,
@@ -463,10 +297,7 @@ const EditSettingsPanel = () => {
 
 const EditSettings = () => {
   const editSettings = useStore((s) => s.editSettings);
-
   if (!editSettings) return null;
-
   return <EditSettingsPanel />;
 };
-
 export default EditSettings;

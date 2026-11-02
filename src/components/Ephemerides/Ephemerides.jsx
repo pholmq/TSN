@@ -25,7 +25,6 @@ const Ephemerides = () => {
     "End Date": posToDate(posRef.current),
     "Step size": 1,
     "\u{000D}": sDay,
-    "Sun-Mars binary CSV": false,
   });
 
   const checkboxes = {};
@@ -52,12 +51,10 @@ const Ephemerides = () => {
       .filter((s) => s.type === "planet" && s.name !== "Earth")
       .filter((s) => formValues[s.name] === true)
       .map((s) => s.name);
-    const binaryDiagnostics =
-      formValues["Sun-Mars binary CSV"] === true;
 
-    if (checkedPlanets.length === 0 && !binaryDiagnostics) {
+    if (checkedPlanets.length === 0) {
       setGenerationError(
-        "No output selected.\nSelect at least one planet or Sun-Mars binary CSV."
+        "No planets selected.\nPlease select at least one planet to generate data."
       );
       return;
     }
@@ -68,7 +65,6 @@ const Ephemerides = () => {
       stepSize: formValues["Step size"],
       stepFactor: formValues["\u{000D}"],
       checkedPlanets,
-      binaryDiagnostics,
     });
   };
 
@@ -191,12 +187,6 @@ const Ephemerides = () => {
         options: speedFactOpts,
         onChange: (v) => {
           valuesRef.current["\u{000D}"] = v;
-        },
-      },
-      "Sun-Mars binary CSV": {
-        value: false,
-        onChange: (v) => {
-          valuesRef.current["Sun-Mars binary CSV"] = v;
         },
       },
       ...checkboxes,
