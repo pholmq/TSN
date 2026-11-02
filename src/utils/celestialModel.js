@@ -85,11 +85,6 @@ export const getCelestialSettings = () => objects.map(toSetting);
 // give people a readable, TYCHOS-oriented way to navigate it.
 const EDITOR_GROUPS = [
   {
-    name: "PVP Orbit",
-    flattenBody: true,
-    bodies: [{ id: "system-center", frames: [["PVP Orbit", ["system-center"]]] }],
-  },
-  {
     name: "Earth",
     flattenBody: true,
     bodies: [{
