@@ -85,37 +85,55 @@ export const getCelestialSettings = () => objects.map(toSetting);
 // give people a readable, TYCHOS-oriented way to navigate it.
 const EDITOR_GROUPS = [
   {
-    name: "PVP / Observer Frame",
-    bodies: [{ id: "system-center", frames: [["System Center", ["system-center"]], ["Earth", ["earth"]]] }],
+    name: "PVP Orbit",
+    flattenBody: true,
+    bodies: [{ id: "system-center", frames: [["PVP Orbit", ["system-center"]]] }],
   },
   {
-    name: "Earth-Moon System",
+    name: "Earth",
+    flattenBody: true,
     bodies: [{
-      id: "moon",
-      frames: [
+      id: "earth",
+      frames: [["Earth", ["earth"]]],
+      children: [{
+        id: "moon",
+        frames: [
         ["Lunar Nodal / Plane Frame", ["moon-node", "moon-plane", "moon-node-counterrotation"]],
         ["Lunar Apsidal Frame", ["moon-deferent-a"]],
         ["Lunar Modulation Frame", ["moon-solar-eccentric"]],
         ["Moon Orbit", ["moon"]],
+        ],
+      }],
+    }],
+  },
+  {
+    name: "Sun",
+    flattenBody: true,
+    bodies: [{
+      id: "sun",
+      frames: [["Sun-Mars Binary Frame", ["sun-mars-binary-frame"]], ["Sun Primary Frame", ["sun-primary-frame"]], ["Sun Deferent", ["sun-deferent"]], ["Sun", ["sun"]]],
+      children: [
+        { id: "venus", frames: [["Venus", ["venus-deferent", "venus-plane", "venus"]]] },
+        { id: "mercury", frames: [["Mercury", ["mercury-deferent", "mercury-plane", "mercury"]]] },
       ],
     }],
   },
   {
-    name: "Sun Primary",
-    bodies: [{ id: "sun", frames: [["Sun-Mars Binary Frame", ["sun-mars-binary-frame"]], ["Sun Primary Frame", ["sun-primary-frame"]], ["Sun Deferent", ["sun-deferent"]], ["Sun", ["sun"]]] }],
-  },
-  {
-    name: "Mars Binary Companion",
+    name: "Mars",
+    flattenBody: true,
     bodies: [
-      { id: "mars", frames: [["Mars", ["mars-deferent-e", "mars-deferent-s", "mars"]]] },
-      { id: "phobos", frames: [["Phobos", ["phobos"]]] },
-      { id: "deimos", frames: [["Deimos", ["deimos"]]] },
+      {
+        id: "mars",
+        frames: [["Mars", ["mars-deferent-e", "mars-deferent-s", "mars"]]],
+        children: [
+          { id: "phobos", frames: [["Phobos", ["phobos"]]] },
+          { id: "deimos", frames: [["Deimos", ["deimos"]]] },
+        ],
+      },
     ],
   },
-  { name: "Venus Senior Solar Moon", bodies: [{ id: "venus", frames: [["Venus", ["venus-deferent", "venus-plane", "venus"]]] }] },
-  { name: "Mercury Junior Solar Moon", bodies: [{ id: "mercury", frames: [["Mercury", ["mercury-deferent", "mercury-plane", "mercury"]]] }] },
   {
-    name: "Sun-Hosted Outer Planets",
+    name: "Outer Planets",
     bodies: [
       { id: "jupiter", frames: [["Jupiter", ["jupiter-deferent", "jupiter"]]] },
       { id: "saturn", frames: [["Saturn", ["saturn-deferent", "saturn"]]] },
@@ -125,7 +143,7 @@ const EDITOR_GROUPS = [
     ],
   },
   {
-    name: "Sun-Hosted Small Bodies",
+    name: "Small Bodies",
     bodies: [
       { id: "halley", frames: [["Halleys", ["halley-deferent", "halley"]]] },
       { id: "eros", frames: [["Eros", ["eros-deferent-a", "eros-annual-centre-oscillation", "eros-deferent-b", "eros"]]] },
@@ -145,7 +163,7 @@ export const getCelestialEditorGroups = (settings = getCelestialSettings()) => {
 
   return EDITOR_GROUPS.map((group) => ({
     ...group,
-    bodies: group.bodies.map((body) => {
+    bodies: group.bodies.map(function buildBody(body) {
       const object = byId.get(body.id);
       return {
         id: body.id,
@@ -155,6 +173,7 @@ export const getCelestialEditorGroups = (settings = getCelestialSettings()) => {
           name,
           settings: ids.map(getSetting),
         })),
+        children: (body.children || []).map(buildBody),
       };
     }),
   }));

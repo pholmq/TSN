@@ -182,8 +182,7 @@ const EditSettingsPanel = () => {
     const celestialBodiesMenu = {};
     const bodySettingNames = new Set(getBodySettingNames());
     getCelestialEditorGroups(settings).forEach((editorGroup) => {
-      const groupControls = {};
-      editorGroup.bodies.forEach((body) => {
+      const buildBodyControls = (body) => {
         const bodyControls = {};
         if (bodySettingNames.has(body.name) && typeof body.setting.visible === "boolean") {
           bodyControls[`${body.name}_visible`] = {
@@ -202,8 +201,21 @@ const EditSettingsPanel = () => {
           });
           bodyControls[frame.name] = folder(frameControls, { collapsed: true });
         });
-        groupControls[editorLabel(body.name)] = folder(bodyControls, { collapsed: true });
-      });
+        body.children.forEach((child) => {
+          bodyControls[editorLabel(child.name)] = folder(
+            buildBodyControls(child),
+            { collapsed: true }
+          );
+        });
+        return bodyControls;
+      };
+
+      const groupControls = editorGroup.flattenBody && editorGroup.bodies.length === 1
+        ? buildBodyControls(editorGroup.bodies[0])
+        : Object.fromEntries(editorGroup.bodies.map((body) => [
+            editorLabel(body.name),
+            folder(buildBodyControls(body), { collapsed: true }),
+          ]));
       celestialBodiesMenu[editorGroup.name] = folder(groupControls, {
         collapsed: true,
       });
