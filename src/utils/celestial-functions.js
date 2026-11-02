@@ -1,5 +1,6 @@
 import { Vector3, Spherical } from "three";
 import { calendarToJD } from "./time-date-functions";
+import { getPhysicalPosition } from "./physicalPosition";
 
 // Convert RA/Dec to Altitude/Azimuth for observer at given lat/lon/time
 export function raDecToAltAz(ra, dec, lat, lon, time) {
@@ -178,20 +179,11 @@ export function rAandDecFromLocal(lat, lon, time, az, alt) {
 }
 
 export function getRaDecDistance(name, scene) {
-  const objectPos = new Vector3();
-  let targetObject;
+  const objectPos = getPhysicalPosition(name, scene, new Vector3());
 
-  if (name === "Moon") {
-    targetObject = scene.getObjectByName("Actual Moon");
-  } else {
-    targetObject = scene.getObjectByName(name);
-  }
-
-  if (!targetObject) {
+  if (!objectPos) {
     throw new Error("getRaDecDistance: Unable to find object " + name);
   }
-
-  targetObject.getWorldPosition(objectPos);
 
   return getRaDecDistanceFromPosition(objectPos, scene);
 }

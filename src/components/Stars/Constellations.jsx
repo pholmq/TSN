@@ -52,11 +52,11 @@ const Constellations = () => {
 
           // LOGGING LOGIC: Check for missing stars
           if (idx1 === undefined && !missingHips.has(hip1)) {
-            console.warn(`Constellation "${constellation.common_name?.english || constellation.id}": HIP ${hip1} not found in BSC data.`);
+            //console.warn(`Constellation "${constellation.common_name?.english || constellation.id}": HIP ${hip1} not found in BSC data.`);
             missingHips.add(hip1);
           }
           if (idx2 === undefined && !missingHips.has(hip2)) {
-            console.warn(`Constellation "${constellation.common_name?.english || constellation.id}": HIP ${hip2} not found in BSC data.`);
+            //console.warn(`Constellation "${constellation.common_name?.english || constellation.id}": HIP ${hip2} not found in BSC data.`);
             missingHips.add(hip2);
           }
 

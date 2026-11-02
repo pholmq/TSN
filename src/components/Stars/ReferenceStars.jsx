@@ -35,26 +35,27 @@ const PALETTE = [
 export default function ReferenceStars() {
   const pointsRef = useRef();
   const getThreeState = useThree((state) => state.get);
-  const plotObjects = usePlotStore((s) => s.plotObjects);
 
+  const plotObjects = usePlotStore((s) => s.plotObjects);
   const hScale = useStore((s) => s.hScale);
   const starDistanceModifier = useStore((s) => s.starDistanceModifier);
   const officialStarDistances = useStore((s) => s.officialStarDistances);
-
   const settings = useSettingsStore((s) => s.settings);
+
   const earthSettings = useMemo(
     () => settings.find((s) => s.name === "Earth"),
     [settings]
   );
 
   const earthDeps = earthSettings
-    ? `${earthSettings.speed}-${earthSettings.orbitRadius}-${earthSettings.tilt}-${earthSettings.tiltb}-${earthSettings.orbitCentera}-${earthSettings.orbitCenterb}-${earthSettings.startPos}`
+    ? `${earthSettings.speed}-${earthSettings.orbitRadius}-${earthSettings.tilt}-${earthSettings.tiltb}-${earthSettings.orbitCenterx}-${earthSettings.orbitCentery}-${earthSettings.orbitCenterz}-${earthSettings.orbitTiltx}-${earthSettings.orbitTilty}-${earthSettings.orbitTiltz}-${earthSettings.startPos}`
     : "0";
 
   const [geometryData, setGeometryData] = useState({
     positions: null,
     colors: null,
   });
+
   const [hoveredData, setHoveredData] = useState(null);
 
   const circleTexture = useMemo(() => createCircleTexture("#ffffff"), []);
@@ -89,12 +90,17 @@ export default function ReferenceStars() {
       earthObj.orbitRadius = earthSettings.orbitRadius;
       earthObj.tilt = earthSettings.tilt;
       earthObj.tiltb = earthSettings.tiltb;
-      earthObj.orbitCentera = earthSettings.orbitCentera;
-      earthObj.orbitCenterb = earthSettings.orbitCenterb;
+      earthObj.orbitCenterx = earthSettings.orbitCenterx;
+      earthObj.orbitCentery = earthSettings.orbitCentery;
+      earthObj.orbitCenterz = earthSettings.orbitCenterz;
+      earthObj.orbitTiltx = earthSettings.orbitTiltx;
+      earthObj.orbitTilty = earthSettings.orbitTilty;
+      earthObj.orbitTiltz = earthSettings.orbitTiltz;
       earthObj.startPos = earthSettings.startPos;
     }
 
     const originalRotations = new Map();
+
     plotObjects.forEach((pObj) => {
       if (pObj.orbitRef && pObj.orbitRef.current) {
         originalRotations.set(pObj.name, pObj.orbitRef.current.rotation.y);
@@ -113,7 +119,6 @@ export default function ReferenceStars() {
       if (originalSpeed !== 0) {
         earthObj.speed = -originalSpeed;
       }
-
       movePlotModel(plotObjects, plotPos);
 
       let root = earthObj.cSphereRef.current;
@@ -124,6 +129,7 @@ export default function ReferenceStars() {
 
       const epochPos = new THREE.Vector3();
       const epochQuat = new THREE.Quaternion();
+
       earthObj.cSphereRef.current.getWorldPosition(epochPos);
       earthObj.cSphereRef.current.getWorldQuaternion(epochQuat);
 
@@ -253,7 +259,6 @@ export default function ReferenceStars() {
   const handlePointerMove = (e) => {
     if (e.index !== undefined && geometryData.positions) {
       const starInfo = refStarsData[e.index];
-
       setHoveredData({
         name: starInfo.name,
         epoch: starInfo.epoch,
@@ -291,14 +296,14 @@ export default function ReferenceStars() {
     el.style.zIndex = "2147483647";
 
     el.innerHTML = `
-      <strong style="color: ${hoveredData.color}; font-size: 14px;">${hoveredData.name}</strong>
-      <br />
-      <span style="color: #aaa;">Epoch:</span> <span style="color: #fff; font-weight: bold;">${hoveredData.epoch}</span>
-      <br />
-      <span style="color: #aaa;">RA:</span> <span style="color: #fff;">${hoveredData.RA}</span>
-      <br />
-      <span style="color: #aaa;">Dec:</span> <span style="color: #fff;">${hoveredData.Dec}</span>
-    `;
+       <strong style="color: ${hoveredData.color}; font-size: 14px;">${hoveredData.name}</strong>
+       <br />
+       <span style="color: #aaa;">Epoch:</span> <span style="color: #fff; font-weight: bold;">${hoveredData.epoch}</span>
+       <br />
+       <span style="color: #aaa;">RA:</span> <span style="color: #fff;">${hoveredData.RA}</span>
+       <br />
+       <span style="color: #aaa;">Dec:</span> <span style="color: #fff;">${hoveredData.Dec}</span>
+     `;
 
     document.body.appendChild(el);
 

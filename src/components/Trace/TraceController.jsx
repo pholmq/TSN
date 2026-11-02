@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useStore, useSettingsStore } from "../../store";
 import { useTraceStore } from "./traceStore";
 import Trace from "./Trace";
+import ObserverTrace from "../Observer/ObserverTrace";
 
 const TraceController = () => {
   const { settings } = useSettingsStore();
@@ -28,6 +29,7 @@ const TraceController = () => {
 
   return (
     <>
+      <ObserverTrace />
       {checkedPlanets.map((item) => (
         <Trace name={item} key={item} />
       ))}

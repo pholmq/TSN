@@ -11,13 +11,14 @@ import HoverObj from "../components/HoverObj/HoverObj";
 import PlanetRings from "./PlanetRings";
 import NameLabel from "./Labels/NameLabelBillboard";
 import GeoSphere from "./Helpers/GeoSphere";
+import { useObserverStore } from "./Observer/observerStore";
 
 // PERFORMANCE: Define geometries and constants globally to share across all planet instances
 const lowResSphere = new THREE.SphereGeometry(1, 64, 64);
 const highResSphere = new THREE.SphereGeometry(1, 128, 128); // Reserved for Earth
 const DEG2RAD = THREE.MathUtils.DEG2RAD; // Pre-calculated constant
 
-const Planet = memo(function Planet({ s, actualMoon, name }) {
+const Planet = memo(function Planet({ s, name }) {
   const planetRef = useRef();
   const transformRef = useRef();
   const pivotRef = useRef();
@@ -37,14 +38,16 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
   const cameraTransitioning = useStore((state) => state.cameraTransitioning);
   const editSettings = useStore((state) => state.editSettings);
   const showPlanets = useStore((state) => state.showPlanets);
+  const observerEarthOpacity = useObserverStore((state) => state.earthOpacity);
 
   const { texture, isLoading } = s.texture
     ? useTextureLoader(s.texture)
     : { texture: null, isLoading: false };
 
-  // PERFORMANCE: Memoize material properties to avoid GC pressure and diffing on every render
-  const isTransparent = s.opacity !== undefined ? s.opacity < 1 : false;
-  const planetOpacity = s.opacity !== undefined ? s.opacity : 1;
+  // Observer Trace can make Earth translucent so its marker and trace remain visible.
+  const configuredOpacity = s.opacity !== undefined ? s.opacity : 1;
+  const planetOpacity = s.name === "Earth" ? observerEarthOpacity : configuredOpacity;
+  const isTransparent = planetOpacity < 1;
   const materialProps = useMemo(
     () => ({
       color: isLoading || !texture ? s.color : s.textureTint || "#ffffff",
@@ -81,11 +84,7 @@ const Planet = memo(function Planet({ s, actualMoon, name }) {
     size = s.actualSize;
   }
 
-  let visible = s.visible;
-  if (actualMoon) {
-    size = s.actualSize;
-    visible = false;
-  }
+  const visible = s.visible;
 
   useFrame(() => {
     if (s.fixedTilt && pivotRef.current) {
