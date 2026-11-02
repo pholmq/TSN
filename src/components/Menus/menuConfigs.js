@@ -1,6 +1,9 @@
-import { folder } from "leva";
+import { button, folder } from "leva";
 import { useStore, useSettingsStore } from "../../store";
 import { useTraceStore } from "../Trace/traceStore";
+import { useObserverStore } from "../Observer/observerStore";
+import { formatGlobalPosition } from "../Observer/observerPosition";
+import { posToDate, posToTime } from "../../utils/time-date-functions";
 
 export const useMainControlsConfig = () => {
   const {
@@ -42,6 +45,7 @@ export const useMainControlsConfig = () => {
 };
 
 export const useTraceConfig = () => {
+  const posRef = useStore((s) => s.posRef);
   const {
     trace,
     setTrace,
@@ -63,6 +67,26 @@ export const useTraceConfig = () => {
     setCustomStepFact,
   } = useTraceStore();
   const { settings, updateSetting } = useSettingsStore();
+  const {
+    showObserver,
+    setShowObserver,
+    traceObserver,
+    setTraceObserver,
+    latitude,
+    setLatitude,
+    longitude,
+    setLongitude,
+    currentGlobalPosition,
+    referenceGlobalPosition,
+    referenceTime,
+    displacementKm,
+    captureReference,
+    clearReference,
+    addSeed,
+    clearSeeds,
+    earthOpacity,
+    setEarthOpacity,
+  } = useObserverStore();
 
   const tracedPlanetsCheckboxes = {};
 
@@ -79,6 +103,58 @@ export const useTraceConfig = () => {
   return {
     TraceOnOff: { label: "Trace On", value: trace, onChange: setTrace },
     "Traced planets": folder(tracedPlanetsCheckboxes, { collapsed: true }),
+    Observer: folder(
+      {
+        "Show marker": { value: showObserver, onChange: setShowObserver },
+        "Trace observer": { value: traceObserver, onChange: setTraceObserver },
+        Latitude: {
+          value: latitude,
+          min: -90,
+          max: 90,
+          step: 0.01,
+          onChange: setLatitude,
+        },
+        Longitude: {
+          value: longitude,
+          min: -180,
+          max: 180,
+          step: 0.01,
+          onChange: setLongitude,
+        },
+        "Earth opacity": {
+          value: earthOpacity,
+          min: 0,
+          max: 1,
+          step: 0.05,
+          onChange: setEarthOpacity,
+        },
+        "Add seed": button(() => addSeed(posRef.current)),
+        "Clear seeds": button(clearSeeds),
+        "Position measurement": folder(
+          {
+            "PVP XYZ (km)": {
+              value: formatGlobalPosition(currentGlobalPosition),
+              editable: false,
+            },
+            "Set current as reference": button(() => captureReference(posRef.current)),
+            "Clear reference": button(clearReference),
+            "Reference date": {
+              value:
+                referenceGlobalPosition && referenceTime !== null
+                  ? `${posToDate(referenceTime)} ${posToTime(referenceTime)}`
+                  : "not set",
+              editable: false,
+            },
+            "Displacement (km)": {
+              value: Number(displacementKm.toFixed(2)),
+              editable: false,
+            },
+          },
+          { collapsed: true }
+        ),
+      },
+      { collapsed: true }
+    ),
     "Line width": {
       value: lineWidth,
       min: 0.5,

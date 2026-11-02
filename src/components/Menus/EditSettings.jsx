@@ -21,7 +21,6 @@ const SETTING_FIELDS = [
   "tilt",
   "tiltb",
   "orbitRadius",
-  "solarVariationRadius",
   "orbitCenterx",
   "orbitCentery",
   "orbitCenterz",
@@ -31,14 +30,13 @@ const SETTING_FIELDS = [
 ];
 
 const OPERATION_PARAMETER_LABELS = {
-  inequalityRadius: "2D−M centre displacement",
-  variationRadius: "2D solar-variation displacement",
-  pairedRadialRadius: "Paired radial displacement",
+  inequalityRadius: "2D−M solar modulation",
+  variationRadius: "2D solar modulation",
+  pairedRadialRadius: "Earth–Moon modulation",
 };
 
 const EDITOR_LABELS = {
   SystemCenter: "PVP / Observer Frame",
-  "Lunar Solar-Coupled Geometry": "Geometry-Dependent Lunar Centre Displacement",
 };
 
 const editorLabel = (name) => EDITOR_LABELS[name] || name;
@@ -68,7 +66,10 @@ const getControls = (s, updateSetting) => {
   const operationParameters = s.operationParameters || {};
   const operationControls = Object.fromEntries(
     Object.entries(operationParameters)
-      .filter(([, value]) => typeof value === "number" || typeof value === "string")
+      .filter(([key, value]) =>
+        (typeof value === "number" || typeof value === "string") &&
+        key !== "pairedRadialPlane"
+      )
       .map(([key, value]) => [
         `${s.name}_operation_${key}`,
         {
@@ -90,7 +91,13 @@ const getControls = (s, updateSetting) => {
   return {
     ...standardControls,
     ...(Object.keys(operationControls).length > 0
-      ? { "Geometry operation": folder(operationControls, { collapsed: false }) }
+      // Lunar modulation parameters are part of the declared lunar model,
+      // rather than an opaque implementation detail. Keep them directly in
+      // their named model stage; other motion operations retain the generic
+      // group for now.
+      ? s.motionOperation === "solar-coupled-centre-offset"
+        ? operationControls
+        : { "Geometry operation": folder(operationControls, { collapsed: false }) }
       : {}),
   };
 };

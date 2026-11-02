@@ -39,6 +39,8 @@ import PlanetCameraCompass from "./components/PlanetCamera/PlanetCameraCompass";
 import TransitionCamera from "./components/PlanetCamera/TransitionCamera";
 import Constellations from "./components/Stars/Constellations";
 import PlanetCameraHelper from "./components/PlanetCamera/PlanetCameraHelper";
+import ObserverMarker from "./components/Observer/ObserverMarker";
+import ObserverReferenceMarker from "./components/Observer/ObserverReferenceMarker";
 import { VideoCanvas } from "./components/Recorder/r3f-video-recorder";
 import RecorderMenu from "./components/Menus/RecorderMenu";
 import RecorderController from "./components/Recorder/RecorderController";
@@ -138,6 +140,8 @@ const TSNext = () => {
           <CheckerController />
           <LightEffectsMenu />
           <SolarSystem />
+          <ObserverMarker />
+          <ObserverReferenceMarker />
           <PlotSolarSystem />
           <Stars />
           <LabeledStars />

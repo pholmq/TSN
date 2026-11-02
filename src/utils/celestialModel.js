@@ -95,7 +95,8 @@ const EDITOR_GROUPS = [
       frames: [
         ["Lunar Nodal / Plane Frame", ["moon-node", "moon-plane", "moon-node-counterrotation"]],
         ["Lunar Apsidal Frame", ["moon-deferent-a"]],
-        ["Geometry-Dependent Lunar Centre Displacement", ["moon-solar-eccentric", "moon"]],
+        ["Lunar Modulation Frame", ["moon-solar-eccentric"]],
+        ["Moon Orbit", ["moon"]],
       ],
     }],
   },
