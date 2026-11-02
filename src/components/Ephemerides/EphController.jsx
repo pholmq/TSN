@@ -12,12 +12,9 @@ import {
   sMonth,
 } from "../../utils/time-date-functions";
 import {
-  getPlotSunMarsBinaryDiagnostics,
   movePlotModel,
   getPlotModelRaDecDistance,
 } from "../../utils/plotModelFunctions";
-import { createSunMarsBinaryDiagnostics } from "../../utils/sunMarsBinaryState";
-import { sunMarsBinaryDiagnosticsToRow } from "../../utils/sunMarsBinaryCsv";
 
 const EphController = () => {
   const { scene, invalidate } = useThree(); // invalidate is grabbed here
@@ -34,7 +31,6 @@ const EphController = () => {
   } = useEphemeridesStore();
 
   const [generating, setGenerating] = useState(false);
-  const binaryDiagnosticsRef = useRef(createSunMarsBinaryDiagnostics());
 
   const jobRef = useRef({
     startPos: 0,
@@ -43,8 +39,6 @@ const EphController = () => {
     increment: 0,
     checkedPlanets: [],
     data: {},
-    binaryDiagnostics: false,
-    binaryRows: [],
     lastProgress: 0,
   });
 
@@ -82,8 +76,6 @@ const EphController = () => {
         increment: increment,
         checkedPlanets: params.checkedPlanets,
         data: initialData,
-        binaryDiagnostics: params.binaryDiagnostics === true,
-        binaryRows: [],
         lastProgress: 0,
       };
 
@@ -148,19 +140,6 @@ const EphController = () => {
 
       movePlotModel(plotObjects, currentPos);
 
-      if (job.binaryDiagnostics) {
-        const diagnostics = getPlotSunMarsBinaryDiagnostics(
-          plotObjects,
-          binaryDiagnosticsRef.current
-        );
-        const row = sunMarsBinaryDiagnosticsToRow(
-          currentDate,
-          currentTime,
-          diagnostics
-        );
-        if (row) job.binaryRows.push(row);
-      }
-
       job.checkedPlanets.forEach((name) => {
         const data = getPlotModelRaDecDistance(name, plotObjects, scene);
         if (data) {
@@ -191,13 +170,7 @@ const EphController = () => {
 
     // Completion Check
     if (job.currentStep > job.totalSteps) {
-      if (job.binaryDiagnostics && job.binaryRows.length === 0) {
-        setGenerationError(
-          "Sun-Mars binary diagnostics could not find the SystemCenter, Earth, Sun and Mars pivots."
-        );
-      } else {
-        setGeneratedData(job.data, job.binaryRows);
-      }
+      setGeneratedData(job.data);
       setGenerating(false);
       setProgress(100);
     }
