@@ -56,6 +56,31 @@ describe("observer seeds", () => {
   });
 });
 
+describe("observer displacement measurement", () => {
+  beforeEach(() => {
+    useObserverStore.setState({
+      currentGlobalPosition: { x: 0, y: 0, z: 0 },
+      referenceGlobalPosition: null,
+      referenceTime: null,
+      displacementKm: 0,
+    });
+  });
+
+  test("measures the live three-dimensional distance from the reference", () => {
+    useObserverStore
+      .getState()
+      .setCurrentGlobalPosition({ x: 10, y: 20, z: 30 }, 1);
+    useObserverStore.getState().captureReference(1);
+    useObserverStore
+      .getState()
+      .setCurrentGlobalPosition({ x: 13, y: 24, z: 42 }, 2);
+
+    const state = useObserverStore.getState();
+    expect(state.referenceTime).toBe(1);
+    expect(state.displacementKm).toBeCloseTo(13, 10);
+  });
+});
+
 describe("observer Earth opacity", () => {
   test("clamps opacity to the visible range", () => {
     useObserverStore.getState().setEarthOpacity(0.35);
