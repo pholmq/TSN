@@ -31,7 +31,7 @@ The primary panel controls the flow of time in the simulator.
 - **Question mark (?):** Opens this window.
 - **Stripes and X:** Hides/Shows the main menu.
 - **Reset:** Restores the simulator to the default start date (2000-06-21).
-- **Today:** Sets today’s date.
+- **Now:** Sets the simulator to the current UTC date and time.
 - **Playback Controls:** - **Play/Pause (▶ / ⏸):** Starts or stops the progression of time.
   - **Step Back / Step Forward (⏮ / ⏭):** Click to step one unit of time, or click and hold to move through time continuously.
 - **Date, Time (UTC), & Julian Day:** Manually enter specific dates or times. Press `Enter` to instantly jump to that exact moment.
