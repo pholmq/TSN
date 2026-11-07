@@ -365,16 +365,20 @@ const UserInterface = () => {
           <button
             className="menu-button"
             onClick={() => {
-              const todayPos =
-                sDay *
-                dateToDays(
-                  new Intl.DateTimeFormat("sv-SE", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                  }).format(Date.now())
-                );
-              posRef.current = todayPos;
+              const now = new Date();
+              const utcDate = `${now.getUTCFullYear()}-${String(
+                now.getUTCMonth() + 1
+              ).padStart(2, "0")}-${String(now.getUTCDate()).padStart(
+                2,
+                "0"
+              )}`;
+              const utcTime = `${String(now.getUTCHours()).padStart(
+                2,
+                "0"
+              )}:${String(now.getUTCMinutes()).padStart(2, "0")}:${String(
+                now.getUTCSeconds()
+              ).padStart(2, "0")}`;
+              posRef.current = dateTimeToPos(utcDate, utcTime);
               dateRef.current.value = posToDate(posRef.current);
               timeRef.current.value = posToTime(posRef.current);
               julianRef.current.value = parseFloat(
@@ -384,7 +388,7 @@ const UserInterface = () => {
               updateDateTimeDisplay();
             }}
           >
-            Today
+            Now
           </button>
           <button
             className="menu-button"
