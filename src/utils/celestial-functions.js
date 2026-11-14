@@ -178,17 +178,21 @@ export function rAandDecFromLocal(lat, lon, time, az, alt) {
   return { ra: toDegrees(ra) / 15, dec: toDegrees(decRad) };
 }
 
-export function getRaDecDistance(name, scene) {
+export function getRaDecDistance(name, scene, observerPosition = null) {
   const objectPos = getPhysicalPosition(name, scene, new Vector3());
 
   if (!objectPos) {
     throw new Error("getRaDecDistance: Unable to find object " + name);
   }
 
-  return getRaDecDistanceFromPosition(objectPos, scene);
+  return getRaDecDistanceFromPosition(objectPos, scene, observerPosition);
 }
 
-export function getRaDecDistanceFromPosition(position, scene) {
+export function getRaDecDistanceFromPosition(
+  position,
+  scene,
+  observerPosition = null
+) {
   const csPos = new Vector3();
   const sunPos = new Vector3();
   const sphericalPos = new Spherical();
@@ -205,11 +209,20 @@ export function getRaDecDistanceFromPosition(position, scene) {
   celestialSphere.getWorldPosition(csPos);
   sun.getWorldPosition(sunPos);
 
-  // Calculate RA and Dec
-  csLookAtObj.lookAt(position);
-  lookAtDir.applyQuaternion(csLookAtObj.quaternion);
-  lookAtDir.setLength(csPos.distanceTo(position));
-  sphericalPos.setFromVector3(lookAtDir);
+  // In topocentric mode, express target and observer in the same local
+  // Earth-equatorial frame before taking their line-of-sight vector.
+  if (observerPosition) {
+    const localTarget = celestialSphere.worldToLocal(position.clone());
+    const localObserver = celestialSphere.worldToLocal(
+      observerPosition.clone()
+    );
+    sphericalPos.setFromVector3(localTarget.sub(localObserver));
+  } else {
+    csLookAtObj.lookAt(position);
+    lookAtDir.applyQuaternion(csLookAtObj.quaternion);
+    lookAtDir.setLength(csPos.distanceTo(position));
+    sphericalPos.setFromVector3(lookAtDir);
+  }
 
   const ra = radToRa(sphericalPos.theta);
   const dec = radToDec(sphericalPos.phi);
@@ -219,8 +232,9 @@ export function getRaDecDistanceFromPosition(position, scene) {
   const distAU = radius.toFixed(2);
 
   // Calculate elongation
-  const earthSunDistance = csPos.distanceTo(sunPos);
-  const earthTargetPositionDistance = csPos.distanceTo(position);
+  const observationOrigin = observerPosition || csPos;
+  const earthSunDistance = observationOrigin.distanceTo(sunPos);
+  const earthTargetPositionDistance = observationOrigin.distanceTo(position);
   const sunTargetPositionDistance = sunPos.distanceTo(position);
 
   const numerator =

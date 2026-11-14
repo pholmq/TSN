@@ -1,5 +1,10 @@
 import { Vector3, Spherical } from "three";
-import { radToRa, radToDec } from "./celestial-functions";
+import {
+  latToRad,
+  longToRad,
+  radToRa,
+  radToDec,
+} from "./celestial-functions";
 import { getPhysicalPositionFromPlotObjects } from "./physicalPosition";
 
 // Helper to convert degrees to radians
@@ -18,11 +23,15 @@ export function movePlotModel(plotObjects, plotPos) {
     .forEach((pObj) => pObj.updateAfterMotion(plotPos));
 }
 
-export function getPlotModelRaDecDistance(name, plotObjects) {
-  return getPlotRaDecDistanceFromPosition(name, plotObjects);
+export function getPlotModelRaDecDistance(name, plotObjects, observer = null) {
+  return getPlotRaDecDistanceFromPosition(name, plotObjects, observer);
 }
 
-export function getPlotRaDecDistanceFromPosition(targetName, plotObjects) {
+export function getPlotRaDecDistanceFromPosition(
+  targetName,
+  plotObjects,
+  observer = null
+) {
   const earthObj = plotObjects.find((p) => p.name === "Earth");
   const sunObj = plotObjects.find((p) => p.name === "Sun");
   const targetObj = plotObjects.find((p) => p.name === targetName);
@@ -47,8 +56,25 @@ export function getPlotRaDecDistanceFromPosition(targetName, plotObjects) {
 
   // Transform the target's World Position into Earth's tilted equatorial frame.
   const localVec = targetPos.clone();
+  const observerWorld = new Vector3();
+  let isTopocentric = false;
   if (earthObj.cSphereRef?.current) {
-    earthObj.cSphereRef.current.worldToLocal(localVec);
+    const earthFrame = earthObj.cSphereRef.current;
+    earthFrame.worldToLocal(localVec);
+    if (observer?.radius && Number.isFinite(observer.time)) {
+      const observerLocal = new Vector3(0, Number(observer.radius), 0)
+        .applyAxisAngle(new Vector3(1, 0, 0), latToRad(observer.latitude))
+        .applyAxisAngle(new Vector3(0, 1, 0), longToRad(observer.longitude))
+        .applyAxisAngle(
+          new Vector3(0, 1, 0),
+          Number(observer.rotationStart || 0) +
+            Number(observer.rotationSpeed || 0) * Number(observer.time)
+        );
+      localVec.sub(observerLocal);
+      observerWorld.copy(observerLocal);
+      earthFrame.localToWorld(observerWorld);
+      isTopocentric = true;
+    }
   }
 
   // Convert Local Vector to Spherical Coordinates (RA/Dec).
@@ -58,9 +84,10 @@ export function getPlotRaDecDistanceFromPosition(targetName, plotObjects) {
   const radius = sphericalPos.radius / 100;
 
   // Calculate distances for elongation using the physical target position.
-  const earthSunDist = earthPos.distanceTo(sunPos);
+  const observationOrigin = isTopocentric ? observerWorld : earthPos;
+  const earthSunDist = observationOrigin.distanceTo(sunPos);
   const sunTargetDist = sunPos.distanceTo(targetPos);
-  const earthTargetDist = earthPos.distanceTo(targetPos);
+  const earthTargetDist = observationOrigin.distanceTo(targetPos);
 
   const numerator =
     earthSunDist * earthSunDist +

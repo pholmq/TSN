@@ -13,6 +13,8 @@ export const useObserverStore = create((set, get) => ({
       traceObserver: value,
       showObserver: value ? true : state.showObserver,
     })),
+  topocentric: false,
+  setTopocentric: (value) => set({ topocentric: value }),
   latitude: 0,
   setLatitude: (value) =>
     set({ latitude: Math.max(-90, Math.min(90, Number(value) || 0)) }),
