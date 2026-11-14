@@ -24,6 +24,8 @@ export const useMainControlsConfig = () => {
     ephimerides,
     setEphemerides,
   } = useStore();
+  const topocentric = useObserverStore((s) => s.topocentric);
+  const setTopocentric = useObserverStore((s) => s.setTopocentric);
 
   return {
     "Actual planet sizes": {
@@ -41,6 +43,11 @@ export const useMainControlsConfig = () => {
       onChange: setShowPositions,
     },
     Ephemerides: { value: ephimerides, onChange: setEphemerides },
+    Topocentric: {
+      value: topocentric,
+      hint: "Use the Trace observer latitude and longitude as the ephemeris origin.",
+      onChange: setTopocentric,
+    },
   };
 };
 
