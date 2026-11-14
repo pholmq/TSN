@@ -157,8 +157,8 @@
       "stepFact": "sDay"
     },
     "rings": {
-      "innerRadius": 0,
-      "outerRadius": 1,
+      "innerRadius": 0.55,
+      "outerRadius": 6.35,
       "texture": "/textures/saturn_ring.jpg",
       "opacity": 0.8
     }
