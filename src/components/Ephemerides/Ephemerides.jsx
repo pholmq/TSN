@@ -9,6 +9,7 @@ import {
   sDay,
 } from "../../utils/time-date-functions";
 import { useEphemeridesStore } from "./ephemeridesStore";
+import { useObserverStore } from "../Observer/observerStore";
 
 const Ephemerides = () => {
   const { ephimerides, setEphemerides, posRef } = useStore();
@@ -17,6 +18,9 @@ const Ephemerides = () => {
   const setGenerationParams = useEphemeridesStore((s) => s.setGenerationParams);
   const setGenerationError = useEphemeridesStore((s) => s.setGenerationError);
   const isGenerating = useEphemeridesStore((s) => s.isGenerating);
+  const topocentric = useObserverStore((s) => s.topocentric);
+  const latitude = useObserverStore((s) => s.latitude);
+  const longitude = useObserverStore((s) => s.longitude);
 
   const levaEphStore = useCreateStore();
 
@@ -59,12 +63,25 @@ const Ephemerides = () => {
       return;
     }
 
+    const earth = settings.find((setting) => setting.name === "Earth");
+    const observerConfig = topocentric
+      ? {
+          latitude,
+          longitude,
+          radius: Number(earth?.actualSize || 0.00426),
+          rotationStart: Number(earth?.rotationStart || 0),
+          rotationSpeed: Number(earth?.rotationSpeed || 0),
+        }
+      : null;
+
     setGenerationParams({
       startDate: formValues["Start Date"],
       endDate: formValues["End Date"],
       stepSize: formValues["Step size"],
       stepFactor: formValues["\u{000D}"],
       checkedPlanets,
+      topocentric,
+      observerConfig,
     });
   };
 

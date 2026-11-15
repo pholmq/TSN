@@ -26,6 +26,13 @@ const EphemeridesResult = () => {
     output += `Start Date: ${parameters.startDate}\n`;
     output += `End Date: ${parameters.endDate}\n`;
     output += `Step Size: ${parameters.stepSize} ${displayUnit}\n`;
+    if (parameters.topocentric && parameters.observerConfig) {
+      output += `Reference: topocentric (${parameters.observerConfig.latitude.toFixed(
+        2
+      )}°, ${parameters.observerConfig.longitude.toFixed(2)}°)\n`;
+    } else {
+      output += "Reference: geocentric (Earth centre)\n";
+    }
     output += "--------------------------------------\n\n";
 
     Object.keys(data).forEach((planetName) => {
