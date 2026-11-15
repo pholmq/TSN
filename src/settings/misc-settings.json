@@ -76,18 +76,6 @@
     "visible": false
   },
   {
-    "name": "Sun Primary Frame",
-    "color": "gray",
-    "type": "deferent",
-    "visible": false
-  },
-  {
-    "name": "Sun deferent",
-    "color": "gray",
-    "type": "deferent",
-    "visible": false
-  },
-  {
     "name": "Sun",
     "color": "yellow",
     "type": "planet",

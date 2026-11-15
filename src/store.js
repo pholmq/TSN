@@ -254,6 +254,9 @@ const buildDefaultSettings = () =>
 
 export const useSettingsStore = create((set, get) => ({
   settings: buildDefaultSettings(),
+  // A reset preserves the declared model hierarchy. The editor uses this
+  // revision to refresh values without closing its expanded folders.
+  settingsResetRevision: 0,
 
   getSetting: (name) => get().settings.find((p) => p.name === name),
 
@@ -282,6 +285,7 @@ export const useSettingsStore = create((set, get) => ({
 
         return defaultSetting;
       }),
+      settingsResetRevision: state.settingsResetRevision + 1,
     })),
 }));
 

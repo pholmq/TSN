@@ -171,44 +171,13 @@
       "carrier": true
     },
     {
-      "id": "sun-primary-frame",
-      "name": "Sun Primary Frame",
-      "size": 0,
-      "startPos": 0,
-      "speed": 0,
-      "orbitRadius": 0,
-      "orbitCenterx": 0,
-      "orbitCenterz": 0,
-      "orbitCentery": 0,
-      "orbitTiltx": 0,
-      "orbitTiltz": 0,
-      "parentId": "sun-mars-binary-frame",
-      "carrier": true
-    },
-    {
-      "id": "sun-deferent",
-      "name": "Sun deferent",
-      "size": 0,
-      "startPos": 0,
-      "speed": 0,
-      "tilt": 0,
-      "orbitRadius": 0,
-      "orbitCenterx": 0,
-      "orbitCenterz": 0,
-      "orbitCentery": 0,
-      "orbitTiltx": 0,
-      "orbitTiltz": 0,
-      "parentId": "sun-primary-frame",
-      "carrier": true
-    },
-    {
       "id": "sun",
       "name": "Sun",
       "size": 8,
       "actualSize": 0.465,
       "startPos": 0,
       "speed": 6.283185307179586,
-      "tilt": 0,
+      "tilt": 7.25,
       "tiltb": 0,
       "rotationStart": 0,
       "rotationSpeed": 90.5,
@@ -218,7 +187,7 @@
       "orbitCentery": 0,
       "orbitTiltx": 0.2762,
       "orbitTiltz": 0,
-      "parentId": "sun-deferent"
+      "parentId": "sun-mars-binary-frame"
     },
     {
       "id": "jupiter-deferent",

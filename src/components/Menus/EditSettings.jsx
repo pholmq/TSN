@@ -102,6 +102,71 @@ const getControls = (s, updateSetting) => {
   };
 };
 
+const editorValueUpdates = (settings, levaStore) => {
+  const data = levaStore?.getData?.();
+  if (!data) return {};
+
+  const updates = {};
+  settings.forEach((setting) => {
+    SETTING_FIELDS.forEach((field) => {
+      if (setting[field] === undefined) return;
+      const controlName = `${setting.name}_${field}`;
+      const path = Object.keys(data).find((candidate) =>
+        candidate.endsWith(controlName)
+      );
+      if (path) updates[path] = `\u200B${setting[field]}`;
+    });
+
+    Object.entries(setting.operationParameters || {}).forEach(([key, value]) => {
+      if (
+        (typeof value !== "number" && typeof value !== "string") ||
+        key === "pairedRadialPlane"
+      ) {
+        return;
+      }
+      const controlName = `${setting.name}_operation_${key}`;
+      const path = Object.keys(data).find((candidate) =>
+        candidate.endsWith(controlName)
+      );
+      if (path) updates[path] = `\u200B${value}`;
+    });
+  });
+  return updates;
+};
+
+const SettingsLeva = ({ settingsFolders, settings, settingsResetRevision }) => {
+  const levaSettingsStore = useCreateStore();
+  const lastResetRevision = useRef(settingsResetRevision);
+
+  useControls(() => settingsFolders, { store: levaSettingsStore });
+
+  useEffect(() => {
+    if (lastResetRevision.current === settingsResetRevision) return;
+    lastResetRevision.current = settingsResetRevision;
+
+    const updates = editorValueUpdates(settings, levaSettingsStore);
+    if (Object.keys(updates).length > 0) {
+      // Existing paths are unchanged by Reset, so this refresh does not
+      // collapse the folders the user currently has open.
+      levaSettingsStore.set(updates, false);
+    }
+  }, [levaSettingsStore, settings, settingsResetRevision]);
+
+  return (
+    <Leva
+      store={levaSettingsStore}
+      titleBar={{ drag: true, title: "Edit Settings", filter: false }}
+      fill={false}
+      hideCopyButton
+      theme={{
+        fontSizes: { root: "12px" },
+        fonts: { mono: "" },
+        colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
+      }}
+    />
+  );
+};
+
 const EditSettingsPanel = () => {
   const showPlanets = useStore((s) => s.showPlanets);
   const setShowPlanets = useStore((s) => s.setShowPlanets);
@@ -113,7 +178,12 @@ const EditSettingsPanel = () => {
   const setShowOrbitLabels = useStore((s) => s.setShowOrbitLabels);
   
   const positions = usePosStore((s) => s.positions);
-  const { settings, updateSetting, resetSettings } = useSettingsStore();
+  const {
+    settings,
+    updateSetting,
+    resetSettings,
+    settingsResetRevision,
+  } = useSettingsStore();
   const initialDeferentStates = useRef({});
 
   useEffect(() => {
@@ -258,17 +328,6 @@ const EditSettingsPanel = () => {
     setShowOrbitLabels
   ]);
 
-  const levaSettingsStore = useCreateStore();
-  useControls(() => settingsFolders, {
-    store: levaSettingsStore,
-  });
-
-  // Leva keeps a path index for its controls.  The menu is intentionally
-  // generated from a conceptual tree, so a programmatic bulk `set()` can try
-  // to address a path from the preceding tree and crash while folders are
-  // being rebuilt.  Direct user edits already update the settings store; a
-  // load/reset is safely reflected when the panel is reopened.
-
   return createPortal(
     <div
       className="settings-div"
@@ -279,16 +338,10 @@ const EditSettingsPanel = () => {
         zIndex: 2147483647,
       }}
     >
-      <Leva
-        store={levaSettingsStore}
-        titleBar={{ drag: true, title: "Edit Settings", filter: false }}
-        fill={false}
-        hideCopyButton
-        theme={{
-          fontSizes: { root: "12px" },
-          fonts: { mono: "" },
-          colors: { highlight1: "#FFFFFF", highlight2: "#FFFFFF" },
-        }}
+      <SettingsLeva
+        settingsFolders={settingsFolders}
+        settings={settings}
+        settingsResetRevision={settingsResetRevision}
       />
     </div>,
     document.body
