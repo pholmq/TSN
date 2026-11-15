@@ -106,7 +106,7 @@ const EDITOR_GROUPS = [
     flattenBody: true,
     bodies: [{
       id: "sun",
-      frames: [["Sun-Mars Binary Frame", ["sun-mars-binary-frame"]], ["Sun Primary Frame", ["sun-primary-frame"]], ["Sun Deferent", ["sun-deferent"]], ["Sun", ["sun"]]],
+      frames: [["Sun-Mars Binary Frame", ["sun-mars-binary-frame"]], ["Sun", ["sun"]]],
       children: [
         { id: "venus", frames: [["Venus", ["venus-deferent", "venus-plane", "venus"]]] },
         { id: "mercury", frames: [["Mercury", ["mercury-deferent", "mercury-plane", "mercury"]]] },
