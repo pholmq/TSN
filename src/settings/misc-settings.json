@@ -76,18 +76,6 @@
     "visible": false
   },
   {
-    "name": "Sun Primary Frame",
-    "color": "gray",
-    "type": "deferent",
-    "visible": false
-  },
-  {
-    "name": "Sun deferent",
-    "color": "gray",
-    "type": "deferent",
-    "visible": false
-  },
-  {
     "name": "Sun",
     "color": "yellow",
     "type": "planet",
@@ -157,8 +145,8 @@
       "stepFact": "sDay"
     },
     "rings": {
-      "innerRadius": 0,
-      "outerRadius": 1,
+      "innerRadius": 0.55,
+      "outerRadius": 6.35,
       "texture": "/textures/saturn_ring.jpg",
       "opacity": 0.8
     }

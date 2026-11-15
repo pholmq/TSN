@@ -2,8 +2,13 @@ import { useRef, useEffect } from "react";
 import { Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useStore } from "../../store";
+import { useObserverStore } from "../Observer/observerStore";
 import ContextMenu from "./ContextMenu";
-import { getRaDecDistance } from "../../utils/celestial-functions";
+import {
+  getRaDecDistance,
+  kmToUnits,
+} from "../../utils/celestial-functions";
+import { Vector3 } from "three";
 
 // Accept pinned and setPinned from parent
 const HoverPanel = ({
@@ -30,6 +35,7 @@ const HoverPanel = ({
   const setCameraTarget = useStore((state) => state.setCameraTarget);
   const setHoveredObjectId = useStore((state) => state.setHoveredObjectId);
   const planetCamera = useStore((state) => state.planetCamera);
+  const topocentric = useObserverStore((state) => state.topocentric);
 
   const groupRef = useRef(null);
   const portalRef = useRef(document.body);
@@ -37,7 +43,19 @@ const HoverPanel = ({
   function update() {
     if (!raRef.current) return;
 
-    const { ra, dec, elongation, dist } = getRaDecDistance(s.name, scene);
+    const observer = useObserverStore.getState();
+    const observerPosition = observer.topocentric
+      ? new Vector3(
+          kmToUnits(observer.currentGlobalPosition.x),
+          kmToUnits(observer.currentGlobalPosition.y),
+          kmToUnits(observer.currentGlobalPosition.z)
+        )
+      : null;
+    const { ra, dec, elongation, dist } = getRaDecDistance(
+      s.name,
+      scene,
+      observerPosition
+    );
     raRef.current.value = ra;
     decRef.current.value = dec;
     distRef.current.value = dist;
@@ -119,6 +137,11 @@ const HoverPanel = ({
                 <span dangerouslySetInnerHTML={{ __html: s.unicodeSymbol }} />
               </label>
             </div>
+            {topocentric && (
+              <div className="panel-item">
+                <label className="menu-label-centered">Topocentric observer</label>
+              </div>
+            )}
             <div className="panel-item">
               <label className="menu-label">RA:</label>
               <input className="menu-input" ref={raRef} disabled />
